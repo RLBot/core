@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using RLBotCS.GameState;
+using RLBotCS.Server;
 using RLBotModels.Message;
 using RLBotSecret;
 using RLBotSecret.Controller;
@@ -15,6 +16,10 @@ Console.WriteLine("RLBot is waiting for Rocket League to connect on port " + por
 
 var playerInputSender = new PlayerInputSender(messenger);
 var gameState = new GameState();
+
+var flatbufferServer = new FlatbufferServer(23234);
+var serverListenerThread = new Thread(() => flatbufferServer.StartListener());
+serverListenerThread.Start();
 
 foreach (var messageClump in messenger)
 {

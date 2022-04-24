@@ -7,7 +7,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLBotCS", "RLBotCS\RLBotCS.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLBotModels", "RLBotModels\RLBotModels.csproj", "{F46726A1-EC2F-4E72-BDB4-47D1A929937B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RLBotCSTests", "RLBotCSTests\RLBotCSTests.csproj", "{1DB880C1-2AA1-4E1B-97AA-642656565457}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLBotCSTests", "RLBotCSTests\RLBotCSTests.csproj", "{1DB880C1-2AA1-4E1B-97AA-642656565457}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7243CDCC-3DAF-4982-9C05-A7F1E4A5E5E3}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

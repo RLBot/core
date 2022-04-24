@@ -1,0 +1,3 @@
+echo Generating flatbuffers header file...
+
+.\flatc.exe --csharp --gen-onefile -o .\ .\rlbot.fbs

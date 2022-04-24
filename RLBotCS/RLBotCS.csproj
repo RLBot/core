@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <AssemblyName>RLBot</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,6 +14,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="FlatBuffers">
+      <HintPath>lib\FlatBuffers.dll</HintPath>
+    </Reference>
     <Reference Include="RLBotSecret">
       <HintPath>RLBotSecret.dll</HintPath>
     </Reference>
