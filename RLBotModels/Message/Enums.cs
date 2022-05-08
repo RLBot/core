@@ -32,6 +32,12 @@
         Ended = 7,
     };
 
+    public enum BoostPadState : byte
+    {
+        Available = 0,
+        PickedUp = 1,
+    };
+
     /// What the player's car is currently doing
     public enum CarState : byte
     {

@@ -56,6 +56,17 @@ namespace RLBotCS.GameState
                         gameTickPacket.ball.physics = physicsUpdate.ballUpdate.Value;
                     }
                 }
+                else if (message is PlayerBoostUpdate)
+                {
+                    var boostUpdate = (PlayerBoostUpdate)message;
+                    var playerIndex = playerMapping.playerIndexFromActorId(boostUpdate.actorId);
+                    if (playerIndex.HasValue)
+                    {
+                        var car = gameTickPacket.gameCars[playerIndex.Value];
+                        car.boost = boostUpdate.boostRemaining;
+                    }
+                }
+                // TODO: lots more message handlers.
             }
         }
     }
