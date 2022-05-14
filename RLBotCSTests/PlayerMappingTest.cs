@@ -42,7 +42,7 @@ namespace RLBotCSTests
             };
             playerMapping.applyCarSpawn(carSpawn);
 
-            Assert.AreEqual(desiredIndex, playerMapping.playerIndexFromActorId(actorId));
+            Assert.AreEqual(desiredIndex, playerMapping.PlayerIndexFromActorId(actorId));
 
             playerMapping.applyCarSpawn(new CarSpawn()
             {
@@ -53,8 +53,8 @@ namespace RLBotCSTests
             });
 
 
-            Assert.AreEqual(0, playerMapping.playerIndexFromActorId(111));
-            Assert.AreEqual(desiredIndex, playerMapping.playerIndexFromActorId(actorId));
+            Assert.AreEqual(0, playerMapping.PlayerIndexFromActorId(111));
+            Assert.AreEqual(desiredIndex, playerMapping.PlayerIndexFromActorId(actorId));
         }
     }
 }

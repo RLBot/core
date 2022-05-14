@@ -43,7 +43,7 @@ namespace RLBotCS.GameState
                     {
                         var actorId = carUpdate.Key;
                         var carPhysics = carUpdate.Value;
-                        var playerIndex = playerMapping.playerIndexFromActorId(actorId);
+                        var playerIndex = playerMapping.PlayerIndexFromActorId(actorId);
                         if (playerIndex.HasValue)
                         {
                             var car = gameTickPacket.gameCars[playerIndex.Value];
@@ -59,7 +59,7 @@ namespace RLBotCS.GameState
                 else if (message is PlayerBoostUpdate)
                 {
                     var boostUpdate = (PlayerBoostUpdate)message;
-                    var playerIndex = playerMapping.playerIndexFromActorId(boostUpdate.actorId);
+                    var playerIndex = playerMapping.PlayerIndexFromActorId(boostUpdate.actorId);
                     if (playerIndex.HasValue)
                     {
                         var car = gameTickPacket.gameCars[playerIndex.Value];

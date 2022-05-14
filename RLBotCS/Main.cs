@@ -2,7 +2,7 @@
 using RLBotCS.GameState;
 using RLBotCS.Server;
 using RLBotModels.Message;
-using RLBotSecret;
+using RLBotSecret.Conversion;
 using RLBotSecret.Controller;
 using RLBotSecret.TCP;
 
@@ -17,7 +17,7 @@ Console.WriteLine("RLBot is waiting for Rocket League to connect on port " + por
 var playerInputSender = new PlayerInputSender(messenger);
 var gameState = new GameState();
 
-var flatbufferServer = new FlatbufferServer(23234);
+var flatbufferServer = new FlatbufferServer(23234, messenger, gameState.playerMapping);
 var serverListenerThread = new Thread(() => flatbufferServer.StartListener());
 serverListenerThread.Start();
 
@@ -46,26 +46,24 @@ void MessAroundToProveThingsWork(PlayerInputSender playerInputSender, GameState 
         if (message is SpectateViewChange)
         {
             var actorId = ((SpectateViewChange)message).spectatedActorId;
-            var customBotActorIds = gameState.playerMapping.getCustomBotActorIds();
-            if (customBotActorIds.Contains(actorId))
+
+            playerInputSender.SendPlayerInput(new RLBotModels.Control.PlayerInput()
             {
-                playerInputSender.SendPlayerInput(new RLBotModels.Control.PlayerInput()
+                actorId = actorId,
+                carInput = new RLBotModels.Control.CarInput { jump = true }
+            });
+            foreach (var otherActor in gameState.playerMapping.getKnownPlayers())
+            {
+                if (otherActor.actorId != actorId)
                 {
-                    actorId = actorId,
-                    carInput = new RLBotModels.Control.CarInput { jump = true }
-                });
-                foreach (var otherActor in customBotActorIds)
-                {
-                    if (otherActor != actorId)
+                    playerInputSender.SendPlayerInput(new RLBotModels.Control.PlayerInput()
                     {
-                        playerInputSender.SendPlayerInput(new RLBotModels.Control.PlayerInput()
-                        {
-                            actorId = otherActor,
-                            carInput = new RLBotModels.Control.CarInput { jump = false }
-                        });
-                    }
+                        actorId = otherActor.actorId,
+                        carInput = new RLBotModels.Control.CarInput { jump = false }
+                    });
                 }
             }
+            
         }
     }
 }

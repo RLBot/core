@@ -67,7 +67,12 @@ namespace RLBotCS.GameState
             return playerIndexToMetadata.Values.Where(pmd => pmd.isCustomBot).Select(pmd => pmd.actorId);
         }
 
-        internal int? playerIndexFromActorId(ushort actorId)
+        internal IEnumerable<PlayerMetadata> getKnownPlayers()
+        {
+            return playerIndexToMetadata.Values;
+        }
+
+        internal int? PlayerIndexFromActorId(ushort actorId)
         {
             int playerIndex;
             if (actorIdToPlayerIndex.TryGetValue(actorId, out playerIndex))
@@ -75,6 +80,11 @@ namespace RLBotCS.GameState
                 return playerIndex;
             }
             return null;
+        }
+
+        internal ushort? ActorIdFromPlayerIndex(int playerIndex)
+        {
+            return playerIndexToMetadata[playerIndex]?.actorId;
         }
 
         internal PlayerMetadata? tryRemoveActorId(ushort actorId)

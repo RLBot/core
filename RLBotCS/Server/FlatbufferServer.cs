@@ -1,4 +1,8 @@
-﻿using System.Net;
+﻿using RLBotCS.GameControl;
+using RLBotCS.GameState;
+using RLBotSecret.Controller;
+using RLBotSecret.TCP;
+using System.Net;
 using System.Net.Sockets;
 
 namespace RLBotCS.Server
@@ -10,13 +14,18 @@ namespace RLBotCS.Server
     internal class FlatbufferServer
     {
 
-        TcpListener server = null;
-        public FlatbufferServer(int port)
+        TcpListener server;
+        TcpMessenger tcpGameInterface;
+        PlayerMapping playerMapping;
+
+        public FlatbufferServer(int port, TcpMessenger tcpGameInterface, PlayerMapping playerMapping)
         {
+            this.tcpGameInterface = tcpGameInterface;
+            this.playerMapping = playerMapping;
+
             IPAddress localAddr = IPAddress.Parse("127.0.0.1");
             server = new TcpListener(localAddr, port);
             server.Start();
-            StartListener();
         }
 
         public void StartListener()
@@ -44,7 +53,12 @@ namespace RLBotCS.Server
         public void HandleClient(TcpClient client)
         {
             var stream = client.GetStream();
-            var session = new FlatbufferSession(stream);
+
+            var playerInputSender = new PlayerInputSender(tcpGameInterface);
+            var renderingSender = new RenderingSender(tcpGameInterface);
+            var gameController = new GameController(playerInputSender, renderingSender);
+
+            var session = new FlatbufferSession(stream, gameController, playerMapping);
             session.RunBlocking();
         }
     }

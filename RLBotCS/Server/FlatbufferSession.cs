@@ -1,5 +1,8 @@
 ﻿using FlatBuffers;
 using rlbot.flat;
+using RLBotCS.GameControl;
+using RLBotCS.GameState;
+using RLBotSecret.Conversion;
 
 namespace RLBotCS.Server
 {
@@ -9,8 +12,9 @@ namespace RLBotCS.Server
      */
     internal class FlatbufferSession
     {
-
         private Stream stream;
+        private GameController gameController;
+        private PlayerMapping playerMapping;
 
         private bool ready;
         public bool needsIntroData;
@@ -19,9 +23,11 @@ namespace RLBotCS.Server
         private bool wantsGameMessages;
         private bool wantsQuickChat;
 
-        public FlatbufferSession(Stream stream)
+        public FlatbufferSession(Stream stream, GameController gameController, PlayerMapping playerMapping)
         {
             this.stream = stream;
+            this.gameController = gameController;
+            this.playerMapping = playerMapping;
         }
 
         public void RunBlocking()
@@ -44,6 +50,18 @@ namespace RLBotCS.Server
                     case DataType.MatchSettings:
                         break;
                     case DataType.PlayerInput:
+                        var playerInputMsg = PlayerInput.GetRootAsPlayerInput(byteBuffer);
+                        var carInput = FlatToModel.ToCarInput(playerInputMsg.ControllerState.Value);
+                        var actorId = playerMapping.ActorIdFromPlayerIndex(playerInputMsg.PlayerIndex);
+                        if (actorId.HasValue)
+                        {
+                            var playerInput = new RLBotModels.Control.PlayerInput() { actorId = actorId.Value, carInput = carInput };
+                            gameController.playerInputSender.SendPlayerInput(playerInput);
+                        } 
+                        else
+                        {
+                            Console.WriteLine("Got input from unknown player index {0}", playerInputMsg.PlayerIndex);
+                        }
                         break;
                     case DataType.QuickChat:
                         break;
