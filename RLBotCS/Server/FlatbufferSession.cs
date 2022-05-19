@@ -15,19 +15,30 @@ namespace RLBotCS.Server
         private Stream stream;
         private GameController gameController;
         private PlayerMapping playerMapping;
+        private SocketSpecStreamWriter socketSpecWriter;
 
-        private bool ready;
-        public bool needsIntroData;
 
-        private bool wantsBallPredictions;
-        private bool wantsGameMessages;
-        private bool wantsQuickChat;
+        public bool IsReady
+        { get; private set; }
+
+        public bool NeedsIntroData
+        { get; private set; }
+
+        public bool WantsBallPredictions
+        { get; private set; }
+
+        public bool WantsGameMessages
+        { get; private set; }
+
+        public bool WantsQuickChat
+        { get; private set; }
 
         public FlatbufferSession(Stream stream, GameController gameController, PlayerMapping playerMapping)
         {
             this.stream = stream;
             this.gameController = gameController;
             this.playerMapping = playerMapping;
+            this.socketSpecWriter = new SocketSpecStreamWriter(stream);
         }
 
         public void RunBlocking()
@@ -41,11 +52,11 @@ namespace RLBotCS.Server
                 {
                     case DataType.ReadyMessage:
                         var readyMsg = ReadyMessage.GetRootAsReadyMessage(byteBuffer);
-                        ready = true;
-                        needsIntroData = true;
-                        wantsBallPredictions = readyMsg.WantsBallPredictions;
-                        wantsGameMessages = readyMsg.WantsGameMessages;
-                        wantsQuickChat = readyMsg.WantsQuickChat;
+                        IsReady = true;
+                        NeedsIntroData = true;
+                        WantsBallPredictions = readyMsg.WantsBallPredictions;
+                        WantsGameMessages = readyMsg.WantsGameMessages;
+                        WantsQuickChat = readyMsg.WantsQuickChat;
                         break;
                     case DataType.MatchSettings:
                         break;
@@ -74,6 +85,11 @@ namespace RLBotCS.Server
                         break;
                 }
             }
+        }
+
+        internal void SendPayloadToClient(TypedPayload payload)
+        {
+            socketSpecWriter.Write(payload);
         }
     }
 }

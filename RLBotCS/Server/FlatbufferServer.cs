@@ -17,6 +17,7 @@ namespace RLBotCS.Server
         TcpListener server;
         TcpMessenger tcpGameInterface;
         PlayerMapping playerMapping;
+        List<FlatbufferSession> sessions = new();
 
         public FlatbufferServer(int port, TcpMessenger tcpGameInterface, PlayerMapping playerMapping)
         {
@@ -50,6 +51,25 @@ namespace RLBotCS.Server
             }
         }
 
+        internal void SendGameStateToClients(GameState.GameState gameState)
+        {
+            TypedPayload gameTickPacket = gameState.gameTickPacket.ToFlatbuffer();
+            foreach (FlatbufferSession session in sessions)
+            {
+                if (!session.IsReady)
+                {
+                    continue;
+                }
+                if (session.NeedsIntroData)
+                {
+                    // TODO: send intro data like match settings, field info packet
+                }
+
+                
+                session.SendPayloadToClient(gameTickPacket);
+            }
+        }
+
         public void HandleClient(TcpClient client)
         {
             var stream = client.GetStream();
@@ -59,6 +79,7 @@ namespace RLBotCS.Server
             var gameController = new GameController(playerInputSender, renderingSender);
 
             var session = new FlatbufferSession(stream, gameController, playerMapping);
+            sessions.Add(session);
             session.RunBlocking();
         }
     }

@@ -32,6 +32,8 @@ foreach (var messageClump in messenger)
     var messageBundle = converter.Convert(messageClump);
     gameState.applyMessage(messageBundle);
 
+    flatbufferServer.SendGameStateToClients(gameState);
+
     MessAroundToProveThingsWork(playerInputSender, gameState, messageBundle);
 }
 

@@ -20,12 +20,6 @@
                 }
             }
         }
-
-        internal class TypedPayload
-        {
-            public DataType type;
-            public ArraySegment<byte> payload;
-        }
         
         class StreamBuffer
         {
