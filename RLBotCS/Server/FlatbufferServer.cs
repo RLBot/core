@@ -17,12 +17,14 @@ namespace RLBotCS.Server
         TcpListener server;
         TcpMessenger tcpGameInterface;
         PlayerMapping playerMapping;
+        MatchStarter matchStarter;
         List<FlatbufferSession> sessions = new();
 
-        public FlatbufferServer(int port, TcpMessenger tcpGameInterface, PlayerMapping playerMapping)
+        public FlatbufferServer(int port, TcpMessenger tcpGameInterface, PlayerMapping playerMapping, MatchStarter matchStarter)
         {
             this.tcpGameInterface = tcpGameInterface;
             this.playerMapping = playerMapping;
+            this.matchStarter = matchStarter;
 
             IPAddress localAddr = IPAddress.Parse("127.0.0.1");
             server = new TcpListener(localAddr, port);
@@ -76,7 +78,7 @@ namespace RLBotCS.Server
 
             var playerInputSender = new PlayerInputSender(tcpGameInterface);
             var renderingSender = new RenderingSender(tcpGameInterface);
-            var gameController = new GameController(playerInputSender, renderingSender);
+            var gameController = new GameController(playerInputSender, renderingSender, matchStarter);
 
             var session = new FlatbufferSession(stream, gameController, playerMapping);
             sessions.Add(session);

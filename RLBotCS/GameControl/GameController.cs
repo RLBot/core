@@ -6,11 +6,13 @@ namespace RLBotCS.GameControl
     {
         public PlayerInputSender playerInputSender;
         public RenderingSender renderingSender;
+        public MatchStarter matchStarter;
 
-        public GameController(PlayerInputSender playerInputSender, RenderingSender renderingSender)
+        public GameController(PlayerInputSender playerInputSender, RenderingSender renderingSender, MatchStarter matchStarter)
         {
             this.playerInputSender = playerInputSender;
             this.renderingSender = renderingSender;
+            this.matchStarter = matchStarter;
         }
     }
 }

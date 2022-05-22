@@ -59,6 +59,8 @@ namespace RLBotCS.Server
                         WantsQuickChat = readyMsg.WantsQuickChat;
                         break;
                     case DataType.MatchSettings:
+                        var matchSettings = rlbot.flat.MatchSettings.GetRootAsMatchSettings(byteBuffer);
+                        gameController.matchStarter.HandleMatchSettings(matchSettings);
                         break;
                     case DataType.PlayerInput:
                         var playerInputMsg = PlayerInput.GetRootAsPlayerInput(byteBuffer);

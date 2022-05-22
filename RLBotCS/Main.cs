@@ -5,6 +5,7 @@ using RLBotModels.Message;
 using RLBotSecret.Conversion;
 using RLBotSecret.Controller;
 using RLBotSecret.TCP;
+using RLBotCS.GameControl;
 
 var converter = new Converter();
 var port = 23233;
@@ -16,8 +17,9 @@ Console.WriteLine("RLBot is waiting for Rocket League to connect on port " + por
 
 var playerInputSender = new PlayerInputSender(messenger);
 var gameState = new GameState();
+var matchStarter = new MatchStarter(messenger, gameState);
 
-var flatbufferServer = new FlatbufferServer(23234, messenger, gameState.playerMapping);
+var flatbufferServer = new FlatbufferServer(23234, messenger, gameState.playerMapping, matchStarter);
 var serverListenerThread = new Thread(() => flatbufferServer.StartListener());
 serverListenerThread.Start();
 
