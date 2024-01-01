@@ -1,0 +1,3 @@
+[submodule "RLBotCS/flatbuffers-schema"]
+	path = RLBotCS/flatbuffers-schema
+	url = https://github.com/RLBot/flatbuffers-schema.git
