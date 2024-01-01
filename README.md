@@ -8,7 +8,7 @@ https://github.com/RLBot/RLBot/tree/00720d1efc447e5495d3952a03e10b5b762421ee/src
 
 # Developer Setup
 
-- Install .NET 6 SDK https://dotnet.microsoft.com/en-us/download/dotnet/6.0
+- Install .NET 8 SDK https://dotnet.microsoft.com/en-us/download/dotnet/8.0
 - Install an IDE
   - Visual Studio 2022 was used for initial development.
   - Rider is also known to work.
