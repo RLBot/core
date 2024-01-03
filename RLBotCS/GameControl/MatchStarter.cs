@@ -1,6 +1,6 @@
 ﻿using rlbot.flat;
+using RLBotCS.Conversion;
 using RLBotCS.GameState;
-using RLBotModels.Command;
 using RLBotModels.Message;
 using RLBotSecret.Controller;
 using RLBotSecret.Conversion;
@@ -21,7 +21,11 @@ namespace RLBotCS.GameControl
 
         public void HandleMatchSettings(rlbot.flat.MatchSettings matchSettings)
         {
-            // TODO: load the map, then spawn the players AFTER the map loads.
+            // Load the map, then spawn the players AFTER the map loads.
+            var load_map_command = FlatToCommand.MakeOpenCommand(matchSettings);
+            Console.WriteLine("Start match with command: " + load_map_command);
+            matchCommandSender.AddCommand(load_map_command);
+            matchCommandSender.Send();
 
             for (int i = 0; i < matchSettings.PlayerConfigurationsLength; i++)
             {
@@ -35,6 +39,8 @@ namespace RLBotCS.GameControl
                 }
 
                 var loadout = FlatToModel.ToLoadout(playerConfig.Loadout.Value, playerConfig.Team);
+
+                Console.WriteLine("Spawning player " + playerConfig.Name + " with spawn id " + playerConfig.SpawnId);
 
                 switch (playerConfig.VarietyType)
                 {

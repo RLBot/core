@@ -36,38 +36,38 @@ foreach (var messageClump in messenger)
 
     flatbufferServer.SendGameStateToClients(gameState);
 
-    MessAroundToProveThingsWork(playerInputSender, gameState, messageBundle);
+    // MessAroundToProveThingsWork(playerInputSender, gameState, messageBundle);
 }
 
-void MessAroundToProveThingsWork(PlayerInputSender playerInputSender, GameState gameState, MessageBundle messageBundle)
-{
-    foreach (var message in messageBundle.messages)
-    {
-        if (message is CarSpawn)
-        {
-            Console.WriteLine(((CarSpawn)message).name + " has spawned.");
-        }
-        if (message is SpectateViewChange)
-        {
-            var actorId = ((SpectateViewChange)message).spectatedActorId;
+// void MessAroundToProveThingsWork(PlayerInputSender playerInputSender, GameState gameState, MessageBundle messageBundle)
+// {
+//     foreach (var message in messageBundle.messages)
+//     {
+//         if (message is CarSpawn)
+//         {
+//             Console.WriteLine(((CarSpawn)message).name + " has spawned.");
+//         }
+//         if (message is SpectateViewChange)
+//         {
+//             var actorId = ((SpectateViewChange)message).spectatedActorId;
 
-            playerInputSender.SendPlayerInput(new RLBotModels.Control.PlayerInput()
-            {
-                actorId = actorId,
-                carInput = new RLBotModels.Control.CarInput { jump = true }
-            });
-            foreach (var otherActor in gameState.playerMapping.getKnownPlayers())
-            {
-                if (otherActor.actorId != actorId)
-                {
-                    playerInputSender.SendPlayerInput(new RLBotModels.Control.PlayerInput()
-                    {
-                        actorId = otherActor.actorId,
-                        carInput = new RLBotModels.Control.CarInput { jump = false }
-                    });
-                }
-            }
+//             playerInputSender.SendPlayerInput(new RLBotModels.Control.PlayerInput()
+//             {
+//                 actorId = actorId,
+//                 carInput = new RLBotModels.Control.CarInput { jump = true }
+//             });
+//             foreach (var otherActor in gameState.playerMapping.getKnownPlayers())
+//             {
+//                 if (otherActor.actorId != actorId)
+//                 {
+//                     playerInputSender.SendPlayerInput(new RLBotModels.Control.PlayerInput()
+//                     {
+//                         actorId = otherActor.actorId,
+//                         carInput = new RLBotModels.Control.CarInput { jump = false }
+//                     });
+//                 }
+//             }
             
-        }
-    }
-}
+//         }
+//     }
+// }
