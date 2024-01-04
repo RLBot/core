@@ -8,7 +8,9 @@ using RLBotSecret.TCP;
 using RLBotCS.GameControl;
 
 var converter = new Converter();
-var port = 23233;
+
+// read the port from the command line arg or default to 23233
+var port = args.Length > 0 ? int.Parse(args[0]) : 23233;
 
 var messenger = new TcpMessenger(port);
 var gotFirstMessage = false;
