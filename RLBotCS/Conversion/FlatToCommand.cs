@@ -9,7 +9,7 @@ namespace RLBotCS.Conversion
             var command = "Open ";
 
             // Parse game map
-            // With RLBot v5, GameMap string is now ignored
+            // With RLBot v5, GameMap enum is now ignored
             // You MUST use GameMapUpk instead
             // This is the name of the map file without the extension
             // And can also be used to tell the game to load custom maps
