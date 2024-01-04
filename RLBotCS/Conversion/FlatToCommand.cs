@@ -16,7 +16,8 @@ namespace RLBotCS.Conversion
             if (matchSettings.GameMapUpk != "")
             {
                 command += matchSettings.GameMapUpk;
-            } else
+            }
+            else
             {
                 command += "Stadium_P";
                 Console.WriteLine("Unknown map, defaulting to DFH Stadium");
@@ -35,8 +36,11 @@ namespace RLBotCS.Conversion
                     break;
             }
 
-            // TODO: Investigate what the Playtest tag does
-            command += "?Playtest";
+            // Whether to or not to skip the kickoff countdown
+            if (!matchSettings.InstantStart)
+            {
+                command += "?Playtest";
+            }
 
             // Parse mutator settings
             command += "?GameTags=";

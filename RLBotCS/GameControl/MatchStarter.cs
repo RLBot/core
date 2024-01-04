@@ -1,6 +1,7 @@
 ﻿using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotCS.GameState;
+using RLBotCS.Server;
 using RLBotModels.Message;
 using RLBotSecret.Controller;
 using RLBotSecret.Conversion;
@@ -12,6 +13,7 @@ namespace RLBotCS.GameControl
     {
         private PlayerMapping playerMapping;
         private MatchCommandSender matchCommandSender;
+        private TypedPayload? lastMatchSettings;
 
         public MatchStarter(TcpMessenger tcpMessenger, GameState.GameState gameState)
         {
@@ -19,13 +21,17 @@ namespace RLBotCS.GameControl
             this.matchCommandSender = new MatchCommandSender(tcpMessenger);
         }
 
-        public void HandleMatchSettings(rlbot.flat.MatchSettings matchSettings)
+        public void HandleMatchSettings(rlbot.flat.MatchSettings matchSettings, TypedPayload originalMessage)
         {
             // Load the map, then spawn the players AFTER the map loads.
             var load_map_command = FlatToCommand.MakeOpenCommand(matchSettings);
             Console.WriteLine("Start match with command: " + load_map_command);
             matchCommandSender.AddCommand(load_map_command);
             matchCommandSender.Send();
+
+            Console.WriteLine("RLBotCS will wait 5 seconds for player to hit spectate...");
+            Thread.Sleep(5000);
+            Console.WriteLine("RLBotCS is done waiting, spawning bots...");
 
             for (int i = 0; i < matchSettings.PlayerConfigurationsLength; i++)
             {
@@ -72,10 +78,15 @@ namespace RLBotCS.GameControl
                         Console.WriteLine("Unable to spawn player with variety type: " + playerConfig.VarietyType);
                         break;
                 }
-                
             }
 
             matchCommandSender.Send();
+
+            lastMatchSettings = originalMessage;
+        }
+
+        public TypedPayload? GetMatchSettings() {
+            return lastMatchSettings;
         }
 
         static float getGravity(GravityOption gravityOption)

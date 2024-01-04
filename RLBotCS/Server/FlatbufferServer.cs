@@ -56,6 +56,8 @@ namespace RLBotCS.Server
         internal void SendGameStateToClients(GameState.GameState gameState)
         {
             TypedPayload gameTickPacket = gameState.gameTickPacket.ToFlatbuffer();
+            List<FlatbufferSession> sessions_to_remove = new();
+
             foreach (FlatbufferSession session in sessions)
             {
                 if (!session.IsReady)
@@ -64,11 +66,27 @@ namespace RLBotCS.Server
                 }
                 if (session.NeedsIntroData)
                 {
-                    // TODO: send intro data like match settings, field info packet
+                    if (matchStarter.GetMatchSettings() is TypedPayload matchSettings)
+                    {
+                        session.SendIntroData(matchSettings);
+                    }
                 }
 
-                
-                session.SendPayloadToClient(gameTickPacket);
+                try
+                {
+                    session.SendPayloadToClient(gameTickPacket);
+                }
+                catch (IOException e)
+                {
+                    Console.WriteLine("Dropping connection to session due to: {0}", e);
+                    sessions_to_remove.Add(session);
+                }
+            }
+
+            // remove sessions that have disconnected
+            foreach (FlatbufferSession session in sessions_to_remove)
+            {
+                sessions.Remove(session);
             }
         }
 
