@@ -13,9 +13,8 @@ namespace RLBotCS.GameState
         {
             foreach (var message in messageBundle.messages)
             {
-                if (message is CarSpawn)
+                if (message is CarSpawn carSpawn)
                 {
-                    var carSpawn = (CarSpawn)message;
                     var metadata = playerMapping.applyCarSpawn((CarSpawn)message);
                     gameTickPacket.gameCars[metadata.playerIndex] = new GameCar()
                     {
@@ -26,9 +25,8 @@ namespace RLBotCS.GameState
                         team = carSpawn.team
                     };
                 }
-                else if (message is ActorDespawn)
+                else if (message is ActorDespawn despawn)
                 {
-                    var despawn = (ActorDespawn)message;
                     var actorId = despawn.actorId;
                     var playerMetadata = playerMapping.tryRemoveActorId(actorId);
                     if (playerMetadata != null)
@@ -36,9 +34,8 @@ namespace RLBotCS.GameState
                         gameTickPacket.gameCars.Remove(playerMetadata.playerIndex);
                     }
                 }
-                else if (message is PhysicsUpdate)
+                else if (message is PhysicsUpdate physicsUpdate)
                 {
-                    var physicsUpdate = (PhysicsUpdate)message;
                     foreach (var carUpdate in physicsUpdate.carUpdates)
                     {
                         var actorId = carUpdate.Key;
@@ -56,14 +53,58 @@ namespace RLBotCS.GameState
                         gameTickPacket.ball.physics = physicsUpdate.ballUpdate.Value;
                     }
                 }
-                else if (message is PlayerBoostUpdate)
+                else if (message is PlayerBoostUpdate boostUpdate)
                 {
-                    var boostUpdate = (PlayerBoostUpdate)message;
                     var playerIndex = playerMapping.PlayerIndexFromActorId(boostUpdate.actorId);
                     if (playerIndex.HasValue)
                     {
                         var car = gameTickPacket.gameCars[playerIndex.Value];
                         car.boost = boostUpdate.boostRemaining;
+                    }
+                }
+                else if (message is GameStateTransition stateTransition)
+                {
+                    gameTickPacket.isOvertime = stateTransition.isOvertime;
+
+                    switch (stateTransition.gameState) {
+                        case GameStateType.Inactive:
+                            gameTickPacket.isMatchEnded = true;
+                            gameTickPacket.isRoundActive = false;
+                            gameTickPacket.isKickoffPause = false;
+                            break;
+                        case GameStateType.Countdown:
+                            gameTickPacket.isMatchEnded = false;
+                            gameTickPacket.isKickoffPause = true;
+                            gameTickPacket.isRoundActive = false;
+                            break;
+                        case GameStateType.Kickoff:
+                            gameTickPacket.isMatchEnded = false;
+                            gameTickPacket.isKickoffPause = true;
+                            gameTickPacket.isRoundActive = true;
+                            break;
+                        case GameStateType.Active:
+                            gameTickPacket.isMatchEnded = false;
+                            gameTickPacket.isKickoffPause = false;
+                            gameTickPacket.isRoundActive = true;
+                            break;
+                        case GameStateType.GoalScored:
+                            gameTickPacket.isMatchEnded = false;
+                            gameTickPacket.isKickoffPause = false;
+                            gameTickPacket.isRoundActive = false;
+                            break;
+                        case GameStateType.Replay:
+                            gameTickPacket.isMatchEnded = false;
+                            gameTickPacket.isKickoffPause = false;
+                            gameTickPacket.isRoundActive = false;
+                            break;
+                        case GameStateType.Paused:
+                            gameTickPacket.isRoundActive = false;
+                            break;
+                        case GameStateType.Ended:
+                            gameTickPacket.isMatchEnded = true;
+                            gameTickPacket.isKickoffPause = false;
+                            gameTickPacket.isRoundActive = false;
+                            break;
                     }
                 }
                 // TODO: lots more message handlers.

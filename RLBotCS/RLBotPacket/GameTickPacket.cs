@@ -8,6 +8,11 @@ namespace RLBotCS.RLBotPacket
         public SortedDictionary<int, GameCar> gameCars = new();
         public List<BoostPadStatus> gameBoosts = new();
         public Ball ball = new();
+        public bool isOvertime = false;
+        public bool isRoundActive = false;
+        public bool isKickoffPause = false;
+        public bool isMatchEnded = false;
+        public float worldGravityZ = -650;
 
 
         // TODO: add gameInfo and teams fields.
@@ -57,10 +62,25 @@ namespace RLBotCS.RLBotPacket
                 last_touch
             );
 
+            var game_info = rlbot.flat.GameInfo.CreateGameInfo(
+                builder,
+                0,
+                0,
+                isOvertime,
+                false,
+                isRoundActive,
+                isKickoffPause,
+                isMatchEnded,
+                worldGravityZ,
+                1,
+                0
+            );
+
             rlbot.flat.GameTickPacket.StartGameTickPacket(builder);
 
             // TODO: add all the data
             rlbot.flat.GameTickPacket.AddBall(builder, ballInfo);
+            rlbot.flat.GameTickPacket.AddGameInfo(builder, game_info);
 
             // finish
             var gtp = rlbot.flat.GameTickPacket.EndGameTickPacket(builder);

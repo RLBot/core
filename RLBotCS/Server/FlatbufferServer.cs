@@ -19,6 +19,7 @@ namespace RLBotCS.Server
         PlayerMapping playerMapping;
         MatchStarter matchStarter;
         List<FlatbufferSession> sessions = new();
+        bool communicationStarted = false;
 
         public FlatbufferServer(int port, TcpMessenger tcpGameInterface, PlayerMapping playerMapping, MatchStarter matchStarter)
         {
@@ -29,6 +30,10 @@ namespace RLBotCS.Server
             IPAddress localAddr = IPAddress.Parse("127.0.0.1");
             server = new TcpListener(localAddr, port);
             server.Start();
+        }
+
+        public void StartCommunications() {
+            communicationStarted = true;
         }
 
         public void StartListener()
@@ -100,6 +105,13 @@ namespace RLBotCS.Server
 
             var session = new FlatbufferSession(stream, gameController, playerMapping);
             sessions.Add(session);
+
+            // wait until we get our first message from Rocket Leauge
+            // before we start accepting messages from the client
+            // they might make us do things before the game is ready
+            while (!communicationStarted) {
+                Thread.Sleep(100);
+            }
             session.RunBlocking();
         }
     }

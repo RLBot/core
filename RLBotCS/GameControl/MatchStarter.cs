@@ -14,6 +14,7 @@ namespace RLBotCS.GameControl
         private PlayerMapping playerMapping;
         private MatchCommandSender matchCommandSender;
         private TypedPayload? lastMatchSettings;
+        private GravityOption gravityOption = GravityOption.Default;
 
         public MatchStarter(TcpMessenger tcpMessenger, GameState.GameState gameState)
         {
@@ -23,14 +24,18 @@ namespace RLBotCS.GameControl
 
         public void HandleMatchSettings(rlbot.flat.MatchSettings matchSettings, TypedPayload originalMessage)
         {
+            if (matchSettings.MutatorSettings is MutatorSettings mutatorSettings) {
+                gravityOption = mutatorSettings.GravityOption;
+            }
+
             // Load the map, then spawn the players AFTER the map loads.
             var load_map_command = FlatToCommand.MakeOpenCommand(matchSettings);
             Console.WriteLine("Start match with command: " + load_map_command);
             matchCommandSender.AddCommand(load_map_command);
             matchCommandSender.Send();
 
-            Console.WriteLine("RLBotCS will wait 5 seconds for player to hit spectate...");
-            Thread.Sleep(5000);
+            Console.WriteLine("RLBotCS will wait 3 seconds for the map to load...");
+            Thread.Sleep(3000);
             Console.WriteLine("RLBotCS is done waiting, spawning bots...");
 
             for (int i = 0; i < matchSettings.PlayerConfigurationsLength; i++)
@@ -89,7 +94,7 @@ namespace RLBotCS.GameControl
             return lastMatchSettings;
         }
 
-        static float getGravity(GravityOption gravityOption)
+        public float GetGravity()
         {
             return gravityOption switch
             {
