@@ -13,8 +13,13 @@ namespace RLBotCS.RLBotPacket
         public bool isKickoffPause = false;
         public bool isMatchEnded = false;
         public float worldGravityZ = -650;
+        public float secondsElapsed = 0;
+        public float gameTimeRemaining = 0;
+        public float gameSpeed = 1;
+        public int frameNum = 0;
+        public List<int> team_scores = [0, 0];
 
-        // TODO: add gameInfo and teams fields.
+        // TODO: tile information?
 
         internal TypedPayload ToFlatbuffer()
         {
@@ -64,36 +69,99 @@ namespace RLBotCS.RLBotPacket
                 LatestTouch = lastTouch
             };
 
-            // TODO: SecondsElapsed, GameTimeRemaining, IsUnlimitedTime, GameSpeed, and FrameNum
             rlbot.flat.GameInfoT gameInfo = new() {
-                SecondsElapsed = 0,
-                GameTimeRemaining = 0,
+                SecondsElapsed = secondsElapsed,
+                GameTimeRemaining = gameTimeRemaining,
                 IsOvertime = isOvertime,
                 IsUnlimitedTime = false,
                 IsRoundActive = isRoundActive,
                 IsKickoffPause = isKickoffPause,
                 IsMatchEnded = isMatchEnded,
                 WorldGravityZ = worldGravityZ,
-                GameSpeed = 1,
-                FrameNum = 0,
+                GameSpeed = gameSpeed,
+                FrameNum = frameNum,
             };
 
-            List<rlbot.flat.TeamInfoT> teams = [
-                new() {
-                    TeamIndex = 0,
-                    Score = 0,
-                },
-                new() {
-                    TeamIndex = 1,
-                    Score = 0,
-                },
-            ];
+            List<rlbot.flat.TeamInfoT> teams = new();
+            for (var i = 0; i < team_scores.Count; i++) {
+                teams.Add(new() {
+                    TeamIndex = i,
+                    Score = team_scores[i],
+                });
+            }
 
-            // TODO: add BoostPadStates, Players, and maybe even TileInformation
+            List<rlbot.flat.BoostPadStateT> boostStates = new();
+            foreach (var boost in gameBoosts)
+            {
+                boostStates.Add(new() {
+                    IsActive = boost.isActive,
+                    Timer = boost.timer,
+                });
+            }
+
+            List<rlbot.flat.PlayerInfoT> players = new();
+            for (var i = 0; i < gameCars.Count; i++) {
+                players.Add(new() {
+                    Physics = new() {
+                        Location = new() {
+                            X = gameCars[i].physics.location.x,
+                            Y = gameCars[i].physics.location.y,
+                            Z = gameCars[i].physics.location.z,
+                        },
+                        Rotation = new() {
+                            Pitch = gameCars[i].physics.rotation.pitch,
+                            Yaw = gameCars[i].physics.rotation.yaw,
+                            Roll = gameCars[i].physics.rotation.roll,
+                        },
+                        Velocity = new() {
+                            X = gameCars[i].physics.velocity.x,
+                            Y = gameCars[i].physics.velocity.y,
+                            Z = gameCars[i].physics.velocity.z,
+                        },
+                        AngularVelocity = new() {
+                            X = gameCars[i].physics.angularVelocity.x,
+                            Y = gameCars[i].physics.angularVelocity.y,
+                            Z = gameCars[i].physics.angularVelocity.z,
+                        },
+                    },
+                    IsDemolished = gameCars[i].isDemolished,
+                    HasWheelContact = gameCars[i].hasWheelContact,
+                    IsSupersonic = gameCars[i].isSuperSonic,
+                    IsBot = gameCars[i].isBot,
+                    Jumped = gameCars[i].jumped,
+                    DoubleJumped = gameCars[i].doubleJumped,
+                    Name = gameCars[i].name,
+                    Team = gameCars[i].team,
+                    Boost = (int)Math.Floor(gameCars[i].boost),
+                    SpawnId = gameCars[i].spawnId,
+                    ScoreInfo = new() {
+                        Score = gameCars[i].scoreInfo.score,
+                        Goals = gameCars[i].scoreInfo.goals,
+                        OwnGoals = gameCars[i].scoreInfo.ownGoals,
+                        Assists = gameCars[i].scoreInfo.assists,
+                        Saves = gameCars[i].scoreInfo.saves,
+                        Shots = gameCars[i].scoreInfo.shots,
+                        Demolitions = gameCars[i].scoreInfo.demolitions,
+                    },
+                    Hitbox = new() {
+                        Length = gameCars[i].hitbox.length,
+                        Width = gameCars[i].hitbox.width,
+                        Height = gameCars[i].hitbox.height,
+                    },
+                    HitboxOffset = new() {
+                        X = gameCars[i].hitboxOffset.x,
+                        Y = gameCars[i].hitboxOffset.y,
+                        Z = gameCars[i].hitboxOffset.z,
+                    },
+                });
+            }
+
             var gameTickPacket = new rlbot.flat.GameTickPacketT() {
                 Ball = ballInfo,
                 GameInfo = gameInfo,
                 Teams = teams,
+                BoostPadStates = boostStates,
+                Players = players,
             };
 
             // A game tick packet is a bit over 8kb

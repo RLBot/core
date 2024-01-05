@@ -14,6 +14,7 @@ namespace RLBotCS.RLBotPacket
         public string name = "";
         public int team;
         public float boost;
+        public int spawnId;
         public BoxDimensions hitbox;
         public Vector3 hitboxOffset;
         public ScoreInfo scoreInfo;

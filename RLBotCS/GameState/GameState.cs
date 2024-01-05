@@ -22,7 +22,8 @@ namespace RLBotCS.GameState
                         isBot = metadata.isBot,
                         hitbox = carSpawn.hitbox.dimensions,
                         hitboxOffset = carSpawn.hitbox.offset,
-                        team = carSpawn.team
+                        team = carSpawn.team,
+                        spawnId = metadata.spawnId.HasValue ? metadata.spawnId.Value : 0,
                     };
                 }
                 else if (message is ActorDespawn despawn)
