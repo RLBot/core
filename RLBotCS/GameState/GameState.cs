@@ -75,7 +75,7 @@ namespace RLBotCS.GameState
                         gameTickPacket.gameTimeRemaining = float.MaxValue;
                     } else {
                         // TODO: account for matches longer than 5 minutes
-                        var total_game_time_seconds = 5 * 50;
+                        var total_game_time_seconds = 5 * 60;
 
                         if (gameTickPacket.isOvertime) {
                             // TODO: account for time-limited overtime
