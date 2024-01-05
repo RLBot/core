@@ -14,7 +14,8 @@ namespace RLBotCS.GameControl
         private PlayerMapping playerMapping;
         private MatchCommandSender matchCommandSender;
         private TypedPayload? lastMatchSettings;
-        private GravityOption gravityOption = GravityOption.Default;
+        private float gravity = -650;
+        private bool isUnlimitedTime = false;
 
         public MatchStarter(TcpMessenger tcpMessenger, GameState.GameState gameState)
         {
@@ -25,7 +26,15 @@ namespace RLBotCS.GameControl
         public void HandleMatchSettings(MatchSettingsT matchSettings, TypedPayload originalMessage)
         {
             if (matchSettings.MutatorSettings is MutatorSettingsT mutatorSettings) {
-                gravityOption = mutatorSettings.GravityOption;
+                gravity = mutatorSettings.GravityOption switch
+                {
+                    GravityOption.Low => -325,
+                    GravityOption.High => -1137.5f,
+                    GravityOption.Super_High => -3250,
+                    _ => -650,
+                };
+
+                isUnlimitedTime = mutatorSettings.MatchLength == MatchLength.Unlimited;
             }
 
             // Load the map, then spawn the players AFTER the map loads.
@@ -94,15 +103,14 @@ namespace RLBotCS.GameControl
             return lastMatchSettings;
         }
 
+        public bool IsUnlimitedTime()
+        {
+            return isUnlimitedTime;
+        }
+
         public float GetGravity()
         {
-            return gravityOption switch
-            {
-                GravityOption.Low => -325,
-                GravityOption.High => -1137.5f,
-                GravityOption.Super_High => -3250,
-                _ => -650,
-            };
+            return gravity;
         }
     }
 }

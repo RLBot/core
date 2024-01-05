@@ -6,6 +6,7 @@ using RLBotSecret.Conversion;
 using RLBotSecret.Controller;
 using RLBotSecret.TCP;
 using RLBotCS.GameControl;
+using rlbot.flat;
 
 var converter = new Converter();
 
@@ -35,6 +36,7 @@ foreach (var messageClump in messenger)
     }
 
     var messageBundle = converter.Convert(messageClump);
+    gameState.gameTickPacket.isUnlimitedTime = matchStarter.IsUnlimitedTime();
     gameState.gameTickPacket.worldGravityZ = matchStarter.GetGravity();
     gameState.applyMessage(messageBundle);
 
