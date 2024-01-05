@@ -68,6 +68,27 @@ namespace RLBotCS.GameState
                     gameTickPacket.isOvertime = stateTransition.isOvertime;
                     gameTickPacket.gameState = stateTransition.gameState;
                 }
+                else if (message is ScoreboardTimeUpdate timeUpdate)
+                {
+                    if (gameTickPacket.isUnlimitedTime) {
+                        gameTickPacket.secondsElapsed = timeUpdate.scoreboardSeconds;
+                        gameTickPacket.gameTimeRemaining = float.MaxValue;
+                    } else {
+                        // TODO: account for matches longer than 5 minutes
+                        var total_game_time_seconds = 5 * 50;
+
+                        if (gameTickPacket.isOvertime) {
+                            // TODO: account for time-limited overtime
+                            gameTickPacket.gameTimeRemaining = float.MaxValue;
+                            // during overtime, the scoreboard counts up
+                            gameTickPacket.secondsElapsed = total_game_time_seconds + timeUpdate.scoreboardSeconds;
+                        } else {
+                            gameTickPacket.gameTimeRemaining = timeUpdate.scoreboardSeconds;
+                            // scoreboard counts down from 5:00, but secondsElapsed counts up from 0.
+                            gameTickPacket.secondsElapsed = total_game_time_seconds - timeUpdate.scoreboardSeconds;
+                        }
+                    }
+                }
                 // TODO: lots more message handlers.
             }
         }
