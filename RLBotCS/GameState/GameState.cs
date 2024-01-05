@@ -89,6 +89,10 @@ namespace RLBotCS.GameState
                         }
                     }
                 }
+                else if (message is TeamScoreUpdate scoreUpdate)
+                {
+                    gameTickPacket.teamScores[scoreUpdate.team] = scoreUpdate.score;
+                }
                 // TODO: lots more message handlers.
             }
         }

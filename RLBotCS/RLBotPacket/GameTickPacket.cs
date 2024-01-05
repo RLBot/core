@@ -17,7 +17,7 @@ namespace RLBotCS.RLBotPacket
         public float gameTimeRemaining = 0;
         public float gameSpeed = 1;
         public int frameNum = 0;
-        public List<int> team_scores = [0, 0];
+        public List<int> teamScores = [0, 0];
 
         // TODO: tile information?
 
@@ -94,10 +94,10 @@ namespace RLBotCS.RLBotPacket
             };
 
             List<rlbot.flat.TeamInfoT> teams = new();
-            for (var i = 0; i < team_scores.Count; i++) {
+            for (var i = 0; i < teamScores.Count; i++) {
                 teams.Add(new() {
                     TeamIndex = i,
-                    Score = team_scores[i],
+                    Score = teamScores[i],
                 });
             }
 
