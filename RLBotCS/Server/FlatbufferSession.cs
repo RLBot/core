@@ -41,6 +41,10 @@ namespace RLBotCS.Server
             this.socketSpecWriter = new SocketSpecStreamWriter(stream);
         }
 
+        public void Close() {
+            stream.Close();
+        }
+
         public void RunBlocking()
         {
             foreach (var message in SocketSpecStreamReader.Read(stream))

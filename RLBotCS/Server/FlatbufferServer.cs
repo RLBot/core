@@ -85,6 +85,8 @@ namespace RLBotCS.Server
                 {
                     Console.WriteLine("Dropping connection to session due to: {0}", e);
                     sessions_to_remove.Add(session);
+                    // tell the socket to close
+                    session.Close();
                 }
             }
 
