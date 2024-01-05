@@ -1,6 +1,7 @@
 ﻿using rlbot.flat;
+using RLBotCS.Conversion;
 using RLBotCS.GameState;
-using RLBotModels.Command;
+using RLBotCS.Server;
 using RLBotModels.Message;
 using RLBotSecret.Controller;
 using RLBotSecret.Conversion;
@@ -12,6 +13,9 @@ namespace RLBotCS.GameControl
     {
         private PlayerMapping playerMapping;
         private MatchCommandSender matchCommandSender;
+        private TypedPayload? lastMatchSettings;
+        private float gravity = -650;
+        private bool isUnlimitedTime = false;
 
         public MatchStarter(TcpMessenger tcpMessenger, GameState.GameState gameState)
         {
@@ -19,13 +23,33 @@ namespace RLBotCS.GameControl
             this.matchCommandSender = new MatchCommandSender(tcpMessenger);
         }
 
-        public void HandleMatchSettings(rlbot.flat.MatchSettings matchSettings)
+        public void HandleMatchSettings(MatchSettingsT matchSettings, TypedPayload originalMessage)
         {
-            // TODO: load the map, then spawn the players AFTER the map loads.
+            if (matchSettings.MutatorSettings is MutatorSettingsT mutatorSettings) {
+                gravity = mutatorSettings.GravityOption switch
+                {
+                    GravityOption.Low => -325,
+                    GravityOption.High => -1137.5f,
+                    GravityOption.Super_High => -3250,
+                    _ => -650,
+                };
 
-            for (int i = 0; i < matchSettings.PlayerConfigurationsLength; i++)
+                isUnlimitedTime = mutatorSettings.MatchLength == MatchLength.Unlimited;
+            }
+
+            // Load the map, then spawn the players AFTER the map loads.
+            var load_map_command = FlatToCommand.MakeOpenCommand(matchSettings);
+            Console.WriteLine("Start match with command: " + load_map_command);
+            matchCommandSender.AddCommand(load_map_command);
+            matchCommandSender.Send();
+
+            Console.WriteLine("RLBotCS will wait 3 seconds for the map to load...");
+            Thread.Sleep(3000);
+            Console.WriteLine("RLBotCS is done waiting, spawning bots...");
+
+            for (int i = 0; i < matchSettings.PlayerConfigurations.Count; i++)
             {
-                var playerConfig = matchSettings.PlayerConfigurations(i).Value;
+                var playerConfig = matchSettings.PlayerConfigurations[i];
 
                 var alreadySpawnedPlayer = playerMapping.getKnownPlayers().FirstOrDefault((kp) => playerConfig.SpawnId == kp.spawnId);
                 if (alreadySpawnedPlayer != null)
@@ -34,9 +58,11 @@ namespace RLBotCS.GameControl
                     continue;
                 }
 
-                var loadout = FlatToModel.ToLoadout(playerConfig.Loadout.Value, playerConfig.Team);
+                var loadout = FlatToModel.ToLoadout(playerConfig.Loadout, playerConfig.Team);
 
-                switch (playerConfig.VarietyType)
+                Console.WriteLine("Spawning player " + playerConfig.Name + " with spawn id " + playerConfig.SpawnId);
+
+                switch (playerConfig.Variety.Type)
                 {
                     case PlayerClass.RLBotPlayer:
                         var rlbotSpawnCommandId = matchCommandSender.AddBotSpawn(playerConfig.Name, playerConfig.Team, BotSkill.Custom, loadout);
@@ -50,7 +76,7 @@ namespace RLBotCS.GameControl
                         });
                         break;
                     case PlayerClass.PsyonixBotPlayer:
-                        var skill = playerConfig.VarietyAsPsyonixBotPlayer().BotSkill;
+                        var skill = playerConfig.Variety.AsPsyonixBotPlayer().BotSkill;
                         var skillEnum = skill < 0.5 ? BotSkill.Easy : skill < 1 ? BotSkill.Medium : BotSkill.Hard;
                         var psySpawnCommandId = matchCommandSender.AddBotSpawn(playerConfig.Name, playerConfig.Team, skillEnum, loadout);
 
@@ -63,24 +89,28 @@ namespace RLBotCS.GameControl
                         });
                         break;
                     default:
-                        Console.WriteLine("Unable to spawn player with variety type: " + playerConfig.VarietyType);
+                        Console.WriteLine("Unable to spawn player with variety type: " + playerConfig.Variety.Type);
                         break;
                 }
-                
             }
 
             matchCommandSender.Send();
+
+            lastMatchSettings = originalMessage;
         }
 
-        static float getGravity(GravityOption gravityOption)
+        public TypedPayload? GetMatchSettings() {
+            return lastMatchSettings;
+        }
+
+        public bool IsUnlimitedTime()
         {
-            return gravityOption switch
-            {
-                GravityOption.Low => -325,
-                GravityOption.High => -1137.5f,
-                GravityOption.Super_High => -3250,
-                _ => -650,
-            };
+            return isUnlimitedTime;
+        }
+
+        public float GetGravity()
+        {
+            return gravity;
         }
     }
 }

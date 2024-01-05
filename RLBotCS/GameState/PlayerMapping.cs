@@ -48,7 +48,8 @@ namespace RLBotCS.GameState
                 {
                     playerIndex = playerIndex,
                     isCustomBot = spawnTracker.isCustomBot,
-                    actorId = carSpawn.actorId
+                    actorId = carSpawn.actorId,
+                    spawnId = spawnTracker.spawnId,
                 };
             }
             else

@@ -41,23 +41,22 @@ namespace RLBotSecret.Conversion
             return new Rotator() { pitch = r.Pitch, yaw = r.Yaw, roll = r.Roll };
         }
 
-        static internal Loadout ToLoadout(rlbot.flat.PlayerLoadout l, int team)
+        static internal Loadout ToLoadout(rlbot.flat.PlayerLoadoutT l, int team)
         {
             System.Drawing.Color primaryColor;
-            if (l.PrimaryColorLookup.HasValue)
+            if (l.PrimaryColorLookup is rlbot.flat.ColorT p)
             {
-                var c = l.PrimaryColorLookup.Value;
-                primaryColor = System.Drawing.Color.FromArgb(c.A, c.R, c.G, c.B);
-            } else
+                primaryColor = System.Drawing.Color.FromArgb(p.A, p.R, p.G, p.B);
+            }
+            else
             {
                 primaryColor = ColorSwatches.GetPrimary(l.TeamColorId, team);
             }
 
             System.Drawing.Color secondaryColor;
-            if (l.SecondaryColorLookup.HasValue)
+            if (l.SecondaryColorLookup is rlbot.flat.ColorT s)
             {
-                var c = l.SecondaryColorLookup.Value;
-                secondaryColor = System.Drawing.Color.FromArgb(c.A, c.R, c.G, c.B);
+                secondaryColor = System.Drawing.Color.FromArgb(s.A, s.R, s.G, s.B);
             }
             else
             {

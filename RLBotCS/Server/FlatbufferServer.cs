@@ -19,6 +19,7 @@ namespace RLBotCS.Server
         PlayerMapping playerMapping;
         MatchStarter matchStarter;
         List<FlatbufferSession> sessions = new();
+        bool communicationStarted = false;
 
         public FlatbufferServer(int port, TcpMessenger tcpGameInterface, PlayerMapping playerMapping, MatchStarter matchStarter)
         {
@@ -29,6 +30,10 @@ namespace RLBotCS.Server
             IPAddress localAddr = IPAddress.Parse("127.0.0.1");
             server = new TcpListener(localAddr, port);
             server.Start();
+        }
+
+        public void StartCommunications() {
+            communicationStarted = true;
         }
 
         public void StartListener()
@@ -56,6 +61,8 @@ namespace RLBotCS.Server
         internal void SendGameStateToClients(GameState.GameState gameState)
         {
             TypedPayload gameTickPacket = gameState.gameTickPacket.ToFlatbuffer();
+            List<FlatbufferSession> sessions_to_remove = new();
+
             foreach (FlatbufferSession session in sessions)
             {
                 if (!session.IsReady)
@@ -64,11 +71,29 @@ namespace RLBotCS.Server
                 }
                 if (session.NeedsIntroData)
                 {
-                    // TODO: send intro data like match settings, field info packet
+                    if (matchStarter.GetMatchSettings() is TypedPayload matchSettings)
+                    {
+                        session.SendIntroData(matchSettings);
+                    }
                 }
 
-                
-                session.SendPayloadToClient(gameTickPacket);
+                try
+                {
+                    session.SendPayloadToClient(gameTickPacket);
+                }
+                catch (IOException e)
+                {
+                    Console.WriteLine("Dropping connection to session due to: {0}", e);
+                    sessions_to_remove.Add(session);
+                    // tell the socket to close
+                    session.Close();
+                }
+            }
+
+            // remove sessions that have disconnected
+            foreach (FlatbufferSession session in sessions_to_remove)
+            {
+                sessions.Remove(session);
             }
         }
 
@@ -82,6 +107,13 @@ namespace RLBotCS.Server
 
             var session = new FlatbufferSession(stream, gameController, playerMapping);
             sessions.Add(session);
+
+            // wait until we get our first message from Rocket Leauge
+            // before we start accepting messages from the client
+            // they might make us do things before the game is ready
+            while (!communicationStarted) {
+                Thread.Sleep(100);
+            }
             session.RunBlocking();
         }
     }

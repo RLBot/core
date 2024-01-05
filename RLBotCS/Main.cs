@@ -6,9 +6,12 @@ using RLBotSecret.Conversion;
 using RLBotSecret.Controller;
 using RLBotSecret.TCP;
 using RLBotCS.GameControl;
+using rlbot.flat;
 
 var converter = new Converter();
-var port = 23233;
+
+// read the port from the command line arg or default to 23233
+var port = args.Length > 0 ? int.Parse(args[0]) : 23233;
 
 var messenger = new TcpMessenger(port);
 var gotFirstMessage = false;
@@ -29,9 +32,12 @@ foreach (var messageClump in messenger)
     {
         Console.WriteLine("RLBot is now receiving messages from Rocket League!");
         gotFirstMessage = true;
+        flatbufferServer.StartCommunications();
     }
 
     var messageBundle = converter.Convert(messageClump);
+    gameState.gameTickPacket.isUnlimitedTime = matchStarter.IsUnlimitedTime();
+    gameState.gameTickPacket.worldGravityZ = matchStarter.GetGravity();
     gameState.applyMessage(messageBundle);
 
     flatbufferServer.SendGameStateToClients(gameState);

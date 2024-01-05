@@ -13,9 +13,8 @@ namespace RLBotCS.GameState
         {
             foreach (var message in messageBundle.messages)
             {
-                if (message is CarSpawn)
+                if (message is CarSpawn carSpawn)
                 {
-                    var carSpawn = (CarSpawn)message;
                     var metadata = playerMapping.applyCarSpawn((CarSpawn)message);
                     gameTickPacket.gameCars[metadata.playerIndex] = new GameCar()
                     {
@@ -23,12 +22,12 @@ namespace RLBotCS.GameState
                         isBot = metadata.isBot,
                         hitbox = carSpawn.hitbox.dimensions,
                         hitboxOffset = carSpawn.hitbox.offset,
-                        team = carSpawn.team
+                        team = carSpawn.team,
+                        spawnId = metadata.spawnId.HasValue ? metadata.spawnId.Value : 0,
                     };
                 }
-                else if (message is ActorDespawn)
+                else if (message is ActorDespawn despawn)
                 {
-                    var despawn = (ActorDespawn)message;
                     var actorId = despawn.actorId;
                     var playerMetadata = playerMapping.tryRemoveActorId(actorId);
                     if (playerMetadata != null)
@@ -36,9 +35,8 @@ namespace RLBotCS.GameState
                         gameTickPacket.gameCars.Remove(playerMetadata.playerIndex);
                     }
                 }
-                else if (message is PhysicsUpdate)
+                else if (message is PhysicsUpdate physicsUpdate)
                 {
-                    var physicsUpdate = (PhysicsUpdate)message;
                     foreach (var carUpdate in physicsUpdate.carUpdates)
                     {
                         var actorId = carUpdate.Key;
@@ -56,15 +54,44 @@ namespace RLBotCS.GameState
                         gameTickPacket.ball.physics = physicsUpdate.ballUpdate.Value;
                     }
                 }
-                else if (message is PlayerBoostUpdate)
+                else if (message is PlayerBoostUpdate boostUpdate)
                 {
-                    var boostUpdate = (PlayerBoostUpdate)message;
                     var playerIndex = playerMapping.PlayerIndexFromActorId(boostUpdate.actorId);
                     if (playerIndex.HasValue)
                     {
                         var car = gameTickPacket.gameCars[playerIndex.Value];
                         car.boost = boostUpdate.boostRemaining;
                     }
+                }
+                else if (message is GameStateTransition stateTransition)
+                {
+                    gameTickPacket.isOvertime = stateTransition.isOvertime;
+                    gameTickPacket.gameState = stateTransition.gameState;
+                }
+                else if (message is ScoreboardTimeUpdate timeUpdate)
+                {
+                    if (gameTickPacket.isUnlimitedTime) {
+                        gameTickPacket.secondsElapsed = timeUpdate.scoreboardSeconds;
+                        gameTickPacket.gameTimeRemaining = float.MaxValue;
+                    } else {
+                        // TODO: account for matches longer than 5 minutes
+                        var total_game_time_seconds = 5 * 60;
+
+                        if (gameTickPacket.isOvertime) {
+                            // TODO: account for time-limited overtime
+                            gameTickPacket.gameTimeRemaining = float.MaxValue;
+                            // during overtime, the scoreboard counts up
+                            gameTickPacket.secondsElapsed = total_game_time_seconds + timeUpdate.scoreboardSeconds;
+                        } else {
+                            gameTickPacket.gameTimeRemaining = timeUpdate.scoreboardSeconds;
+                            // scoreboard counts down from 5:00, but secondsElapsed counts up from 0.
+                            gameTickPacket.secondsElapsed = total_game_time_seconds - timeUpdate.scoreboardSeconds;
+                        }
+                    }
+                }
+                else if (message is TeamScoreUpdate scoreUpdate)
+                {
+                    gameTickPacket.teamScores[scoreUpdate.team] = scoreUpdate.score;
                 }
                 // TODO: lots more message handlers.
             }

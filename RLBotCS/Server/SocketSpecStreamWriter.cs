@@ -3,9 +3,9 @@
 namespace RLBotCS.Server
 {
     /**
-	 * Communicates with bots and scripts over TCP according to the spec
-	 * defined at https://github.com/RLBot/RLBot/wiki/Sockets-Specification
-	 */
+     * Communicates with bots and scripts over TCP according to the spec
+     * defined at https://github.com/RLBot/RLBot/wiki/Sockets-Specification
+     */
     internal class SocketSpecStreamWriter
     {
         Stream stream;
@@ -29,8 +29,8 @@ namespace RLBotCS.Server
 
         void WriteBigEndian(ushort value, byte[] buffer)
         {
-            buffer[1] = (byte)((value >> 8) & 0xFF);
-            buffer[0] = (byte)((value) & 0xFF);
+            buffer[0] = (byte)((value >> 8) & 0xFF);
+            buffer[1] = (byte)((value) & 0xFF);
         }
 
         internal void Write(TypedPayload message)

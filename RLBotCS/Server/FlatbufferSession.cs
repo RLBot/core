@@ -41,13 +41,16 @@ namespace RLBotCS.Server
             this.socketSpecWriter = new SocketSpecStreamWriter(stream);
         }
 
+        public void Close() {
+            stream.Close();
+        }
+
         public void RunBlocking()
         {
             foreach (var message in SocketSpecStreamReader.Read(stream))
             {
                 var byteBuffer = new ByteBuffer(message.payload.Array, message.payload.Offset);
-                
-               
+
                 switch (message.type)
                 {
                     case DataType.ReadyMessage:
@@ -60,7 +63,7 @@ namespace RLBotCS.Server
                         break;
                     case DataType.MatchSettings:
                         var matchSettings = rlbot.flat.MatchSettings.GetRootAsMatchSettings(byteBuffer);
-                        gameController.matchStarter.HandleMatchSettings(matchSettings);
+                        gameController.matchStarter.HandleMatchSettings(matchSettings.UnPack(), message);
                         break;
                     case DataType.PlayerInput:
                         var playerInputMsg = PlayerInput.GetRootAsPlayerInput(byteBuffer);
@@ -87,6 +90,20 @@ namespace RLBotCS.Server
                         break;
                 }
             }
+        }
+
+        public void SendIntroData(TypedPayload matchSettings)
+        {
+            if (matchSettings.type != DataType.MatchSettings)
+            {
+                throw new Exception("Expected match settings, got " + matchSettings.type);
+            }
+
+            Console.WriteLine("RLBotCS sent intro data to client.");
+            socketSpecWriter.Write(matchSettings);
+            
+            // TODO: send field info packet before setting this to false
+            NeedsIntroData = false;
         }
 
         internal void SendPayloadToClient(TypedPayload payload)
