@@ -22,7 +22,7 @@ namespace RLBotCS.GameControl
             this.matchCommandSender = new MatchCommandSender(tcpMessenger);
         }
 
-        public void HandleMatchSettings(rlbot.flat.MatchSettingsT matchSettings, TypedPayload originalMessage)
+        public void HandleMatchSettings(MatchSettingsT matchSettings, TypedPayload originalMessage)
         {
             if (matchSettings.MutatorSettings is MutatorSettingsT mutatorSettings) {
                 gravityOption = mutatorSettings.GravityOption;

@@ -1,3 +1,0 @@
-echo Generating flatbuffers header file...
-
-../flatbuffers-schema/flatc --csharp --gen-object-api --gen-onefile -o ./ ../flatbuffers-schema/rlbot.fbs

@@ -1,5 +1,6 @@
 ﻿using Google.FlatBuffers;
 using RLBotCS.Server;
+using RLBotModels.Message;
 
 namespace RLBotCS.RLBotPacket
 {
@@ -9,9 +10,7 @@ namespace RLBotCS.RLBotPacket
         public List<BoostPadStatus> gameBoosts = new();
         public Ball ball = new();
         public bool isOvertime = false;
-        public bool isRoundActive = false;
-        public bool isKickoffPause = false;
-        public bool isMatchEnded = false;
+        public GameStateType gameState = GameStateType.Inactive;
         public float worldGravityZ = -650;
         public float secondsElapsed = 0;
         public float gameTimeRemaining = 0;
@@ -69,14 +68,25 @@ namespace RLBotCS.RLBotPacket
                 LatestTouch = lastTouch
             };
 
+            rlbot.flat.GameStateType gameStateType = gameState switch
+            {
+                GameStateType.Inactive => rlbot.flat.GameStateType.Inactive,
+                GameStateType.Countdown => rlbot.flat.GameStateType.Countdown,
+                GameStateType.Kickoff => rlbot.flat.GameStateType.Kickoff,
+                GameStateType.Active => rlbot.flat.GameStateType.Active,
+                GameStateType.GoalScored => rlbot.flat.GameStateType.GoalScored,
+                GameStateType.Replay => rlbot.flat.GameStateType.Replay,
+                GameStateType.Paused => rlbot.flat.GameStateType.Paused,
+                GameStateType.Ended => rlbot.flat.GameStateType.Ended,
+                _ => rlbot.flat.GameStateType.Inactive,
+            };
+
             rlbot.flat.GameInfoT gameInfo = new() {
                 SecondsElapsed = secondsElapsed,
                 GameTimeRemaining = gameTimeRemaining,
                 IsOvertime = isOvertime,
                 IsUnlimitedTime = false,
-                IsRoundActive = isRoundActive,
-                IsKickoffPause = isKickoffPause,
-                IsMatchEnded = isMatchEnded,
+                GameStateType = gameStateType,
                 WorldGravityZ = worldGravityZ,
                 GameSpeed = gameSpeed,
                 FrameNum = frameNum,

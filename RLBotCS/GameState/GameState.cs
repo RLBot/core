@@ -66,47 +66,7 @@ namespace RLBotCS.GameState
                 else if (message is GameStateTransition stateTransition)
                 {
                     gameTickPacket.isOvertime = stateTransition.isOvertime;
-
-                    switch (stateTransition.gameState) {
-                        case GameStateType.Inactive:
-                            gameTickPacket.isMatchEnded = true;
-                            gameTickPacket.isRoundActive = false;
-                            gameTickPacket.isKickoffPause = false;
-                            break;
-                        case GameStateType.Countdown:
-                            gameTickPacket.isMatchEnded = false;
-                            gameTickPacket.isKickoffPause = true;
-                            gameTickPacket.isRoundActive = false;
-                            break;
-                        case GameStateType.Kickoff:
-                            gameTickPacket.isMatchEnded = false;
-                            gameTickPacket.isKickoffPause = true;
-                            gameTickPacket.isRoundActive = true;
-                            break;
-                        case GameStateType.Active:
-                            gameTickPacket.isMatchEnded = false;
-                            gameTickPacket.isKickoffPause = false;
-                            gameTickPacket.isRoundActive = true;
-                            break;
-                        case GameStateType.GoalScored:
-                            gameTickPacket.isMatchEnded = false;
-                            gameTickPacket.isKickoffPause = false;
-                            gameTickPacket.isRoundActive = false;
-                            break;
-                        case GameStateType.Replay:
-                            gameTickPacket.isMatchEnded = false;
-                            gameTickPacket.isKickoffPause = false;
-                            gameTickPacket.isRoundActive = false;
-                            break;
-                        case GameStateType.Paused:
-                            gameTickPacket.isRoundActive = false;
-                            break;
-                        case GameStateType.Ended:
-                            gameTickPacket.isMatchEnded = true;
-                            gameTickPacket.isKickoffPause = false;
-                            gameTickPacket.isRoundActive = false;
-                            break;
-                    }
+                    gameTickPacket.gameState = stateTransition.gameState;
                 }
                 // TODO: lots more message handlers.
             }

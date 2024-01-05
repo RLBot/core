@@ -80,6 +80,26 @@ public enum TileState : sbyte
   Open = 3,
 };
 
+public enum GameStateType : sbyte
+{
+  /// Game has not been created yet
+  Inactive = 0,
+  /// 3-2-1 countdown
+  Countdown = 1,
+  /// After countdown, but before ball has been hit
+  Kickoff = 2,
+  /// Ball has been hit
+  Active = 3,
+  /// A goal was scored. Waiting for replay.
+  GoalScored = 4,
+  /// Watching replay
+  Replay = 5,
+  /// Game paused
+  Paused = 6,
+  /// Match has ended
+  Ended = 7,
+};
+
 public enum RenderType : sbyte
 {
   DrawLine2D = 1,
@@ -562,14 +582,14 @@ public struct ControllerState : IFlatbufferObject
       bool jump = false,
       bool boost = false,
       bool handbrake = false,
-      bool useItem = false) {
+      bool use_item = false) {
     builder.StartTable(9);
     ControllerState.AddRoll(builder, roll);
     ControllerState.AddYaw(builder, yaw);
     ControllerState.AddPitch(builder, pitch);
     ControllerState.AddSteer(builder, steer);
     ControllerState.AddThrottle(builder, throttle);
-    ControllerState.AddUseItem(builder, useItem);
+    ControllerState.AddUseItem(builder, use_item);
     ControllerState.AddHandbrake(builder, handbrake);
     ControllerState.AddBoost(builder, boost);
     ControllerState.AddJump(builder, jump);
@@ -679,11 +699,11 @@ public struct PlayerInput : IFlatbufferObject
   public rlbot.flat.ControllerState? ControllerState { get { int o = __p.__offset(6); return o != 0 ? (rlbot.flat.ControllerState?)(new rlbot.flat.ControllerState()).__assign(__p.__indirect(o + __p.bb_pos), __p.bb) : null; } }
 
   public static Offset<rlbot.flat.PlayerInput> CreatePlayerInput(FlatBufferBuilder builder,
-      int playerIndex = 0,
-      Offset<rlbot.flat.ControllerState> controllerStateOffset = default(Offset<rlbot.flat.ControllerState>)) {
+      int player_index = 0,
+      Offset<rlbot.flat.ControllerState> controller_stateOffset = default(Offset<rlbot.flat.ControllerState>)) {
     builder.StartTable(2);
-    PlayerInput.AddControllerState(builder, controllerStateOffset);
-    PlayerInput.AddPlayerIndex(builder, playerIndex);
+    PlayerInput.AddControllerState(builder, controller_stateOffset);
+    PlayerInput.AddPlayerIndex(builder, player_index);
     return PlayerInput.EndPlayerInput(builder);
   }
 
@@ -705,11 +725,11 @@ public struct PlayerInput : IFlatbufferObject
   }
   public static Offset<rlbot.flat.PlayerInput> Pack(FlatBufferBuilder builder, PlayerInputT _o) {
     if (_o == null) return default(Offset<rlbot.flat.PlayerInput>);
-    var _controllerState = _o.ControllerState == null ? default(Offset<rlbot.flat.ControllerState>) : rlbot.flat.ControllerState.Pack(builder, _o.ControllerState);
+    var _controller_state = _o.ControllerState == null ? default(Offset<rlbot.flat.ControllerState>) : rlbot.flat.ControllerState.Pack(builder, _o.ControllerState);
     return CreatePlayerInput(
       builder,
       _o.PlayerIndex,
-      _controllerState);
+      _controller_state);
   }
 }
 
@@ -1135,19 +1155,19 @@ public struct Touch : IFlatbufferObject
   public int PlayerIndex { get { int o = __p.__offset(14); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)0; } }
 
   public static Offset<rlbot.flat.Touch> CreateTouch(FlatBufferBuilder builder,
-      StringOffset playerNameOffset = default(StringOffset),
-      float gameSeconds = 0.0f,
+      StringOffset player_nameOffset = default(StringOffset),
+      float game_seconds = 0.0f,
       rlbot.flat.Vector3T location = null,
       rlbot.flat.Vector3T normal = null,
       int team = 0,
-      int playerIndex = 0) {
+      int player_index = 0) {
     builder.StartTable(6);
-    Touch.AddPlayerIndex(builder, playerIndex);
+    Touch.AddPlayerIndex(builder, player_index);
     Touch.AddTeam(builder, team);
     Touch.AddNormal(builder, rlbot.flat.Vector3.Pack(builder, normal));
     Touch.AddLocation(builder, rlbot.flat.Vector3.Pack(builder, location));
-    Touch.AddGameSeconds(builder, gameSeconds);
-    Touch.AddPlayerName(builder, playerNameOffset);
+    Touch.AddGameSeconds(builder, game_seconds);
+    Touch.AddPlayerName(builder, player_nameOffset);
     return Touch.EndTouch(builder);
   }
 
@@ -1177,10 +1197,10 @@ public struct Touch : IFlatbufferObject
   }
   public static Offset<rlbot.flat.Touch> Pack(FlatBufferBuilder builder, TouchT _o) {
     if (_o == null) return default(Offset<rlbot.flat.Touch>);
-    var _playerName = _o.PlayerName == null ? default(StringOffset) : builder.CreateString(_o.PlayerName);
+    var _player_name = _o.PlayerName == null ? default(StringOffset) : builder.CreateString(_o.PlayerName);
     return CreateTouch(
       builder,
-      _playerName,
+      _player_name,
       _o.GameSeconds,
       _o.Location,
       _o.Normal,
@@ -1244,7 +1264,7 @@ public struct ScoreInfo : IFlatbufferObject
   public static Offset<rlbot.flat.ScoreInfo> CreateScoreInfo(FlatBufferBuilder builder,
       int score = 0,
       int goals = 0,
-      int ownGoals = 0,
+      int own_goals = 0,
       int assists = 0,
       int saves = 0,
       int shots = 0,
@@ -1254,7 +1274,7 @@ public struct ScoreInfo : IFlatbufferObject
     ScoreInfo.AddShots(builder, shots);
     ScoreInfo.AddSaves(builder, saves);
     ScoreInfo.AddAssists(builder, assists);
-    ScoreInfo.AddOwnGoals(builder, ownGoals);
+    ScoreInfo.AddOwnGoals(builder, own_goals);
     ScoreInfo.AddGoals(builder, goals);
     ScoreInfo.AddScore(builder, score);
     return ScoreInfo.EndScoreInfo(builder);
@@ -1450,34 +1470,34 @@ public struct PlayerInfo : IFlatbufferObject
 
   public static Offset<rlbot.flat.PlayerInfo> CreatePlayerInfo(FlatBufferBuilder builder,
       Offset<rlbot.flat.Physics> physicsOffset = default(Offset<rlbot.flat.Physics>),
-      Offset<rlbot.flat.ScoreInfo> scoreInfoOffset = default(Offset<rlbot.flat.ScoreInfo>),
-      bool isDemolished = false,
-      bool hasWheelContact = false,
-      bool isSupersonic = false,
-      bool isBot = false,
+      Offset<rlbot.flat.ScoreInfo> score_infoOffset = default(Offset<rlbot.flat.ScoreInfo>),
+      bool is_demolished = false,
+      bool has_wheel_contact = false,
+      bool is_supersonic = false,
+      bool is_bot = false,
       bool jumped = false,
-      bool doubleJumped = false,
+      bool double_jumped = false,
       StringOffset nameOffset = default(StringOffset),
       int team = 0,
       int boost = 0,
-      Offset<rlbot.flat.BoxShape> hitboxOOffset = default(Offset<rlbot.flat.BoxShape>),
-      rlbot.flat.Vector3T hitboxOffset = null,
-      int spawnId = 0) {
+      Offset<rlbot.flat.BoxShape> hitboxOffset = default(Offset<rlbot.flat.BoxShape>),
+      rlbot.flat.Vector3T hitbox_offset = null,
+      int spawn_id = 0) {
     builder.StartTable(14);
-    PlayerInfo.AddSpawnId(builder, spawnId);
-    PlayerInfo.AddHitboxOffset(builder, rlbot.flat.Vector3.Pack(builder, hitboxOffset));
-    PlayerInfo.AddHitbox(builder, hitboxOOffset);
+    PlayerInfo.AddSpawnId(builder, spawn_id);
+    PlayerInfo.AddHitboxOffset(builder, rlbot.flat.Vector3.Pack(builder, hitbox_offset));
+    PlayerInfo.AddHitbox(builder, hitboxOffset);
     PlayerInfo.AddBoost(builder, boost);
     PlayerInfo.AddTeam(builder, team);
     PlayerInfo.AddName(builder, nameOffset);
-    PlayerInfo.AddScoreInfo(builder, scoreInfoOffset);
+    PlayerInfo.AddScoreInfo(builder, score_infoOffset);
     PlayerInfo.AddPhysics(builder, physicsOffset);
-    PlayerInfo.AddDoubleJumped(builder, doubleJumped);
+    PlayerInfo.AddDoubleJumped(builder, double_jumped);
     PlayerInfo.AddJumped(builder, jumped);
-    PlayerInfo.AddIsBot(builder, isBot);
-    PlayerInfo.AddIsSupersonic(builder, isSupersonic);
-    PlayerInfo.AddHasWheelContact(builder, hasWheelContact);
-    PlayerInfo.AddIsDemolished(builder, isDemolished);
+    PlayerInfo.AddIsBot(builder, is_bot);
+    PlayerInfo.AddIsSupersonic(builder, is_supersonic);
+    PlayerInfo.AddHasWheelContact(builder, has_wheel_contact);
+    PlayerInfo.AddIsDemolished(builder, is_demolished);
     return PlayerInfo.EndPlayerInfo(builder);
   }
 
@@ -1524,13 +1544,13 @@ public struct PlayerInfo : IFlatbufferObject
   public static Offset<rlbot.flat.PlayerInfo> Pack(FlatBufferBuilder builder, PlayerInfoT _o) {
     if (_o == null) return default(Offset<rlbot.flat.PlayerInfo>);
     var _physics = _o.Physics == null ? default(Offset<rlbot.flat.Physics>) : rlbot.flat.Physics.Pack(builder, _o.Physics);
-    var _scoreInfo = _o.ScoreInfo == null ? default(Offset<rlbot.flat.ScoreInfo>) : rlbot.flat.ScoreInfo.Pack(builder, _o.ScoreInfo);
+    var _score_info = _o.ScoreInfo == null ? default(Offset<rlbot.flat.ScoreInfo>) : rlbot.flat.ScoreInfo.Pack(builder, _o.ScoreInfo);
     var _name = _o.Name == null ? default(StringOffset) : builder.CreateString(_o.Name);
     var _hitbox = _o.Hitbox == null ? default(Offset<rlbot.flat.BoxShape>) : rlbot.flat.BoxShape.Pack(builder, _o.Hitbox);
     return CreatePlayerInfo(
       builder,
       _physics,
-      _scoreInfo,
+      _score_info,
       _o.IsDemolished,
       _o.HasWheelContact,
       _o.IsSupersonic,
@@ -1619,13 +1639,13 @@ public struct DropShotBallInfo : IFlatbufferObject
   public float ForceAccumRecent { get { int o = __p.__offset(8); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
 
   public static Offset<rlbot.flat.DropShotBallInfo> CreateDropShotBallInfo(FlatBufferBuilder builder,
-      float absorbedForce = 0.0f,
-      int damageIndex = 0,
-      float forceAccumRecent = 0.0f) {
+      float absorbed_force = 0.0f,
+      int damage_index = 0,
+      float force_accum_recent = 0.0f) {
     builder.StartTable(3);
-    DropShotBallInfo.AddForceAccumRecent(builder, forceAccumRecent);
-    DropShotBallInfo.AddDamageIndex(builder, damageIndex);
-    DropShotBallInfo.AddAbsorbedForce(builder, absorbedForce);
+    DropShotBallInfo.AddForceAccumRecent(builder, force_accum_recent);
+    DropShotBallInfo.AddDamageIndex(builder, damage_index);
+    DropShotBallInfo.AddAbsorbedForce(builder, absorbed_force);
     return DropShotBallInfo.EndDropShotBallInfo(builder);
   }
 
@@ -1703,14 +1723,14 @@ public struct BallInfo : IFlatbufferObject
 
   public static Offset<rlbot.flat.BallInfo> CreateBallInfo(FlatBufferBuilder builder,
       Offset<rlbot.flat.Physics> physicsOffset = default(Offset<rlbot.flat.Physics>),
-      Offset<rlbot.flat.Touch> latestTouchOffset = default(Offset<rlbot.flat.Touch>),
-      Offset<rlbot.flat.DropShotBallInfo> dropShotInfoOffset = default(Offset<rlbot.flat.DropShotBallInfo>),
+      Offset<rlbot.flat.Touch> latest_touchOffset = default(Offset<rlbot.flat.Touch>),
+      Offset<rlbot.flat.DropShotBallInfo> drop_shot_infoOffset = default(Offset<rlbot.flat.DropShotBallInfo>),
       rlbot.flat.CollisionShape shape_type = rlbot.flat.CollisionShape.NONE,
       int shapeOffset = 0) {
     builder.StartTable(5);
     BallInfo.AddShape(builder, shapeOffset);
-    BallInfo.AddDropShotInfo(builder, dropShotInfoOffset);
-    BallInfo.AddLatestTouch(builder, latestTouchOffset);
+    BallInfo.AddDropShotInfo(builder, drop_shot_infoOffset);
+    BallInfo.AddLatestTouch(builder, latest_touchOffset);
     BallInfo.AddPhysics(builder, physicsOffset);
     BallInfo.AddShapeType(builder, shape_type);
     return BallInfo.EndBallInfo(builder);
@@ -1753,15 +1773,15 @@ public struct BallInfo : IFlatbufferObject
   public static Offset<rlbot.flat.BallInfo> Pack(FlatBufferBuilder builder, BallInfoT _o) {
     if (_o == null) return default(Offset<rlbot.flat.BallInfo>);
     var _physics = _o.Physics == null ? default(Offset<rlbot.flat.Physics>) : rlbot.flat.Physics.Pack(builder, _o.Physics);
-    var _latestTouch = _o.LatestTouch == null ? default(Offset<rlbot.flat.Touch>) : rlbot.flat.Touch.Pack(builder, _o.LatestTouch);
-    var _dropShotInfo = _o.DropShotInfo == null ? default(Offset<rlbot.flat.DropShotBallInfo>) : rlbot.flat.DropShotBallInfo.Pack(builder, _o.DropShotInfo);
+    var _latest_touch = _o.LatestTouch == null ? default(Offset<rlbot.flat.Touch>) : rlbot.flat.Touch.Pack(builder, _o.LatestTouch);
+    var _drop_shot_info = _o.DropShotInfo == null ? default(Offset<rlbot.flat.DropShotBallInfo>) : rlbot.flat.DropShotBallInfo.Pack(builder, _o.DropShotInfo);
     var _shape_type = _o.Shape == null ? rlbot.flat.CollisionShape.NONE : _o.Shape.Type;
     var _shape = _o.Shape == null ? 0 : rlbot.flat.CollisionShapeUnion.Pack(builder, _o.Shape);
     return CreateBallInfo(
       builder,
       _physics,
-      _latestTouch,
-      _dropShotInfo,
+      _latest_touch,
+      _drop_shot_info,
       _shape_type,
       _shape);
   }
@@ -1812,11 +1832,11 @@ public struct BoostPadState : IFlatbufferObject
   public float Timer { get { int o = __p.__offset(6); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
 
   public static Offset<rlbot.flat.BoostPadState> CreateBoostPadState(FlatBufferBuilder builder,
-      bool isActive = false,
+      bool is_active = false,
       float timer = 0.0f) {
     builder.StartTable(2);
     BoostPadState.AddTimer(builder, timer);
-    BoostPadState.AddIsActive(builder, isActive);
+    BoostPadState.AddIsActive(builder, is_active);
     return BoostPadState.EndBoostPadState(builder);
   }
 
@@ -1881,9 +1901,9 @@ public struct DropshotTile : IFlatbufferObject
   public rlbot.flat.TileState TileState { get { int o = __p.__offset(4); return o != 0 ? (rlbot.flat.TileState)__p.bb.GetSbyte(o + __p.bb_pos) : rlbot.flat.TileState.Unknown; } }
 
   public static Offset<rlbot.flat.DropshotTile> CreateDropshotTile(FlatBufferBuilder builder,
-      rlbot.flat.TileState tileState = rlbot.flat.TileState.Unknown) {
+      rlbot.flat.TileState tile_state = rlbot.flat.TileState.Unknown) {
     builder.StartTable(1);
-    DropshotTile.AddTileState(builder, tileState);
+    DropshotTile.AddTileState(builder, tile_state);
     return DropshotTile.EndDropshotTile(builder);
   }
 
@@ -1942,58 +1962,45 @@ public struct GameInfo : IFlatbufferObject
   public float GameTimeRemaining { get { int o = __p.__offset(6); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
   public bool IsOvertime { get { int o = __p.__offset(8); return o != 0 ? 0!=__p.bb.Get(o + __p.bb_pos) : (bool)false; } }
   public bool IsUnlimitedTime { get { int o = __p.__offset(10); return o != 0 ? 0!=__p.bb.Get(o + __p.bb_pos) : (bool)false; } }
-  /// True when cars are allowed to move, and during the pause menu. False during replays.
-  public bool IsRoundActive { get { int o = __p.__offset(12); return o != 0 ? 0!=__p.bb.Get(o + __p.bb_pos) : (bool)false; } }
-  /// True when the clock is paused due to kickoff, but false during kickoff countdown. In other words, it is true
-  /// while cars can move during kickoff. Note that if both players sit still, game clock start and this will become false.
-  public bool IsKickoffPause { get { int o = __p.__offset(14); return o != 0 ? 0!=__p.bb.Get(o + __p.bb_pos) : (bool)false; } }
-  /// Turns true after final replay, the moment the 'winner' screen appears. Remains true during next match
-  /// countdown. Turns false again the moment the 'choose team' screen appears.
-  public bool IsMatchEnded { get { int o = __p.__offset(16); return o != 0 ? 0!=__p.bb.Get(o + __p.bb_pos) : (bool)false; } }
-  public float WorldGravityZ { get { int o = __p.__offset(18); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
+  public rlbot.flat.GameStateType GameStateType { get { int o = __p.__offset(12); return o != 0 ? (rlbot.flat.GameStateType)__p.bb.GetSbyte(o + __p.bb_pos) : rlbot.flat.GameStateType.Inactive; } }
+  public float WorldGravityZ { get { int o = __p.__offset(14); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
   /// Game speed multiplier, 1.0 is regular game speed.
-  public float GameSpeed { get { int o = __p.__offset(20); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
+  public float GameSpeed { get { int o = __p.__offset(16); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
   /// Tracks the number of physics frames the game has computed.
   /// May increase by more than one across consecutive packets.
   /// Data type will roll over after 207 days at 120Hz.
-  public int FrameNum { get { int o = __p.__offset(22); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)0; } }
+  public int FrameNum { get { int o = __p.__offset(18); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)0; } }
 
   public static Offset<rlbot.flat.GameInfo> CreateGameInfo(FlatBufferBuilder builder,
-      float secondsElapsed = 0.0f,
-      float gameTimeRemaining = 0.0f,
-      bool isOvertime = false,
-      bool isUnlimitedTime = false,
-      bool isRoundActive = false,
-      bool isKickoffPause = false,
-      bool isMatchEnded = false,
-      float worldGravityZ = 0.0f,
-      float gameSpeed = 0.0f,
-      int frameNum = 0) {
-    builder.StartTable(10);
-    GameInfo.AddFrameNum(builder, frameNum);
-    GameInfo.AddGameSpeed(builder, gameSpeed);
-    GameInfo.AddWorldGravityZ(builder, worldGravityZ);
-    GameInfo.AddGameTimeRemaining(builder, gameTimeRemaining);
-    GameInfo.AddSecondsElapsed(builder, secondsElapsed);
-    GameInfo.AddIsMatchEnded(builder, isMatchEnded);
-    GameInfo.AddIsKickoffPause(builder, isKickoffPause);
-    GameInfo.AddIsRoundActive(builder, isRoundActive);
-    GameInfo.AddIsUnlimitedTime(builder, isUnlimitedTime);
-    GameInfo.AddIsOvertime(builder, isOvertime);
+      float seconds_elapsed = 0.0f,
+      float game_time_remaining = 0.0f,
+      bool is_overtime = false,
+      bool is_unlimited_time = false,
+      rlbot.flat.GameStateType game_state_type = rlbot.flat.GameStateType.Inactive,
+      float world_gravity_z = 0.0f,
+      float game_speed = 0.0f,
+      int frame_num = 0) {
+    builder.StartTable(8);
+    GameInfo.AddFrameNum(builder, frame_num);
+    GameInfo.AddGameSpeed(builder, game_speed);
+    GameInfo.AddWorldGravityZ(builder, world_gravity_z);
+    GameInfo.AddGameTimeRemaining(builder, game_time_remaining);
+    GameInfo.AddSecondsElapsed(builder, seconds_elapsed);
+    GameInfo.AddGameStateType(builder, game_state_type);
+    GameInfo.AddIsUnlimitedTime(builder, is_unlimited_time);
+    GameInfo.AddIsOvertime(builder, is_overtime);
     return GameInfo.EndGameInfo(builder);
   }
 
-  public static void StartGameInfo(FlatBufferBuilder builder) { builder.StartTable(10); }
+  public static void StartGameInfo(FlatBufferBuilder builder) { builder.StartTable(8); }
   public static void AddSecondsElapsed(FlatBufferBuilder builder, float secondsElapsed) { builder.AddFloat(0, secondsElapsed, 0.0f); }
   public static void AddGameTimeRemaining(FlatBufferBuilder builder, float gameTimeRemaining) { builder.AddFloat(1, gameTimeRemaining, 0.0f); }
   public static void AddIsOvertime(FlatBufferBuilder builder, bool isOvertime) { builder.AddBool(2, isOvertime, false); }
   public static void AddIsUnlimitedTime(FlatBufferBuilder builder, bool isUnlimitedTime) { builder.AddBool(3, isUnlimitedTime, false); }
-  public static void AddIsRoundActive(FlatBufferBuilder builder, bool isRoundActive) { builder.AddBool(4, isRoundActive, false); }
-  public static void AddIsKickoffPause(FlatBufferBuilder builder, bool isKickoffPause) { builder.AddBool(5, isKickoffPause, false); }
-  public static void AddIsMatchEnded(FlatBufferBuilder builder, bool isMatchEnded) { builder.AddBool(6, isMatchEnded, false); }
-  public static void AddWorldGravityZ(FlatBufferBuilder builder, float worldGravityZ) { builder.AddFloat(7, worldGravityZ, 0.0f); }
-  public static void AddGameSpeed(FlatBufferBuilder builder, float gameSpeed) { builder.AddFloat(8, gameSpeed, 0.0f); }
-  public static void AddFrameNum(FlatBufferBuilder builder, int frameNum) { builder.AddInt(9, frameNum, 0); }
+  public static void AddGameStateType(FlatBufferBuilder builder, rlbot.flat.GameStateType gameStateType) { builder.AddSbyte(4, (sbyte)gameStateType, 0); }
+  public static void AddWorldGravityZ(FlatBufferBuilder builder, float worldGravityZ) { builder.AddFloat(5, worldGravityZ, 0.0f); }
+  public static void AddGameSpeed(FlatBufferBuilder builder, float gameSpeed) { builder.AddFloat(6, gameSpeed, 0.0f); }
+  public static void AddFrameNum(FlatBufferBuilder builder, int frameNum) { builder.AddInt(7, frameNum, 0); }
   public static Offset<rlbot.flat.GameInfo> EndGameInfo(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.GameInfo>(o);
@@ -2008,9 +2015,7 @@ public struct GameInfo : IFlatbufferObject
     _o.GameTimeRemaining = this.GameTimeRemaining;
     _o.IsOvertime = this.IsOvertime;
     _o.IsUnlimitedTime = this.IsUnlimitedTime;
-    _o.IsRoundActive = this.IsRoundActive;
-    _o.IsKickoffPause = this.IsKickoffPause;
-    _o.IsMatchEnded = this.IsMatchEnded;
+    _o.GameStateType = this.GameStateType;
     _o.WorldGravityZ = this.WorldGravityZ;
     _o.GameSpeed = this.GameSpeed;
     _o.FrameNum = this.FrameNum;
@@ -2023,9 +2028,7 @@ public struct GameInfo : IFlatbufferObject
       _o.GameTimeRemaining,
       _o.IsOvertime,
       _o.IsUnlimitedTime,
-      _o.IsRoundActive,
-      _o.IsKickoffPause,
-      _o.IsMatchEnded,
+      _o.GameStateType,
       _o.WorldGravityZ,
       _o.GameSpeed,
       _o.FrameNum);
@@ -2038,9 +2041,7 @@ public class GameInfoT
   public float GameTimeRemaining { get; set; }
   public bool IsOvertime { get; set; }
   public bool IsUnlimitedTime { get; set; }
-  public bool IsRoundActive { get; set; }
-  public bool IsKickoffPause { get; set; }
-  public bool IsMatchEnded { get; set; }
+  public rlbot.flat.GameStateType GameStateType { get; set; }
   public float WorldGravityZ { get; set; }
   public float GameSpeed { get; set; }
   public int FrameNum { get; set; }
@@ -2050,9 +2051,7 @@ public class GameInfoT
     this.GameTimeRemaining = 0.0f;
     this.IsOvertime = false;
     this.IsUnlimitedTime = false;
-    this.IsRoundActive = false;
-    this.IsKickoffPause = false;
-    this.IsMatchEnded = false;
+    this.GameStateType = rlbot.flat.GameStateType.Inactive;
     this.WorldGravityZ = 0.0f;
     this.GameSpeed = 0.0f;
     this.FrameNum = 0;
@@ -2069,12 +2068,10 @@ static public class GameInfoVerify
       && verifier.VerifyField(tablePos, 6 /*GameTimeRemaining*/, 4 /*float*/, 4, false)
       && verifier.VerifyField(tablePos, 8 /*IsOvertime*/, 1 /*bool*/, 1, false)
       && verifier.VerifyField(tablePos, 10 /*IsUnlimitedTime*/, 1 /*bool*/, 1, false)
-      && verifier.VerifyField(tablePos, 12 /*IsRoundActive*/, 1 /*bool*/, 1, false)
-      && verifier.VerifyField(tablePos, 14 /*IsKickoffPause*/, 1 /*bool*/, 1, false)
-      && verifier.VerifyField(tablePos, 16 /*IsMatchEnded*/, 1 /*bool*/, 1, false)
-      && verifier.VerifyField(tablePos, 18 /*WorldGravityZ*/, 4 /*float*/, 4, false)
-      && verifier.VerifyField(tablePos, 20 /*GameSpeed*/, 4 /*float*/, 4, false)
-      && verifier.VerifyField(tablePos, 22 /*FrameNum*/, 4 /*int*/, 4, false)
+      && verifier.VerifyField(tablePos, 12 /*GameStateType*/, 1 /*rlbot.flat.GameStateType*/, 1, false)
+      && verifier.VerifyField(tablePos, 14 /*WorldGravityZ*/, 4 /*float*/, 4, false)
+      && verifier.VerifyField(tablePos, 16 /*GameSpeed*/, 4 /*float*/, 4, false)
+      && verifier.VerifyField(tablePos, 18 /*FrameNum*/, 4 /*int*/, 4, false)
       && verifier.VerifyTableEnd(tablePos);
   }
 }
@@ -2093,11 +2090,11 @@ public struct TeamInfo : IFlatbufferObject
   public int Score { get { int o = __p.__offset(6); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)0; } }
 
   public static Offset<rlbot.flat.TeamInfo> CreateTeamInfo(FlatBufferBuilder builder,
-      int teamIndex = 0,
+      int team_index = 0,
       int score = 0) {
     builder.StartTable(2);
     TeamInfo.AddScore(builder, score);
-    TeamInfo.AddTeamIndex(builder, teamIndex);
+    TeamInfo.AddTeamIndex(builder, team_index);
     return TeamInfo.EndTeamInfo(builder);
   }
 
@@ -2171,17 +2168,17 @@ public struct GameTickPacket : IFlatbufferObject
 
   public static Offset<rlbot.flat.GameTickPacket> CreateGameTickPacket(FlatBufferBuilder builder,
       VectorOffset playersOffset = default(VectorOffset),
-      VectorOffset boostPadStatesOffset = default(VectorOffset),
+      VectorOffset boost_pad_statesOffset = default(VectorOffset),
       Offset<rlbot.flat.BallInfo> ballOffset = default(Offset<rlbot.flat.BallInfo>),
-      Offset<rlbot.flat.GameInfo> gameInfoOffset = default(Offset<rlbot.flat.GameInfo>),
-      VectorOffset tileInformationOffset = default(VectorOffset),
+      Offset<rlbot.flat.GameInfo> game_infoOffset = default(Offset<rlbot.flat.GameInfo>),
+      VectorOffset tile_informationOffset = default(VectorOffset),
       VectorOffset teamsOffset = default(VectorOffset)) {
     builder.StartTable(6);
     GameTickPacket.AddTeams(builder, teamsOffset);
-    GameTickPacket.AddTileInformation(builder, tileInformationOffset);
-    GameTickPacket.AddGameInfo(builder, gameInfoOffset);
+    GameTickPacket.AddTileInformation(builder, tile_informationOffset);
+    GameTickPacket.AddGameInfo(builder, game_infoOffset);
     GameTickPacket.AddBall(builder, ballOffset);
-    GameTickPacket.AddBoostPadStates(builder, boostPadStatesOffset);
+    GameTickPacket.AddBoostPadStates(builder, boost_pad_statesOffset);
     GameTickPacket.AddPlayers(builder, playersOffset);
     return GameTickPacket.EndGameTickPacket(builder);
   }
@@ -2242,19 +2239,19 @@ public struct GameTickPacket : IFlatbufferObject
       for (var _j = 0; _j < __players.Length; ++_j) { __players[_j] = rlbot.flat.PlayerInfo.Pack(builder, _o.Players[_j]); }
       _players = CreatePlayersVector(builder, __players);
     }
-    var _boostPadStates = default(VectorOffset);
+    var _boost_pad_states = default(VectorOffset);
     if (_o.BoostPadStates != null) {
-      var __boostPadStates = new Offset<rlbot.flat.BoostPadState>[_o.BoostPadStates.Count];
-      for (var _j = 0; _j < __boostPadStates.Length; ++_j) { __boostPadStates[_j] = rlbot.flat.BoostPadState.Pack(builder, _o.BoostPadStates[_j]); }
-      _boostPadStates = CreateBoostPadStatesVector(builder, __boostPadStates);
+      var __boost_pad_states = new Offset<rlbot.flat.BoostPadState>[_o.BoostPadStates.Count];
+      for (var _j = 0; _j < __boost_pad_states.Length; ++_j) { __boost_pad_states[_j] = rlbot.flat.BoostPadState.Pack(builder, _o.BoostPadStates[_j]); }
+      _boost_pad_states = CreateBoostPadStatesVector(builder, __boost_pad_states);
     }
     var _ball = _o.Ball == null ? default(Offset<rlbot.flat.BallInfo>) : rlbot.flat.BallInfo.Pack(builder, _o.Ball);
-    var _gameInfo = _o.GameInfo == null ? default(Offset<rlbot.flat.GameInfo>) : rlbot.flat.GameInfo.Pack(builder, _o.GameInfo);
-    var _tileInformation = default(VectorOffset);
+    var _game_info = _o.GameInfo == null ? default(Offset<rlbot.flat.GameInfo>) : rlbot.flat.GameInfo.Pack(builder, _o.GameInfo);
+    var _tile_information = default(VectorOffset);
     if (_o.TileInformation != null) {
-      var __tileInformation = new Offset<rlbot.flat.DropshotTile>[_o.TileInformation.Count];
-      for (var _j = 0; _j < __tileInformation.Length; ++_j) { __tileInformation[_j] = rlbot.flat.DropshotTile.Pack(builder, _o.TileInformation[_j]); }
-      _tileInformation = CreateTileInformationVector(builder, __tileInformation);
+      var __tile_information = new Offset<rlbot.flat.DropshotTile>[_o.TileInformation.Count];
+      for (var _j = 0; _j < __tile_information.Length; ++_j) { __tile_information[_j] = rlbot.flat.DropshotTile.Pack(builder, _o.TileInformation[_j]); }
+      _tile_information = CreateTileInformationVector(builder, __tile_information);
     }
     var _teams = default(VectorOffset);
     if (_o.Teams != null) {
@@ -2265,10 +2262,10 @@ public struct GameTickPacket : IFlatbufferObject
     return CreateGameTickPacket(
       builder,
       _players,
-      _boostPadStates,
+      _boost_pad_states,
       _ball,
-      _gameInfo,
-      _tileInformation,
+      _game_info,
+      _tile_information,
       _teams);
   }
 }
@@ -2331,9 +2328,9 @@ public struct RigidBodyState : IFlatbufferObject
       rlbot.flat.Vector3T location = null,
       rlbot.flat.QuaternionT rotation = null,
       rlbot.flat.Vector3T velocity = null,
-      rlbot.flat.Vector3T angularVelocity = null) {
+      rlbot.flat.Vector3T angular_velocity = null) {
     builder.StartTable(5);
-    RigidBodyState.AddAngularVelocity(builder, rlbot.flat.Vector3.Pack(builder, angularVelocity));
+    RigidBodyState.AddAngularVelocity(builder, rlbot.flat.Vector3.Pack(builder, angular_velocity));
     RigidBodyState.AddVelocity(builder, rlbot.flat.Vector3.Pack(builder, velocity));
     RigidBodyState.AddRotation(builder, rlbot.flat.Quaternion.Pack(builder, rotation));
     RigidBodyState.AddLocation(builder, rlbot.flat.Vector3.Pack(builder, location));
@@ -2642,7 +2639,7 @@ public struct GoalInfo : IFlatbufferObject
   public float Height { get { int o = __p.__offset(12); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
 
   public static Offset<rlbot.flat.GoalInfo> CreateGoalInfo(FlatBufferBuilder builder,
-      int teamNum = 0,
+      int team_num = 0,
       rlbot.flat.Vector3T location = null,
       rlbot.flat.Vector3T direction = null,
       float width = 0.0f,
@@ -2652,7 +2649,7 @@ public struct GoalInfo : IFlatbufferObject
     GoalInfo.AddWidth(builder, width);
     GoalInfo.AddDirection(builder, rlbot.flat.Vector3.Pack(builder, direction));
     GoalInfo.AddLocation(builder, rlbot.flat.Vector3.Pack(builder, location));
-    GoalInfo.AddTeamNum(builder, teamNum);
+    GoalInfo.AddTeamNum(builder, team_num);
     return GoalInfo.EndGoalInfo(builder);
   }
 
@@ -2736,10 +2733,10 @@ public struct BoostPad : IFlatbufferObject
 
   public static Offset<rlbot.flat.BoostPad> CreateBoostPad(FlatBufferBuilder builder,
       rlbot.flat.Vector3T location = null,
-      bool isFullBoost = false) {
+      bool is_full_boost = false) {
     builder.StartTable(2);
     BoostPad.AddLocation(builder, rlbot.flat.Vector3.Pack(builder, location));
-    BoostPad.AddIsFullBoost(builder, isFullBoost);
+    BoostPad.AddIsFullBoost(builder, is_full_boost);
     return BoostPad.EndBoostPad(builder);
   }
 
@@ -2806,11 +2803,11 @@ public struct FieldInfo : IFlatbufferObject
   public int GoalsLength { get { int o = __p.__offset(6); return o != 0 ? __p.__vector_len(o) : 0; } }
 
   public static Offset<rlbot.flat.FieldInfo> CreateFieldInfo(FlatBufferBuilder builder,
-      VectorOffset boostPadsOffset = default(VectorOffset),
+      VectorOffset boost_padsOffset = default(VectorOffset),
       VectorOffset goalsOffset = default(VectorOffset)) {
     builder.StartTable(2);
     FieldInfo.AddGoals(builder, goalsOffset);
-    FieldInfo.AddBoostPads(builder, boostPadsOffset);
+    FieldInfo.AddBoostPads(builder, boost_padsOffset);
     return FieldInfo.EndFieldInfo(builder);
   }
 
@@ -2844,11 +2841,11 @@ public struct FieldInfo : IFlatbufferObject
   }
   public static Offset<rlbot.flat.FieldInfo> Pack(FlatBufferBuilder builder, FieldInfoT _o) {
     if (_o == null) return default(Offset<rlbot.flat.FieldInfo>);
-    var _boostPads = default(VectorOffset);
+    var _boost_pads = default(VectorOffset);
     if (_o.BoostPads != null) {
-      var __boostPads = new Offset<rlbot.flat.BoostPad>[_o.BoostPads.Count];
-      for (var _j = 0; _j < __boostPads.Length; ++_j) { __boostPads[_j] = rlbot.flat.BoostPad.Pack(builder, _o.BoostPads[_j]); }
-      _boostPads = CreateBoostPadsVector(builder, __boostPads);
+      var __boost_pads = new Offset<rlbot.flat.BoostPad>[_o.BoostPads.Count];
+      for (var _j = 0; _j < __boost_pads.Length; ++_j) { __boost_pads[_j] = rlbot.flat.BoostPad.Pack(builder, _o.BoostPads[_j]); }
+      _boost_pads = CreateBoostPadsVector(builder, __boost_pads);
     }
     var _goals = default(VectorOffset);
     if (_o.Goals != null) {
@@ -2858,7 +2855,7 @@ public struct FieldInfo : IFlatbufferObject
     }
     return CreateFieldInfo(
       builder,
-      _boostPads,
+      _boost_pads,
       _goals);
   }
 }
@@ -3116,9 +3113,9 @@ public struct DesiredPhysics : IFlatbufferObject
       Offset<rlbot.flat.Vector3Partial> locationOffset = default(Offset<rlbot.flat.Vector3Partial>),
       Offset<rlbot.flat.RotatorPartial> rotationOffset = default(Offset<rlbot.flat.RotatorPartial>),
       Offset<rlbot.flat.Vector3Partial> velocityOffset = default(Offset<rlbot.flat.Vector3Partial>),
-      Offset<rlbot.flat.Vector3Partial> angularVelocityOffset = default(Offset<rlbot.flat.Vector3Partial>)) {
+      Offset<rlbot.flat.Vector3Partial> angular_velocityOffset = default(Offset<rlbot.flat.Vector3Partial>)) {
     builder.StartTable(4);
-    DesiredPhysics.AddAngularVelocity(builder, angularVelocityOffset);
+    DesiredPhysics.AddAngularVelocity(builder, angular_velocityOffset);
     DesiredPhysics.AddVelocity(builder, velocityOffset);
     DesiredPhysics.AddRotation(builder, rotationOffset);
     DesiredPhysics.AddLocation(builder, locationOffset);
@@ -3150,13 +3147,13 @@ public struct DesiredPhysics : IFlatbufferObject
     var _location = _o.Location == null ? default(Offset<rlbot.flat.Vector3Partial>) : rlbot.flat.Vector3Partial.Pack(builder, _o.Location);
     var _rotation = _o.Rotation == null ? default(Offset<rlbot.flat.RotatorPartial>) : rlbot.flat.RotatorPartial.Pack(builder, _o.Rotation);
     var _velocity = _o.Velocity == null ? default(Offset<rlbot.flat.Vector3Partial>) : rlbot.flat.Vector3Partial.Pack(builder, _o.Velocity);
-    var _angularVelocity = _o.AngularVelocity == null ? default(Offset<rlbot.flat.Vector3Partial>) : rlbot.flat.Vector3Partial.Pack(builder, _o.AngularVelocity);
+    var _angular_velocity = _o.AngularVelocity == null ? default(Offset<rlbot.flat.Vector3Partial>) : rlbot.flat.Vector3Partial.Pack(builder, _o.AngularVelocity);
     return CreateDesiredPhysics(
       builder,
       _location,
       _rotation,
       _velocity,
-      _angularVelocity);
+      _angular_velocity);
   }
 }
 
@@ -3266,13 +3263,13 @@ public struct DesiredCarState : IFlatbufferObject
 
   public static Offset<rlbot.flat.DesiredCarState> CreateDesiredCarState(FlatBufferBuilder builder,
       Offset<rlbot.flat.DesiredPhysics> physicsOffset = default(Offset<rlbot.flat.DesiredPhysics>),
-      rlbot.flat.FloatT boostAmount = null,
+      rlbot.flat.FloatT boost_amount = null,
       rlbot.flat.BoolT jumped = null,
-      rlbot.flat.BoolT doubleJumped = null) {
+      rlbot.flat.BoolT double_jumped = null) {
     builder.StartTable(4);
-    DesiredCarState.AddDoubleJumped(builder, rlbot.flat.Bool.Pack(builder, doubleJumped));
+    DesiredCarState.AddDoubleJumped(builder, rlbot.flat.Bool.Pack(builder, double_jumped));
     DesiredCarState.AddJumped(builder, rlbot.flat.Bool.Pack(builder, jumped));
-    DesiredCarState.AddBoostAmount(builder, rlbot.flat.Float.Pack(builder, boostAmount));
+    DesiredCarState.AddBoostAmount(builder, rlbot.flat.Float.Pack(builder, boost_amount));
     DesiredCarState.AddPhysics(builder, physicsOffset);
     return DesiredCarState.EndDesiredCarState(builder);
   }
@@ -3553,17 +3550,17 @@ public struct DesiredGameState : IFlatbufferObject
   public int ConsoleCommandsLength { get { int o = __p.__offset(12); return o != 0 ? __p.__vector_len(o) : 0; } }
 
   public static Offset<rlbot.flat.DesiredGameState> CreateDesiredGameState(FlatBufferBuilder builder,
-      Offset<rlbot.flat.DesiredBallState> ballStateOffset = default(Offset<rlbot.flat.DesiredBallState>),
-      VectorOffset carStatesOffset = default(VectorOffset),
-      VectorOffset boostStatesOffset = default(VectorOffset),
-      Offset<rlbot.flat.DesiredGameInfoState> gameInfoStateOffset = default(Offset<rlbot.flat.DesiredGameInfoState>),
-      VectorOffset consoleCommandsOffset = default(VectorOffset)) {
+      Offset<rlbot.flat.DesiredBallState> ball_stateOffset = default(Offset<rlbot.flat.DesiredBallState>),
+      VectorOffset car_statesOffset = default(VectorOffset),
+      VectorOffset boost_statesOffset = default(VectorOffset),
+      Offset<rlbot.flat.DesiredGameInfoState> game_info_stateOffset = default(Offset<rlbot.flat.DesiredGameInfoState>),
+      VectorOffset console_commandsOffset = default(VectorOffset)) {
     builder.StartTable(5);
-    DesiredGameState.AddConsoleCommands(builder, consoleCommandsOffset);
-    DesiredGameState.AddGameInfoState(builder, gameInfoStateOffset);
-    DesiredGameState.AddBoostStates(builder, boostStatesOffset);
-    DesiredGameState.AddCarStates(builder, carStatesOffset);
-    DesiredGameState.AddBallState(builder, ballStateOffset);
+    DesiredGameState.AddConsoleCommands(builder, console_commandsOffset);
+    DesiredGameState.AddGameInfoState(builder, game_info_stateOffset);
+    DesiredGameState.AddBoostStates(builder, boost_statesOffset);
+    DesiredGameState.AddCarStates(builder, car_statesOffset);
+    DesiredGameState.AddBallState(builder, ball_stateOffset);
     return DesiredGameState.EndDesiredGameState(builder);
   }
 
@@ -3609,33 +3606,33 @@ public struct DesiredGameState : IFlatbufferObject
   }
   public static Offset<rlbot.flat.DesiredGameState> Pack(FlatBufferBuilder builder, DesiredGameStateT _o) {
     if (_o == null) return default(Offset<rlbot.flat.DesiredGameState>);
-    var _ballState = _o.BallState == null ? default(Offset<rlbot.flat.DesiredBallState>) : rlbot.flat.DesiredBallState.Pack(builder, _o.BallState);
-    var _carStates = default(VectorOffset);
+    var _ball_state = _o.BallState == null ? default(Offset<rlbot.flat.DesiredBallState>) : rlbot.flat.DesiredBallState.Pack(builder, _o.BallState);
+    var _car_states = default(VectorOffset);
     if (_o.CarStates != null) {
-      var __carStates = new Offset<rlbot.flat.DesiredCarState>[_o.CarStates.Count];
-      for (var _j = 0; _j < __carStates.Length; ++_j) { __carStates[_j] = rlbot.flat.DesiredCarState.Pack(builder, _o.CarStates[_j]); }
-      _carStates = CreateCarStatesVector(builder, __carStates);
+      var __car_states = new Offset<rlbot.flat.DesiredCarState>[_o.CarStates.Count];
+      for (var _j = 0; _j < __car_states.Length; ++_j) { __car_states[_j] = rlbot.flat.DesiredCarState.Pack(builder, _o.CarStates[_j]); }
+      _car_states = CreateCarStatesVector(builder, __car_states);
     }
-    var _boostStates = default(VectorOffset);
+    var _boost_states = default(VectorOffset);
     if (_o.BoostStates != null) {
-      var __boostStates = new Offset<rlbot.flat.DesiredBoostState>[_o.BoostStates.Count];
-      for (var _j = 0; _j < __boostStates.Length; ++_j) { __boostStates[_j] = rlbot.flat.DesiredBoostState.Pack(builder, _o.BoostStates[_j]); }
-      _boostStates = CreateBoostStatesVector(builder, __boostStates);
+      var __boost_states = new Offset<rlbot.flat.DesiredBoostState>[_o.BoostStates.Count];
+      for (var _j = 0; _j < __boost_states.Length; ++_j) { __boost_states[_j] = rlbot.flat.DesiredBoostState.Pack(builder, _o.BoostStates[_j]); }
+      _boost_states = CreateBoostStatesVector(builder, __boost_states);
     }
-    var _gameInfoState = _o.GameInfoState == null ? default(Offset<rlbot.flat.DesiredGameInfoState>) : rlbot.flat.DesiredGameInfoState.Pack(builder, _o.GameInfoState);
-    var _consoleCommands = default(VectorOffset);
+    var _game_info_state = _o.GameInfoState == null ? default(Offset<rlbot.flat.DesiredGameInfoState>) : rlbot.flat.DesiredGameInfoState.Pack(builder, _o.GameInfoState);
+    var _console_commands = default(VectorOffset);
     if (_o.ConsoleCommands != null) {
-      var __consoleCommands = new Offset<rlbot.flat.ConsoleCommand>[_o.ConsoleCommands.Count];
-      for (var _j = 0; _j < __consoleCommands.Length; ++_j) { __consoleCommands[_j] = rlbot.flat.ConsoleCommand.Pack(builder, _o.ConsoleCommands[_j]); }
-      _consoleCommands = CreateConsoleCommandsVector(builder, __consoleCommands);
+      var __console_commands = new Offset<rlbot.flat.ConsoleCommand>[_o.ConsoleCommands.Count];
+      for (var _j = 0; _j < __console_commands.Length; ++_j) { __console_commands[_j] = rlbot.flat.ConsoleCommand.Pack(builder, _o.ConsoleCommands[_j]); }
+      _console_commands = CreateConsoleCommandsVector(builder, __console_commands);
     }
     return CreateDesiredGameState(
       builder,
-      _ballState,
-      _carStates,
-      _boostStates,
-      _gameInfoState,
-      _consoleCommands);
+      _ball_state,
+      _car_states,
+      _boost_states,
+      _game_info_state,
+      _console_commands);
   }
 }
 
@@ -3788,23 +3785,23 @@ public struct RenderMessage : IFlatbufferObject
   public bool IsFilled { get { int o = __p.__offset(18); return o != 0 ? 0!=__p.bb.Get(o + __p.bb_pos) : (bool)false; } }
 
   public static Offset<rlbot.flat.RenderMessage> CreateRenderMessage(FlatBufferBuilder builder,
-      rlbot.flat.RenderType renderType = rlbot.flat.RenderType.DrawLine2D,
+      rlbot.flat.RenderType render_type = rlbot.flat.RenderType.DrawLine2D,
       Offset<rlbot.flat.Color> colorOffset = default(Offset<rlbot.flat.Color>),
       rlbot.flat.Vector3T start = null,
       rlbot.flat.Vector3T end = null,
-      int scaleX = 1,
-      int scaleY = 1,
+      int scale_x = 1,
+      int scale_y = 1,
       StringOffset textOffset = default(StringOffset),
-      bool isFilled = false) {
+      bool is_filled = false) {
     builder.StartTable(8);
     RenderMessage.AddText(builder, textOffset);
-    RenderMessage.AddScaleY(builder, scaleY);
-    RenderMessage.AddScaleX(builder, scaleX);
+    RenderMessage.AddScaleY(builder, scale_y);
+    RenderMessage.AddScaleX(builder, scale_x);
     RenderMessage.AddEnd(builder, rlbot.flat.Vector3.Pack(builder, end));
     RenderMessage.AddStart(builder, rlbot.flat.Vector3.Pack(builder, start));
     RenderMessage.AddColor(builder, colorOffset);
-    RenderMessage.AddIsFilled(builder, isFilled);
-    RenderMessage.AddRenderType(builder, renderType);
+    RenderMessage.AddIsFilled(builder, is_filled);
+    RenderMessage.AddRenderType(builder, render_type);
     return RenderMessage.EndRenderMessage(builder);
   }
 
@@ -3909,11 +3906,11 @@ public struct RenderGroup : IFlatbufferObject
   public int Id { get { int o = __p.__offset(6); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)0; } }
 
   public static Offset<rlbot.flat.RenderGroup> CreateRenderGroup(FlatBufferBuilder builder,
-      VectorOffset renderMessagesOffset = default(VectorOffset),
+      VectorOffset render_messagesOffset = default(VectorOffset),
       int id = 0) {
     builder.StartTable(2);
     RenderGroup.AddId(builder, id);
-    RenderGroup.AddRenderMessages(builder, renderMessagesOffset);
+    RenderGroup.AddRenderMessages(builder, render_messagesOffset);
     return RenderGroup.EndRenderGroup(builder);
   }
 
@@ -3941,15 +3938,15 @@ public struct RenderGroup : IFlatbufferObject
   }
   public static Offset<rlbot.flat.RenderGroup> Pack(FlatBufferBuilder builder, RenderGroupT _o) {
     if (_o == null) return default(Offset<rlbot.flat.RenderGroup>);
-    var _renderMessages = default(VectorOffset);
+    var _render_messages = default(VectorOffset);
     if (_o.RenderMessages != null) {
-      var __renderMessages = new Offset<rlbot.flat.RenderMessage>[_o.RenderMessages.Count];
-      for (var _j = 0; _j < __renderMessages.Length; ++_j) { __renderMessages[_j] = rlbot.flat.RenderMessage.Pack(builder, _o.RenderMessages[_j]); }
-      _renderMessages = CreateRenderMessagesVector(builder, __renderMessages);
+      var __render_messages = new Offset<rlbot.flat.RenderMessage>[_o.RenderMessages.Count];
+      for (var _j = 0; _j < __render_messages.Length; ++_j) { __render_messages[_j] = rlbot.flat.RenderMessage.Pack(builder, _o.RenderMessages[_j]); }
+      _render_messages = CreateRenderMessagesVector(builder, __render_messages);
     }
     return CreateRenderGroup(
       builder,
-      _renderMessages,
+      _render_messages,
       _o.Id);
   }
 }
@@ -3996,17 +3993,17 @@ public struct QuickChat : IFlatbufferObject
   public float TimeStamp { get { int o = __p.__offset(12); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
 
   public static Offset<rlbot.flat.QuickChat> CreateQuickChat(FlatBufferBuilder builder,
-      rlbot.flat.QuickChatSelection quickChatSelection = rlbot.flat.QuickChatSelection.Information_IGotIt,
-      int playerIndex = 0,
-      bool teamOnly = false,
-      int messageIndex = 0,
-      float timeStamp = 0.0f) {
+      rlbot.flat.QuickChatSelection quick_chat_selection = rlbot.flat.QuickChatSelection.Information_IGotIt,
+      int player_index = 0,
+      bool team_only = false,
+      int message_index = 0,
+      float time_stamp = 0.0f) {
     builder.StartTable(5);
-    QuickChat.AddTimeStamp(builder, timeStamp);
-    QuickChat.AddMessageIndex(builder, messageIndex);
-    QuickChat.AddPlayerIndex(builder, playerIndex);
-    QuickChat.AddTeamOnly(builder, teamOnly);
-    QuickChat.AddQuickChatSelection(builder, quickChatSelection);
+    QuickChat.AddTimeStamp(builder, time_stamp);
+    QuickChat.AddMessageIndex(builder, message_index);
+    QuickChat.AddPlayerIndex(builder, player_index);
+    QuickChat.AddTeamOnly(builder, team_only);
+    QuickChat.AddQuickChatSelection(builder, quick_chat_selection);
     return QuickChat.EndQuickChat(builder);
   }
 
@@ -4108,8 +4105,8 @@ public struct TinyPlayer : IFlatbufferObject
       rlbot.flat.Vector3T location = null,
       rlbot.flat.RotatorT rotation = null,
       rlbot.flat.Vector3T velocity = null,
-      bool hasWheelContact = false,
-      bool isSupersonic = false,
+      bool has_wheel_contact = false,
+      bool is_supersonic = false,
       int team = 0,
       int boost = 0) {
     builder.StartTable(7);
@@ -4118,8 +4115,8 @@ public struct TinyPlayer : IFlatbufferObject
     TinyPlayer.AddVelocity(builder, rlbot.flat.Vector3.Pack(builder, velocity));
     TinyPlayer.AddRotation(builder, rlbot.flat.Rotator.Pack(builder, rotation));
     TinyPlayer.AddLocation(builder, rlbot.flat.Vector3.Pack(builder, location));
-    TinyPlayer.AddIsSupersonic(builder, isSupersonic);
-    TinyPlayer.AddHasWheelContact(builder, hasWheelContact);
+    TinyPlayer.AddIsSupersonic(builder, is_supersonic);
+    TinyPlayer.AddHasWheelContact(builder, has_wheel_contact);
     return TinyPlayer.EndTinyPlayer(builder);
   }
 
@@ -4362,11 +4359,11 @@ public struct PredictionSlice : IFlatbufferObject
   public rlbot.flat.Physics? Physics { get { int o = __p.__offset(6); return o != 0 ? (rlbot.flat.Physics?)(new rlbot.flat.Physics()).__assign(__p.__indirect(o + __p.bb_pos), __p.bb) : null; } }
 
   public static Offset<rlbot.flat.PredictionSlice> CreatePredictionSlice(FlatBufferBuilder builder,
-      float gameSeconds = 0.0f,
+      float game_seconds = 0.0f,
       Offset<rlbot.flat.Physics> physicsOffset = default(Offset<rlbot.flat.Physics>)) {
     builder.StartTable(2);
     PredictionSlice.AddPhysics(builder, physicsOffset);
-    PredictionSlice.AddGameSeconds(builder, gameSeconds);
+    PredictionSlice.AddGameSeconds(builder, game_seconds);
     return PredictionSlice.EndPredictionSlice(builder);
   }
 
@@ -4602,9 +4599,9 @@ public struct PsyonixBotPlayer : IFlatbufferObject
   public float BotSkill { get { int o = __p.__offset(4); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
 
   public static Offset<rlbot.flat.PsyonixBotPlayer> CreatePsyonixBotPlayer(FlatBufferBuilder builder,
-      float botSkill = 0.0f) {
+      float bot_skill = 0.0f) {
     builder.StartTable(1);
-    PsyonixBotPlayer.AddBotSkill(builder, botSkill);
+    PsyonixBotPlayer.AddBotSkill(builder, bot_skill);
     return PsyonixBotPlayer.EndPsyonixBotPlayer(builder);
   }
 
@@ -4731,39 +4728,39 @@ public struct PlayerLoadout : IFlatbufferObject
   public rlbot.flat.Color? SecondaryColorLookup { get { int o = __p.__offset(34); return o != 0 ? (rlbot.flat.Color?)(new rlbot.flat.Color()).__assign(__p.__indirect(o + __p.bb_pos), __p.bb) : null; } }
 
   public static Offset<rlbot.flat.PlayerLoadout> CreatePlayerLoadout(FlatBufferBuilder builder,
-      int teamColorId = 0,
-      int customColorId = 0,
-      int carId = 0,
-      int decalId = 0,
-      int wheelsId = 0,
-      int boostId = 0,
-      int antennaId = 0,
-      int hatId = 0,
-      int paintFinishId = 0,
-      int customFinishId = 0,
-      int engineAudioId = 0,
-      int trailsId = 0,
-      int goalExplosionId = 0,
-      Offset<rlbot.flat.LoadoutPaint> loadoutPaintOffset = default(Offset<rlbot.flat.LoadoutPaint>),
-      Offset<rlbot.flat.Color> primaryColorLookupOffset = default(Offset<rlbot.flat.Color>),
-      Offset<rlbot.flat.Color> secondaryColorLookupOffset = default(Offset<rlbot.flat.Color>)) {
+      int team_color_id = 0,
+      int custom_color_id = 0,
+      int car_id = 0,
+      int decal_id = 0,
+      int wheels_id = 0,
+      int boost_id = 0,
+      int antenna_id = 0,
+      int hat_id = 0,
+      int paint_finish_id = 0,
+      int custom_finish_id = 0,
+      int engine_audio_id = 0,
+      int trails_id = 0,
+      int goal_explosion_id = 0,
+      Offset<rlbot.flat.LoadoutPaint> loadout_paintOffset = default(Offset<rlbot.flat.LoadoutPaint>),
+      Offset<rlbot.flat.Color> primary_color_lookupOffset = default(Offset<rlbot.flat.Color>),
+      Offset<rlbot.flat.Color> secondary_color_lookupOffset = default(Offset<rlbot.flat.Color>)) {
     builder.StartTable(16);
-    PlayerLoadout.AddSecondaryColorLookup(builder, secondaryColorLookupOffset);
-    PlayerLoadout.AddPrimaryColorLookup(builder, primaryColorLookupOffset);
-    PlayerLoadout.AddLoadoutPaint(builder, loadoutPaintOffset);
-    PlayerLoadout.AddGoalExplosionId(builder, goalExplosionId);
-    PlayerLoadout.AddTrailsId(builder, trailsId);
-    PlayerLoadout.AddEngineAudioId(builder, engineAudioId);
-    PlayerLoadout.AddCustomFinishId(builder, customFinishId);
-    PlayerLoadout.AddPaintFinishId(builder, paintFinishId);
-    PlayerLoadout.AddHatId(builder, hatId);
-    PlayerLoadout.AddAntennaId(builder, antennaId);
-    PlayerLoadout.AddBoostId(builder, boostId);
-    PlayerLoadout.AddWheelsId(builder, wheelsId);
-    PlayerLoadout.AddDecalId(builder, decalId);
-    PlayerLoadout.AddCarId(builder, carId);
-    PlayerLoadout.AddCustomColorId(builder, customColorId);
-    PlayerLoadout.AddTeamColorId(builder, teamColorId);
+    PlayerLoadout.AddSecondaryColorLookup(builder, secondary_color_lookupOffset);
+    PlayerLoadout.AddPrimaryColorLookup(builder, primary_color_lookupOffset);
+    PlayerLoadout.AddLoadoutPaint(builder, loadout_paintOffset);
+    PlayerLoadout.AddGoalExplosionId(builder, goal_explosion_id);
+    PlayerLoadout.AddTrailsId(builder, trails_id);
+    PlayerLoadout.AddEngineAudioId(builder, engine_audio_id);
+    PlayerLoadout.AddCustomFinishId(builder, custom_finish_id);
+    PlayerLoadout.AddPaintFinishId(builder, paint_finish_id);
+    PlayerLoadout.AddHatId(builder, hat_id);
+    PlayerLoadout.AddAntennaId(builder, antenna_id);
+    PlayerLoadout.AddBoostId(builder, boost_id);
+    PlayerLoadout.AddWheelsId(builder, wheels_id);
+    PlayerLoadout.AddDecalId(builder, decal_id);
+    PlayerLoadout.AddCarId(builder, car_id);
+    PlayerLoadout.AddCustomColorId(builder, custom_color_id);
+    PlayerLoadout.AddTeamColorId(builder, team_color_id);
     return PlayerLoadout.EndPlayerLoadout(builder);
   }
 
@@ -4813,9 +4810,9 @@ public struct PlayerLoadout : IFlatbufferObject
   }
   public static Offset<rlbot.flat.PlayerLoadout> Pack(FlatBufferBuilder builder, PlayerLoadoutT _o) {
     if (_o == null) return default(Offset<rlbot.flat.PlayerLoadout>);
-    var _loadoutPaint = _o.LoadoutPaint == null ? default(Offset<rlbot.flat.LoadoutPaint>) : rlbot.flat.LoadoutPaint.Pack(builder, _o.LoadoutPaint);
-    var _primaryColorLookup = _o.PrimaryColorLookup == null ? default(Offset<rlbot.flat.Color>) : rlbot.flat.Color.Pack(builder, _o.PrimaryColorLookup);
-    var _secondaryColorLookup = _o.SecondaryColorLookup == null ? default(Offset<rlbot.flat.Color>) : rlbot.flat.Color.Pack(builder, _o.SecondaryColorLookup);
+    var _loadout_paint = _o.LoadoutPaint == null ? default(Offset<rlbot.flat.LoadoutPaint>) : rlbot.flat.LoadoutPaint.Pack(builder, _o.LoadoutPaint);
+    var _primary_color_lookup = _o.PrimaryColorLookup == null ? default(Offset<rlbot.flat.Color>) : rlbot.flat.Color.Pack(builder, _o.PrimaryColorLookup);
+    var _secondary_color_lookup = _o.SecondaryColorLookup == null ? default(Offset<rlbot.flat.Color>) : rlbot.flat.Color.Pack(builder, _o.SecondaryColorLookup);
     return CreatePlayerLoadout(
       builder,
       _o.TeamColorId,
@@ -4831,9 +4828,9 @@ public struct PlayerLoadout : IFlatbufferObject
       _o.EngineAudioId,
       _o.TrailsId,
       _o.GoalExplosionId,
-      _loadoutPaint,
-      _primaryColorLookup,
-      _secondaryColorLookup);
+      _loadout_paint,
+      _primary_color_lookup,
+      _secondary_color_lookup);
   }
 }
 
@@ -4922,23 +4919,23 @@ public struct LoadoutPaint : IFlatbufferObject
   public int GoalExplosionPaintId { get { int o = __p.__offset(18); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)0; } }
 
   public static Offset<rlbot.flat.LoadoutPaint> CreateLoadoutPaint(FlatBufferBuilder builder,
-      int carPaintId = 0,
-      int decalPaintId = 0,
-      int wheelsPaintId = 0,
-      int boostPaintId = 0,
-      int antennaPaintId = 0,
-      int hatPaintId = 0,
-      int trailsPaintId = 0,
-      int goalExplosionPaintId = 0) {
+      int car_paint_id = 0,
+      int decal_paint_id = 0,
+      int wheels_paint_id = 0,
+      int boost_paint_id = 0,
+      int antenna_paint_id = 0,
+      int hat_paint_id = 0,
+      int trails_paint_id = 0,
+      int goal_explosion_paint_id = 0) {
     builder.StartTable(8);
-    LoadoutPaint.AddGoalExplosionPaintId(builder, goalExplosionPaintId);
-    LoadoutPaint.AddTrailsPaintId(builder, trailsPaintId);
-    LoadoutPaint.AddHatPaintId(builder, hatPaintId);
-    LoadoutPaint.AddAntennaPaintId(builder, antennaPaintId);
-    LoadoutPaint.AddBoostPaintId(builder, boostPaintId);
-    LoadoutPaint.AddWheelsPaintId(builder, wheelsPaintId);
-    LoadoutPaint.AddDecalPaintId(builder, decalPaintId);
-    LoadoutPaint.AddCarPaintId(builder, carPaintId);
+    LoadoutPaint.AddGoalExplosionPaintId(builder, goal_explosion_paint_id);
+    LoadoutPaint.AddTrailsPaintId(builder, trails_paint_id);
+    LoadoutPaint.AddHatPaintId(builder, hat_paint_id);
+    LoadoutPaint.AddAntennaPaintId(builder, antenna_paint_id);
+    LoadoutPaint.AddBoostPaintId(builder, boost_paint_id);
+    LoadoutPaint.AddWheelsPaintId(builder, wheels_paint_id);
+    LoadoutPaint.AddDecalPaintId(builder, decal_paint_id);
+    LoadoutPaint.AddCarPaintId(builder, car_paint_id);
     return LoadoutPaint.EndLoadoutPaint(builder);
   }
 
@@ -5060,9 +5057,9 @@ public struct PlayerConfiguration : IFlatbufferObject
       StringOffset nameOffset = default(StringOffset),
       int team = 0,
       Offset<rlbot.flat.PlayerLoadout> loadoutOffset = default(Offset<rlbot.flat.PlayerLoadout>),
-      int spawnId = 0) {
+      int spawn_id = 0) {
     builder.StartTable(6);
-    PlayerConfiguration.AddSpawnId(builder, spawnId);
+    PlayerConfiguration.AddSpawnId(builder, spawn_id);
     PlayerConfiguration.AddLoadout(builder, loadoutOffset);
     PlayerConfiguration.AddTeam(builder, team);
     PlayerConfiguration.AddName(builder, nameOffset);
@@ -5187,39 +5184,39 @@ public struct MutatorSettings : IFlatbufferObject
   public rlbot.flat.RespawnTimeOption RespawnTimeOption { get { int o = __p.__offset(34); return o != 0 ? (rlbot.flat.RespawnTimeOption)__p.bb.GetSbyte(o + __p.bb_pos) : rlbot.flat.RespawnTimeOption.Three_Seconds; } }
 
   public static Offset<rlbot.flat.MutatorSettings> CreateMutatorSettings(FlatBufferBuilder builder,
-      rlbot.flat.MatchLength matchLength = rlbot.flat.MatchLength.Five_Minutes,
-      rlbot.flat.MaxScore maxScore = rlbot.flat.MaxScore.Unlimited,
-      rlbot.flat.OvertimeOption overtimeOption = rlbot.flat.OvertimeOption.Unlimited,
-      rlbot.flat.SeriesLengthOption seriesLengthOption = rlbot.flat.SeriesLengthOption.Unlimited,
-      rlbot.flat.GameSpeedOption gameSpeedOption = rlbot.flat.GameSpeedOption.Default,
-      rlbot.flat.BallMaxSpeedOption ballMaxSpeedOption = rlbot.flat.BallMaxSpeedOption.Default,
-      rlbot.flat.BallTypeOption ballTypeOption = rlbot.flat.BallTypeOption.Default,
-      rlbot.flat.BallWeightOption ballWeightOption = rlbot.flat.BallWeightOption.Default,
-      rlbot.flat.BallSizeOption ballSizeOption = rlbot.flat.BallSizeOption.Default,
-      rlbot.flat.BallBouncinessOption ballBouncinessOption = rlbot.flat.BallBouncinessOption.Default,
-      rlbot.flat.BoostOption boostOption = rlbot.flat.BoostOption.Normal_Boost,
-      rlbot.flat.RumbleOption rumbleOption = rlbot.flat.RumbleOption.No_Rumble,
-      rlbot.flat.BoostStrengthOption boostStrengthOption = rlbot.flat.BoostStrengthOption.One,
-      rlbot.flat.GravityOption gravityOption = rlbot.flat.GravityOption.Default,
-      rlbot.flat.DemolishOption demolishOption = rlbot.flat.DemolishOption.Default,
-      rlbot.flat.RespawnTimeOption respawnTimeOption = rlbot.flat.RespawnTimeOption.Three_Seconds) {
+      rlbot.flat.MatchLength match_length = rlbot.flat.MatchLength.Five_Minutes,
+      rlbot.flat.MaxScore max_score = rlbot.flat.MaxScore.Unlimited,
+      rlbot.flat.OvertimeOption overtime_option = rlbot.flat.OvertimeOption.Unlimited,
+      rlbot.flat.SeriesLengthOption series_length_option = rlbot.flat.SeriesLengthOption.Unlimited,
+      rlbot.flat.GameSpeedOption game_speed_option = rlbot.flat.GameSpeedOption.Default,
+      rlbot.flat.BallMaxSpeedOption ball_max_speed_option = rlbot.flat.BallMaxSpeedOption.Default,
+      rlbot.flat.BallTypeOption ball_type_option = rlbot.flat.BallTypeOption.Default,
+      rlbot.flat.BallWeightOption ball_weight_option = rlbot.flat.BallWeightOption.Default,
+      rlbot.flat.BallSizeOption ball_size_option = rlbot.flat.BallSizeOption.Default,
+      rlbot.flat.BallBouncinessOption ball_bounciness_option = rlbot.flat.BallBouncinessOption.Default,
+      rlbot.flat.BoostOption boost_option = rlbot.flat.BoostOption.Normal_Boost,
+      rlbot.flat.RumbleOption rumble_option = rlbot.flat.RumbleOption.No_Rumble,
+      rlbot.flat.BoostStrengthOption boost_strength_option = rlbot.flat.BoostStrengthOption.One,
+      rlbot.flat.GravityOption gravity_option = rlbot.flat.GravityOption.Default,
+      rlbot.flat.DemolishOption demolish_option = rlbot.flat.DemolishOption.Default,
+      rlbot.flat.RespawnTimeOption respawn_time_option = rlbot.flat.RespawnTimeOption.Three_Seconds) {
     builder.StartTable(16);
-    MutatorSettings.AddRespawnTimeOption(builder, respawnTimeOption);
-    MutatorSettings.AddDemolishOption(builder, demolishOption);
-    MutatorSettings.AddGravityOption(builder, gravityOption);
-    MutatorSettings.AddBoostStrengthOption(builder, boostStrengthOption);
-    MutatorSettings.AddRumbleOption(builder, rumbleOption);
-    MutatorSettings.AddBoostOption(builder, boostOption);
-    MutatorSettings.AddBallBouncinessOption(builder, ballBouncinessOption);
-    MutatorSettings.AddBallSizeOption(builder, ballSizeOption);
-    MutatorSettings.AddBallWeightOption(builder, ballWeightOption);
-    MutatorSettings.AddBallTypeOption(builder, ballTypeOption);
-    MutatorSettings.AddBallMaxSpeedOption(builder, ballMaxSpeedOption);
-    MutatorSettings.AddGameSpeedOption(builder, gameSpeedOption);
-    MutatorSettings.AddSeriesLengthOption(builder, seriesLengthOption);
-    MutatorSettings.AddOvertimeOption(builder, overtimeOption);
-    MutatorSettings.AddMaxScore(builder, maxScore);
-    MutatorSettings.AddMatchLength(builder, matchLength);
+    MutatorSettings.AddRespawnTimeOption(builder, respawn_time_option);
+    MutatorSettings.AddDemolishOption(builder, demolish_option);
+    MutatorSettings.AddGravityOption(builder, gravity_option);
+    MutatorSettings.AddBoostStrengthOption(builder, boost_strength_option);
+    MutatorSettings.AddRumbleOption(builder, rumble_option);
+    MutatorSettings.AddBoostOption(builder, boost_option);
+    MutatorSettings.AddBallBouncinessOption(builder, ball_bounciness_option);
+    MutatorSettings.AddBallSizeOption(builder, ball_size_option);
+    MutatorSettings.AddBallWeightOption(builder, ball_weight_option);
+    MutatorSettings.AddBallTypeOption(builder, ball_type_option);
+    MutatorSettings.AddBallMaxSpeedOption(builder, ball_max_speed_option);
+    MutatorSettings.AddGameSpeedOption(builder, game_speed_option);
+    MutatorSettings.AddSeriesLengthOption(builder, series_length_option);
+    MutatorSettings.AddOvertimeOption(builder, overtime_option);
+    MutatorSettings.AddMaxScore(builder, max_score);
+    MutatorSettings.AddMatchLength(builder, match_length);
     return MutatorSettings.EndMutatorSettings(builder);
   }
 
@@ -5390,31 +5387,31 @@ public struct MatchSettings : IFlatbufferObject
   public byte[] GetGameMapUpkArray() { return __p.__vector_as_array<byte>(26); }
 
   public static Offset<rlbot.flat.MatchSettings> CreateMatchSettings(FlatBufferBuilder builder,
-      VectorOffset playerConfigurationsOffset = default(VectorOffset),
-      rlbot.flat.GameMode gameMode = rlbot.flat.GameMode.Soccer,
-      rlbot.flat.GameMap gameMap = rlbot.flat.GameMap.DFHStadium,
-      bool skipReplays = false,
-      bool instantStart = false,
-      Offset<rlbot.flat.MutatorSettings> mutatorSettingsOffset = default(Offset<rlbot.flat.MutatorSettings>),
-      rlbot.flat.ExistingMatchBehavior existingMatchBehavior = rlbot.flat.ExistingMatchBehavior.Restart_If_Different,
-      bool enableLockstep = false,
-      bool enableRendering = false,
-      bool enableStateSetting = false,
-      bool autoSaveReplay = false,
-      StringOffset gameMapUpkOffset = default(StringOffset)) {
+      VectorOffset player_configurationsOffset = default(VectorOffset),
+      rlbot.flat.GameMode game_mode = rlbot.flat.GameMode.Soccer,
+      rlbot.flat.GameMap game_map = rlbot.flat.GameMap.DFHStadium,
+      bool skip_replays = false,
+      bool instant_start = false,
+      Offset<rlbot.flat.MutatorSettings> mutator_settingsOffset = default(Offset<rlbot.flat.MutatorSettings>),
+      rlbot.flat.ExistingMatchBehavior existing_match_behavior = rlbot.flat.ExistingMatchBehavior.Restart_If_Different,
+      bool enable_lockstep = false,
+      bool enable_rendering = false,
+      bool enable_state_setting = false,
+      bool auto_save_replay = false,
+      StringOffset game_map_upkOffset = default(StringOffset)) {
     builder.StartTable(12);
-    MatchSettings.AddGameMapUpk(builder, gameMapUpkOffset);
-    MatchSettings.AddMutatorSettings(builder, mutatorSettingsOffset);
-    MatchSettings.AddPlayerConfigurations(builder, playerConfigurationsOffset);
-    MatchSettings.AddAutoSaveReplay(builder, autoSaveReplay);
-    MatchSettings.AddEnableStateSetting(builder, enableStateSetting);
-    MatchSettings.AddEnableRendering(builder, enableRendering);
-    MatchSettings.AddEnableLockstep(builder, enableLockstep);
-    MatchSettings.AddExistingMatchBehavior(builder, existingMatchBehavior);
-    MatchSettings.AddInstantStart(builder, instantStart);
-    MatchSettings.AddSkipReplays(builder, skipReplays);
-    MatchSettings.AddGameMap(builder, gameMap);
-    MatchSettings.AddGameMode(builder, gameMode);
+    MatchSettings.AddGameMapUpk(builder, game_map_upkOffset);
+    MatchSettings.AddMutatorSettings(builder, mutator_settingsOffset);
+    MatchSettings.AddPlayerConfigurations(builder, player_configurationsOffset);
+    MatchSettings.AddAutoSaveReplay(builder, auto_save_replay);
+    MatchSettings.AddEnableStateSetting(builder, enable_state_setting);
+    MatchSettings.AddEnableRendering(builder, enable_rendering);
+    MatchSettings.AddEnableLockstep(builder, enable_lockstep);
+    MatchSettings.AddExistingMatchBehavior(builder, existing_match_behavior);
+    MatchSettings.AddInstantStart(builder, instant_start);
+    MatchSettings.AddSkipReplays(builder, skip_replays);
+    MatchSettings.AddGameMap(builder, game_map);
+    MatchSettings.AddGameMode(builder, game_mode);
     return MatchSettings.EndMatchSettings(builder);
   }
 
@@ -5462,28 +5459,28 @@ public struct MatchSettings : IFlatbufferObject
   }
   public static Offset<rlbot.flat.MatchSettings> Pack(FlatBufferBuilder builder, MatchSettingsT _o) {
     if (_o == null) return default(Offset<rlbot.flat.MatchSettings>);
-    var _playerConfigurations = default(VectorOffset);
+    var _player_configurations = default(VectorOffset);
     if (_o.PlayerConfigurations != null) {
-      var __playerConfigurations = new Offset<rlbot.flat.PlayerConfiguration>[_o.PlayerConfigurations.Count];
-      for (var _j = 0; _j < __playerConfigurations.Length; ++_j) { __playerConfigurations[_j] = rlbot.flat.PlayerConfiguration.Pack(builder, _o.PlayerConfigurations[_j]); }
-      _playerConfigurations = CreatePlayerConfigurationsVector(builder, __playerConfigurations);
+      var __player_configurations = new Offset<rlbot.flat.PlayerConfiguration>[_o.PlayerConfigurations.Count];
+      for (var _j = 0; _j < __player_configurations.Length; ++_j) { __player_configurations[_j] = rlbot.flat.PlayerConfiguration.Pack(builder, _o.PlayerConfigurations[_j]); }
+      _player_configurations = CreatePlayerConfigurationsVector(builder, __player_configurations);
     }
-    var _mutatorSettings = _o.MutatorSettings == null ? default(Offset<rlbot.flat.MutatorSettings>) : rlbot.flat.MutatorSettings.Pack(builder, _o.MutatorSettings);
-    var _gameMapUpk = _o.GameMapUpk == null ? default(StringOffset) : builder.CreateString(_o.GameMapUpk);
+    var _mutator_settings = _o.MutatorSettings == null ? default(Offset<rlbot.flat.MutatorSettings>) : rlbot.flat.MutatorSettings.Pack(builder, _o.MutatorSettings);
+    var _game_map_upk = _o.GameMapUpk == null ? default(StringOffset) : builder.CreateString(_o.GameMapUpk);
     return CreateMatchSettings(
       builder,
-      _playerConfigurations,
+      _player_configurations,
       _o.GameMode,
       _o.GameMap,
       _o.SkipReplays,
       _o.InstantStart,
-      _mutatorSettings,
+      _mutator_settings,
       _o.ExistingMatchBehavior,
       _o.EnableLockstep,
       _o.EnableRendering,
       _o.EnableStateSetting,
       _o.AutoSaveReplay,
-      _gameMapUpk);
+      _game_map_upk);
   }
 }
 
@@ -5630,13 +5627,13 @@ public struct ReadyMessage : IFlatbufferObject
   public bool WantsGameMessages { get { int o = __p.__offset(8); return o != 0 ? 0!=__p.bb.Get(o + __p.bb_pos) : (bool)false; } }
 
   public static Offset<rlbot.flat.ReadyMessage> CreateReadyMessage(FlatBufferBuilder builder,
-      bool wantsBallPredictions = false,
-      bool wantsQuickChat = false,
-      bool wantsGameMessages = false) {
+      bool wants_ball_predictions = false,
+      bool wants_quick_chat = false,
+      bool wants_game_messages = false) {
     builder.StartTable(3);
-    ReadyMessage.AddWantsGameMessages(builder, wantsGameMessages);
-    ReadyMessage.AddWantsQuickChat(builder, wantsQuickChat);
-    ReadyMessage.AddWantsBallPredictions(builder, wantsBallPredictions);
+    ReadyMessage.AddWantsGameMessages(builder, wants_game_messages);
+    ReadyMessage.AddWantsQuickChat(builder, wants_quick_chat);
+    ReadyMessage.AddWantsBallPredictions(builder, wants_ball_predictions);
     return ReadyMessage.EndReadyMessage(builder);
   }
 
@@ -5726,11 +5723,11 @@ public struct PlayerStatEvent : IFlatbufferObject
   public byte[] GetStatTypeArray() { return __p.__vector_as_array<byte>(6); }
 
   public static Offset<rlbot.flat.PlayerStatEvent> CreatePlayerStatEvent(FlatBufferBuilder builder,
-      int playerIndex = 0,
-      StringOffset statTypeOffset = default(StringOffset)) {
+      int player_index = 0,
+      StringOffset stat_typeOffset = default(StringOffset)) {
     builder.StartTable(2);
-    PlayerStatEvent.AddStatType(builder, statTypeOffset);
-    PlayerStatEvent.AddPlayerIndex(builder, playerIndex);
+    PlayerStatEvent.AddStatType(builder, stat_typeOffset);
+    PlayerStatEvent.AddPlayerIndex(builder, player_index);
     return PlayerStatEvent.EndPlayerStatEvent(builder);
   }
 
@@ -5752,11 +5749,11 @@ public struct PlayerStatEvent : IFlatbufferObject
   }
   public static Offset<rlbot.flat.PlayerStatEvent> Pack(FlatBufferBuilder builder, PlayerStatEventT _o) {
     if (_o == null) return default(Offset<rlbot.flat.PlayerStatEvent>);
-    var _statType = _o.StatType == null ? default(StringOffset) : builder.CreateString(_o.StatType);
+    var _stat_type = _o.StatType == null ? default(StringOffset) : builder.CreateString(_o.StatType);
     return CreatePlayerStatEvent(
       builder,
       _o.PlayerIndex,
-      _statType);
+      _stat_type);
   }
 }
 
@@ -5797,9 +5794,9 @@ public struct PlayerSpectate : IFlatbufferObject
   public int PlayerIndex { get { int o = __p.__offset(4); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)0; } }
 
   public static Offset<rlbot.flat.PlayerSpectate> CreatePlayerSpectate(FlatBufferBuilder builder,
-      int playerIndex = 0) {
+      int player_index = 0) {
     builder.StartTable(1);
-    PlayerSpectate.AddPlayerIndex(builder, playerIndex);
+    PlayerSpectate.AddPlayerIndex(builder, player_index);
     return PlayerSpectate.EndPlayerSpectate(builder);
   }
 
@@ -5861,15 +5858,15 @@ public struct PlayerInputChange : IFlatbufferObject
   public float DodgeRight { get { int o = __p.__offset(10); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
 
   public static Offset<rlbot.flat.PlayerInputChange> CreatePlayerInputChange(FlatBufferBuilder builder,
-      int playerIndex = 0,
-      Offset<rlbot.flat.ControllerState> controllerStateOffset = default(Offset<rlbot.flat.ControllerState>),
-      float dodgeForward = 0.0f,
-      float dodgeRight = 0.0f) {
+      int player_index = 0,
+      Offset<rlbot.flat.ControllerState> controller_stateOffset = default(Offset<rlbot.flat.ControllerState>),
+      float dodge_forward = 0.0f,
+      float dodge_right = 0.0f) {
     builder.StartTable(4);
-    PlayerInputChange.AddDodgeRight(builder, dodgeRight);
-    PlayerInputChange.AddDodgeForward(builder, dodgeForward);
-    PlayerInputChange.AddControllerState(builder, controllerStateOffset);
-    PlayerInputChange.AddPlayerIndex(builder, playerIndex);
+    PlayerInputChange.AddDodgeRight(builder, dodge_right);
+    PlayerInputChange.AddDodgeForward(builder, dodge_forward);
+    PlayerInputChange.AddControllerState(builder, controller_stateOffset);
+    PlayerInputChange.AddPlayerIndex(builder, player_index);
     return PlayerInputChange.EndPlayerInputChange(builder);
   }
 
@@ -5895,11 +5892,11 @@ public struct PlayerInputChange : IFlatbufferObject
   }
   public static Offset<rlbot.flat.PlayerInputChange> Pack(FlatBufferBuilder builder, PlayerInputChangeT _o) {
     if (_o == null) return default(Offset<rlbot.flat.PlayerInputChange>);
-    var _controllerState = _o.ControllerState == null ? default(Offset<rlbot.flat.ControllerState>) : rlbot.flat.ControllerState.Pack(builder, _o.ControllerState);
+    var _controller_state = _o.ControllerState == null ? default(Offset<rlbot.flat.ControllerState>) : rlbot.flat.ControllerState.Pack(builder, _o.ControllerState);
     return CreatePlayerInputChange(
       builder,
       _o.PlayerIndex,
-      _controllerState,
+      _controller_state,
       _o.DodgeForward,
       _o.DodgeRight);
   }
@@ -5950,11 +5947,11 @@ public struct GameMessageWrapper : IFlatbufferObject
   public rlbot.flat.PlayerInputChange MessageAsPlayerInputChange() { return Message<rlbot.flat.PlayerInputChange>().Value; }
 
   public static Offset<rlbot.flat.GameMessageWrapper> CreateGameMessageWrapper(FlatBufferBuilder builder,
-      rlbot.flat.GameMessage Message_type = rlbot.flat.GameMessage.NONE,
-      int MessageOffset = 0) {
+      rlbot.flat.GameMessage message_type = rlbot.flat.GameMessage.NONE,
+      int messageOffset = 0) {
     builder.StartTable(2);
-    GameMessageWrapper.AddMessage(builder, MessageOffset);
-    GameMessageWrapper.AddMessageType(builder, Message_type);
+    GameMessageWrapper.AddMessage(builder, messageOffset);
+    GameMessageWrapper.AddMessageType(builder, message_type);
     return GameMessageWrapper.EndGameMessageWrapper(builder);
   }
 
@@ -5988,12 +5985,12 @@ public struct GameMessageWrapper : IFlatbufferObject
   }
   public static Offset<rlbot.flat.GameMessageWrapper> Pack(FlatBufferBuilder builder, GameMessageWrapperT _o) {
     if (_o == null) return default(Offset<rlbot.flat.GameMessageWrapper>);
-    var _Message_type = _o.Message == null ? rlbot.flat.GameMessage.NONE : _o.Message.Type;
-    var _Message = _o.Message == null ? 0 : rlbot.flat.GameMessageUnion.Pack(builder, _o.Message);
+    var _message_type = _o.Message == null ? rlbot.flat.GameMessage.NONE : _o.Message.Type;
+    var _message = _o.Message == null ? 0 : rlbot.flat.GameMessageUnion.Pack(builder, _o.Message);
     return CreateGameMessageWrapper(
       builder,
-      _Message_type,
-      _Message);
+      _message_type,
+      _message);
   }
 }
 
@@ -6036,11 +6033,11 @@ public struct MessagePacket : IFlatbufferObject
 
   public static Offset<rlbot.flat.MessagePacket> CreateMessagePacket(FlatBufferBuilder builder,
       VectorOffset messagesOffset = default(VectorOffset),
-      float gameSeconds = 0.0f,
-      int frameNum = 0) {
+      float game_seconds = 0.0f,
+      int frame_num = 0) {
     builder.StartTable(3);
-    MessagePacket.AddFrameNum(builder, frameNum);
-    MessagePacket.AddGameSeconds(builder, gameSeconds);
+    MessagePacket.AddFrameNum(builder, frame_num);
+    MessagePacket.AddGameSeconds(builder, game_seconds);
     MessagePacket.AddMessages(builder, messagesOffset);
     return MessagePacket.EndMessagePacket(builder);
   }
