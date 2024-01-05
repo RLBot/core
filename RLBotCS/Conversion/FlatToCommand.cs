@@ -4,7 +4,7 @@ namespace RLBotCS.Conversion
 {
     internal class FlatToCommand
     {
-        static public string MakeOpenCommand(MatchSettings matchSettings)
+        static public string MakeOpenCommand(MatchSettingsT matchSettings)
         {
             var command = "Open ";
 
@@ -47,7 +47,7 @@ namespace RLBotCS.Conversion
 
             List<string> game_tags = ["PlayerCount8"];
 
-            if (matchSettings.MutatorSettings is MutatorSettings mutatorSettings)
+            if (matchSettings.MutatorSettings is MutatorSettingsT mutatorSettings)
             {
                 switch (mutatorSettings.MatchLength)
                 {

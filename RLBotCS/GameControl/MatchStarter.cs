@@ -22,9 +22,9 @@ namespace RLBotCS.GameControl
             this.matchCommandSender = new MatchCommandSender(tcpMessenger);
         }
 
-        public void HandleMatchSettings(rlbot.flat.MatchSettings matchSettings, TypedPayload originalMessage)
+        public void HandleMatchSettings(rlbot.flat.MatchSettingsT matchSettings, TypedPayload originalMessage)
         {
-            if (matchSettings.MutatorSettings is MutatorSettings mutatorSettings) {
+            if (matchSettings.MutatorSettings is MutatorSettingsT mutatorSettings) {
                 gravityOption = mutatorSettings.GravityOption;
             }
 
@@ -38,9 +38,9 @@ namespace RLBotCS.GameControl
             Thread.Sleep(3000);
             Console.WriteLine("RLBotCS is done waiting, spawning bots...");
 
-            for (int i = 0; i < matchSettings.PlayerConfigurationsLength; i++)
+            for (int i = 0; i < matchSettings.PlayerConfigurations.Count; i++)
             {
-                var playerConfig = matchSettings.PlayerConfigurations(i).Value;
+                var playerConfig = matchSettings.PlayerConfigurations[i];
 
                 var alreadySpawnedPlayer = playerMapping.getKnownPlayers().FirstOrDefault((kp) => playerConfig.SpawnId == kp.spawnId);
                 if (alreadySpawnedPlayer != null)
@@ -49,11 +49,11 @@ namespace RLBotCS.GameControl
                     continue;
                 }
 
-                var loadout = FlatToModel.ToLoadout(playerConfig.Loadout.Value, playerConfig.Team);
+                var loadout = FlatToModel.ToLoadout(playerConfig.Loadout, playerConfig.Team);
 
                 Console.WriteLine("Spawning player " + playerConfig.Name + " with spawn id " + playerConfig.SpawnId);
 
-                switch (playerConfig.VarietyType)
+                switch (playerConfig.Variety.Type)
                 {
                     case PlayerClass.RLBotPlayer:
                         var rlbotSpawnCommandId = matchCommandSender.AddBotSpawn(playerConfig.Name, playerConfig.Team, BotSkill.Custom, loadout);
@@ -67,7 +67,7 @@ namespace RLBotCS.GameControl
                         });
                         break;
                     case PlayerClass.PsyonixBotPlayer:
-                        var skill = playerConfig.VarietyAsPsyonixBotPlayer().BotSkill;
+                        var skill = playerConfig.Variety.AsPsyonixBotPlayer().BotSkill;
                         var skillEnum = skill < 0.5 ? BotSkill.Easy : skill < 1 ? BotSkill.Medium : BotSkill.Hard;
                         var psySpawnCommandId = matchCommandSender.AddBotSpawn(playerConfig.Name, playerConfig.Team, skillEnum, loadout);
 
@@ -80,7 +80,7 @@ namespace RLBotCS.GameControl
                         });
                         break;
                     default:
-                        Console.WriteLine("Unable to spawn player with variety type: " + playerConfig.VarietyType);
+                        Console.WriteLine("Unable to spawn player with variety type: " + playerConfig.Variety.Type);
                         break;
                 }
             }

@@ -59,7 +59,7 @@ namespace RLBotCS.Server
                         break;
                     case DataType.MatchSettings:
                         var matchSettings = rlbot.flat.MatchSettings.GetRootAsMatchSettings(byteBuffer);
-                        gameController.matchStarter.HandleMatchSettings(matchSettings, message);
+                        gameController.matchStarter.HandleMatchSettings(matchSettings.UnPack(), message);
                         break;
                     case DataType.PlayerInput:
                         var playerInputMsg = PlayerInput.GetRootAsPlayerInput(byteBuffer);

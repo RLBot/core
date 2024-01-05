@@ -14,77 +14,91 @@ namespace RLBotCS.RLBotPacket
         public bool isMatchEnded = false;
         public float worldGravityZ = -650;
 
-
         // TODO: add gameInfo and teams fields.
 
         internal TypedPayload ToFlatbuffer()
         {
-            FlatBufferBuilder builder = new(10000);
+            // Create the ball info
+            rlbot.flat.PhysicsT ballPhysics = new() {
+                Location = new() {
+                    X = ball.physics.location.x,
+                    Y = ball.physics.location.y,
+                    Z = ball.physics.location.z
+                },
+                Rotation = new() {
+                    Pitch = ball.physics.rotation.pitch,
+                    Yaw = ball.physics.rotation.yaw,
+                    Roll = ball.physics.rotation.roll
+                },
+                Velocity = new() {
+                    X = ball.physics.velocity.x,
+                    Y = ball.physics.velocity.y,
+                    Z = ball.physics.velocity.z
+                },
+                AngularVelocity = new() {
+                    X = ball.physics.angularVelocity.x,
+                    Y = ball.physics.angularVelocity.y,
+                    Z = ball.physics.angularVelocity.z
+                },
+            };
 
-            // create the ball info
+            rlbot.flat.TouchT lastTouch = new() {
+                PlayerName = ball.latestTouch.playerName,
+                PlayerIndex = ball.latestTouch.playerIndex,
+                Team = ball.latestTouch.team,
+                GameSeconds = ball.latestTouch.timeSeconds,
+                Location = new() {
+                    X = ball.latestTouch.hitLocation.x,
+                    Y = ball.latestTouch.hitLocation.y,
+                    Z = ball.latestTouch.hitLocation.z
+                },
+                Normal = new() {
+                    X = ball.latestTouch.hitNormal.x,
+                    Y = ball.latestTouch.hitNormal.y,
+                    Z = ball.latestTouch.hitNormal.z
+                }
+            };
 
-            rlbot.flat.Physics.StartPhysics(builder);
+            rlbot.flat.BallInfoT ballInfo = new() {
+                Physics = ballPhysics,
+                LatestTouch = lastTouch
+            };
 
-            var ball_location = rlbot.flat.Vector3.CreateVector3(builder, ball.physics.location.x, ball.physics.location.y, ball.physics.location.z);
-            rlbot.flat.Physics.AddLocation(builder, ball_location);
+            // TODO: SecondsElapsed, GameTimeRemaining, IsUnlimitedTime, GameSpeed, and FrameNum
+            rlbot.flat.GameInfoT gameInfo = new() {
+                SecondsElapsed = 0,
+                GameTimeRemaining = 0,
+                IsOvertime = isOvertime,
+                IsUnlimitedTime = false,
+                IsRoundActive = isRoundActive,
+                IsKickoffPause = isKickoffPause,
+                IsMatchEnded = isMatchEnded,
+                WorldGravityZ = worldGravityZ,
+                GameSpeed = 1,
+                FrameNum = 0,
+            };
 
-            var ball_velocity = rlbot.flat.Vector3.CreateVector3(builder, ball.physics.velocity.x, ball.physics.velocity.y, ball.physics.velocity.z);
-            rlbot.flat.Physics.AddVelocity(builder, ball_velocity);
+            List<rlbot.flat.TeamInfoT> teams = [
+                new() {
+                    TeamIndex = 0,
+                    Score = 0,
+                },
+                new() {
+                    TeamIndex = 1,
+                    Score = 0,
+                },
+            ];
 
-            var ball_angular_velocity = rlbot.flat.Vector3.CreateVector3(builder, ball.physics.angularVelocity.x, ball.physics.angularVelocity.y, ball.physics.angularVelocity.z);
-            rlbot.flat.Physics.AddAngularVelocity(builder, ball_angular_velocity);
+            // TODO: add BoostPadStates, Players, and maybe even TileInformation
+            var gameTickPacket = new rlbot.flat.GameTickPacketT() {
+                Ball = ballInfo,
+                GameInfo = gameInfo,
+                Teams = teams,
+            };
 
-            var ball_rotation = rlbot.flat.Rotator.CreateRotator(builder, ball.physics.rotation.pitch, ball.physics.rotation.yaw, ball.physics.rotation.roll);
-            rlbot.flat.Physics.AddRotation(builder, ball_rotation);
-
-            var ball_physics = rlbot.flat.Physics.EndPhysics(builder);
-
-            rlbot.flat.Touch.StartTouch(builder);
-
-            var last_touch_player_name = builder.CreateString(ball.latestTouch.playerName);
-            rlbot.flat.Touch.AddPlayerName(builder, last_touch_player_name);
-
-            rlbot.flat.Touch.AddPlayerIndex(builder, ball.latestTouch.playerIndex);
-            rlbot.flat.Touch.AddTeam(builder, ball.latestTouch.team);
-            rlbot.flat.Touch.AddGameSeconds(builder, ball.latestTouch.timeSeconds);
-
-            var last_touch_location = rlbot.flat.Vector3.CreateVector3(builder, ball.latestTouch.hitLocation.x, ball.latestTouch.hitLocation.y, ball.latestTouch.hitLocation.z);
-            rlbot.flat.Touch.AddLocation(builder, last_touch_location);
-
-            var last_touch_normal = rlbot.flat.Vector3.CreateVector3(builder, ball.latestTouch.hitNormal.x, ball.latestTouch.hitNormal.y, ball.latestTouch.hitNormal.z);
-            rlbot.flat.Touch.AddNormal(builder, last_touch_normal);
-
-            var last_touch = rlbot.flat.Touch.EndTouch(builder);
-
-            var ballInfo = rlbot.flat.BallInfo.CreateBallInfo(
-                builder,
-                ball_physics,
-                last_touch
-            );
-
-            var game_info = rlbot.flat.GameInfo.CreateGameInfo(
-                builder,
-                0,
-                0,
-                isOvertime,
-                false,
-                isRoundActive,
-                isKickoffPause,
-                isMatchEnded,
-                worldGravityZ,
-                1,
-                0
-            );
-
-            rlbot.flat.GameTickPacket.StartGameTickPacket(builder);
-
-            // TODO: add all the data
-            rlbot.flat.GameTickPacket.AddBall(builder, ballInfo);
-            rlbot.flat.GameTickPacket.AddGameInfo(builder, game_info);
-
-            // finish
-            var gtp = rlbot.flat.GameTickPacket.EndGameTickPacket(builder);
-            builder.Finish(gtp.Value);
+            // A game tick packet is a bit over 8kb
+            FlatBufferBuilder builder = new(8500);
+            builder.Finish(rlbot.flat.GameTickPacket.Pack(builder, gameTickPacket).Value);
 
             return TypedPayload.FromFlatBufferBuilder(DataType.GameTickPacket, builder);
         }

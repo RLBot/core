@@ -17,6 +17,33 @@ public enum CollisionShape : byte
   CylinderShape = 3,
 };
 
+public class CollisionShapeUnion {
+  public CollisionShape Type { get; set; }
+  public object Value { get; set; }
+
+  public CollisionShapeUnion() {
+    this.Type = CollisionShape.NONE;
+    this.Value = null;
+  }
+
+  public T As<T>() where T : class { return this.Value as T; }
+  public rlbot.flat.BoxShapeT AsBoxShape() { return this.As<rlbot.flat.BoxShapeT>(); }
+  public static CollisionShapeUnion FromBoxShape(rlbot.flat.BoxShapeT _boxshape) { return new CollisionShapeUnion{ Type = CollisionShape.BoxShape, Value = _boxshape }; }
+  public rlbot.flat.SphereShapeT AsSphereShape() { return this.As<rlbot.flat.SphereShapeT>(); }
+  public static CollisionShapeUnion FromSphereShape(rlbot.flat.SphereShapeT _sphereshape) { return new CollisionShapeUnion{ Type = CollisionShape.SphereShape, Value = _sphereshape }; }
+  public rlbot.flat.CylinderShapeT AsCylinderShape() { return this.As<rlbot.flat.CylinderShapeT>(); }
+  public static CollisionShapeUnion FromCylinderShape(rlbot.flat.CylinderShapeT _cylindershape) { return new CollisionShapeUnion{ Type = CollisionShape.CylinderShape, Value = _cylindershape }; }
+
+  public static int Pack(Google.FlatBuffers.FlatBufferBuilder builder, CollisionShapeUnion _o) {
+    switch (_o.Type) {
+      default: return 0;
+      case CollisionShape.BoxShape: return rlbot.flat.BoxShape.Pack(builder, _o.AsBoxShape()).Value;
+      case CollisionShape.SphereShape: return rlbot.flat.SphereShape.Pack(builder, _o.AsSphereShape()).Value;
+      case CollisionShape.CylinderShape: return rlbot.flat.CylinderShape.Pack(builder, _o.AsCylinderShape()).Value;
+    }
+  }
+}
+
 
 
 static public class CollisionShapeVerify
@@ -160,6 +187,36 @@ public enum PlayerClass : byte
   PsyonixBotPlayer = 3,
   PartyMemberBotPlayer = 4,
 };
+
+public class PlayerClassUnion {
+  public PlayerClass Type { get; set; }
+  public object Value { get; set; }
+
+  public PlayerClassUnion() {
+    this.Type = PlayerClass.NONE;
+    this.Value = null;
+  }
+
+  public T As<T>() where T : class { return this.Value as T; }
+  public rlbot.flat.RLBotPlayerT AsRLBotPlayer() { return this.As<rlbot.flat.RLBotPlayerT>(); }
+  public static PlayerClassUnion FromRLBotPlayer(rlbot.flat.RLBotPlayerT _rlbotplayer) { return new PlayerClassUnion{ Type = PlayerClass.RLBotPlayer, Value = _rlbotplayer }; }
+  public rlbot.flat.HumanPlayerT AsHumanPlayer() { return this.As<rlbot.flat.HumanPlayerT>(); }
+  public static PlayerClassUnion FromHumanPlayer(rlbot.flat.HumanPlayerT _humanplayer) { return new PlayerClassUnion{ Type = PlayerClass.HumanPlayer, Value = _humanplayer }; }
+  public rlbot.flat.PsyonixBotPlayerT AsPsyonixBotPlayer() { return this.As<rlbot.flat.PsyonixBotPlayerT>(); }
+  public static PlayerClassUnion FromPsyonixBotPlayer(rlbot.flat.PsyonixBotPlayerT _psyonixbotplayer) { return new PlayerClassUnion{ Type = PlayerClass.PsyonixBotPlayer, Value = _psyonixbotplayer }; }
+  public rlbot.flat.PartyMemberBotPlayerT AsPartyMemberBotPlayer() { return this.As<rlbot.flat.PartyMemberBotPlayerT>(); }
+  public static PlayerClassUnion FromPartyMemberBotPlayer(rlbot.flat.PartyMemberBotPlayerT _partymemberbotplayer) { return new PlayerClassUnion{ Type = PlayerClass.PartyMemberBotPlayer, Value = _partymemberbotplayer }; }
+
+  public static int Pack(Google.FlatBuffers.FlatBufferBuilder builder, PlayerClassUnion _o) {
+    switch (_o.Type) {
+      default: return 0;
+      case PlayerClass.RLBotPlayer: return rlbot.flat.RLBotPlayer.Pack(builder, _o.AsRLBotPlayer()).Value;
+      case PlayerClass.HumanPlayer: return rlbot.flat.HumanPlayer.Pack(builder, _o.AsHumanPlayer()).Value;
+      case PlayerClass.PsyonixBotPlayer: return rlbot.flat.PsyonixBotPlayer.Pack(builder, _o.AsPsyonixBotPlayer()).Value;
+      case PlayerClass.PartyMemberBotPlayer: return rlbot.flat.PartyMemberBotPlayer.Pack(builder, _o.AsPartyMemberBotPlayer()).Value;
+    }
+  }
+}
 
 
 
@@ -415,6 +472,33 @@ public enum GameMessage : byte
   PlayerInputChange = 3,
 };
 
+public class GameMessageUnion {
+  public GameMessage Type { get; set; }
+  public object Value { get; set; }
+
+  public GameMessageUnion() {
+    this.Type = GameMessage.NONE;
+    this.Value = null;
+  }
+
+  public T As<T>() where T : class { return this.Value as T; }
+  public rlbot.flat.PlayerStatEventT AsPlayerStatEvent() { return this.As<rlbot.flat.PlayerStatEventT>(); }
+  public static GameMessageUnion FromPlayerStatEvent(rlbot.flat.PlayerStatEventT _playerstatevent) { return new GameMessageUnion{ Type = GameMessage.PlayerStatEvent, Value = _playerstatevent }; }
+  public rlbot.flat.PlayerSpectateT AsPlayerSpectate() { return this.As<rlbot.flat.PlayerSpectateT>(); }
+  public static GameMessageUnion FromPlayerSpectate(rlbot.flat.PlayerSpectateT _playerspectate) { return new GameMessageUnion{ Type = GameMessage.PlayerSpectate, Value = _playerspectate }; }
+  public rlbot.flat.PlayerInputChangeT AsPlayerInputChange() { return this.As<rlbot.flat.PlayerInputChangeT>(); }
+  public static GameMessageUnion FromPlayerInputChange(rlbot.flat.PlayerInputChangeT _playerinputchange) { return new GameMessageUnion{ Type = GameMessage.PlayerInputChange, Value = _playerinputchange }; }
+
+  public static int Pack(Google.FlatBuffers.FlatBufferBuilder builder, GameMessageUnion _o) {
+    switch (_o.Type) {
+      default: return 0;
+      case GameMessage.PlayerStatEvent: return rlbot.flat.PlayerStatEvent.Pack(builder, _o.AsPlayerStatEvent()).Value;
+      case GameMessage.PlayerSpectate: return rlbot.flat.PlayerSpectate.Pack(builder, _o.AsPlayerSpectate()).Value;
+      case GameMessage.PlayerInputChange: return rlbot.flat.PlayerInputChange.Pack(builder, _o.AsPlayerInputChange()).Value;
+    }
+  }
+}
+
 
 
 static public class GameMessageVerify
@@ -506,6 +590,61 @@ public struct ControllerState : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.ControllerState>(o);
   }
+  public ControllerStateT UnPack() {
+    var _o = new ControllerStateT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(ControllerStateT _o) {
+    _o.Throttle = this.Throttle;
+    _o.Steer = this.Steer;
+    _o.Pitch = this.Pitch;
+    _o.Yaw = this.Yaw;
+    _o.Roll = this.Roll;
+    _o.Jump = this.Jump;
+    _o.Boost = this.Boost;
+    _o.Handbrake = this.Handbrake;
+    _o.UseItem = this.UseItem;
+  }
+  public static Offset<rlbot.flat.ControllerState> Pack(FlatBufferBuilder builder, ControllerStateT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.ControllerState>);
+    return CreateControllerState(
+      builder,
+      _o.Throttle,
+      _o.Steer,
+      _o.Pitch,
+      _o.Yaw,
+      _o.Roll,
+      _o.Jump,
+      _o.Boost,
+      _o.Handbrake,
+      _o.UseItem);
+  }
+}
+
+public class ControllerStateT
+{
+  public float Throttle { get; set; }
+  public float Steer { get; set; }
+  public float Pitch { get; set; }
+  public float Yaw { get; set; }
+  public float Roll { get; set; }
+  public bool Jump { get; set; }
+  public bool Boost { get; set; }
+  public bool Handbrake { get; set; }
+  public bool UseItem { get; set; }
+
+  public ControllerStateT() {
+    this.Throttle = 0.0f;
+    this.Steer = 0.0f;
+    this.Pitch = 0.0f;
+    this.Yaw = 0.0f;
+    this.Roll = 0.0f;
+    this.Jump = false;
+    this.Boost = false;
+    this.Handbrake = false;
+    this.UseItem = false;
+  }
 }
 
 
@@ -555,6 +694,34 @@ public struct PlayerInput : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.PlayerInput>(o);
   }
+  public PlayerInputT UnPack() {
+    var _o = new PlayerInputT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(PlayerInputT _o) {
+    _o.PlayerIndex = this.PlayerIndex;
+    _o.ControllerState = this.ControllerState.HasValue ? this.ControllerState.Value.UnPack() : null;
+  }
+  public static Offset<rlbot.flat.PlayerInput> Pack(FlatBufferBuilder builder, PlayerInputT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.PlayerInput>);
+    var _controllerState = _o.ControllerState == null ? default(Offset<rlbot.flat.ControllerState>) : rlbot.flat.ControllerState.Pack(builder, _o.ControllerState);
+    return CreatePlayerInput(
+      builder,
+      _o.PlayerIndex,
+      _controllerState);
+  }
+}
+
+public class PlayerInputT
+{
+  public int PlayerIndex { get; set; }
+  public rlbot.flat.ControllerStateT ControllerState { get; set; }
+
+  public PlayerInputT() {
+    this.PlayerIndex = 0;
+    this.ControllerState = null;
+  }
 }
 
 
@@ -586,6 +753,37 @@ public struct Vector3 : IFlatbufferObject
     builder.PutFloat(X);
     return new Offset<rlbot.flat.Vector3>(builder.Offset);
   }
+  public Vector3T UnPack() {
+    var _o = new Vector3T();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(Vector3T _o) {
+    _o.X = this.X;
+    _o.Y = this.Y;
+    _o.Z = this.Z;
+  }
+  public static Offset<rlbot.flat.Vector3> Pack(FlatBufferBuilder builder, Vector3T _o) {
+    if (_o == null) return default(Offset<rlbot.flat.Vector3>);
+    return CreateVector3(
+      builder,
+      _o.X,
+      _o.Y,
+      _o.Z);
+  }
+}
+
+public class Vector3T
+{
+  public float X { get; set; }
+  public float Y { get; set; }
+  public float Z { get; set; }
+
+  public Vector3T() {
+    this.X = 0.0f;
+    this.Y = 0.0f;
+    this.Z = 0.0f;
+  }
 }
 
 /// Expresses the rotation state of an object in Euler angles, with values in radians.
@@ -606,6 +804,37 @@ public struct Rotator : IFlatbufferObject
     builder.PutFloat(Yaw);
     builder.PutFloat(Pitch);
     return new Offset<rlbot.flat.Rotator>(builder.Offset);
+  }
+  public RotatorT UnPack() {
+    var _o = new RotatorT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(RotatorT _o) {
+    _o.Pitch = this.Pitch;
+    _o.Yaw = this.Yaw;
+    _o.Roll = this.Roll;
+  }
+  public static Offset<rlbot.flat.Rotator> Pack(FlatBufferBuilder builder, RotatorT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.Rotator>);
+    return CreateRotator(
+      builder,
+      _o.Pitch,
+      _o.Yaw,
+      _o.Roll);
+  }
+}
+
+public class RotatorT
+{
+  public float Pitch { get; set; }
+  public float Yaw { get; set; }
+  public float Roll { get; set; }
+
+  public RotatorT() {
+    this.Pitch = 0.0f;
+    this.Yaw = 0.0f;
+    this.Roll = 0.0f;
   }
 }
 
@@ -631,6 +860,41 @@ public struct Quaternion : IFlatbufferObject
     builder.PutFloat(Y);
     builder.PutFloat(X);
     return new Offset<rlbot.flat.Quaternion>(builder.Offset);
+  }
+  public QuaternionT UnPack() {
+    var _o = new QuaternionT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(QuaternionT _o) {
+    _o.X = this.X;
+    _o.Y = this.Y;
+    _o.Z = this.Z;
+    _o.W = this.W;
+  }
+  public static Offset<rlbot.flat.Quaternion> Pack(FlatBufferBuilder builder, QuaternionT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.Quaternion>);
+    return CreateQuaternion(
+      builder,
+      _o.X,
+      _o.Y,
+      _o.Z,
+      _o.W);
+  }
+}
+
+public class QuaternionT
+{
+  public float X { get; set; }
+  public float Y { get; set; }
+  public float Z { get; set; }
+  public float W { get; set; }
+
+  public QuaternionT() {
+    this.X = 0.0f;
+    this.Y = 0.0f;
+    this.Z = 0.0f;
+    this.W = 0.0f;
   }
 }
 
@@ -666,6 +930,37 @@ public struct BoxShape : IFlatbufferObject
   public static Offset<rlbot.flat.BoxShape> EndBoxShape(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.BoxShape>(o);
+  }
+  public BoxShapeT UnPack() {
+    var _o = new BoxShapeT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(BoxShapeT _o) {
+    _o.Length = this.Length;
+    _o.Width = this.Width;
+    _o.Height = this.Height;
+  }
+  public static Offset<rlbot.flat.BoxShape> Pack(FlatBufferBuilder builder, BoxShapeT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.BoxShape>);
+    return CreateBoxShape(
+      builder,
+      _o.Length,
+      _o.Width,
+      _o.Height);
+  }
+}
+
+public class BoxShapeT
+{
+  public float Length { get; set; }
+  public float Width { get; set; }
+  public float Height { get; set; }
+
+  public BoxShapeT() {
+    this.Length = 0.0f;
+    this.Width = 0.0f;
+    this.Height = 0.0f;
   }
 }
 
@@ -705,6 +1000,29 @@ public struct SphereShape : IFlatbufferObject
   public static Offset<rlbot.flat.SphereShape> EndSphereShape(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.SphereShape>(o);
+  }
+  public SphereShapeT UnPack() {
+    var _o = new SphereShapeT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(SphereShapeT _o) {
+    _o.Diameter = this.Diameter;
+  }
+  public static Offset<rlbot.flat.SphereShape> Pack(FlatBufferBuilder builder, SphereShapeT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.SphereShape>);
+    return CreateSphereShape(
+      builder,
+      _o.Diameter);
+  }
+}
+
+public class SphereShapeT
+{
+  public float Diameter { get; set; }
+
+  public SphereShapeT() {
+    this.Diameter = 0.0f;
   }
 }
 
@@ -746,6 +1064,33 @@ public struct CylinderShape : IFlatbufferObject
   public static Offset<rlbot.flat.CylinderShape> EndCylinderShape(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.CylinderShape>(o);
+  }
+  public CylinderShapeT UnPack() {
+    var _o = new CylinderShapeT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(CylinderShapeT _o) {
+    _o.Diameter = this.Diameter;
+    _o.Height = this.Height;
+  }
+  public static Offset<rlbot.flat.CylinderShape> Pack(FlatBufferBuilder builder, CylinderShapeT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.CylinderShape>);
+    return CreateCylinderShape(
+      builder,
+      _o.Diameter,
+      _o.Height);
+  }
+}
+
+public class CylinderShapeT
+{
+  public float Diameter { get; set; }
+  public float Height { get; set; }
+
+  public CylinderShapeT() {
+    this.Diameter = 0.0f;
+    this.Height = 0.0f;
   }
 }
 
@@ -789,6 +1134,23 @@ public struct Touch : IFlatbufferObject
   /// The index of the player involved with the touch.
   public int PlayerIndex { get { int o = __p.__offset(14); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)0; } }
 
+  public static Offset<rlbot.flat.Touch> CreateTouch(FlatBufferBuilder builder,
+      StringOffset playerNameOffset = default(StringOffset),
+      float gameSeconds = 0.0f,
+      rlbot.flat.Vector3T location = null,
+      rlbot.flat.Vector3T normal = null,
+      int team = 0,
+      int playerIndex = 0) {
+    builder.StartTable(6);
+    Touch.AddPlayerIndex(builder, playerIndex);
+    Touch.AddTeam(builder, team);
+    Touch.AddNormal(builder, rlbot.flat.Vector3.Pack(builder, normal));
+    Touch.AddLocation(builder, rlbot.flat.Vector3.Pack(builder, location));
+    Touch.AddGameSeconds(builder, gameSeconds);
+    Touch.AddPlayerName(builder, playerNameOffset);
+    return Touch.EndTouch(builder);
+  }
+
   public static void StartTouch(FlatBufferBuilder builder) { builder.StartTable(6); }
   public static void AddPlayerName(FlatBufferBuilder builder, StringOffset playerNameOffset) { builder.AddOffset(0, playerNameOffset.Value, 0); }
   public static void AddGameSeconds(FlatBufferBuilder builder, float gameSeconds) { builder.AddFloat(1, gameSeconds, 0.0f); }
@@ -799,6 +1161,50 @@ public struct Touch : IFlatbufferObject
   public static Offset<rlbot.flat.Touch> EndTouch(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.Touch>(o);
+  }
+  public TouchT UnPack() {
+    var _o = new TouchT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(TouchT _o) {
+    _o.PlayerName = this.PlayerName;
+    _o.GameSeconds = this.GameSeconds;
+    _o.Location = this.Location.HasValue ? this.Location.Value.UnPack() : null;
+    _o.Normal = this.Normal.HasValue ? this.Normal.Value.UnPack() : null;
+    _o.Team = this.Team;
+    _o.PlayerIndex = this.PlayerIndex;
+  }
+  public static Offset<rlbot.flat.Touch> Pack(FlatBufferBuilder builder, TouchT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.Touch>);
+    var _playerName = _o.PlayerName == null ? default(StringOffset) : builder.CreateString(_o.PlayerName);
+    return CreateTouch(
+      builder,
+      _playerName,
+      _o.GameSeconds,
+      _o.Location,
+      _o.Normal,
+      _o.Team,
+      _o.PlayerIndex);
+  }
+}
+
+public class TouchT
+{
+  public string PlayerName { get; set; }
+  public float GameSeconds { get; set; }
+  public rlbot.flat.Vector3T Location { get; set; }
+  public rlbot.flat.Vector3T Normal { get; set; }
+  public int Team { get; set; }
+  public int PlayerIndex { get; set; }
+
+  public TouchT() {
+    this.PlayerName = null;
+    this.GameSeconds = 0.0f;
+    this.Location = new rlbot.flat.Vector3T();
+    this.Normal = new rlbot.flat.Vector3T();
+    this.Team = 0;
+    this.PlayerIndex = 0;
   }
 }
 
@@ -866,6 +1272,53 @@ public struct ScoreInfo : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.ScoreInfo>(o);
   }
+  public ScoreInfoT UnPack() {
+    var _o = new ScoreInfoT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(ScoreInfoT _o) {
+    _o.Score = this.Score;
+    _o.Goals = this.Goals;
+    _o.OwnGoals = this.OwnGoals;
+    _o.Assists = this.Assists;
+    _o.Saves = this.Saves;
+    _o.Shots = this.Shots;
+    _o.Demolitions = this.Demolitions;
+  }
+  public static Offset<rlbot.flat.ScoreInfo> Pack(FlatBufferBuilder builder, ScoreInfoT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.ScoreInfo>);
+    return CreateScoreInfo(
+      builder,
+      _o.Score,
+      _o.Goals,
+      _o.OwnGoals,
+      _o.Assists,
+      _o.Saves,
+      _o.Shots,
+      _o.Demolitions);
+  }
+}
+
+public class ScoreInfoT
+{
+  public int Score { get; set; }
+  public int Goals { get; set; }
+  public int OwnGoals { get; set; }
+  public int Assists { get; set; }
+  public int Saves { get; set; }
+  public int Shots { get; set; }
+  public int Demolitions { get; set; }
+
+  public ScoreInfoT() {
+    this.Score = 0;
+    this.Goals = 0;
+    this.OwnGoals = 0;
+    this.Assists = 0;
+    this.Saves = 0;
+    this.Shots = 0;
+    this.Demolitions = 0;
+  }
 }
 
 
@@ -907,6 +1360,41 @@ public struct Physics : IFlatbufferObject
   public static Offset<rlbot.flat.Physics> EndPhysics(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.Physics>(o);
+  }
+  public PhysicsT UnPack() {
+    var _o = new PhysicsT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(PhysicsT _o) {
+    _o.Location = this.Location.HasValue ? this.Location.Value.UnPack() : null;
+    _o.Rotation = this.Rotation.HasValue ? this.Rotation.Value.UnPack() : null;
+    _o.Velocity = this.Velocity.HasValue ? this.Velocity.Value.UnPack() : null;
+    _o.AngularVelocity = this.AngularVelocity.HasValue ? this.AngularVelocity.Value.UnPack() : null;
+  }
+  public static Offset<rlbot.flat.Physics> Pack(FlatBufferBuilder builder, PhysicsT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.Physics>);
+    StartPhysics(builder);
+    AddLocation(builder, rlbot.flat.Vector3.Pack(builder, _o.Location));
+    AddRotation(builder, rlbot.flat.Rotator.Pack(builder, _o.Rotation));
+    AddVelocity(builder, rlbot.flat.Vector3.Pack(builder, _o.Velocity));
+    AddAngularVelocity(builder, rlbot.flat.Vector3.Pack(builder, _o.AngularVelocity));
+    return EndPhysics(builder);
+  }
+}
+
+public class PhysicsT
+{
+  public rlbot.flat.Vector3T Location { get; set; }
+  public rlbot.flat.RotatorT Rotation { get; set; }
+  public rlbot.flat.Vector3T Velocity { get; set; }
+  public rlbot.flat.Vector3T AngularVelocity { get; set; }
+
+  public PhysicsT() {
+    this.Location = new rlbot.flat.Vector3T();
+    this.Rotation = new rlbot.flat.RotatorT();
+    this.Velocity = new rlbot.flat.Vector3T();
+    this.AngularVelocity = new rlbot.flat.Vector3T();
   }
 }
 
@@ -960,6 +1448,39 @@ public struct PlayerInfo : IFlatbufferObject
   /// the framework figure out what index was actually assigned to this player instead.
   public int SpawnId { get { int o = __p.__offset(30); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)0; } }
 
+  public static Offset<rlbot.flat.PlayerInfo> CreatePlayerInfo(FlatBufferBuilder builder,
+      Offset<rlbot.flat.Physics> physicsOffset = default(Offset<rlbot.flat.Physics>),
+      Offset<rlbot.flat.ScoreInfo> scoreInfoOffset = default(Offset<rlbot.flat.ScoreInfo>),
+      bool isDemolished = false,
+      bool hasWheelContact = false,
+      bool isSupersonic = false,
+      bool isBot = false,
+      bool jumped = false,
+      bool doubleJumped = false,
+      StringOffset nameOffset = default(StringOffset),
+      int team = 0,
+      int boost = 0,
+      Offset<rlbot.flat.BoxShape> hitboxOOffset = default(Offset<rlbot.flat.BoxShape>),
+      rlbot.flat.Vector3T hitboxOffset = null,
+      int spawnId = 0) {
+    builder.StartTable(14);
+    PlayerInfo.AddSpawnId(builder, spawnId);
+    PlayerInfo.AddHitboxOffset(builder, rlbot.flat.Vector3.Pack(builder, hitboxOffset));
+    PlayerInfo.AddHitbox(builder, hitboxOOffset);
+    PlayerInfo.AddBoost(builder, boost);
+    PlayerInfo.AddTeam(builder, team);
+    PlayerInfo.AddName(builder, nameOffset);
+    PlayerInfo.AddScoreInfo(builder, scoreInfoOffset);
+    PlayerInfo.AddPhysics(builder, physicsOffset);
+    PlayerInfo.AddDoubleJumped(builder, doubleJumped);
+    PlayerInfo.AddJumped(builder, jumped);
+    PlayerInfo.AddIsBot(builder, isBot);
+    PlayerInfo.AddIsSupersonic(builder, isSupersonic);
+    PlayerInfo.AddHasWheelContact(builder, hasWheelContact);
+    PlayerInfo.AddIsDemolished(builder, isDemolished);
+    return PlayerInfo.EndPlayerInfo(builder);
+  }
+
   public static void StartPlayerInfo(FlatBufferBuilder builder) { builder.StartTable(14); }
   public static void AddPhysics(FlatBufferBuilder builder, Offset<rlbot.flat.Physics> physicsOffset) { builder.AddOffset(0, physicsOffset.Value, 0); }
   public static void AddScoreInfo(FlatBufferBuilder builder, Offset<rlbot.flat.ScoreInfo> scoreInfoOffset) { builder.AddOffset(1, scoreInfoOffset.Value, 0); }
@@ -978,6 +1499,85 @@ public struct PlayerInfo : IFlatbufferObject
   public static Offset<rlbot.flat.PlayerInfo> EndPlayerInfo(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.PlayerInfo>(o);
+  }
+  public PlayerInfoT UnPack() {
+    var _o = new PlayerInfoT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(PlayerInfoT _o) {
+    _o.Physics = this.Physics.HasValue ? this.Physics.Value.UnPack() : null;
+    _o.ScoreInfo = this.ScoreInfo.HasValue ? this.ScoreInfo.Value.UnPack() : null;
+    _o.IsDemolished = this.IsDemolished;
+    _o.HasWheelContact = this.HasWheelContact;
+    _o.IsSupersonic = this.IsSupersonic;
+    _o.IsBot = this.IsBot;
+    _o.Jumped = this.Jumped;
+    _o.DoubleJumped = this.DoubleJumped;
+    _o.Name = this.Name;
+    _o.Team = this.Team;
+    _o.Boost = this.Boost;
+    _o.Hitbox = this.Hitbox.HasValue ? this.Hitbox.Value.UnPack() : null;
+    _o.HitboxOffset = this.HitboxOffset.HasValue ? this.HitboxOffset.Value.UnPack() : null;
+    _o.SpawnId = this.SpawnId;
+  }
+  public static Offset<rlbot.flat.PlayerInfo> Pack(FlatBufferBuilder builder, PlayerInfoT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.PlayerInfo>);
+    var _physics = _o.Physics == null ? default(Offset<rlbot.flat.Physics>) : rlbot.flat.Physics.Pack(builder, _o.Physics);
+    var _scoreInfo = _o.ScoreInfo == null ? default(Offset<rlbot.flat.ScoreInfo>) : rlbot.flat.ScoreInfo.Pack(builder, _o.ScoreInfo);
+    var _name = _o.Name == null ? default(StringOffset) : builder.CreateString(_o.Name);
+    var _hitbox = _o.Hitbox == null ? default(Offset<rlbot.flat.BoxShape>) : rlbot.flat.BoxShape.Pack(builder, _o.Hitbox);
+    return CreatePlayerInfo(
+      builder,
+      _physics,
+      _scoreInfo,
+      _o.IsDemolished,
+      _o.HasWheelContact,
+      _o.IsSupersonic,
+      _o.IsBot,
+      _o.Jumped,
+      _o.DoubleJumped,
+      _name,
+      _o.Team,
+      _o.Boost,
+      _hitbox,
+      _o.HitboxOffset,
+      _o.SpawnId);
+  }
+}
+
+public class PlayerInfoT
+{
+  public rlbot.flat.PhysicsT Physics { get; set; }
+  public rlbot.flat.ScoreInfoT ScoreInfo { get; set; }
+  public bool IsDemolished { get; set; }
+  public bool HasWheelContact { get; set; }
+  public bool IsSupersonic { get; set; }
+  public bool IsBot { get; set; }
+  public bool Jumped { get; set; }
+  public bool DoubleJumped { get; set; }
+  public string Name { get; set; }
+  public int Team { get; set; }
+  public int Boost { get; set; }
+  public rlbot.flat.BoxShapeT Hitbox { get; set; }
+  public rlbot.flat.Vector3T HitboxOffset { get; set; }
+  public int SpawnId { get; set; }
+
+  public PlayerInfoT() {
+    this.Physics = null;
+    this.ScoreInfo = null;
+    this.IsDemolished = false;
+    this.HasWheelContact = false;
+    this.IsSupersonic = false;
+    this.IsBot = false;
+    this.Jumped = false;
+    this.DoubleJumped = false;
+    this.Name = null;
+    this.Team = 0;
+    this.Boost = 0;
+    this.Hitbox = null;
+    this.HitboxOffset = new rlbot.flat.Vector3T();
+    this.SpawnId = 0;
   }
 }
 
@@ -1037,6 +1637,37 @@ public struct DropShotBallInfo : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.DropShotBallInfo>(o);
   }
+  public DropShotBallInfoT UnPack() {
+    var _o = new DropShotBallInfoT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(DropShotBallInfoT _o) {
+    _o.AbsorbedForce = this.AbsorbedForce;
+    _o.DamageIndex = this.DamageIndex;
+    _o.ForceAccumRecent = this.ForceAccumRecent;
+  }
+  public static Offset<rlbot.flat.DropShotBallInfo> Pack(FlatBufferBuilder builder, DropShotBallInfoT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.DropShotBallInfo>);
+    return CreateDropShotBallInfo(
+      builder,
+      _o.AbsorbedForce,
+      _o.DamageIndex,
+      _o.ForceAccumRecent);
+  }
+}
+
+public class DropShotBallInfoT
+{
+  public float AbsorbedForce { get; set; }
+  public int DamageIndex { get; set; }
+  public float ForceAccumRecent { get; set; }
+
+  public DropShotBallInfoT() {
+    this.AbsorbedForce = 0.0f;
+    this.DamageIndex = 0;
+    this.ForceAccumRecent = 0.0f;
+  }
 }
 
 
@@ -1095,6 +1726,60 @@ public struct BallInfo : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.BallInfo>(o);
   }
+  public BallInfoT UnPack() {
+    var _o = new BallInfoT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(BallInfoT _o) {
+    _o.Physics = this.Physics.HasValue ? this.Physics.Value.UnPack() : null;
+    _o.LatestTouch = this.LatestTouch.HasValue ? this.LatestTouch.Value.UnPack() : null;
+    _o.DropShotInfo = this.DropShotInfo.HasValue ? this.DropShotInfo.Value.UnPack() : null;
+    _o.Shape = new rlbot.flat.CollisionShapeUnion();
+    _o.Shape.Type = this.ShapeType;
+    switch (this.ShapeType) {
+      default: break;
+      case rlbot.flat.CollisionShape.BoxShape:
+        _o.Shape.Value = this.Shape<rlbot.flat.BoxShape>().HasValue ? this.Shape<rlbot.flat.BoxShape>().Value.UnPack() : null;
+        break;
+      case rlbot.flat.CollisionShape.SphereShape:
+        _o.Shape.Value = this.Shape<rlbot.flat.SphereShape>().HasValue ? this.Shape<rlbot.flat.SphereShape>().Value.UnPack() : null;
+        break;
+      case rlbot.flat.CollisionShape.CylinderShape:
+        _o.Shape.Value = this.Shape<rlbot.flat.CylinderShape>().HasValue ? this.Shape<rlbot.flat.CylinderShape>().Value.UnPack() : null;
+        break;
+    }
+  }
+  public static Offset<rlbot.flat.BallInfo> Pack(FlatBufferBuilder builder, BallInfoT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.BallInfo>);
+    var _physics = _o.Physics == null ? default(Offset<rlbot.flat.Physics>) : rlbot.flat.Physics.Pack(builder, _o.Physics);
+    var _latestTouch = _o.LatestTouch == null ? default(Offset<rlbot.flat.Touch>) : rlbot.flat.Touch.Pack(builder, _o.LatestTouch);
+    var _dropShotInfo = _o.DropShotInfo == null ? default(Offset<rlbot.flat.DropShotBallInfo>) : rlbot.flat.DropShotBallInfo.Pack(builder, _o.DropShotInfo);
+    var _shape_type = _o.Shape == null ? rlbot.flat.CollisionShape.NONE : _o.Shape.Type;
+    var _shape = _o.Shape == null ? 0 : rlbot.flat.CollisionShapeUnion.Pack(builder, _o.Shape);
+    return CreateBallInfo(
+      builder,
+      _physics,
+      _latestTouch,
+      _dropShotInfo,
+      _shape_type,
+      _shape);
+  }
+}
+
+public class BallInfoT
+{
+  public rlbot.flat.PhysicsT Physics { get; set; }
+  public rlbot.flat.TouchT LatestTouch { get; set; }
+  public rlbot.flat.DropShotBallInfoT DropShotInfo { get; set; }
+  public rlbot.flat.CollisionShapeUnion Shape { get; set; }
+
+  public BallInfoT() {
+    this.Physics = null;
+    this.LatestTouch = null;
+    this.DropShotInfo = null;
+    this.Shape = null;
+  }
 }
 
 
@@ -1142,6 +1827,33 @@ public struct BoostPadState : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.BoostPadState>(o);
   }
+  public BoostPadStateT UnPack() {
+    var _o = new BoostPadStateT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(BoostPadStateT _o) {
+    _o.IsActive = this.IsActive;
+    _o.Timer = this.Timer;
+  }
+  public static Offset<rlbot.flat.BoostPadState> Pack(FlatBufferBuilder builder, BoostPadStateT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.BoostPadState>);
+    return CreateBoostPadState(
+      builder,
+      _o.IsActive,
+      _o.Timer);
+  }
+}
+
+public class BoostPadStateT
+{
+  public bool IsActive { get; set; }
+  public float Timer { get; set; }
+
+  public BoostPadStateT() {
+    this.IsActive = false;
+    this.Timer = 0.0f;
+  }
 }
 
 
@@ -1180,6 +1892,29 @@ public struct DropshotTile : IFlatbufferObject
   public static Offset<rlbot.flat.DropshotTile> EndDropshotTile(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.DropshotTile>(o);
+  }
+  public DropshotTileT UnPack() {
+    var _o = new DropshotTileT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(DropshotTileT _o) {
+    _o.TileState = this.TileState;
+  }
+  public static Offset<rlbot.flat.DropshotTile> Pack(FlatBufferBuilder builder, DropshotTileT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.DropshotTile>);
+    return CreateDropshotTile(
+      builder,
+      _o.TileState);
+  }
+}
+
+public class DropshotTileT
+{
+  public rlbot.flat.TileState TileState { get; set; }
+
+  public DropshotTileT() {
+    this.TileState = rlbot.flat.TileState.Unknown;
   }
 }
 
@@ -1263,6 +1998,65 @@ public struct GameInfo : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.GameInfo>(o);
   }
+  public GameInfoT UnPack() {
+    var _o = new GameInfoT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(GameInfoT _o) {
+    _o.SecondsElapsed = this.SecondsElapsed;
+    _o.GameTimeRemaining = this.GameTimeRemaining;
+    _o.IsOvertime = this.IsOvertime;
+    _o.IsUnlimitedTime = this.IsUnlimitedTime;
+    _o.IsRoundActive = this.IsRoundActive;
+    _o.IsKickoffPause = this.IsKickoffPause;
+    _o.IsMatchEnded = this.IsMatchEnded;
+    _o.WorldGravityZ = this.WorldGravityZ;
+    _o.GameSpeed = this.GameSpeed;
+    _o.FrameNum = this.FrameNum;
+  }
+  public static Offset<rlbot.flat.GameInfo> Pack(FlatBufferBuilder builder, GameInfoT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.GameInfo>);
+    return CreateGameInfo(
+      builder,
+      _o.SecondsElapsed,
+      _o.GameTimeRemaining,
+      _o.IsOvertime,
+      _o.IsUnlimitedTime,
+      _o.IsRoundActive,
+      _o.IsKickoffPause,
+      _o.IsMatchEnded,
+      _o.WorldGravityZ,
+      _o.GameSpeed,
+      _o.FrameNum);
+  }
+}
+
+public class GameInfoT
+{
+  public float SecondsElapsed { get; set; }
+  public float GameTimeRemaining { get; set; }
+  public bool IsOvertime { get; set; }
+  public bool IsUnlimitedTime { get; set; }
+  public bool IsRoundActive { get; set; }
+  public bool IsKickoffPause { get; set; }
+  public bool IsMatchEnded { get; set; }
+  public float WorldGravityZ { get; set; }
+  public float GameSpeed { get; set; }
+  public int FrameNum { get; set; }
+
+  public GameInfoT() {
+    this.SecondsElapsed = 0.0f;
+    this.GameTimeRemaining = 0.0f;
+    this.IsOvertime = false;
+    this.IsUnlimitedTime = false;
+    this.IsRoundActive = false;
+    this.IsKickoffPause = false;
+    this.IsMatchEnded = false;
+    this.WorldGravityZ = 0.0f;
+    this.GameSpeed = 0.0f;
+    this.FrameNum = 0;
+  }
 }
 
 
@@ -1313,6 +2107,33 @@ public struct TeamInfo : IFlatbufferObject
   public static Offset<rlbot.flat.TeamInfo> EndTeamInfo(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.TeamInfo>(o);
+  }
+  public TeamInfoT UnPack() {
+    var _o = new TeamInfoT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(TeamInfoT _o) {
+    _o.TeamIndex = this.TeamIndex;
+    _o.Score = this.Score;
+  }
+  public static Offset<rlbot.flat.TeamInfo> Pack(FlatBufferBuilder builder, TeamInfoT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.TeamInfo>);
+    return CreateTeamInfo(
+      builder,
+      _o.TeamIndex,
+      _o.Score);
+  }
+}
+
+public class TeamInfoT
+{
+  public int TeamIndex { get; set; }
+  public int Score { get; set; }
+
+  public TeamInfoT() {
+    this.TeamIndex = 0;
+    this.Score = 0;
   }
 }
 
@@ -1396,6 +2217,79 @@ public struct GameTickPacket : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.GameTickPacket>(o);
   }
+  public GameTickPacketT UnPack() {
+    var _o = new GameTickPacketT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(GameTickPacketT _o) {
+    _o.Players = new List<rlbot.flat.PlayerInfoT>();
+    for (var _j = 0; _j < this.PlayersLength; ++_j) {_o.Players.Add(this.Players(_j).HasValue ? this.Players(_j).Value.UnPack() : null);}
+    _o.BoostPadStates = new List<rlbot.flat.BoostPadStateT>();
+    for (var _j = 0; _j < this.BoostPadStatesLength; ++_j) {_o.BoostPadStates.Add(this.BoostPadStates(_j).HasValue ? this.BoostPadStates(_j).Value.UnPack() : null);}
+    _o.Ball = this.Ball.HasValue ? this.Ball.Value.UnPack() : null;
+    _o.GameInfo = this.GameInfo.HasValue ? this.GameInfo.Value.UnPack() : null;
+    _o.TileInformation = new List<rlbot.flat.DropshotTileT>();
+    for (var _j = 0; _j < this.TileInformationLength; ++_j) {_o.TileInformation.Add(this.TileInformation(_j).HasValue ? this.TileInformation(_j).Value.UnPack() : null);}
+    _o.Teams = new List<rlbot.flat.TeamInfoT>();
+    for (var _j = 0; _j < this.TeamsLength; ++_j) {_o.Teams.Add(this.Teams(_j).HasValue ? this.Teams(_j).Value.UnPack() : null);}
+  }
+  public static Offset<rlbot.flat.GameTickPacket> Pack(FlatBufferBuilder builder, GameTickPacketT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.GameTickPacket>);
+    var _players = default(VectorOffset);
+    if (_o.Players != null) {
+      var __players = new Offset<rlbot.flat.PlayerInfo>[_o.Players.Count];
+      for (var _j = 0; _j < __players.Length; ++_j) { __players[_j] = rlbot.flat.PlayerInfo.Pack(builder, _o.Players[_j]); }
+      _players = CreatePlayersVector(builder, __players);
+    }
+    var _boostPadStates = default(VectorOffset);
+    if (_o.BoostPadStates != null) {
+      var __boostPadStates = new Offset<rlbot.flat.BoostPadState>[_o.BoostPadStates.Count];
+      for (var _j = 0; _j < __boostPadStates.Length; ++_j) { __boostPadStates[_j] = rlbot.flat.BoostPadState.Pack(builder, _o.BoostPadStates[_j]); }
+      _boostPadStates = CreateBoostPadStatesVector(builder, __boostPadStates);
+    }
+    var _ball = _o.Ball == null ? default(Offset<rlbot.flat.BallInfo>) : rlbot.flat.BallInfo.Pack(builder, _o.Ball);
+    var _gameInfo = _o.GameInfo == null ? default(Offset<rlbot.flat.GameInfo>) : rlbot.flat.GameInfo.Pack(builder, _o.GameInfo);
+    var _tileInformation = default(VectorOffset);
+    if (_o.TileInformation != null) {
+      var __tileInformation = new Offset<rlbot.flat.DropshotTile>[_o.TileInformation.Count];
+      for (var _j = 0; _j < __tileInformation.Length; ++_j) { __tileInformation[_j] = rlbot.flat.DropshotTile.Pack(builder, _o.TileInformation[_j]); }
+      _tileInformation = CreateTileInformationVector(builder, __tileInformation);
+    }
+    var _teams = default(VectorOffset);
+    if (_o.Teams != null) {
+      var __teams = new Offset<rlbot.flat.TeamInfo>[_o.Teams.Count];
+      for (var _j = 0; _j < __teams.Length; ++_j) { __teams[_j] = rlbot.flat.TeamInfo.Pack(builder, _o.Teams[_j]); }
+      _teams = CreateTeamsVector(builder, __teams);
+    }
+    return CreateGameTickPacket(
+      builder,
+      _players,
+      _boostPadStates,
+      _ball,
+      _gameInfo,
+      _tileInformation,
+      _teams);
+  }
+}
+
+public class GameTickPacketT
+{
+  public List<rlbot.flat.PlayerInfoT> Players { get; set; }
+  public List<rlbot.flat.BoostPadStateT> BoostPadStates { get; set; }
+  public rlbot.flat.BallInfoT Ball { get; set; }
+  public rlbot.flat.GameInfoT GameInfo { get; set; }
+  public List<rlbot.flat.DropshotTileT> TileInformation { get; set; }
+  public List<rlbot.flat.TeamInfoT> Teams { get; set; }
+
+  public GameTickPacketT() {
+    this.Players = null;
+    this.BoostPadStates = null;
+    this.Ball = null;
+    this.GameInfo = null;
+    this.TileInformation = null;
+    this.Teams = null;
+  }
 }
 
 
@@ -1432,6 +2326,21 @@ public struct RigidBodyState : IFlatbufferObject
   public rlbot.flat.Vector3? Velocity { get { int o = __p.__offset(10); return o != 0 ? (rlbot.flat.Vector3?)(new rlbot.flat.Vector3()).__assign(o + __p.bb_pos, __p.bb) : null; } }
   public rlbot.flat.Vector3? AngularVelocity { get { int o = __p.__offset(12); return o != 0 ? (rlbot.flat.Vector3?)(new rlbot.flat.Vector3()).__assign(o + __p.bb_pos, __p.bb) : null; } }
 
+  public static Offset<rlbot.flat.RigidBodyState> CreateRigidBodyState(FlatBufferBuilder builder,
+      int frame = 0,
+      rlbot.flat.Vector3T location = null,
+      rlbot.flat.QuaternionT rotation = null,
+      rlbot.flat.Vector3T velocity = null,
+      rlbot.flat.Vector3T angularVelocity = null) {
+    builder.StartTable(5);
+    RigidBodyState.AddAngularVelocity(builder, rlbot.flat.Vector3.Pack(builder, angularVelocity));
+    RigidBodyState.AddVelocity(builder, rlbot.flat.Vector3.Pack(builder, velocity));
+    RigidBodyState.AddRotation(builder, rlbot.flat.Quaternion.Pack(builder, rotation));
+    RigidBodyState.AddLocation(builder, rlbot.flat.Vector3.Pack(builder, location));
+    RigidBodyState.AddFrame(builder, frame);
+    return RigidBodyState.EndRigidBodyState(builder);
+  }
+
   public static void StartRigidBodyState(FlatBufferBuilder builder) { builder.StartTable(5); }
   public static void AddFrame(FlatBufferBuilder builder, int frame) { builder.AddInt(0, frame, 0); }
   public static void AddLocation(FlatBufferBuilder builder, Offset<rlbot.flat.Vector3> locationOffset) { builder.AddStruct(1, locationOffset.Value, 0); }
@@ -1441,6 +2350,45 @@ public struct RigidBodyState : IFlatbufferObject
   public static Offset<rlbot.flat.RigidBodyState> EndRigidBodyState(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.RigidBodyState>(o);
+  }
+  public RigidBodyStateT UnPack() {
+    var _o = new RigidBodyStateT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(RigidBodyStateT _o) {
+    _o.Frame = this.Frame;
+    _o.Location = this.Location.HasValue ? this.Location.Value.UnPack() : null;
+    _o.Rotation = this.Rotation.HasValue ? this.Rotation.Value.UnPack() : null;
+    _o.Velocity = this.Velocity.HasValue ? this.Velocity.Value.UnPack() : null;
+    _o.AngularVelocity = this.AngularVelocity.HasValue ? this.AngularVelocity.Value.UnPack() : null;
+  }
+  public static Offset<rlbot.flat.RigidBodyState> Pack(FlatBufferBuilder builder, RigidBodyStateT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.RigidBodyState>);
+    return CreateRigidBodyState(
+      builder,
+      _o.Frame,
+      _o.Location,
+      _o.Rotation,
+      _o.Velocity,
+      _o.AngularVelocity);
+  }
+}
+
+public class RigidBodyStateT
+{
+  public int Frame { get; set; }
+  public rlbot.flat.Vector3T Location { get; set; }
+  public rlbot.flat.QuaternionT Rotation { get; set; }
+  public rlbot.flat.Vector3T Velocity { get; set; }
+  public rlbot.flat.Vector3T AngularVelocity { get; set; }
+
+  public RigidBodyStateT() {
+    this.Frame = 0;
+    this.Location = new rlbot.flat.Vector3T();
+    this.Rotation = new rlbot.flat.QuaternionT();
+    this.Velocity = new rlbot.flat.Vector3T();
+    this.AngularVelocity = new rlbot.flat.Vector3T();
   }
 }
 
@@ -1489,6 +2437,35 @@ public struct PlayerRigidBodyState : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.PlayerRigidBodyState>(o);
   }
+  public PlayerRigidBodyStateT UnPack() {
+    var _o = new PlayerRigidBodyStateT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(PlayerRigidBodyStateT _o) {
+    _o.State = this.State.HasValue ? this.State.Value.UnPack() : null;
+    _o.Input = this.Input.HasValue ? this.Input.Value.UnPack() : null;
+  }
+  public static Offset<rlbot.flat.PlayerRigidBodyState> Pack(FlatBufferBuilder builder, PlayerRigidBodyStateT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.PlayerRigidBodyState>);
+    var _state = _o.State == null ? default(Offset<rlbot.flat.RigidBodyState>) : rlbot.flat.RigidBodyState.Pack(builder, _o.State);
+    var _input = _o.Input == null ? default(Offset<rlbot.flat.ControllerState>) : rlbot.flat.ControllerState.Pack(builder, _o.Input);
+    return CreatePlayerRigidBodyState(
+      builder,
+      _state,
+      _input);
+  }
+}
+
+public class PlayerRigidBodyStateT
+{
+  public rlbot.flat.RigidBodyStateT State { get; set; }
+  public rlbot.flat.ControllerStateT Input { get; set; }
+
+  public PlayerRigidBodyStateT() {
+    this.State = null;
+    this.Input = null;
+  }
 }
 
 
@@ -1527,6 +2504,30 @@ public struct BallRigidBodyState : IFlatbufferObject
   public static Offset<rlbot.flat.BallRigidBodyState> EndBallRigidBodyState(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.BallRigidBodyState>(o);
+  }
+  public BallRigidBodyStateT UnPack() {
+    var _o = new BallRigidBodyStateT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(BallRigidBodyStateT _o) {
+    _o.State = this.State.HasValue ? this.State.Value.UnPack() : null;
+  }
+  public static Offset<rlbot.flat.BallRigidBodyState> Pack(FlatBufferBuilder builder, BallRigidBodyStateT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.BallRigidBodyState>);
+    var _state = _o.State == null ? default(Offset<rlbot.flat.RigidBodyState>) : rlbot.flat.RigidBodyState.Pack(builder, _o.State);
+    return CreateBallRigidBodyState(
+      builder,
+      _state);
+  }
+}
+
+public class BallRigidBodyStateT
+{
+  public rlbot.flat.RigidBodyStateT State { get; set; }
+
+  public BallRigidBodyStateT() {
+    this.State = null;
   }
 }
 
@@ -1576,6 +2577,41 @@ public struct RigidBodyTick : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.RigidBodyTick>(o);
   }
+  public RigidBodyTickT UnPack() {
+    var _o = new RigidBodyTickT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(RigidBodyTickT _o) {
+    _o.Ball = this.Ball.HasValue ? this.Ball.Value.UnPack() : null;
+    _o.Players = new List<rlbot.flat.PlayerRigidBodyStateT>();
+    for (var _j = 0; _j < this.PlayersLength; ++_j) {_o.Players.Add(this.Players(_j).HasValue ? this.Players(_j).Value.UnPack() : null);}
+  }
+  public static Offset<rlbot.flat.RigidBodyTick> Pack(FlatBufferBuilder builder, RigidBodyTickT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.RigidBodyTick>);
+    var _ball = _o.Ball == null ? default(Offset<rlbot.flat.BallRigidBodyState>) : rlbot.flat.BallRigidBodyState.Pack(builder, _o.Ball);
+    var _players = default(VectorOffset);
+    if (_o.Players != null) {
+      var __players = new Offset<rlbot.flat.PlayerRigidBodyState>[_o.Players.Count];
+      for (var _j = 0; _j < __players.Length; ++_j) { __players[_j] = rlbot.flat.PlayerRigidBodyState.Pack(builder, _o.Players[_j]); }
+      _players = CreatePlayersVector(builder, __players);
+    }
+    return CreateRigidBodyTick(
+      builder,
+      _ball,
+      _players);
+  }
+}
+
+public class RigidBodyTickT
+{
+  public rlbot.flat.BallRigidBodyStateT Ball { get; set; }
+  public List<rlbot.flat.PlayerRigidBodyStateT> Players { get; set; }
+
+  public RigidBodyTickT() {
+    this.Ball = null;
+    this.Players = null;
+  }
 }
 
 
@@ -1605,6 +2641,21 @@ public struct GoalInfo : IFlatbufferObject
   public float Width { get { int o = __p.__offset(10); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
   public float Height { get { int o = __p.__offset(12); return o != 0 ? __p.bb.GetFloat(o + __p.bb_pos) : (float)0.0f; } }
 
+  public static Offset<rlbot.flat.GoalInfo> CreateGoalInfo(FlatBufferBuilder builder,
+      int teamNum = 0,
+      rlbot.flat.Vector3T location = null,
+      rlbot.flat.Vector3T direction = null,
+      float width = 0.0f,
+      float height = 0.0f) {
+    builder.StartTable(5);
+    GoalInfo.AddHeight(builder, height);
+    GoalInfo.AddWidth(builder, width);
+    GoalInfo.AddDirection(builder, rlbot.flat.Vector3.Pack(builder, direction));
+    GoalInfo.AddLocation(builder, rlbot.flat.Vector3.Pack(builder, location));
+    GoalInfo.AddTeamNum(builder, teamNum);
+    return GoalInfo.EndGoalInfo(builder);
+  }
+
   public static void StartGoalInfo(FlatBufferBuilder builder) { builder.StartTable(5); }
   public static void AddTeamNum(FlatBufferBuilder builder, int teamNum) { builder.AddInt(0, teamNum, 0); }
   public static void AddLocation(FlatBufferBuilder builder, Offset<rlbot.flat.Vector3> locationOffset) { builder.AddStruct(1, locationOffset.Value, 0); }
@@ -1614,6 +2665,45 @@ public struct GoalInfo : IFlatbufferObject
   public static Offset<rlbot.flat.GoalInfo> EndGoalInfo(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.GoalInfo>(o);
+  }
+  public GoalInfoT UnPack() {
+    var _o = new GoalInfoT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(GoalInfoT _o) {
+    _o.TeamNum = this.TeamNum;
+    _o.Location = this.Location.HasValue ? this.Location.Value.UnPack() : null;
+    _o.Direction = this.Direction.HasValue ? this.Direction.Value.UnPack() : null;
+    _o.Width = this.Width;
+    _o.Height = this.Height;
+  }
+  public static Offset<rlbot.flat.GoalInfo> Pack(FlatBufferBuilder builder, GoalInfoT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.GoalInfo>);
+    return CreateGoalInfo(
+      builder,
+      _o.TeamNum,
+      _o.Location,
+      _o.Direction,
+      _o.Width,
+      _o.Height);
+  }
+}
+
+public class GoalInfoT
+{
+  public int TeamNum { get; set; }
+  public rlbot.flat.Vector3T Location { get; set; }
+  public rlbot.flat.Vector3T Direction { get; set; }
+  public float Width { get; set; }
+  public float Height { get; set; }
+
+  public GoalInfoT() {
+    this.TeamNum = 0;
+    this.Location = new rlbot.flat.Vector3T();
+    this.Direction = new rlbot.flat.Vector3T();
+    this.Width = 0.0f;
+    this.Height = 0.0f;
   }
 }
 
@@ -1644,12 +2734,48 @@ public struct BoostPad : IFlatbufferObject
   public rlbot.flat.Vector3? Location { get { int o = __p.__offset(4); return o != 0 ? (rlbot.flat.Vector3?)(new rlbot.flat.Vector3()).__assign(o + __p.bb_pos, __p.bb) : null; } }
   public bool IsFullBoost { get { int o = __p.__offset(6); return o != 0 ? 0!=__p.bb.Get(o + __p.bb_pos) : (bool)false; } }
 
+  public static Offset<rlbot.flat.BoostPad> CreateBoostPad(FlatBufferBuilder builder,
+      rlbot.flat.Vector3T location = null,
+      bool isFullBoost = false) {
+    builder.StartTable(2);
+    BoostPad.AddLocation(builder, rlbot.flat.Vector3.Pack(builder, location));
+    BoostPad.AddIsFullBoost(builder, isFullBoost);
+    return BoostPad.EndBoostPad(builder);
+  }
+
   public static void StartBoostPad(FlatBufferBuilder builder) { builder.StartTable(2); }
   public static void AddLocation(FlatBufferBuilder builder, Offset<rlbot.flat.Vector3> locationOffset) { builder.AddStruct(0, locationOffset.Value, 0); }
   public static void AddIsFullBoost(FlatBufferBuilder builder, bool isFullBoost) { builder.AddBool(1, isFullBoost, false); }
   public static Offset<rlbot.flat.BoostPad> EndBoostPad(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.BoostPad>(o);
+  }
+  public BoostPadT UnPack() {
+    var _o = new BoostPadT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(BoostPadT _o) {
+    _o.Location = this.Location.HasValue ? this.Location.Value.UnPack() : null;
+    _o.IsFullBoost = this.IsFullBoost;
+  }
+  public static Offset<rlbot.flat.BoostPad> Pack(FlatBufferBuilder builder, BoostPadT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.BoostPad>);
+    return CreateBoostPad(
+      builder,
+      _o.Location,
+      _o.IsFullBoost);
+  }
+}
+
+public class BoostPadT
+{
+  public rlbot.flat.Vector3T Location { get; set; }
+  public bool IsFullBoost { get; set; }
+
+  public BoostPadT() {
+    this.Location = new rlbot.flat.Vector3T();
+    this.IsFullBoost = false;
   }
 }
 
@@ -1705,6 +2831,47 @@ public struct FieldInfo : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.FieldInfo>(o);
   }
+  public FieldInfoT UnPack() {
+    var _o = new FieldInfoT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(FieldInfoT _o) {
+    _o.BoostPads = new List<rlbot.flat.BoostPadT>();
+    for (var _j = 0; _j < this.BoostPadsLength; ++_j) {_o.BoostPads.Add(this.BoostPads(_j).HasValue ? this.BoostPads(_j).Value.UnPack() : null);}
+    _o.Goals = new List<rlbot.flat.GoalInfoT>();
+    for (var _j = 0; _j < this.GoalsLength; ++_j) {_o.Goals.Add(this.Goals(_j).HasValue ? this.Goals(_j).Value.UnPack() : null);}
+  }
+  public static Offset<rlbot.flat.FieldInfo> Pack(FlatBufferBuilder builder, FieldInfoT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.FieldInfo>);
+    var _boostPads = default(VectorOffset);
+    if (_o.BoostPads != null) {
+      var __boostPads = new Offset<rlbot.flat.BoostPad>[_o.BoostPads.Count];
+      for (var _j = 0; _j < __boostPads.Length; ++_j) { __boostPads[_j] = rlbot.flat.BoostPad.Pack(builder, _o.BoostPads[_j]); }
+      _boostPads = CreateBoostPadsVector(builder, __boostPads);
+    }
+    var _goals = default(VectorOffset);
+    if (_o.Goals != null) {
+      var __goals = new Offset<rlbot.flat.GoalInfo>[_o.Goals.Count];
+      for (var _j = 0; _j < __goals.Length; ++_j) { __goals[_j] = rlbot.flat.GoalInfo.Pack(builder, _o.Goals[_j]); }
+      _goals = CreateGoalsVector(builder, __goals);
+    }
+    return CreateFieldInfo(
+      builder,
+      _boostPads,
+      _goals);
+  }
+}
+
+public class FieldInfoT
+{
+  public List<rlbot.flat.BoostPadT> BoostPads { get; set; }
+  public List<rlbot.flat.GoalInfoT> Goals { get; set; }
+
+  public FieldInfoT() {
+    this.BoostPads = null;
+    this.Goals = null;
+  }
 }
 
 
@@ -1732,6 +2899,29 @@ public struct Float : IFlatbufferObject
     builder.PutFloat(Val);
     return new Offset<rlbot.flat.Float>(builder.Offset);
   }
+  public FloatT UnPack() {
+    var _o = new FloatT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(FloatT _o) {
+    _o.Val = this.Val;
+  }
+  public static Offset<rlbot.flat.Float> Pack(FlatBufferBuilder builder, FloatT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.Float>);
+    return CreateFloat(
+      builder,
+      _o.Val);
+  }
+}
+
+public class FloatT
+{
+  public float Val { get; set; }
+
+  public FloatT() {
+    this.Val = 0.0f;
+  }
 }
 
 public struct Bool : IFlatbufferObject
@@ -1747,6 +2937,29 @@ public struct Bool : IFlatbufferObject
     builder.Prep(1, 1);
     builder.PutBool(Val);
     return new Offset<rlbot.flat.Bool>(builder.Offset);
+  }
+  public BoolT UnPack() {
+    var _o = new BoolT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(BoolT _o) {
+    _o.Val = this.Val;
+  }
+  public static Offset<rlbot.flat.Bool> Pack(FlatBufferBuilder builder, BoolT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.Bool>);
+    return CreateBool(
+      builder,
+      _o.Val);
+  }
+}
+
+public class BoolT
+{
+  public bool Val { get; set; }
+
+  public BoolT() {
+    this.Val = false;
   }
 }
 
@@ -1771,6 +2984,37 @@ public struct Vector3Partial : IFlatbufferObject
   public static Offset<rlbot.flat.Vector3Partial> EndVector3Partial(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.Vector3Partial>(o);
+  }
+  public Vector3PartialT UnPack() {
+    var _o = new Vector3PartialT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(Vector3PartialT _o) {
+    _o.X = this.X.HasValue ? this.X.Value.UnPack() : null;
+    _o.Y = this.Y.HasValue ? this.Y.Value.UnPack() : null;
+    _o.Z = this.Z.HasValue ? this.Z.Value.UnPack() : null;
+  }
+  public static Offset<rlbot.flat.Vector3Partial> Pack(FlatBufferBuilder builder, Vector3PartialT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.Vector3Partial>);
+    StartVector3Partial(builder);
+    AddX(builder, rlbot.flat.Float.Pack(builder, _o.X));
+    AddY(builder, rlbot.flat.Float.Pack(builder, _o.Y));
+    AddZ(builder, rlbot.flat.Float.Pack(builder, _o.Z));
+    return EndVector3Partial(builder);
+  }
+}
+
+public class Vector3PartialT
+{
+  public rlbot.flat.FloatT X { get; set; }
+  public rlbot.flat.FloatT Y { get; set; }
+  public rlbot.flat.FloatT Z { get; set; }
+
+  public Vector3PartialT() {
+    this.X = new rlbot.flat.FloatT();
+    this.Y = new rlbot.flat.FloatT();
+    this.Z = new rlbot.flat.FloatT();
   }
 }
 
@@ -1807,6 +3051,37 @@ public struct RotatorPartial : IFlatbufferObject
   public static Offset<rlbot.flat.RotatorPartial> EndRotatorPartial(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.RotatorPartial>(o);
+  }
+  public RotatorPartialT UnPack() {
+    var _o = new RotatorPartialT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(RotatorPartialT _o) {
+    _o.Pitch = this.Pitch.HasValue ? this.Pitch.Value.UnPack() : null;
+    _o.Yaw = this.Yaw.HasValue ? this.Yaw.Value.UnPack() : null;
+    _o.Roll = this.Roll.HasValue ? this.Roll.Value.UnPack() : null;
+  }
+  public static Offset<rlbot.flat.RotatorPartial> Pack(FlatBufferBuilder builder, RotatorPartialT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.RotatorPartial>);
+    StartRotatorPartial(builder);
+    AddPitch(builder, rlbot.flat.Float.Pack(builder, _o.Pitch));
+    AddYaw(builder, rlbot.flat.Float.Pack(builder, _o.Yaw));
+    AddRoll(builder, rlbot.flat.Float.Pack(builder, _o.Roll));
+    return EndRotatorPartial(builder);
+  }
+}
+
+public class RotatorPartialT
+{
+  public rlbot.flat.FloatT Pitch { get; set; }
+  public rlbot.flat.FloatT Yaw { get; set; }
+  public rlbot.flat.FloatT Roll { get; set; }
+
+  public RotatorPartialT() {
+    this.Pitch = new rlbot.flat.FloatT();
+    this.Yaw = new rlbot.flat.FloatT();
+    this.Roll = new rlbot.flat.FloatT();
   }
 }
 
@@ -1859,6 +3134,45 @@ public struct DesiredPhysics : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.DesiredPhysics>(o);
   }
+  public DesiredPhysicsT UnPack() {
+    var _o = new DesiredPhysicsT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(DesiredPhysicsT _o) {
+    _o.Location = this.Location.HasValue ? this.Location.Value.UnPack() : null;
+    _o.Rotation = this.Rotation.HasValue ? this.Rotation.Value.UnPack() : null;
+    _o.Velocity = this.Velocity.HasValue ? this.Velocity.Value.UnPack() : null;
+    _o.AngularVelocity = this.AngularVelocity.HasValue ? this.AngularVelocity.Value.UnPack() : null;
+  }
+  public static Offset<rlbot.flat.DesiredPhysics> Pack(FlatBufferBuilder builder, DesiredPhysicsT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.DesiredPhysics>);
+    var _location = _o.Location == null ? default(Offset<rlbot.flat.Vector3Partial>) : rlbot.flat.Vector3Partial.Pack(builder, _o.Location);
+    var _rotation = _o.Rotation == null ? default(Offset<rlbot.flat.RotatorPartial>) : rlbot.flat.RotatorPartial.Pack(builder, _o.Rotation);
+    var _velocity = _o.Velocity == null ? default(Offset<rlbot.flat.Vector3Partial>) : rlbot.flat.Vector3Partial.Pack(builder, _o.Velocity);
+    var _angularVelocity = _o.AngularVelocity == null ? default(Offset<rlbot.flat.Vector3Partial>) : rlbot.flat.Vector3Partial.Pack(builder, _o.AngularVelocity);
+    return CreateDesiredPhysics(
+      builder,
+      _location,
+      _rotation,
+      _velocity,
+      _angularVelocity);
+  }
+}
+
+public class DesiredPhysicsT
+{
+  public rlbot.flat.Vector3PartialT Location { get; set; }
+  public rlbot.flat.RotatorPartialT Rotation { get; set; }
+  public rlbot.flat.Vector3PartialT Velocity { get; set; }
+  public rlbot.flat.Vector3PartialT AngularVelocity { get; set; }
+
+  public DesiredPhysicsT() {
+    this.Location = null;
+    this.Rotation = null;
+    this.Velocity = null;
+    this.AngularVelocity = null;
+  }
 }
 
 
@@ -1899,6 +3213,30 @@ public struct DesiredBallState : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.DesiredBallState>(o);
   }
+  public DesiredBallStateT UnPack() {
+    var _o = new DesiredBallStateT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(DesiredBallStateT _o) {
+    _o.Physics = this.Physics.HasValue ? this.Physics.Value.UnPack() : null;
+  }
+  public static Offset<rlbot.flat.DesiredBallState> Pack(FlatBufferBuilder builder, DesiredBallStateT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.DesiredBallState>);
+    var _physics = _o.Physics == null ? default(Offset<rlbot.flat.DesiredPhysics>) : rlbot.flat.DesiredPhysics.Pack(builder, _o.Physics);
+    return CreateDesiredBallState(
+      builder,
+      _physics);
+  }
+}
+
+public class DesiredBallStateT
+{
+  public rlbot.flat.DesiredPhysicsT Physics { get; set; }
+
+  public DesiredBallStateT() {
+    this.Physics = null;
+  }
 }
 
 
@@ -1926,6 +3264,19 @@ public struct DesiredCarState : IFlatbufferObject
   public rlbot.flat.Bool? Jumped { get { int o = __p.__offset(8); return o != 0 ? (rlbot.flat.Bool?)(new rlbot.flat.Bool()).__assign(o + __p.bb_pos, __p.bb) : null; } }
   public rlbot.flat.Bool? DoubleJumped { get { int o = __p.__offset(10); return o != 0 ? (rlbot.flat.Bool?)(new rlbot.flat.Bool()).__assign(o + __p.bb_pos, __p.bb) : null; } }
 
+  public static Offset<rlbot.flat.DesiredCarState> CreateDesiredCarState(FlatBufferBuilder builder,
+      Offset<rlbot.flat.DesiredPhysics> physicsOffset = default(Offset<rlbot.flat.DesiredPhysics>),
+      rlbot.flat.FloatT boostAmount = null,
+      rlbot.flat.BoolT jumped = null,
+      rlbot.flat.BoolT doubleJumped = null) {
+    builder.StartTable(4);
+    DesiredCarState.AddDoubleJumped(builder, rlbot.flat.Bool.Pack(builder, doubleJumped));
+    DesiredCarState.AddJumped(builder, rlbot.flat.Bool.Pack(builder, jumped));
+    DesiredCarState.AddBoostAmount(builder, rlbot.flat.Float.Pack(builder, boostAmount));
+    DesiredCarState.AddPhysics(builder, physicsOffset);
+    return DesiredCarState.EndDesiredCarState(builder);
+  }
+
   public static void StartDesiredCarState(FlatBufferBuilder builder) { builder.StartTable(4); }
   public static void AddPhysics(FlatBufferBuilder builder, Offset<rlbot.flat.DesiredPhysics> physicsOffset) { builder.AddOffset(0, physicsOffset.Value, 0); }
   public static void AddBoostAmount(FlatBufferBuilder builder, Offset<rlbot.flat.Float> boostAmountOffset) { builder.AddStruct(1, boostAmountOffset.Value, 0); }
@@ -1934,6 +3285,42 @@ public struct DesiredCarState : IFlatbufferObject
   public static Offset<rlbot.flat.DesiredCarState> EndDesiredCarState(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.DesiredCarState>(o);
+  }
+  public DesiredCarStateT UnPack() {
+    var _o = new DesiredCarStateT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(DesiredCarStateT _o) {
+    _o.Physics = this.Physics.HasValue ? this.Physics.Value.UnPack() : null;
+    _o.BoostAmount = this.BoostAmount.HasValue ? this.BoostAmount.Value.UnPack() : null;
+    _o.Jumped = this.Jumped.HasValue ? this.Jumped.Value.UnPack() : null;
+    _o.DoubleJumped = this.DoubleJumped.HasValue ? this.DoubleJumped.Value.UnPack() : null;
+  }
+  public static Offset<rlbot.flat.DesiredCarState> Pack(FlatBufferBuilder builder, DesiredCarStateT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.DesiredCarState>);
+    var _physics = _o.Physics == null ? default(Offset<rlbot.flat.DesiredPhysics>) : rlbot.flat.DesiredPhysics.Pack(builder, _o.Physics);
+    return CreateDesiredCarState(
+      builder,
+      _physics,
+      _o.BoostAmount,
+      _o.Jumped,
+      _o.DoubleJumped);
+  }
+}
+
+public class DesiredCarStateT
+{
+  public rlbot.flat.DesiredPhysicsT Physics { get; set; }
+  public rlbot.flat.FloatT BoostAmount { get; set; }
+  public rlbot.flat.BoolT Jumped { get; set; }
+  public rlbot.flat.BoolT DoubleJumped { get; set; }
+
+  public DesiredCarStateT() {
+    this.Physics = null;
+    this.BoostAmount = new rlbot.flat.FloatT();
+    this.Jumped = new rlbot.flat.BoolT();
+    this.DoubleJumped = new rlbot.flat.BoolT();
   }
 }
 
@@ -1967,6 +3354,29 @@ public struct DesiredBoostState : IFlatbufferObject
   public static Offset<rlbot.flat.DesiredBoostState> EndDesiredBoostState(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.DesiredBoostState>(o);
+  }
+  public DesiredBoostStateT UnPack() {
+    var _o = new DesiredBoostStateT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(DesiredBoostStateT _o) {
+    _o.RespawnTime = this.RespawnTime.HasValue ? this.RespawnTime.Value.UnPack() : null;
+  }
+  public static Offset<rlbot.flat.DesiredBoostState> Pack(FlatBufferBuilder builder, DesiredBoostStateT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.DesiredBoostState>);
+    StartDesiredBoostState(builder);
+    AddRespawnTime(builder, rlbot.flat.Float.Pack(builder, _o.RespawnTime));
+    return EndDesiredBoostState(builder);
+  }
+}
+
+public class DesiredBoostStateT
+{
+  public rlbot.flat.FloatT RespawnTime { get; set; }
+
+  public DesiredBoostStateT() {
+    this.RespawnTime = new rlbot.flat.FloatT();
   }
 }
 
@@ -2003,6 +3413,41 @@ public struct DesiredGameInfoState : IFlatbufferObject
   public static Offset<rlbot.flat.DesiredGameInfoState> EndDesiredGameInfoState(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.DesiredGameInfoState>(o);
+  }
+  public DesiredGameInfoStateT UnPack() {
+    var _o = new DesiredGameInfoStateT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(DesiredGameInfoStateT _o) {
+    _o.WorldGravityZ = this.WorldGravityZ.HasValue ? this.WorldGravityZ.Value.UnPack() : null;
+    _o.GameSpeed = this.GameSpeed.HasValue ? this.GameSpeed.Value.UnPack() : null;
+    _o.Paused = this.Paused.HasValue ? this.Paused.Value.UnPack() : null;
+    _o.EndMatch = this.EndMatch.HasValue ? this.EndMatch.Value.UnPack() : null;
+  }
+  public static Offset<rlbot.flat.DesiredGameInfoState> Pack(FlatBufferBuilder builder, DesiredGameInfoStateT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.DesiredGameInfoState>);
+    StartDesiredGameInfoState(builder);
+    AddWorldGravityZ(builder, rlbot.flat.Float.Pack(builder, _o.WorldGravityZ));
+    AddGameSpeed(builder, rlbot.flat.Float.Pack(builder, _o.GameSpeed));
+    AddPaused(builder, rlbot.flat.Bool.Pack(builder, _o.Paused));
+    AddEndMatch(builder, rlbot.flat.Bool.Pack(builder, _o.EndMatch));
+    return EndDesiredGameInfoState(builder);
+  }
+}
+
+public class DesiredGameInfoStateT
+{
+  public rlbot.flat.FloatT WorldGravityZ { get; set; }
+  public rlbot.flat.FloatT GameSpeed { get; set; }
+  public rlbot.flat.BoolT Paused { get; set; }
+  public rlbot.flat.BoolT EndMatch { get; set; }
+
+  public DesiredGameInfoStateT() {
+    this.WorldGravityZ = new rlbot.flat.FloatT();
+    this.GameSpeed = new rlbot.flat.FloatT();
+    this.Paused = new rlbot.flat.BoolT();
+    this.EndMatch = new rlbot.flat.BoolT();
   }
 }
 
@@ -2051,6 +3496,30 @@ public struct ConsoleCommand : IFlatbufferObject
   public static Offset<rlbot.flat.ConsoleCommand> EndConsoleCommand(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.ConsoleCommand>(o);
+  }
+  public ConsoleCommandT UnPack() {
+    var _o = new ConsoleCommandT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(ConsoleCommandT _o) {
+    _o.Command = this.Command;
+  }
+  public static Offset<rlbot.flat.ConsoleCommand> Pack(FlatBufferBuilder builder, ConsoleCommandT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.ConsoleCommand>);
+    var _command = _o.Command == null ? default(StringOffset) : builder.CreateString(_o.Command);
+    return CreateConsoleCommand(
+      builder,
+      _command);
+  }
+}
+
+public class ConsoleCommandT
+{
+  public string Command { get; set; }
+
+  public ConsoleCommandT() {
+    this.Command = null;
   }
 }
 
@@ -2123,6 +3592,68 @@ public struct DesiredGameState : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.DesiredGameState>(o);
   }
+  public DesiredGameStateT UnPack() {
+    var _o = new DesiredGameStateT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(DesiredGameStateT _o) {
+    _o.BallState = this.BallState.HasValue ? this.BallState.Value.UnPack() : null;
+    _o.CarStates = new List<rlbot.flat.DesiredCarStateT>();
+    for (var _j = 0; _j < this.CarStatesLength; ++_j) {_o.CarStates.Add(this.CarStates(_j).HasValue ? this.CarStates(_j).Value.UnPack() : null);}
+    _o.BoostStates = new List<rlbot.flat.DesiredBoostStateT>();
+    for (var _j = 0; _j < this.BoostStatesLength; ++_j) {_o.BoostStates.Add(this.BoostStates(_j).HasValue ? this.BoostStates(_j).Value.UnPack() : null);}
+    _o.GameInfoState = this.GameInfoState.HasValue ? this.GameInfoState.Value.UnPack() : null;
+    _o.ConsoleCommands = new List<rlbot.flat.ConsoleCommandT>();
+    for (var _j = 0; _j < this.ConsoleCommandsLength; ++_j) {_o.ConsoleCommands.Add(this.ConsoleCommands(_j).HasValue ? this.ConsoleCommands(_j).Value.UnPack() : null);}
+  }
+  public static Offset<rlbot.flat.DesiredGameState> Pack(FlatBufferBuilder builder, DesiredGameStateT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.DesiredGameState>);
+    var _ballState = _o.BallState == null ? default(Offset<rlbot.flat.DesiredBallState>) : rlbot.flat.DesiredBallState.Pack(builder, _o.BallState);
+    var _carStates = default(VectorOffset);
+    if (_o.CarStates != null) {
+      var __carStates = new Offset<rlbot.flat.DesiredCarState>[_o.CarStates.Count];
+      for (var _j = 0; _j < __carStates.Length; ++_j) { __carStates[_j] = rlbot.flat.DesiredCarState.Pack(builder, _o.CarStates[_j]); }
+      _carStates = CreateCarStatesVector(builder, __carStates);
+    }
+    var _boostStates = default(VectorOffset);
+    if (_o.BoostStates != null) {
+      var __boostStates = new Offset<rlbot.flat.DesiredBoostState>[_o.BoostStates.Count];
+      for (var _j = 0; _j < __boostStates.Length; ++_j) { __boostStates[_j] = rlbot.flat.DesiredBoostState.Pack(builder, _o.BoostStates[_j]); }
+      _boostStates = CreateBoostStatesVector(builder, __boostStates);
+    }
+    var _gameInfoState = _o.GameInfoState == null ? default(Offset<rlbot.flat.DesiredGameInfoState>) : rlbot.flat.DesiredGameInfoState.Pack(builder, _o.GameInfoState);
+    var _consoleCommands = default(VectorOffset);
+    if (_o.ConsoleCommands != null) {
+      var __consoleCommands = new Offset<rlbot.flat.ConsoleCommand>[_o.ConsoleCommands.Count];
+      for (var _j = 0; _j < __consoleCommands.Length; ++_j) { __consoleCommands[_j] = rlbot.flat.ConsoleCommand.Pack(builder, _o.ConsoleCommands[_j]); }
+      _consoleCommands = CreateConsoleCommandsVector(builder, __consoleCommands);
+    }
+    return CreateDesiredGameState(
+      builder,
+      _ballState,
+      _carStates,
+      _boostStates,
+      _gameInfoState,
+      _consoleCommands);
+  }
+}
+
+public class DesiredGameStateT
+{
+  public rlbot.flat.DesiredBallStateT BallState { get; set; }
+  public List<rlbot.flat.DesiredCarStateT> CarStates { get; set; }
+  public List<rlbot.flat.DesiredBoostStateT> BoostStates { get; set; }
+  public rlbot.flat.DesiredGameInfoStateT GameInfoState { get; set; }
+  public List<rlbot.flat.ConsoleCommandT> ConsoleCommands { get; set; }
+
+  public DesiredGameStateT() {
+    this.BallState = null;
+    this.CarStates = null;
+    this.BoostStates = null;
+    this.GameInfoState = null;
+    this.ConsoleCommands = null;
+  }
 }
 
 
@@ -2176,6 +3707,41 @@ public struct Color : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.Color>(o);
   }
+  public ColorT UnPack() {
+    var _o = new ColorT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(ColorT _o) {
+    _o.A = this.A;
+    _o.R = this.R;
+    _o.G = this.G;
+    _o.B = this.B;
+  }
+  public static Offset<rlbot.flat.Color> Pack(FlatBufferBuilder builder, ColorT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.Color>);
+    return CreateColor(
+      builder,
+      _o.A,
+      _o.R,
+      _o.G,
+      _o.B);
+  }
+}
+
+public class ColorT
+{
+  public byte A { get; set; }
+  public byte R { get; set; }
+  public byte G { get; set; }
+  public byte B { get; set; }
+
+  public ColorT() {
+    this.A = 0;
+    this.R = 0;
+    this.G = 0;
+    this.B = 0;
+  }
 }
 
 
@@ -2221,6 +3787,27 @@ public struct RenderMessage : IFlatbufferObject
   /// Rectangles can be filled or just outlines.
   public bool IsFilled { get { int o = __p.__offset(18); return o != 0 ? 0!=__p.bb.Get(o + __p.bb_pos) : (bool)false; } }
 
+  public static Offset<rlbot.flat.RenderMessage> CreateRenderMessage(FlatBufferBuilder builder,
+      rlbot.flat.RenderType renderType = rlbot.flat.RenderType.DrawLine2D,
+      Offset<rlbot.flat.Color> colorOffset = default(Offset<rlbot.flat.Color>),
+      rlbot.flat.Vector3T start = null,
+      rlbot.flat.Vector3T end = null,
+      int scaleX = 1,
+      int scaleY = 1,
+      StringOffset textOffset = default(StringOffset),
+      bool isFilled = false) {
+    builder.StartTable(8);
+    RenderMessage.AddText(builder, textOffset);
+    RenderMessage.AddScaleY(builder, scaleY);
+    RenderMessage.AddScaleX(builder, scaleX);
+    RenderMessage.AddEnd(builder, rlbot.flat.Vector3.Pack(builder, end));
+    RenderMessage.AddStart(builder, rlbot.flat.Vector3.Pack(builder, start));
+    RenderMessage.AddColor(builder, colorOffset);
+    RenderMessage.AddIsFilled(builder, isFilled);
+    RenderMessage.AddRenderType(builder, renderType);
+    return RenderMessage.EndRenderMessage(builder);
+  }
+
   public static void StartRenderMessage(FlatBufferBuilder builder) { builder.StartTable(8); }
   public static void AddRenderType(FlatBufferBuilder builder, rlbot.flat.RenderType renderType) { builder.AddSbyte(0, (sbyte)renderType, 1); }
   public static void AddColor(FlatBufferBuilder builder, Offset<rlbot.flat.Color> colorOffset) { builder.AddOffset(1, colorOffset.Value, 0); }
@@ -2233,6 +3820,59 @@ public struct RenderMessage : IFlatbufferObject
   public static Offset<rlbot.flat.RenderMessage> EndRenderMessage(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.RenderMessage>(o);
+  }
+  public RenderMessageT UnPack() {
+    var _o = new RenderMessageT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(RenderMessageT _o) {
+    _o.RenderType = this.RenderType;
+    _o.Color = this.Color.HasValue ? this.Color.Value.UnPack() : null;
+    _o.Start = this.Start.HasValue ? this.Start.Value.UnPack() : null;
+    _o.End = this.End.HasValue ? this.End.Value.UnPack() : null;
+    _o.ScaleX = this.ScaleX;
+    _o.ScaleY = this.ScaleY;
+    _o.Text = this.Text;
+    _o.IsFilled = this.IsFilled;
+  }
+  public static Offset<rlbot.flat.RenderMessage> Pack(FlatBufferBuilder builder, RenderMessageT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.RenderMessage>);
+    var _color = _o.Color == null ? default(Offset<rlbot.flat.Color>) : rlbot.flat.Color.Pack(builder, _o.Color);
+    var _text = _o.Text == null ? default(StringOffset) : builder.CreateString(_o.Text);
+    return CreateRenderMessage(
+      builder,
+      _o.RenderType,
+      _color,
+      _o.Start,
+      _o.End,
+      _o.ScaleX,
+      _o.ScaleY,
+      _text,
+      _o.IsFilled);
+  }
+}
+
+public class RenderMessageT
+{
+  public rlbot.flat.RenderType RenderType { get; set; }
+  public rlbot.flat.ColorT Color { get; set; }
+  public rlbot.flat.Vector3T Start { get; set; }
+  public rlbot.flat.Vector3T End { get; set; }
+  public int ScaleX { get; set; }
+  public int ScaleY { get; set; }
+  public string Text { get; set; }
+  public bool IsFilled { get; set; }
+
+  public RenderMessageT() {
+    this.RenderType = rlbot.flat.RenderType.DrawLine2D;
+    this.Color = null;
+    this.Start = new rlbot.flat.Vector3T();
+    this.End = new rlbot.flat.Vector3T();
+    this.ScaleX = 1;
+    this.ScaleY = 1;
+    this.Text = null;
+    this.IsFilled = false;
   }
 }
 
@@ -2288,6 +3928,40 @@ public struct RenderGroup : IFlatbufferObject
   public static Offset<rlbot.flat.RenderGroup> EndRenderGroup(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.RenderGroup>(o);
+  }
+  public RenderGroupT UnPack() {
+    var _o = new RenderGroupT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(RenderGroupT _o) {
+    _o.RenderMessages = new List<rlbot.flat.RenderMessageT>();
+    for (var _j = 0; _j < this.RenderMessagesLength; ++_j) {_o.RenderMessages.Add(this.RenderMessages(_j).HasValue ? this.RenderMessages(_j).Value.UnPack() : null);}
+    _o.Id = this.Id;
+  }
+  public static Offset<rlbot.flat.RenderGroup> Pack(FlatBufferBuilder builder, RenderGroupT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.RenderGroup>);
+    var _renderMessages = default(VectorOffset);
+    if (_o.RenderMessages != null) {
+      var __renderMessages = new Offset<rlbot.flat.RenderMessage>[_o.RenderMessages.Count];
+      for (var _j = 0; _j < __renderMessages.Length; ++_j) { __renderMessages[_j] = rlbot.flat.RenderMessage.Pack(builder, _o.RenderMessages[_j]); }
+      _renderMessages = CreateRenderMessagesVector(builder, __renderMessages);
+    }
+    return CreateRenderGroup(
+      builder,
+      _renderMessages,
+      _o.Id);
+  }
+}
+
+public class RenderGroupT
+{
+  public List<rlbot.flat.RenderMessageT> RenderMessages { get; set; }
+  public int Id { get; set; }
+
+  public RenderGroupT() {
+    this.RenderMessages = null;
+    this.Id = 0;
   }
 }
 
@@ -2348,6 +4022,53 @@ public struct QuickChat : IFlatbufferObject
   }
   public static void FinishQuickChatBuffer(FlatBufferBuilder builder, Offset<rlbot.flat.QuickChat> offset) { builder.Finish(offset.Value); }
   public static void FinishSizePrefixedQuickChatBuffer(FlatBufferBuilder builder, Offset<rlbot.flat.QuickChat> offset) { builder.FinishSizePrefixed(offset.Value); }
+  public QuickChatT UnPack() {
+    var _o = new QuickChatT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(QuickChatT _o) {
+    _o.QuickChatSelection = this.QuickChatSelection;
+    _o.PlayerIndex = this.PlayerIndex;
+    _o.TeamOnly = this.TeamOnly;
+    _o.MessageIndex = this.MessageIndex;
+    _o.TimeStamp = this.TimeStamp;
+  }
+  public static Offset<rlbot.flat.QuickChat> Pack(FlatBufferBuilder builder, QuickChatT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.QuickChat>);
+    return CreateQuickChat(
+      builder,
+      _o.QuickChatSelection,
+      _o.PlayerIndex,
+      _o.TeamOnly,
+      _o.MessageIndex,
+      _o.TimeStamp);
+  }
+}
+
+public class QuickChatT
+{
+  public rlbot.flat.QuickChatSelection QuickChatSelection { get; set; }
+  public int PlayerIndex { get; set; }
+  public bool TeamOnly { get; set; }
+  public int MessageIndex { get; set; }
+  public float TimeStamp { get; set; }
+
+  public QuickChatT() {
+    this.QuickChatSelection = rlbot.flat.QuickChatSelection.Information_IGotIt;
+    this.PlayerIndex = 0;
+    this.TeamOnly = false;
+    this.MessageIndex = 0;
+    this.TimeStamp = 0.0f;
+  }
+  public static QuickChatT DeserializeFromBinary(byte[] fbBuffer) {
+    return QuickChat.GetRootAsQuickChat(new ByteBuffer(fbBuffer)).UnPack();
+  }
+  public byte[] SerializeToBinary() {
+    var fbb = new FlatBufferBuilder(0x10000);
+    QuickChat.FinishQuickChatBuffer(fbb, QuickChat.Pack(fbb, this));
+    return fbb.DataBuffer.ToSizedArray();
+  }
 }
 
 
@@ -2383,6 +4104,25 @@ public struct TinyPlayer : IFlatbufferObject
   public int Team { get { int o = __p.__offset(14); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)0; } }
   public int Boost { get { int o = __p.__offset(16); return o != 0 ? __p.bb.GetInt(o + __p.bb_pos) : (int)0; } }
 
+  public static Offset<rlbot.flat.TinyPlayer> CreateTinyPlayer(FlatBufferBuilder builder,
+      rlbot.flat.Vector3T location = null,
+      rlbot.flat.RotatorT rotation = null,
+      rlbot.flat.Vector3T velocity = null,
+      bool hasWheelContact = false,
+      bool isSupersonic = false,
+      int team = 0,
+      int boost = 0) {
+    builder.StartTable(7);
+    TinyPlayer.AddBoost(builder, boost);
+    TinyPlayer.AddTeam(builder, team);
+    TinyPlayer.AddVelocity(builder, rlbot.flat.Vector3.Pack(builder, velocity));
+    TinyPlayer.AddRotation(builder, rlbot.flat.Rotator.Pack(builder, rotation));
+    TinyPlayer.AddLocation(builder, rlbot.flat.Vector3.Pack(builder, location));
+    TinyPlayer.AddIsSupersonic(builder, isSupersonic);
+    TinyPlayer.AddHasWheelContact(builder, hasWheelContact);
+    return TinyPlayer.EndTinyPlayer(builder);
+  }
+
   public static void StartTinyPlayer(FlatBufferBuilder builder) { builder.StartTable(7); }
   public static void AddLocation(FlatBufferBuilder builder, Offset<rlbot.flat.Vector3> locationOffset) { builder.AddStruct(0, locationOffset.Value, 0); }
   public static void AddRotation(FlatBufferBuilder builder, Offset<rlbot.flat.Rotator> rotationOffset) { builder.AddStruct(1, rotationOffset.Value, 0); }
@@ -2394,6 +4134,53 @@ public struct TinyPlayer : IFlatbufferObject
   public static Offset<rlbot.flat.TinyPlayer> EndTinyPlayer(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.TinyPlayer>(o);
+  }
+  public TinyPlayerT UnPack() {
+    var _o = new TinyPlayerT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(TinyPlayerT _o) {
+    _o.Location = this.Location.HasValue ? this.Location.Value.UnPack() : null;
+    _o.Rotation = this.Rotation.HasValue ? this.Rotation.Value.UnPack() : null;
+    _o.Velocity = this.Velocity.HasValue ? this.Velocity.Value.UnPack() : null;
+    _o.HasWheelContact = this.HasWheelContact;
+    _o.IsSupersonic = this.IsSupersonic;
+    _o.Team = this.Team;
+    _o.Boost = this.Boost;
+  }
+  public static Offset<rlbot.flat.TinyPlayer> Pack(FlatBufferBuilder builder, TinyPlayerT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.TinyPlayer>);
+    return CreateTinyPlayer(
+      builder,
+      _o.Location,
+      _o.Rotation,
+      _o.Velocity,
+      _o.HasWheelContact,
+      _o.IsSupersonic,
+      _o.Team,
+      _o.Boost);
+  }
+}
+
+public class TinyPlayerT
+{
+  public rlbot.flat.Vector3T Location { get; set; }
+  public rlbot.flat.RotatorT Rotation { get; set; }
+  public rlbot.flat.Vector3T Velocity { get; set; }
+  public bool HasWheelContact { get; set; }
+  public bool IsSupersonic { get; set; }
+  public int Team { get; set; }
+  public int Boost { get; set; }
+
+  public TinyPlayerT() {
+    this.Location = new rlbot.flat.Vector3T();
+    this.Rotation = new rlbot.flat.RotatorT();
+    this.Velocity = new rlbot.flat.Vector3T();
+    this.HasWheelContact = false;
+    this.IsSupersonic = false;
+    this.Team = 0;
+    this.Boost = 0;
   }
 }
 
@@ -2433,6 +4220,33 @@ public struct TinyBall : IFlatbufferObject
   public static Offset<rlbot.flat.TinyBall> EndTinyBall(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.TinyBall>(o);
+  }
+  public TinyBallT UnPack() {
+    var _o = new TinyBallT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(TinyBallT _o) {
+    _o.Location = this.Location.HasValue ? this.Location.Value.UnPack() : null;
+    _o.Velocity = this.Velocity.HasValue ? this.Velocity.Value.UnPack() : null;
+  }
+  public static Offset<rlbot.flat.TinyBall> Pack(FlatBufferBuilder builder, TinyBallT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.TinyBall>);
+    StartTinyBall(builder);
+    AddLocation(builder, rlbot.flat.Vector3.Pack(builder, _o.Location));
+    AddVelocity(builder, rlbot.flat.Vector3.Pack(builder, _o.Velocity));
+    return EndTinyBall(builder);
+  }
+}
+
+public class TinyBallT
+{
+  public rlbot.flat.Vector3T Location { get; set; }
+  public rlbot.flat.Vector3T Velocity { get; set; }
+
+  public TinyBallT() {
+    this.Location = new rlbot.flat.Vector3T();
+    this.Velocity = new rlbot.flat.Vector3T();
   }
 }
 
@@ -2483,6 +4297,41 @@ public struct TinyPacket : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.TinyPacket>(o);
   }
+  public TinyPacketT UnPack() {
+    var _o = new TinyPacketT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(TinyPacketT _o) {
+    _o.Players = new List<rlbot.flat.TinyPlayerT>();
+    for (var _j = 0; _j < this.PlayersLength; ++_j) {_o.Players.Add(this.Players(_j).HasValue ? this.Players(_j).Value.UnPack() : null);}
+    _o.Ball = this.Ball.HasValue ? this.Ball.Value.UnPack() : null;
+  }
+  public static Offset<rlbot.flat.TinyPacket> Pack(FlatBufferBuilder builder, TinyPacketT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.TinyPacket>);
+    var _players = default(VectorOffset);
+    if (_o.Players != null) {
+      var __players = new Offset<rlbot.flat.TinyPlayer>[_o.Players.Count];
+      for (var _j = 0; _j < __players.Length; ++_j) { __players[_j] = rlbot.flat.TinyPlayer.Pack(builder, _o.Players[_j]); }
+      _players = CreatePlayersVector(builder, __players);
+    }
+    var _ball = _o.Ball == null ? default(Offset<rlbot.flat.TinyBall>) : rlbot.flat.TinyBall.Pack(builder, _o.Ball);
+    return CreateTinyPacket(
+      builder,
+      _players,
+      _ball);
+  }
+}
+
+public class TinyPacketT
+{
+  public List<rlbot.flat.TinyPlayerT> Players { get; set; }
+  public rlbot.flat.TinyBallT Ball { get; set; }
+
+  public TinyPacketT() {
+    this.Players = null;
+    this.Ball = null;
+  }
 }
 
 
@@ -2527,6 +4376,34 @@ public struct PredictionSlice : IFlatbufferObject
   public static Offset<rlbot.flat.PredictionSlice> EndPredictionSlice(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.PredictionSlice>(o);
+  }
+  public PredictionSliceT UnPack() {
+    var _o = new PredictionSliceT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(PredictionSliceT _o) {
+    _o.GameSeconds = this.GameSeconds;
+    _o.Physics = this.Physics.HasValue ? this.Physics.Value.UnPack() : null;
+  }
+  public static Offset<rlbot.flat.PredictionSlice> Pack(FlatBufferBuilder builder, PredictionSliceT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.PredictionSlice>);
+    var _physics = _o.Physics == null ? default(Offset<rlbot.flat.Physics>) : rlbot.flat.Physics.Pack(builder, _o.Physics);
+    return CreatePredictionSlice(
+      builder,
+      _o.GameSeconds,
+      _physics);
+  }
+}
+
+public class PredictionSliceT
+{
+  public float GameSeconds { get; set; }
+  public rlbot.flat.PhysicsT Physics { get; set; }
+
+  public PredictionSliceT() {
+    this.GameSeconds = 0.0f;
+    this.Physics = null;
   }
 }
 
@@ -2575,6 +4452,36 @@ public struct BallPrediction : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.BallPrediction>(o);
   }
+  public BallPredictionT UnPack() {
+    var _o = new BallPredictionT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(BallPredictionT _o) {
+    _o.Slices = new List<rlbot.flat.PredictionSliceT>();
+    for (var _j = 0; _j < this.SlicesLength; ++_j) {_o.Slices.Add(this.Slices(_j).HasValue ? this.Slices(_j).Value.UnPack() : null);}
+  }
+  public static Offset<rlbot.flat.BallPrediction> Pack(FlatBufferBuilder builder, BallPredictionT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.BallPrediction>);
+    var _slices = default(VectorOffset);
+    if (_o.Slices != null) {
+      var __slices = new Offset<rlbot.flat.PredictionSlice>[_o.Slices.Count];
+      for (var _j = 0; _j < __slices.Length; ++_j) { __slices[_j] = rlbot.flat.PredictionSlice.Pack(builder, _o.Slices[_j]); }
+      _slices = CreateSlicesVector(builder, __slices);
+    }
+    return CreateBallPrediction(
+      builder,
+      _slices);
+  }
+}
+
+public class BallPredictionT
+{
+  public List<rlbot.flat.PredictionSliceT> Slices { get; set; }
+
+  public BallPredictionT() {
+    this.Slices = null;
+  }
 }
 
 
@@ -2604,6 +4511,25 @@ public struct RLBotPlayer : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.RLBotPlayer>(o);
   }
+  public RLBotPlayerT UnPack() {
+    var _o = new RLBotPlayerT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(RLBotPlayerT _o) {
+  }
+  public static Offset<rlbot.flat.RLBotPlayer> Pack(FlatBufferBuilder builder, RLBotPlayerT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.RLBotPlayer>);
+    StartRLBotPlayer(builder);
+    return EndRLBotPlayer(builder);
+  }
+}
+
+public class RLBotPlayerT
+{
+
+  public RLBotPlayerT() {
+  }
 }
 
 
@@ -2631,6 +4557,25 @@ public struct HumanPlayer : IFlatbufferObject
   public static Offset<rlbot.flat.HumanPlayer> EndHumanPlayer(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.HumanPlayer>(o);
+  }
+  public HumanPlayerT UnPack() {
+    var _o = new HumanPlayerT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(HumanPlayerT _o) {
+  }
+  public static Offset<rlbot.flat.HumanPlayer> Pack(FlatBufferBuilder builder, HumanPlayerT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.HumanPlayer>);
+    StartHumanPlayer(builder);
+    return EndHumanPlayer(builder);
+  }
+}
+
+public class HumanPlayerT
+{
+
+  public HumanPlayerT() {
   }
 }
 
@@ -2669,6 +4614,29 @@ public struct PsyonixBotPlayer : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.PsyonixBotPlayer>(o);
   }
+  public PsyonixBotPlayerT UnPack() {
+    var _o = new PsyonixBotPlayerT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(PsyonixBotPlayerT _o) {
+    _o.BotSkill = this.BotSkill;
+  }
+  public static Offset<rlbot.flat.PsyonixBotPlayer> Pack(FlatBufferBuilder builder, PsyonixBotPlayerT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.PsyonixBotPlayer>);
+    return CreatePsyonixBotPlayer(
+      builder,
+      _o.BotSkill);
+  }
+}
+
+public class PsyonixBotPlayerT
+{
+  public float BotSkill { get; set; }
+
+  public PsyonixBotPlayerT() {
+    this.BotSkill = 0.0f;
+  }
 }
 
 
@@ -2698,6 +4666,25 @@ public struct PartyMemberBotPlayer : IFlatbufferObject
   public static Offset<rlbot.flat.PartyMemberBotPlayer> EndPartyMemberBotPlayer(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.PartyMemberBotPlayer>(o);
+  }
+  public PartyMemberBotPlayerT UnPack() {
+    var _o = new PartyMemberBotPlayerT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(PartyMemberBotPlayerT _o) {
+  }
+  public static Offset<rlbot.flat.PartyMemberBotPlayer> Pack(FlatBufferBuilder builder, PartyMemberBotPlayerT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.PartyMemberBotPlayer>);
+    StartPartyMemberBotPlayer(builder);
+    return EndPartyMemberBotPlayer(builder);
+  }
+}
+
+public class PartyMemberBotPlayerT
+{
+
+  public PartyMemberBotPlayerT() {
   }
 }
 
@@ -2801,6 +4788,92 @@ public struct PlayerLoadout : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.PlayerLoadout>(o);
   }
+  public PlayerLoadoutT UnPack() {
+    var _o = new PlayerLoadoutT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(PlayerLoadoutT _o) {
+    _o.TeamColorId = this.TeamColorId;
+    _o.CustomColorId = this.CustomColorId;
+    _o.CarId = this.CarId;
+    _o.DecalId = this.DecalId;
+    _o.WheelsId = this.WheelsId;
+    _o.BoostId = this.BoostId;
+    _o.AntennaId = this.AntennaId;
+    _o.HatId = this.HatId;
+    _o.PaintFinishId = this.PaintFinishId;
+    _o.CustomFinishId = this.CustomFinishId;
+    _o.EngineAudioId = this.EngineAudioId;
+    _o.TrailsId = this.TrailsId;
+    _o.GoalExplosionId = this.GoalExplosionId;
+    _o.LoadoutPaint = this.LoadoutPaint.HasValue ? this.LoadoutPaint.Value.UnPack() : null;
+    _o.PrimaryColorLookup = this.PrimaryColorLookup.HasValue ? this.PrimaryColorLookup.Value.UnPack() : null;
+    _o.SecondaryColorLookup = this.SecondaryColorLookup.HasValue ? this.SecondaryColorLookup.Value.UnPack() : null;
+  }
+  public static Offset<rlbot.flat.PlayerLoadout> Pack(FlatBufferBuilder builder, PlayerLoadoutT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.PlayerLoadout>);
+    var _loadoutPaint = _o.LoadoutPaint == null ? default(Offset<rlbot.flat.LoadoutPaint>) : rlbot.flat.LoadoutPaint.Pack(builder, _o.LoadoutPaint);
+    var _primaryColorLookup = _o.PrimaryColorLookup == null ? default(Offset<rlbot.flat.Color>) : rlbot.flat.Color.Pack(builder, _o.PrimaryColorLookup);
+    var _secondaryColorLookup = _o.SecondaryColorLookup == null ? default(Offset<rlbot.flat.Color>) : rlbot.flat.Color.Pack(builder, _o.SecondaryColorLookup);
+    return CreatePlayerLoadout(
+      builder,
+      _o.TeamColorId,
+      _o.CustomColorId,
+      _o.CarId,
+      _o.DecalId,
+      _o.WheelsId,
+      _o.BoostId,
+      _o.AntennaId,
+      _o.HatId,
+      _o.PaintFinishId,
+      _o.CustomFinishId,
+      _o.EngineAudioId,
+      _o.TrailsId,
+      _o.GoalExplosionId,
+      _loadoutPaint,
+      _primaryColorLookup,
+      _secondaryColorLookup);
+  }
+}
+
+public class PlayerLoadoutT
+{
+  public int TeamColorId { get; set; }
+  public int CustomColorId { get; set; }
+  public int CarId { get; set; }
+  public int DecalId { get; set; }
+  public int WheelsId { get; set; }
+  public int BoostId { get; set; }
+  public int AntennaId { get; set; }
+  public int HatId { get; set; }
+  public int PaintFinishId { get; set; }
+  public int CustomFinishId { get; set; }
+  public int EngineAudioId { get; set; }
+  public int TrailsId { get; set; }
+  public int GoalExplosionId { get; set; }
+  public rlbot.flat.LoadoutPaintT LoadoutPaint { get; set; }
+  public rlbot.flat.ColorT PrimaryColorLookup { get; set; }
+  public rlbot.flat.ColorT SecondaryColorLookup { get; set; }
+
+  public PlayerLoadoutT() {
+    this.TeamColorId = 0;
+    this.CustomColorId = 0;
+    this.CarId = 0;
+    this.DecalId = 0;
+    this.WheelsId = 0;
+    this.BoostId = 0;
+    this.AntennaId = 0;
+    this.HatId = 0;
+    this.PaintFinishId = 0;
+    this.CustomFinishId = 0;
+    this.EngineAudioId = 0;
+    this.TrailsId = 0;
+    this.GoalExplosionId = 0;
+    this.LoadoutPaint = null;
+    this.PrimaryColorLookup = null;
+    this.SecondaryColorLookup = null;
+  }
 }
 
 
@@ -2882,6 +4955,57 @@ public struct LoadoutPaint : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.LoadoutPaint>(o);
   }
+  public LoadoutPaintT UnPack() {
+    var _o = new LoadoutPaintT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(LoadoutPaintT _o) {
+    _o.CarPaintId = this.CarPaintId;
+    _o.DecalPaintId = this.DecalPaintId;
+    _o.WheelsPaintId = this.WheelsPaintId;
+    _o.BoostPaintId = this.BoostPaintId;
+    _o.AntennaPaintId = this.AntennaPaintId;
+    _o.HatPaintId = this.HatPaintId;
+    _o.TrailsPaintId = this.TrailsPaintId;
+    _o.GoalExplosionPaintId = this.GoalExplosionPaintId;
+  }
+  public static Offset<rlbot.flat.LoadoutPaint> Pack(FlatBufferBuilder builder, LoadoutPaintT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.LoadoutPaint>);
+    return CreateLoadoutPaint(
+      builder,
+      _o.CarPaintId,
+      _o.DecalPaintId,
+      _o.WheelsPaintId,
+      _o.BoostPaintId,
+      _o.AntennaPaintId,
+      _o.HatPaintId,
+      _o.TrailsPaintId,
+      _o.GoalExplosionPaintId);
+  }
+}
+
+public class LoadoutPaintT
+{
+  public int CarPaintId { get; set; }
+  public int DecalPaintId { get; set; }
+  public int WheelsPaintId { get; set; }
+  public int BoostPaintId { get; set; }
+  public int AntennaPaintId { get; set; }
+  public int HatPaintId { get; set; }
+  public int TrailsPaintId { get; set; }
+  public int GoalExplosionPaintId { get; set; }
+
+  public LoadoutPaintT() {
+    this.CarPaintId = 0;
+    this.DecalPaintId = 0;
+    this.WheelsPaintId = 0;
+    this.BoostPaintId = 0;
+    this.AntennaPaintId = 0;
+    this.HatPaintId = 0;
+    this.TrailsPaintId = 0;
+    this.GoalExplosionPaintId = 0;
+  }
 }
 
 
@@ -2957,6 +5081,66 @@ public struct PlayerConfiguration : IFlatbufferObject
   public static Offset<rlbot.flat.PlayerConfiguration> EndPlayerConfiguration(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.PlayerConfiguration>(o);
+  }
+  public PlayerConfigurationT UnPack() {
+    var _o = new PlayerConfigurationT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(PlayerConfigurationT _o) {
+    _o.Variety = new rlbot.flat.PlayerClassUnion();
+    _o.Variety.Type = this.VarietyType;
+    switch (this.VarietyType) {
+      default: break;
+      case rlbot.flat.PlayerClass.RLBotPlayer:
+        _o.Variety.Value = this.Variety<rlbot.flat.RLBotPlayer>().HasValue ? this.Variety<rlbot.flat.RLBotPlayer>().Value.UnPack() : null;
+        break;
+      case rlbot.flat.PlayerClass.HumanPlayer:
+        _o.Variety.Value = this.Variety<rlbot.flat.HumanPlayer>().HasValue ? this.Variety<rlbot.flat.HumanPlayer>().Value.UnPack() : null;
+        break;
+      case rlbot.flat.PlayerClass.PsyonixBotPlayer:
+        _o.Variety.Value = this.Variety<rlbot.flat.PsyonixBotPlayer>().HasValue ? this.Variety<rlbot.flat.PsyonixBotPlayer>().Value.UnPack() : null;
+        break;
+      case rlbot.flat.PlayerClass.PartyMemberBotPlayer:
+        _o.Variety.Value = this.Variety<rlbot.flat.PartyMemberBotPlayer>().HasValue ? this.Variety<rlbot.flat.PartyMemberBotPlayer>().Value.UnPack() : null;
+        break;
+    }
+    _o.Name = this.Name;
+    _o.Team = this.Team;
+    _o.Loadout = this.Loadout.HasValue ? this.Loadout.Value.UnPack() : null;
+    _o.SpawnId = this.SpawnId;
+  }
+  public static Offset<rlbot.flat.PlayerConfiguration> Pack(FlatBufferBuilder builder, PlayerConfigurationT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.PlayerConfiguration>);
+    var _variety_type = _o.Variety == null ? rlbot.flat.PlayerClass.NONE : _o.Variety.Type;
+    var _variety = _o.Variety == null ? 0 : rlbot.flat.PlayerClassUnion.Pack(builder, _o.Variety);
+    var _name = _o.Name == null ? default(StringOffset) : builder.CreateString(_o.Name);
+    var _loadout = _o.Loadout == null ? default(Offset<rlbot.flat.PlayerLoadout>) : rlbot.flat.PlayerLoadout.Pack(builder, _o.Loadout);
+    return CreatePlayerConfiguration(
+      builder,
+      _variety_type,
+      _variety,
+      _name,
+      _o.Team,
+      _loadout,
+      _o.SpawnId);
+  }
+}
+
+public class PlayerConfigurationT
+{
+  public rlbot.flat.PlayerClassUnion Variety { get; set; }
+  public string Name { get; set; }
+  public int Team { get; set; }
+  public rlbot.flat.PlayerLoadoutT Loadout { get; set; }
+  public int SpawnId { get; set; }
+
+  public PlayerConfigurationT() {
+    this.Variety = null;
+    this.Name = null;
+    this.Team = 0;
+    this.Loadout = null;
+    this.SpawnId = 0;
   }
 }
 
@@ -3059,6 +5243,89 @@ public struct MutatorSettings : IFlatbufferObject
   public static Offset<rlbot.flat.MutatorSettings> EndMutatorSettings(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.MutatorSettings>(o);
+  }
+  public MutatorSettingsT UnPack() {
+    var _o = new MutatorSettingsT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(MutatorSettingsT _o) {
+    _o.MatchLength = this.MatchLength;
+    _o.MaxScore = this.MaxScore;
+    _o.OvertimeOption = this.OvertimeOption;
+    _o.SeriesLengthOption = this.SeriesLengthOption;
+    _o.GameSpeedOption = this.GameSpeedOption;
+    _o.BallMaxSpeedOption = this.BallMaxSpeedOption;
+    _o.BallTypeOption = this.BallTypeOption;
+    _o.BallWeightOption = this.BallWeightOption;
+    _o.BallSizeOption = this.BallSizeOption;
+    _o.BallBouncinessOption = this.BallBouncinessOption;
+    _o.BoostOption = this.BoostOption;
+    _o.RumbleOption = this.RumbleOption;
+    _o.BoostStrengthOption = this.BoostStrengthOption;
+    _o.GravityOption = this.GravityOption;
+    _o.DemolishOption = this.DemolishOption;
+    _o.RespawnTimeOption = this.RespawnTimeOption;
+  }
+  public static Offset<rlbot.flat.MutatorSettings> Pack(FlatBufferBuilder builder, MutatorSettingsT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.MutatorSettings>);
+    return CreateMutatorSettings(
+      builder,
+      _o.MatchLength,
+      _o.MaxScore,
+      _o.OvertimeOption,
+      _o.SeriesLengthOption,
+      _o.GameSpeedOption,
+      _o.BallMaxSpeedOption,
+      _o.BallTypeOption,
+      _o.BallWeightOption,
+      _o.BallSizeOption,
+      _o.BallBouncinessOption,
+      _o.BoostOption,
+      _o.RumbleOption,
+      _o.BoostStrengthOption,
+      _o.GravityOption,
+      _o.DemolishOption,
+      _o.RespawnTimeOption);
+  }
+}
+
+public class MutatorSettingsT
+{
+  public rlbot.flat.MatchLength MatchLength { get; set; }
+  public rlbot.flat.MaxScore MaxScore { get; set; }
+  public rlbot.flat.OvertimeOption OvertimeOption { get; set; }
+  public rlbot.flat.SeriesLengthOption SeriesLengthOption { get; set; }
+  public rlbot.flat.GameSpeedOption GameSpeedOption { get; set; }
+  public rlbot.flat.BallMaxSpeedOption BallMaxSpeedOption { get; set; }
+  public rlbot.flat.BallTypeOption BallTypeOption { get; set; }
+  public rlbot.flat.BallWeightOption BallWeightOption { get; set; }
+  public rlbot.flat.BallSizeOption BallSizeOption { get; set; }
+  public rlbot.flat.BallBouncinessOption BallBouncinessOption { get; set; }
+  public rlbot.flat.BoostOption BoostOption { get; set; }
+  public rlbot.flat.RumbleOption RumbleOption { get; set; }
+  public rlbot.flat.BoostStrengthOption BoostStrengthOption { get; set; }
+  public rlbot.flat.GravityOption GravityOption { get; set; }
+  public rlbot.flat.DemolishOption DemolishOption { get; set; }
+  public rlbot.flat.RespawnTimeOption RespawnTimeOption { get; set; }
+
+  public MutatorSettingsT() {
+    this.MatchLength = rlbot.flat.MatchLength.Five_Minutes;
+    this.MaxScore = rlbot.flat.MaxScore.Unlimited;
+    this.OvertimeOption = rlbot.flat.OvertimeOption.Unlimited;
+    this.SeriesLengthOption = rlbot.flat.SeriesLengthOption.Unlimited;
+    this.GameSpeedOption = rlbot.flat.GameSpeedOption.Default;
+    this.BallMaxSpeedOption = rlbot.flat.BallMaxSpeedOption.Default;
+    this.BallTypeOption = rlbot.flat.BallTypeOption.Default;
+    this.BallWeightOption = rlbot.flat.BallWeightOption.Default;
+    this.BallSizeOption = rlbot.flat.BallSizeOption.Default;
+    this.BallBouncinessOption = rlbot.flat.BallBouncinessOption.Default;
+    this.BoostOption = rlbot.flat.BoostOption.Normal_Boost;
+    this.RumbleOption = rlbot.flat.RumbleOption.No_Rumble;
+    this.BoostStrengthOption = rlbot.flat.BoostStrengthOption.One;
+    this.GravityOption = rlbot.flat.GravityOption.Default;
+    this.DemolishOption = rlbot.flat.DemolishOption.Default;
+    this.RespawnTimeOption = rlbot.flat.RespawnTimeOption.Three_Seconds;
   }
 }
 
@@ -3173,6 +5440,82 @@ public struct MatchSettings : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.MatchSettings>(o);
   }
+  public MatchSettingsT UnPack() {
+    var _o = new MatchSettingsT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(MatchSettingsT _o) {
+    _o.PlayerConfigurations = new List<rlbot.flat.PlayerConfigurationT>();
+    for (var _j = 0; _j < this.PlayerConfigurationsLength; ++_j) {_o.PlayerConfigurations.Add(this.PlayerConfigurations(_j).HasValue ? this.PlayerConfigurations(_j).Value.UnPack() : null);}
+    _o.GameMode = this.GameMode;
+    _o.GameMap = this.GameMap;
+    _o.SkipReplays = this.SkipReplays;
+    _o.InstantStart = this.InstantStart;
+    _o.MutatorSettings = this.MutatorSettings.HasValue ? this.MutatorSettings.Value.UnPack() : null;
+    _o.ExistingMatchBehavior = this.ExistingMatchBehavior;
+    _o.EnableLockstep = this.EnableLockstep;
+    _o.EnableRendering = this.EnableRendering;
+    _o.EnableStateSetting = this.EnableStateSetting;
+    _o.AutoSaveReplay = this.AutoSaveReplay;
+    _o.GameMapUpk = this.GameMapUpk;
+  }
+  public static Offset<rlbot.flat.MatchSettings> Pack(FlatBufferBuilder builder, MatchSettingsT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.MatchSettings>);
+    var _playerConfigurations = default(VectorOffset);
+    if (_o.PlayerConfigurations != null) {
+      var __playerConfigurations = new Offset<rlbot.flat.PlayerConfiguration>[_o.PlayerConfigurations.Count];
+      for (var _j = 0; _j < __playerConfigurations.Length; ++_j) { __playerConfigurations[_j] = rlbot.flat.PlayerConfiguration.Pack(builder, _o.PlayerConfigurations[_j]); }
+      _playerConfigurations = CreatePlayerConfigurationsVector(builder, __playerConfigurations);
+    }
+    var _mutatorSettings = _o.MutatorSettings == null ? default(Offset<rlbot.flat.MutatorSettings>) : rlbot.flat.MutatorSettings.Pack(builder, _o.MutatorSettings);
+    var _gameMapUpk = _o.GameMapUpk == null ? default(StringOffset) : builder.CreateString(_o.GameMapUpk);
+    return CreateMatchSettings(
+      builder,
+      _playerConfigurations,
+      _o.GameMode,
+      _o.GameMap,
+      _o.SkipReplays,
+      _o.InstantStart,
+      _mutatorSettings,
+      _o.ExistingMatchBehavior,
+      _o.EnableLockstep,
+      _o.EnableRendering,
+      _o.EnableStateSetting,
+      _o.AutoSaveReplay,
+      _gameMapUpk);
+  }
+}
+
+public class MatchSettingsT
+{
+  public List<rlbot.flat.PlayerConfigurationT> PlayerConfigurations { get; set; }
+  public rlbot.flat.GameMode GameMode { get; set; }
+  public rlbot.flat.GameMap GameMap { get; set; }
+  public bool SkipReplays { get; set; }
+  public bool InstantStart { get; set; }
+  public rlbot.flat.MutatorSettingsT MutatorSettings { get; set; }
+  public rlbot.flat.ExistingMatchBehavior ExistingMatchBehavior { get; set; }
+  public bool EnableLockstep { get; set; }
+  public bool EnableRendering { get; set; }
+  public bool EnableStateSetting { get; set; }
+  public bool AutoSaveReplay { get; set; }
+  public string GameMapUpk { get; set; }
+
+  public MatchSettingsT() {
+    this.PlayerConfigurations = null;
+    this.GameMode = rlbot.flat.GameMode.Soccer;
+    this.GameMap = rlbot.flat.GameMap.DFHStadium;
+    this.SkipReplays = false;
+    this.InstantStart = false;
+    this.MutatorSettings = null;
+    this.ExistingMatchBehavior = rlbot.flat.ExistingMatchBehavior.Restart_If_Different;
+    this.EnableLockstep = false;
+    this.EnableRendering = false;
+    this.EnableStateSetting = false;
+    this.AutoSaveReplay = false;
+    this.GameMapUpk = null;
+  }
 }
 
 
@@ -3227,6 +5570,36 @@ public struct QuickChatMessages : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.QuickChatMessages>(o);
   }
+  public QuickChatMessagesT UnPack() {
+    var _o = new QuickChatMessagesT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(QuickChatMessagesT _o) {
+    _o.Messages = new List<rlbot.flat.QuickChatT>();
+    for (var _j = 0; _j < this.MessagesLength; ++_j) {_o.Messages.Add(this.Messages(_j).HasValue ? this.Messages(_j).Value.UnPack() : null);}
+  }
+  public static Offset<rlbot.flat.QuickChatMessages> Pack(FlatBufferBuilder builder, QuickChatMessagesT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.QuickChatMessages>);
+    var _messages = default(VectorOffset);
+    if (_o.Messages != null) {
+      var __messages = new Offset<rlbot.flat.QuickChat>[_o.Messages.Count];
+      for (var _j = 0; _j < __messages.Length; ++_j) { __messages[_j] = rlbot.flat.QuickChat.Pack(builder, _o.Messages[_j]); }
+      _messages = CreateMessagesVector(builder, __messages);
+    }
+    return CreateQuickChatMessages(
+      builder,
+      _messages);
+  }
+}
+
+public class QuickChatMessagesT
+{
+  public List<rlbot.flat.QuickChatT> Messages { get; set; }
+
+  public QuickChatMessagesT() {
+    this.Messages = null;
+  }
 }
 
 
@@ -3274,6 +5647,37 @@ public struct ReadyMessage : IFlatbufferObject
   public static Offset<rlbot.flat.ReadyMessage> EndReadyMessage(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.ReadyMessage>(o);
+  }
+  public ReadyMessageT UnPack() {
+    var _o = new ReadyMessageT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(ReadyMessageT _o) {
+    _o.WantsBallPredictions = this.WantsBallPredictions;
+    _o.WantsQuickChat = this.WantsQuickChat;
+    _o.WantsGameMessages = this.WantsGameMessages;
+  }
+  public static Offset<rlbot.flat.ReadyMessage> Pack(FlatBufferBuilder builder, ReadyMessageT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.ReadyMessage>);
+    return CreateReadyMessage(
+      builder,
+      _o.WantsBallPredictions,
+      _o.WantsQuickChat,
+      _o.WantsGameMessages);
+  }
+}
+
+public class ReadyMessageT
+{
+  public bool WantsBallPredictions { get; set; }
+  public bool WantsQuickChat { get; set; }
+  public bool WantsGameMessages { get; set; }
+
+  public ReadyMessageT() {
+    this.WantsBallPredictions = false;
+    this.WantsQuickChat = false;
+    this.WantsGameMessages = false;
   }
 }
 
@@ -3337,6 +5741,34 @@ public struct PlayerStatEvent : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.PlayerStatEvent>(o);
   }
+  public PlayerStatEventT UnPack() {
+    var _o = new PlayerStatEventT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(PlayerStatEventT _o) {
+    _o.PlayerIndex = this.PlayerIndex;
+    _o.StatType = this.StatType;
+  }
+  public static Offset<rlbot.flat.PlayerStatEvent> Pack(FlatBufferBuilder builder, PlayerStatEventT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.PlayerStatEvent>);
+    var _statType = _o.StatType == null ? default(StringOffset) : builder.CreateString(_o.StatType);
+    return CreatePlayerStatEvent(
+      builder,
+      _o.PlayerIndex,
+      _statType);
+  }
+}
+
+public class PlayerStatEventT
+{
+  public int PlayerIndex { get; set; }
+  public string StatType { get; set; }
+
+  public PlayerStatEventT() {
+    this.PlayerIndex = 0;
+    this.StatType = null;
+  }
 }
 
 
@@ -3376,6 +5808,29 @@ public struct PlayerSpectate : IFlatbufferObject
   public static Offset<rlbot.flat.PlayerSpectate> EndPlayerSpectate(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.PlayerSpectate>(o);
+  }
+  public PlayerSpectateT UnPack() {
+    var _o = new PlayerSpectateT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(PlayerSpectateT _o) {
+    _o.PlayerIndex = this.PlayerIndex;
+  }
+  public static Offset<rlbot.flat.PlayerSpectate> Pack(FlatBufferBuilder builder, PlayerSpectateT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.PlayerSpectate>);
+    return CreatePlayerSpectate(
+      builder,
+      _o.PlayerIndex);
+  }
+}
+
+public class PlayerSpectateT
+{
+  public int PlayerIndex { get; set; }
+
+  public PlayerSpectateT() {
+    this.PlayerIndex = 0;
   }
 }
 
@@ -3427,6 +5882,42 @@ public struct PlayerInputChange : IFlatbufferObject
     int o = builder.EndTable();
     return new Offset<rlbot.flat.PlayerInputChange>(o);
   }
+  public PlayerInputChangeT UnPack() {
+    var _o = new PlayerInputChangeT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(PlayerInputChangeT _o) {
+    _o.PlayerIndex = this.PlayerIndex;
+    _o.ControllerState = this.ControllerState.HasValue ? this.ControllerState.Value.UnPack() : null;
+    _o.DodgeForward = this.DodgeForward;
+    _o.DodgeRight = this.DodgeRight;
+  }
+  public static Offset<rlbot.flat.PlayerInputChange> Pack(FlatBufferBuilder builder, PlayerInputChangeT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.PlayerInputChange>);
+    var _controllerState = _o.ControllerState == null ? default(Offset<rlbot.flat.ControllerState>) : rlbot.flat.ControllerState.Pack(builder, _o.ControllerState);
+    return CreatePlayerInputChange(
+      builder,
+      _o.PlayerIndex,
+      _controllerState,
+      _o.DodgeForward,
+      _o.DodgeRight);
+  }
+}
+
+public class PlayerInputChangeT
+{
+  public int PlayerIndex { get; set; }
+  public rlbot.flat.ControllerStateT ControllerState { get; set; }
+  public float DodgeForward { get; set; }
+  public float DodgeRight { get; set; }
+
+  public PlayerInputChangeT() {
+    this.PlayerIndex = 0;
+    this.ControllerState = null;
+    this.DodgeForward = 0.0f;
+    this.DodgeRight = 0.0f;
+  }
 }
 
 
@@ -3473,6 +5964,45 @@ public struct GameMessageWrapper : IFlatbufferObject
   public static Offset<rlbot.flat.GameMessageWrapper> EndGameMessageWrapper(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.GameMessageWrapper>(o);
+  }
+  public GameMessageWrapperT UnPack() {
+    var _o = new GameMessageWrapperT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(GameMessageWrapperT _o) {
+    _o.Message = new rlbot.flat.GameMessageUnion();
+    _o.Message.Type = this.MessageType;
+    switch (this.MessageType) {
+      default: break;
+      case rlbot.flat.GameMessage.PlayerStatEvent:
+        _o.Message.Value = this.Message<rlbot.flat.PlayerStatEvent>().HasValue ? this.Message<rlbot.flat.PlayerStatEvent>().Value.UnPack() : null;
+        break;
+      case rlbot.flat.GameMessage.PlayerSpectate:
+        _o.Message.Value = this.Message<rlbot.flat.PlayerSpectate>().HasValue ? this.Message<rlbot.flat.PlayerSpectate>().Value.UnPack() : null;
+        break;
+      case rlbot.flat.GameMessage.PlayerInputChange:
+        _o.Message.Value = this.Message<rlbot.flat.PlayerInputChange>().HasValue ? this.Message<rlbot.flat.PlayerInputChange>().Value.UnPack() : null;
+        break;
+    }
+  }
+  public static Offset<rlbot.flat.GameMessageWrapper> Pack(FlatBufferBuilder builder, GameMessageWrapperT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.GameMessageWrapper>);
+    var _Message_type = _o.Message == null ? rlbot.flat.GameMessage.NONE : _o.Message.Type;
+    var _Message = _o.Message == null ? 0 : rlbot.flat.GameMessageUnion.Pack(builder, _o.Message);
+    return CreateGameMessageWrapper(
+      builder,
+      _Message_type,
+      _Message);
+  }
+}
+
+public class GameMessageWrapperT
+{
+  public rlbot.flat.GameMessageUnion Message { get; set; }
+
+  public GameMessageWrapperT() {
+    this.Message = null;
   }
 }
 
@@ -3527,6 +6057,44 @@ public struct MessagePacket : IFlatbufferObject
   public static Offset<rlbot.flat.MessagePacket> EndMessagePacket(FlatBufferBuilder builder) {
     int o = builder.EndTable();
     return new Offset<rlbot.flat.MessagePacket>(o);
+  }
+  public MessagePacketT UnPack() {
+    var _o = new MessagePacketT();
+    this.UnPackTo(_o);
+    return _o;
+  }
+  public void UnPackTo(MessagePacketT _o) {
+    _o.Messages = new List<rlbot.flat.GameMessageWrapperT>();
+    for (var _j = 0; _j < this.MessagesLength; ++_j) {_o.Messages.Add(this.Messages(_j).HasValue ? this.Messages(_j).Value.UnPack() : null);}
+    _o.GameSeconds = this.GameSeconds;
+    _o.FrameNum = this.FrameNum;
+  }
+  public static Offset<rlbot.flat.MessagePacket> Pack(FlatBufferBuilder builder, MessagePacketT _o) {
+    if (_o == null) return default(Offset<rlbot.flat.MessagePacket>);
+    var _messages = default(VectorOffset);
+    if (_o.Messages != null) {
+      var __messages = new Offset<rlbot.flat.GameMessageWrapper>[_o.Messages.Count];
+      for (var _j = 0; _j < __messages.Length; ++_j) { __messages[_j] = rlbot.flat.GameMessageWrapper.Pack(builder, _o.Messages[_j]); }
+      _messages = CreateMessagesVector(builder, __messages);
+    }
+    return CreateMessagePacket(
+      builder,
+      _messages,
+      _o.GameSeconds,
+      _o.FrameNum);
+  }
+}
+
+public class MessagePacketT
+{
+  public List<rlbot.flat.GameMessageWrapperT> Messages { get; set; }
+  public float GameSeconds { get; set; }
+  public int FrameNum { get; set; }
+
+  public MessagePacketT() {
+    this.Messages = null;
+    this.GameSeconds = 0.0f;
+    this.FrameNum = 0;
   }
 }
 
