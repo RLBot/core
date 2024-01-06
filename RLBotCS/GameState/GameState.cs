@@ -8,6 +8,8 @@ namespace RLBotCS.GameState
         public GameTickPacket gameTickPacket = new();
 
         public PlayerMapping playerMapping = new();
+        
+        public List<BoostPadSpawn> boostPads = new();
 
         public void applyMessage(MessageBundle messageBundle)
         {
@@ -92,6 +94,15 @@ namespace RLBotCS.GameState
                 else if (message is TeamScoreUpdate scoreUpdate)
                 {
                     gameTickPacket.teamScores[scoreUpdate.team] = scoreUpdate.score;
+                }
+                else if (message is MatchInfo matchInfo)
+                {
+                    boostPads.Clear();
+                    gameTickPacket.worldGravityZ = matchInfo.gravity.z;
+                }
+                else if (message is BoostPadSpawn boostPadSpawn)
+                {
+                    boostPads.Add(boostPadSpawn);
                 }
                 // TODO: lots more message handlers.
             }

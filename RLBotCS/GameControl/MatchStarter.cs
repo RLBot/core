@@ -14,7 +14,6 @@ namespace RLBotCS.GameControl
         private PlayerMapping playerMapping;
         private MatchCommandSender matchCommandSender;
         private (MatchSettingsT, TypedPayload)? lastMatchMessage;
-        private float gravity = -650;
         private bool isUnlimitedTime = false;
         private bool needsSpawnBots = true;
         private bool hasEverLoadedMap = false;
@@ -28,14 +27,6 @@ namespace RLBotCS.GameControl
         public void HandleMatchSettings(MatchSettingsT matchSettings, TypedPayload originalMessage)
         {
             if (matchSettings.MutatorSettings is MutatorSettingsT mutatorSettings) {
-                gravity = mutatorSettings.GravityOption switch
-                {
-                    GravityOption.Low => -325,
-                    GravityOption.High => -1137.5f,
-                    GravityOption.Super_High => -3250,
-                    _ => -650,
-                };
-
                 isUnlimitedTime = mutatorSettings.MatchLength == MatchLength.Unlimited;
             }
 
@@ -62,14 +53,10 @@ namespace RLBotCS.GameControl
         {
             if (needsSpawnBots && lastMatchMessage?.Item1 is MatchSettingsT matchSettings)
             {
-                foreach (var message in messageBundle.messages)
+                if (messageBundle.messages.Any(message => message is MatchInfo))
                 {
-                    if (message is BoostPadSpawn)
-                    {
-                        SpawnBots(matchSettings);
-                        needsSpawnBots = false;
-                        break;
-                    }
+                    SpawnBots(matchSettings);
+                    needsSpawnBots = false;
                 }
             }
         }
@@ -133,11 +120,6 @@ namespace RLBotCS.GameControl
         public bool IsUnlimitedTime()
         {
             return isUnlimitedTime;
-        }
-
-        public float GetGravity()
-        {
-            return gravity;
         }
     }
 }

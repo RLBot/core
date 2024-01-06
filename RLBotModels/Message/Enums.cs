@@ -48,7 +48,7 @@
         /// Did a double jump. Changes to InAir immediately after.
         DoubleJumping = 2,
         /// Did a dodge. Changes to InAir when dodge completes
-        Dodged = 3,
+        Dodging = 3,
         /// Wheels not on ground
         InAir = 4,
         /// Demolished, awaiting respawn
