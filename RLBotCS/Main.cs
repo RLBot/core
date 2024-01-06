@@ -42,7 +42,7 @@ foreach (var messageClump in messenger)
     // this helps to wait for a new map to load 
     if (gameState.NotMatchEnded())
     {
-        matchStarter.SpawnBotsIfNeeded();
+        matchStarter.applyMessageBundle(messageBundle);
     }
 
     flatbufferServer.SendGameStateToClients(gameState);

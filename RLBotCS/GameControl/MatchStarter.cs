@@ -17,6 +17,7 @@ namespace RLBotCS.GameControl
         private float gravity = -650;
         private bool isUnlimitedTime = false;
         private bool needsSpawnBots = true;
+        private bool hasEverLoadedMap = false;
 
         public MatchStarter(TcpMessenger tcpMessenger, GameState.GameState gameState)
         {
@@ -38,7 +39,9 @@ namespace RLBotCS.GameControl
                 isUnlimitedTime = mutatorSettings.MatchLength == MatchLength.Unlimited;
             }
 
-            if (matchSettings.ExistingMatchBehavior == ExistingMatchBehavior.Continue_And_Spawn)
+            lastMatchMessage = (matchSettings, originalMessage);
+
+            if (hasEverLoadedMap && matchSettings.ExistingMatchBehavior == ExistingMatchBehavior.Continue_And_Spawn)
             {
                 // No need to load a new map, just spawn the players.
                 SpawnBots(matchSettings);
@@ -51,17 +54,23 @@ namespace RLBotCS.GameControl
                 matchCommandSender.AddCommand(load_map_command);
                 matchCommandSender.Send();
                 needsSpawnBots = true;
+                hasEverLoadedMap = true;
             }
-
-            lastMatchMessage = (matchSettings, originalMessage);
         }
 
-        public void SpawnBotsIfNeeded()
+        public void applyMessageBundle(MessageBundle messageBundle)
         {
             if (needsSpawnBots && lastMatchMessage?.Item1 is MatchSettingsT matchSettings)
             {
-                SpawnBots(matchSettings);
-                needsSpawnBots = false;
+                foreach (var message in messageBundle.messages)
+                {
+                    if (message is BoostPadSpawn)
+                    {
+                        SpawnBots(matchSettings);
+                        needsSpawnBots = false;
+                        break;
+                    }
+                }
             }
         }
 
