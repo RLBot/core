@@ -42,7 +42,7 @@ namespace RLBotCS.GameControl
                 // Load the map, then spawn the players AFTER the map loads.
                 var load_map_command = FlatToCommand.MakeOpenCommand(matchSettings);
                 Console.WriteLine("Core is about to start match with command: " + load_map_command);
-                matchCommandSender.AddCommand(load_map_command);
+                matchCommandSender.AddConsoleCommand(load_map_command);
                 matchCommandSender.Send();
                 needsSpawnBots = true;
                 hasEverLoadedMap = true;

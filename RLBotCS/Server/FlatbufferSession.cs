@@ -17,7 +17,6 @@ namespace RLBotCS.Server
         private PlayerMapping playerMapping;
         private SocketSpecStreamWriter socketSpecWriter;
 
-
         public bool IsReady
         { get; private set; }
 
