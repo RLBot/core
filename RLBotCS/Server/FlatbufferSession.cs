@@ -73,7 +73,7 @@ namespace RLBotCS.Server
                         {
                             var playerInput = new RLBotModels.Control.PlayerInput() { actorId = actorId.Value, carInput = carInput };
                             gameController.playerInputSender.SendPlayerInput(playerInput);
-                        } 
+                        }
                         else
                         {
                             Console.WriteLine("Core got input from unknown player index {0}", playerInputMsg.PlayerIndex);
@@ -92,7 +92,7 @@ namespace RLBotCS.Server
             }
         }
 
-        public void SendIntroData(TypedPayload matchSettings)
+        public void SendIntroData(TypedPayload matchSettings, GameState.GameState gameState)
         {
             if (matchSettings.type != DataType.MatchSettings)
             {
@@ -101,8 +101,33 @@ namespace RLBotCS.Server
 
             Console.WriteLine("Core sent intro data to client.");
             socketSpecWriter.Write(matchSettings);
-            
-            // TODO: send field info packet before setting this to false
+
+            List<BoostPadT> boostPads = new();
+            foreach (var boostPad in gameState.boostPads)
+            {
+                boostPads.Add(new BoostPadT()
+                {
+                    Location = new Vector3T() {
+                        X = boostPad.spawnPosition.x,
+                        Y = boostPad.spawnPosition.y,
+                        Z = boostPad.spawnPosition.z,
+                    },
+                    IsFullBoost = boostPad.isFullBoost,
+                });
+            }
+
+            // TODO: Add goals
+            FieldInfoT fieldInfoT = new()
+            {
+                BoostPads = boostPads,
+            };
+
+            FlatBufferBuilder builder = new(1024);
+            var offset = FieldInfo.Pack(builder, fieldInfoT);
+            builder.Finish(offset.Value);
+            var fieldInfo = TypedPayload.FromFlatBufferBuilder(DataType.FieldInfo, builder);
+            socketSpecWriter.Write(fieldInfo);
+
             NeedsIntroData = false;
         }
 

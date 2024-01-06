@@ -24,23 +24,28 @@ namespace RLBotCS.RLBotPacket
         internal TypedPayload ToFlatbuffer()
         {
             // Create the ball info
-            rlbot.flat.PhysicsT ballPhysics = new() {
-                Location = new() {
+            rlbot.flat.PhysicsT ballPhysics = new()
+            {
+                Location = new()
+                {
                     X = ball.physics.location.x,
                     Y = ball.physics.location.y,
                     Z = ball.physics.location.z
                 },
-                Rotation = new() {
+                Rotation = new()
+                {
                     Pitch = ball.physics.rotation.pitch,
                     Yaw = ball.physics.rotation.yaw,
                     Roll = ball.physics.rotation.roll
                 },
-                Velocity = new() {
+                Velocity = new()
+                {
                     X = ball.physics.velocity.x,
                     Y = ball.physics.velocity.y,
                     Z = ball.physics.velocity.z
                 },
-                AngularVelocity = new() {
+                AngularVelocity = new()
+                {
                     X = ball.physics.angularVelocity.x,
                     Y = ball.physics.angularVelocity.y,
                     Z = ball.physics.angularVelocity.z
@@ -52,12 +57,14 @@ namespace RLBotCS.RLBotPacket
                 PlayerIndex = ball.latestTouch.playerIndex,
                 Team = ball.latestTouch.team,
                 GameSeconds = ball.latestTouch.timeSeconds,
-                Location = new() {
+                Location = new()
+                {
                     X = ball.latestTouch.hitLocation.x,
                     Y = ball.latestTouch.hitLocation.y,
                     Z = ball.latestTouch.hitLocation.z
                 },
-                Normal = new() {
+                Normal = new()
+                {
                     X = ball.latestTouch.hitNormal.x,
                     Y = ball.latestTouch.hitNormal.y,
                     Z = ball.latestTouch.hitNormal.z
@@ -114,22 +121,26 @@ namespace RLBotCS.RLBotPacket
             for (var i = 0; i < gameCars.Count; i++) {
                 players.Add(new() {
                     Physics = new() {
-                        Location = new() {
+                        Location = new()
+                        {
                             X = gameCars[i].physics.location.x,
                             Y = gameCars[i].physics.location.y,
                             Z = gameCars[i].physics.location.z,
                         },
-                        Rotation = new() {
+                        Rotation = new()
+                        {
                             Pitch = gameCars[i].physics.rotation.pitch,
                             Yaw = gameCars[i].physics.rotation.yaw,
                             Roll = gameCars[i].physics.rotation.roll,
                         },
-                        Velocity = new() {
+                        Velocity = new()
+                        {
                             X = gameCars[i].physics.velocity.x,
                             Y = gameCars[i].physics.velocity.y,
                             Z = gameCars[i].physics.velocity.z,
                         },
-                        AngularVelocity = new() {
+                        AngularVelocity = new()
+                        {
                             X = gameCars[i].physics.angularVelocity.x,
                             Y = gameCars[i].physics.angularVelocity.y,
                             Z = gameCars[i].physics.angularVelocity.z,
@@ -145,7 +156,8 @@ namespace RLBotCS.RLBotPacket
                     Team = gameCars[i].team,
                     Boost = (int)Math.Floor(gameCars[i].boost),
                     SpawnId = gameCars[i].spawnId,
-                    ScoreInfo = new() {
+                    ScoreInfo = new()
+                    {
                         Score = gameCars[i].scoreInfo.score,
                         Goals = gameCars[i].scoreInfo.goals,
                         OwnGoals = gameCars[i].scoreInfo.ownGoals,
@@ -154,12 +166,14 @@ namespace RLBotCS.RLBotPacket
                         Shots = gameCars[i].scoreInfo.shots,
                         Demolitions = gameCars[i].scoreInfo.demolitions,
                     },
-                    Hitbox = new() {
+                    Hitbox = new()
+                    {
                         Length = gameCars[i].hitbox.length,
                         Width = gameCars[i].hitbox.width,
                         Height = gameCars[i].hitbox.height,
                     },
-                    HitboxOffset = new() {
+                    HitboxOffset = new()
+                    {
                         X = gameCars[i].hitboxOffset.x,
                         Y = gameCars[i].hitboxOffset.y,
                         Z = gameCars[i].hitboxOffset.z,
@@ -167,7 +181,8 @@ namespace RLBotCS.RLBotPacket
                 });
             }
 
-            var gameTickPacket = new rlbot.flat.GameTickPacketT() {
+            var gameTickPacket = new rlbot.flat.GameTickPacketT()
+            {
                 Ball = ballInfo,
                 GameInfo = gameInfo,
                 Teams = teams,

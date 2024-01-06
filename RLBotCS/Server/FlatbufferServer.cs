@@ -73,7 +73,7 @@ namespace RLBotCS.Server
                 {
                     if (matchStarter.GetMatchSettings() is TypedPayload matchSettings)
                     {
-                        session.SendIntroData(matchSettings);
+                        session.SendIntroData(matchSettings, gameState);
                     }
                 }
 
