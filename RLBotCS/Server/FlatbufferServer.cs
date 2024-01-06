@@ -42,10 +42,10 @@ namespace RLBotCS.Server
             {
                 while (true)
                 {
-                    Console.WriteLine("RLBotCS Flatbuffer Server waiting for client connections...");
+                    Console.WriteLine("Core Flatbuffer Server waiting for client connections...");
                     TcpClient client = server.AcceptTcpClient();
                     var ipEndpoint = (IPEndPoint)client.Client.RemoteEndPoint;
-                    Console.WriteLine("RLBotCS is now serving a client that connected from port " + ipEndpoint.Port);
+                    Console.WriteLine("Core is now serving a client that connected from port " + ipEndpoint.Port);
 
                     Thread t = new Thread(() => HandleClient(client));
                     t.Start();
@@ -53,7 +53,7 @@ namespace RLBotCS.Server
             }
             catch (SocketException e)
             {
-                Console.WriteLine("SocketException: {0}", e);
+                Console.WriteLine("SocketException in Core: {0}", e);
                 server.Stop();
             }
         }
@@ -83,7 +83,7 @@ namespace RLBotCS.Server
                 }
                 catch (IOException e)
                 {
-                    Console.WriteLine("Dropping connection to session due to: {0}", e);
+                    Console.WriteLine("Core is dropping connection to session due to: {0}", e);
                     sessions_to_remove.Add(session);
                     // tell the socket to close
                     session.Close();

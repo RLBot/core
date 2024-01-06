@@ -39,6 +39,12 @@ foreach (var messageClump in messenger)
     gameState.gameTickPacket.worldGravityZ = matchStarter.GetGravity();
     gameState.applyMessage(messageBundle);
 
+    // this helps to wait for a new map to load 
+    if (gameState.NotMatchEnded())
+    {
+        matchStarter.SpawnBotsIfNeeded();
+    }
+
     flatbufferServer.SendGameStateToClients(gameState);
 
     MessAroundToProveThingsWork(playerInputSender, gameState, messageBundle);

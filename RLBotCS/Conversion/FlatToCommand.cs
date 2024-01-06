@@ -20,7 +20,7 @@ namespace RLBotCS.Conversion
             else
             {
                 command += "Stadium_P";
-                Console.WriteLine("Unknown map, defaulting to DFH Stadium");
+                Console.WriteLine("Core got unknown map, defaulting to DFH Stadium");
             }
 
             // Parse game mode
@@ -32,7 +32,7 @@ namespace RLBotCS.Conversion
                     break;
                 default:
                     command += "TAGame.GameInfo_Soccar_TA";
-                    Console.WriteLine("Unknown game mode, defaulting to Soccer");
+                    Console.WriteLine("Core got unknown game mode, defaulting to Soccer");
                     break;
             }
 
@@ -57,7 +57,7 @@ namespace RLBotCS.Conversion
                         game_tags.Add("UnlimitedTime");
                         break;
                     default:
-                        Console.WriteLine("Unsupported match length option");
+                        Console.WriteLine("Got got unsupported match length option");
                         break;
                 }
             }

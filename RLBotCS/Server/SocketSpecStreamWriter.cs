@@ -38,7 +38,7 @@ namespace RLBotCS.Server
             if (message.payload.Count > ushort.MaxValue)
             {
                 // Can't send if the message size is bigger than our header can describe.
-                Console.WriteLine("Warning! Cannot send message because size of {0} cannot be described by a ushort.", message.payload.Count);
+                Console.WriteLine("Warning! Core cannot send message because size of {0} cannot be described by a ushort.", message.payload.Count);
                 return;
             }
             PrepareDataType(message.type);

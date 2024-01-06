@@ -96,5 +96,10 @@ namespace RLBotCS.GameState
                 // TODO: lots more message handlers.
             }
         }
+
+        public bool NotMatchEnded()
+        {
+            return gameTickPacket.gameState != GameStateType.Ended;
+        }
     }
 }

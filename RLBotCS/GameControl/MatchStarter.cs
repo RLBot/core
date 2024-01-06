@@ -13,9 +13,10 @@ namespace RLBotCS.GameControl
     {
         private PlayerMapping playerMapping;
         private MatchCommandSender matchCommandSender;
-        private TypedPayload? lastMatchSettings;
+        private (MatchSettingsT, TypedPayload)? lastMatchMessage;
         private float gravity = -650;
         private bool isUnlimitedTime = false;
+        private bool needsSpawnBots = true;
 
         public MatchStarter(TcpMessenger tcpMessenger, GameState.GameState gameState)
         {
@@ -37,16 +38,35 @@ namespace RLBotCS.GameControl
                 isUnlimitedTime = mutatorSettings.MatchLength == MatchLength.Unlimited;
             }
 
-            // Load the map, then spawn the players AFTER the map loads.
-            var load_map_command = FlatToCommand.MakeOpenCommand(matchSettings);
-            Console.WriteLine("Start match with command: " + load_map_command);
-            matchCommandSender.AddCommand(load_map_command);
-            matchCommandSender.Send();
+            if (matchSettings.ExistingMatchBehavior == ExistingMatchBehavior.Continue_And_Spawn)
+            {
+                // No need to load a new map, just spawn the players.
+                SpawnBots(matchSettings);
+            }
+            else
+            {
+                // Load the map, then spawn the players AFTER the map loads.
+                var load_map_command = FlatToCommand.MakeOpenCommand(matchSettings);
+                Console.WriteLine("Core is about to start match with command: " + load_map_command);
+                matchCommandSender.AddCommand(load_map_command);
+                matchCommandSender.Send();
+                needsSpawnBots = true;
+            }
 
-            Console.WriteLine("RLBotCS will wait 3 seconds for the map to load...");
-            Thread.Sleep(3000);
-            Console.WriteLine("RLBotCS is done waiting, spawning bots...");
+            lastMatchMessage = (matchSettings, originalMessage);
+        }
 
+        public void SpawnBotsIfNeeded()
+        {
+            if (needsSpawnBots && lastMatchMessage?.Item1 is MatchSettingsT matchSettings)
+            {
+                SpawnBots(matchSettings);
+                needsSpawnBots = false;
+            }
+        }
+
+        private void SpawnBots(MatchSettingsT matchSettings)
+        {
             for (int i = 0; i < matchSettings.PlayerConfigurations.Count; i++)
             {
                 var playerConfig = matchSettings.PlayerConfigurations[i];
@@ -60,7 +80,7 @@ namespace RLBotCS.GameControl
 
                 var loadout = FlatToModel.ToLoadout(playerConfig.Loadout, playerConfig.Team);
 
-                Console.WriteLine("Spawning player " + playerConfig.Name + " with spawn id " + playerConfig.SpawnId);
+                Console.WriteLine("Core is spawning player " + playerConfig.Name + " with spawn id " + playerConfig.SpawnId);
 
                 switch (playerConfig.Variety.Type)
                 {
@@ -89,18 +109,16 @@ namespace RLBotCS.GameControl
                         });
                         break;
                     default:
-                        Console.WriteLine("Unable to spawn player with variety type: " + playerConfig.Variety.Type);
+                        Console.WriteLine("Core was unable to spawn player with variety type: " + playerConfig.Variety.Type);
                         break;
                 }
             }
 
             matchCommandSender.Send();
-
-            lastMatchSettings = originalMessage;
         }
 
         public TypedPayload? GetMatchSettings() {
-            return lastMatchSettings;
+            return lastMatchMessage?.Item2;
         }
 
         public bool IsUnlimitedTime()

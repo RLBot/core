@@ -63,6 +63,18 @@ namespace RLBotSecret.Conversion
                 secondaryColor = ColorSwatches.GetSecondary(l.CustomColorId);
             }
 
+            var lp = l.LoadoutPaint;
+
+            LoadoutPaint loadoutPaint = new() {
+                carPaintId = (byte)lp.CarPaintId,
+                decalPaintId = (byte)lp.DecalPaintId,
+                wheelsPaintId = (byte)lp.WheelsPaintId,
+                boostPaintId = (byte)lp.BoostPaintId,
+                antennaPaintId = (byte)lp.AntennaPaintId,
+                hatPaintId = (byte)lp.HatPaintId,
+                trailsPaintId = (byte)lp.TrailsPaintId,
+                goalExplosionPaintId = (byte)lp.GoalExplosionPaintId
+            };
 
             return new Loadout()
             {
@@ -77,6 +89,7 @@ namespace RLBotSecret.Conversion
                 paintFinishId = (ushort)l.PaintFinishId,
                 trailsId = (ushort)l.TrailsId,
                 wheelsId = (ushort)l.WheelsId,
+                loadoutPaint = loadoutPaint,
                 primaryColorLookup = primaryColor,
                 secondaryColorLookup = secondaryColor
             };
