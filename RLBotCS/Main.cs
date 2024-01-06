@@ -6,7 +6,6 @@ using RLBotSecret.Conversion;
 using RLBotSecret.Controller;
 using RLBotSecret.TCP;
 using RLBotCS.GameControl;
-using rlbot.flat;
 
 var converter = new Converter();
 
