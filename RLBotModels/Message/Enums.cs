@@ -44,11 +44,11 @@
         /// Wheels on ground
         OnGround = 0,
         /// Did a jump. Changes to InAir when no longer jumping.
-        Jumped = 1,
+        Jumping = 1,
         /// Did a double jump. Changes to InAir immediately after.
-        DoubleJumped = 2,
+        DoubleJumping = 2,
         /// Did a dodge. Changes to InAir when dodge completes
-        Dodged = 3,
+        Dodging = 3,
         /// Wheels not on ground
         InAir = 4,
         /// Demolished, awaiting respawn

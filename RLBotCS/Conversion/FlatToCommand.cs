@@ -20,7 +20,7 @@ namespace RLBotCS.Conversion
             else
             {
                 command += "Stadium_P";
-                Console.WriteLine("Unknown map, defaulting to DFH Stadium");
+                Console.WriteLine("Core got unknown map, defaulting to DFH Stadium");
             }
 
             // Parse game mode
@@ -32,7 +32,7 @@ namespace RLBotCS.Conversion
                     break;
                 default:
                     command += "TAGame.GameInfo_Soccar_TA";
-                    Console.WriteLine("Unknown game mode, defaulting to Soccer");
+                    Console.WriteLine("Core got unknown game mode, defaulting to Soccer");
                     break;
             }
 
@@ -57,7 +57,7 @@ namespace RLBotCS.Conversion
                         game_tags.Add("UnlimitedTime");
                         break;
                     default:
-                        Console.WriteLine("Unsupported match length option");
+                        Console.WriteLine("Got got unsupported match length option");
                         break;
                 }
             }
@@ -65,6 +65,40 @@ namespace RLBotCS.Conversion
             command += String.Join(",", game_tags);
 
             return command;
+        }
+
+        static public string MakeGameSpeedCommand(GameSpeedOption gameSpeed)
+        {
+            var command = "Set WorldInfo TimeDilation ";
+            var speed = gameSpeed switch
+            {
+                GameSpeedOption.Slo_Mo => 0.5f,
+                GameSpeedOption.Time_Warp => 1.5f,
+                _ => 1.0f,
+            };
+            command += speed.ToString();
+
+            return command;
+        }
+
+        static public string MakeGravityCommand(GravityOption gravityOption)
+        {
+            var command = "Set WorldInfo WorldGravityZ ";
+            var gravity = gravityOption switch
+            {
+                GravityOption.Low => -325,
+                GravityOption.High => -1137.5f,
+                GravityOption.Super_High => -3250,
+                _ => -650,
+            };
+            command += gravity.ToString();
+
+            return command;
+        }
+
+        static public string MakeAutoSaveReplayCommand()
+        {
+            return "QueSaveReplay";
         }
     }
 }
