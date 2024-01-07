@@ -53,6 +53,11 @@ namespace RLBotCS.GameControl
                     {
                         matchCommandSender.AddSetPhysicsCommand(actorId, FlatToModel.DesiredToPhysics(physics));
                     }
+
+                    if (carState.BoostAmount is FloatT boostAmount)
+                    {
+                        matchCommandSender.AddSetBoostCommand(actorId, (int)boostAmount.Val);
+                    }
                 }
             }
 
