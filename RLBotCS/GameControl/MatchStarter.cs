@@ -17,6 +17,7 @@ namespace RLBotCS.GameControl
         private bool isUnlimitedTime = false;
         private bool needsSpawnBots = true;
         private bool hasEverLoadedMap = false;
+        private bool stateSettingEnabled = true;
 
         public MatchStarter(TcpMessenger tcpMessenger, GameState.GameState gameState)
         {
@@ -77,6 +78,8 @@ namespace RLBotCS.GameControl
                 matchCommandSender.AddConsoleCommand(FlatToCommand.MakeGravityCommandFromOption(mutatorSettings.GravityOption));
                 matchCommandSender.AddConsoleCommand(FlatToCommand.MakeGameSpeedCommandFromOption(mutatorSettings.GameSpeedOption));
             }
+
+            stateSettingEnabled = matchSettings.EnableStateSetting;
 
             if (matchSettings.AutoSaveReplay)
             {
@@ -173,5 +176,11 @@ namespace RLBotCS.GameControl
         {
             return isUnlimitedTime;
         }
+
+        internal bool IsStateSettingEnabled()
+        {
+            return stateSettingEnabled;
+        }
+
     }
 }

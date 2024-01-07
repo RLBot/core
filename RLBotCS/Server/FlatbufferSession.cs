@@ -18,6 +18,7 @@ namespace RLBotCS.Server
         private SocketSpecStreamWriter socketSpecWriter;
         private Dictionary<int, List<ushort>> sessionRenderIds = new();
         private ushort? ballActorId;
+        private bool stateSettingIsEnabled = true;
 
         public bool IsReady
         { get; private set; }
@@ -97,6 +98,11 @@ namespace RLBotCS.Server
                     case DataType.QuickChat:
                         break;
                     case DataType.RenderGroup:
+                        if (!stateSettingIsEnabled)
+                        {
+                            break;
+                        }
+
                         var renderingGroup = RenderGroup.GetRootAsRenderGroup(byteBuffer).UnPack();
                         List<ushort> renderIds = new();
 
@@ -289,6 +295,11 @@ namespace RLBotCS.Server
         public void SetBallActorId(ushort actorId)
         {
             ballActorId = actorId;
+        }
+
+        public void ToggleStateSetting(bool isEnabled)
+        {
+            stateSettingIsEnabled = isEnabled;
         }
 
         internal void SendPayloadToClient(TypedPayload payload)

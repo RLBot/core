@@ -83,6 +83,7 @@ namespace RLBotCS.Server
                 }
 
                 session.SetBallActorId(gameState.gameTickPacket.ball.actorId);
+                session.ToggleStateSetting(matchStarter.IsStateSettingEnabled());
 
                 try
                 {
