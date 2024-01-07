@@ -71,14 +71,31 @@ namespace RLBotCS.RLBotPacket
                 }
             };
 
-            rlbot.flat.CollisionShapeUnion collisionShape = new() {
-                Type = rlbot.flat.CollisionShape.SphereShape,
-                Value = new rlbot.flat.SphereShapeT() {
+            rlbot.flat.CollisionShapeUnion collisionShape = ball.shape.Type switch
+            {
+                CollisionShape.BoxShape => rlbot.flat.CollisionShapeUnion.FromBoxShape(new()
+                {
+                    Length = ball.shape.As<BoxShape>().Length,
+                    Width = ball.shape.As<BoxShape>().Width,
+                    Height = ball.shape.As<BoxShape>().Height,
+                }),
+                CollisionShape.SphereShape => rlbot.flat.CollisionShapeUnion.FromSphereShape(new()
+                {
+                    Diameter = ball.shape.As<SphereShape>().Diameter,
+                }),
+                CollisionShape.CylinderShape => rlbot.flat.CollisionShapeUnion.FromCylinderShape(new()
+                {
+                    Diameter = ball.shape.As<CylinderShape>().Diameter,
+                    Height = ball.shape.As<CylinderShape>().Height,
+                }),
+                _ => rlbot.flat.CollisionShapeUnion.FromSphereShape(new()
+                {
                     Diameter = 91.25f * 2,
-                }
+                }),
             };
 
-            rlbot.flat.BallInfoT ballInfo = new() {
+            rlbot.flat.BallInfoT ballInfo = new()
+            {
                 Physics = ballPhysics,
                 LatestTouch = lastTouch,
                 Shape = collisionShape,

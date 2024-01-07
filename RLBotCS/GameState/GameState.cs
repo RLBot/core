@@ -109,6 +109,11 @@ namespace RLBotCS.GameState
                         car.scoreInfo.demolitions = playerAccolade.demolitions;
                     }
                 }
+                else if (message is BallSpawn ballSpawn)
+                {
+                    gameTickPacket.ball.actorId = ballSpawn.actorId;
+                    gameTickPacket.ball.shape = ballSpawn.collisionShape;
+                }
                 // TODO: lots more message handlers.
             }
         }
@@ -175,9 +180,9 @@ namespace RLBotCS.GameState
         }
 
 
-        public bool NotMatchEnded()
+        public bool MatchEnded()
         {
-            return gameTickPacket.gameState != GameStateType.Ended;
+            return gameTickPacket.gameState == GameStateType.Ended;
         }
     }
 }
