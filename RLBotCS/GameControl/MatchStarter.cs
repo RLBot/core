@@ -137,7 +137,7 @@ namespace RLBotCS.GameControl
                 switch (playerConfig.Variety.Type)
                 {
                     case PlayerClass.RLBotPlayer:
-                        var rlbotSpawnCommandId = matchCommandSender.AddBotSpawn(playerConfig.Name, playerConfig.Team, BotSkill.Custom, loadout);
+                        var rlbotSpawnCommandId = matchCommandSender.AddBotSpawnCommand(playerConfig.Name, playerConfig.Team, BotSkill.Custom, loadout);
 
                         playerMapping.addPendingSpawn(new SpawnTracker()
                         {
@@ -150,7 +150,7 @@ namespace RLBotCS.GameControl
                     case PlayerClass.PsyonixBotPlayer:
                         var skill = playerConfig.Variety.AsPsyonixBotPlayer().BotSkill;
                         var skillEnum = skill < 0.5 ? BotSkill.Easy : skill < 1 ? BotSkill.Medium : BotSkill.Hard;
-                        var psySpawnCommandId = matchCommandSender.AddBotSpawn(playerConfig.Name, playerConfig.Team, skillEnum, loadout);
+                        var psySpawnCommandId = matchCommandSender.AddBotSpawnCommand(playerConfig.Name, playerConfig.Team, skillEnum, loadout);
 
                         playerMapping.addPendingSpawn(new SpawnTracker()
                         {
