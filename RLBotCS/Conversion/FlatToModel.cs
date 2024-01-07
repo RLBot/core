@@ -94,5 +94,35 @@ namespace RLBotSecret.Conversion
                 secondaryColorLookup = secondaryColor
             };
         }
+
+        static internal Vector3 DesiredToVector(rlbot.flat.Vector3PartialT vec)
+        {
+            return new Vector3() {
+                x = vec.X?.Val ?? 0,
+                y = vec.Y?.Val ?? 0,
+                z = vec.Z?.Val ?? 0
+            };
+        }
+
+        static internal Rotator DesiredToRotator(rlbot.flat.RotatorPartialT rot)
+        {
+            return new Rotator() {
+                pitch = rot.Pitch?.Val ?? 0,
+                yaw = rot.Yaw?.Val ?? 0,
+                roll = rot.Roll?.Val ?? 0
+            };
+        }
+
+        static internal Physics DesiredToPhysics(rlbot.flat.DesiredPhysicsT p)
+        {
+            return new Physics()
+            {
+                location = DesiredToVector(p.Location),
+                rotation = DesiredToRotator(p.Rotation),
+                velocity = DesiredToVector(p.Velocity),
+                angularVelocity = DesiredToVector(p.AngularVelocity),
+            };
+        }
+
     }
 }

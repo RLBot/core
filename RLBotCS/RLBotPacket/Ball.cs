@@ -1,4 +1,5 @@
-﻿using RLBotModels.Phys;
+﻿using RLBotModels.Message;
+using RLBotModels.Phys;
 
 namespace RLBotCS.RLBotPacket
 {
@@ -6,5 +7,14 @@ namespace RLBotCS.RLBotPacket
     {
         public Physics physics;
         public BallTouch latestTouch;
+        public CollisionShapeUnion shape = new()
+        {
+            Type = CollisionShape.SphereShape,
+            Value = new SphereShape()
+            {
+                Diameter = 91.25f,
+            }
+        };
+        public ushort actorId;
     }
 }
