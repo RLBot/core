@@ -11,6 +11,7 @@ namespace RLBotCS.GameState
         public PlayerMapping playerMapping = new();
 
         public List<BoostPadSpawn> boostPads = new();
+        public List<rlbot.flat.GoalInfoT> goals = new();
 
         public void applyMessage(MessageBundle messageBundle)
         {
@@ -114,7 +115,27 @@ namespace RLBotCS.GameState
                     gameTickPacket.ball.actorId = ballSpawn.actorId;
                     gameTickPacket.ball.shape = ballSpawn.collisionShape;
                 }
-                // TODO: lots more message handlers.
+                else if (message is GoalSpawn goalSpawn)
+                {
+                    rlbot.flat.GoalInfoT goalInfo = new()
+                    {
+                        TeamNum = goalSpawn.team,
+                        Height = goalSpawn.height,
+                        Width = goalSpawn.width,
+                        Direction = new rlbot.flat.Vector3T()
+                        {
+                            X = goalSpawn.direction.x,
+                            Y = goalSpawn.direction.y,
+                            Z = goalSpawn.direction.z,
+                        },
+                        Location = new rlbot.flat.Vector3T()
+                        {
+                            X = goalSpawn.location.x,
+                            Y = goalSpawn.location.y,
+                            Z = goalSpawn.location.z,
+                        },
+                    };
+                }
             }
         }
 

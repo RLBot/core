@@ -260,7 +260,6 @@ namespace RLBotCS.Server
                 throw new Exception("Expected match settings, got " + matchSettings.type);
             }
 
-            Console.WriteLine("Core sent intro data to client.");
             socketSpecWriter.Write(matchSettings);
 
             List<BoostPadT> boostPads = new();
@@ -277,10 +276,10 @@ namespace RLBotCS.Server
                 });
             }
 
-            // TODO: Add goals
             FieldInfoT fieldInfoT = new()
             {
                 BoostPads = boostPads,
+                Goals = gameState.goals,
             };
 
             FlatBufferBuilder builder = new(1024);
@@ -289,6 +288,7 @@ namespace RLBotCS.Server
             var fieldInfo = TypedPayload.FromFlatBufferBuilder(DataType.FieldInfo, builder);
             socketSpecWriter.Write(fieldInfo);
 
+            Console.WriteLine("Core sent intro data to client.");
             NeedsIntroData = false;
         }
 
