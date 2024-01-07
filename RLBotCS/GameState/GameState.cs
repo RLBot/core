@@ -93,35 +93,20 @@ namespace RLBotCS.GameState
                 {
                     boostPads.Add(boostPadSpawn);
                 }
-                else if (message is PlayerAccolade playerAccolade)
+                else if (message is PlayerStatsUpdate playerAccolade)
                 {
                     var playerIndex = playerMapping.PlayerIndexFromActorId(playerAccolade.actorId);
                     if (playerIndex.HasValue)
                     {
                         var car = gameTickPacket.gameCars[playerIndex.Value];
-                        switch (playerAccolade.accolade)
-                        {
-                            // TODO: See if "EpicSave" doesn't also send a "Save"
-                            // Might have to fix others too
-                            case "Goal":
-                                car.scoreInfo.goals++;
-                                break;
-                            case "OwnGoal":
-                                car.scoreInfo.ownGoals++;
-                                break;
-                            case "Assist":
-                                car.scoreInfo.assists++;
-                                break;
-                            case "Shot":
-                                car.scoreInfo.shots++;
-                                break;
-                            case "Save":
-                                car.scoreInfo.saves++;
-                                break;
-                            case "Demolition":
-                                car.scoreInfo.demolitions++;
-                                break;
-                        }
+
+                        car.scoreInfo.score = playerAccolade.score;
+                        car.scoreInfo.goals = playerAccolade.goals;
+                        car.scoreInfo.ownGoals = playerAccolade.ownGoals;
+                        car.scoreInfo.assists = playerAccolade.assists;
+                        car.scoreInfo.saves = playerAccolade.saves;
+                        car.scoreInfo.shots = playerAccolade.shots;
+                        car.scoreInfo.demolitions = playerAccolade.demolitions;
                     }
                 }
                 // TODO: lots more message handlers.

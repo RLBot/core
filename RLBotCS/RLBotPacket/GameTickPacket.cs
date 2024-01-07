@@ -127,6 +127,11 @@ namespace RLBotCS.RLBotPacket
 
             List<rlbot.flat.PlayerInfoT> players = new();
             for (var i = 0; i < gameCars.Count; i++) {
+                if (!gameCars.ContainsKey(i)) {
+                    players.Add(new());
+                    continue;
+                }
+
                 players.Add(new() {
                     Physics = new() {
                         Location = new()
