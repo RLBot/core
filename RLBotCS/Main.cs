@@ -39,7 +39,7 @@ foreach (var messageClump in messenger)
     gameState.applyMessage(messageBundle);
 
     // this helps to wait for a new map to load 
-    if (gameState.NotMatchEnded())
+    if (!gameState.MatchEnded())
     {
         matchStarter.applyMessageBundle(messageBundle);
     }

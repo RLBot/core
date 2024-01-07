@@ -67,33 +67,35 @@ namespace RLBotCS.Conversion
             return command;
         }
 
-        static public string MakeGameSpeedCommand(GameSpeedOption gameSpeed)
+        static public string MakeGameSpeedCommand(float gameSpeed)
         {
-            var command = "Set WorldInfo TimeDilation ";
-            var speed = gameSpeed switch
+            return "Set WorldInfo TimeDilation " + gameSpeed.ToString();
+        }
+
+        static public string MakeGameSpeedCommandFromOption(GameSpeedOption gameSpeed)
+        {
+            return MakeGameSpeedCommand(gameSpeed switch
             {
                 GameSpeedOption.Slo_Mo => 0.5f,
                 GameSpeedOption.Time_Warp => 1.5f,
                 _ => 1.0f,
-            };
-            command += speed.ToString();
-
-            return command;
+            });
         }
 
-        static public string MakeGravityCommand(GravityOption gravityOption)
+        static public string MakeGravityCommand(float gravity)
         {
-            var command = "Set WorldInfo WorldGravityZ ";
-            var gravity = gravityOption switch
+            return "Set WorldInfo WorldGravityZ " + gravity.ToString();
+        }
+
+        static public string MakeGravityCommandFromOption(GravityOption gravityOption)
+        {
+            return MakeGravityCommand(gravityOption switch
             {
                 GravityOption.Low => -325,
                 GravityOption.High => -1137.5f,
                 GravityOption.Super_High => -3250,
                 _ => -650,
-            };
-            command += gravity.ToString();
-
-            return command;
+            });
         }
 
         static public string MakeAutoSaveReplayCommand()

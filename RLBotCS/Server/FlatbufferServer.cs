@@ -7,7 +7,6 @@ using System.Net.Sockets;
 
 namespace RLBotCS.Server
 {
-
     /**
      * Taken from https://codinginfinite.com/multi-threaded-tcp-server-core-example-csharp/
      */
@@ -69,6 +68,7 @@ namespace RLBotCS.Server
                 {
                     continue;
                 }
+
                 if (session.NeedsIntroData)
                 {
                     if (matchStarter.GetMatchSettings() is TypedPayload matchSettings)
@@ -76,6 +76,13 @@ namespace RLBotCS.Server
                         session.SendIntroData(matchSettings, gameState);
                     }
                 }
+
+                if (gameState.MatchEnded())
+                {
+                    session.RemoveRenders();
+                }
+
+                session.SetBallActorId(gameState.gameTickPacket.ball.actorId);
 
                 try
                 {

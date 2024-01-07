@@ -24,13 +24,58 @@ namespace RLBotCS.GameControl
             this.matchCommandSender = new MatchCommandSender(tcpMessenger);
         }
 
+        public void SetDesiredGameState(DesiredGameStateT desiredGameState, ushort? ballActorid)
+        {
+            if (desiredGameState.GameInfoState is DesiredGameInfoStateT gameState)
+            {
+                if (gameState.WorldGravityZ is FloatT worldGravityZ)
+                {
+                    matchCommandSender.AddConsoleCommand(FlatToCommand.MakeGravityCommand(worldGravityZ.Val));
+                }
+
+                if (gameState.GameSpeed is FloatT gameSpeed)
+                {
+                    matchCommandSender.AddConsoleCommand(FlatToCommand.MakeGameSpeedCommand(gameSpeed.Val));
+                }
+
+                if (gameState.Paused is BoolT paused)
+                {
+                    matchCommandSender.AddSetPausedCommand(paused.Val);
+                }
+            }
+
+            for (var i = 0; i < desiredGameState.CarStates.Count; i++)
+            {
+                if (desiredGameState.CarStates[i] is DesiredCarStateT carState && playerMapping.ActorIdFromPlayerIndex(i) is ushort actorId)
+                {
+                    if (carState.Physics is DesiredPhysicsT physics)
+                    {
+                        matchCommandSender.AddSetPhysicsCommand(actorId, FlatToModel.DesiredToPhysics(physics));
+                    }
+                }
+            }
+
+            if (ballActorid is ushort)
+            {
+                if (desiredGameState.BallState is DesiredBallStateT ballState)
+                {
+                    if (ballState.Physics is DesiredPhysicsT physics)
+                    {
+                        matchCommandSender.AddSetPhysicsCommand(ballActorid.Value, FlatToModel.DesiredToPhysics(physics));
+                    }
+                }
+            }
+
+            matchCommandSender.Send();
+        }
+
         public void HandleMatchSettings(MatchSettingsT matchSettings, TypedPayload originalMessage)
         {
             if (matchSettings.MutatorSettings is MutatorSettingsT mutatorSettings)
             {
                 isUnlimitedTime = mutatorSettings.MatchLength == MatchLength.Unlimited;
-                matchCommandSender.AddConsoleCommand(FlatToCommand.MakeGravityCommand(mutatorSettings.GravityOption));
-                matchCommandSender.AddConsoleCommand(FlatToCommand.MakeGameSpeedCommand(mutatorSettings.GameSpeedOption));
+                matchCommandSender.AddConsoleCommand(FlatToCommand.MakeGravityCommandFromOption(mutatorSettings.GravityOption));
+                matchCommandSender.AddConsoleCommand(FlatToCommand.MakeGameSpeedCommandFromOption(mutatorSettings.GameSpeedOption));
             }
 
             if (matchSettings.AutoSaveReplay)
@@ -112,11 +157,10 @@ namespace RLBotCS.GameControl
                             isCustomBot = false
                         });
                         break;
-                    default:
-                        Console.WriteLine("Core was unable to spawn player with variety type: " + playerConfig.Variety.Type);
-                        break;
                 }
             }
+
+            matchCommandSender.AddConsoleCommand("spectate");
 
             matchCommandSender.Send();
         }
