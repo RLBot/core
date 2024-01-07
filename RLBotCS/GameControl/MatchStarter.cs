@@ -26,8 +26,16 @@ namespace RLBotCS.GameControl
 
         public void HandleMatchSettings(MatchSettingsT matchSettings, TypedPayload originalMessage)
         {
-            if (matchSettings.MutatorSettings is MutatorSettingsT mutatorSettings) {
+            if (matchSettings.MutatorSettings is MutatorSettingsT mutatorSettings)
+            {
                 isUnlimitedTime = mutatorSettings.MatchLength == MatchLength.Unlimited;
+                matchCommandSender.AddConsoleCommand(FlatToCommand.MakeGravityCommand(mutatorSettings.GravityOption));
+                matchCommandSender.AddConsoleCommand(FlatToCommand.MakeGameSpeedCommand(mutatorSettings.GameSpeedOption));
+            }
+
+            if (matchSettings.AutoSaveReplay)
+            {
+                matchCommandSender.AddConsoleCommand(FlatToCommand.MakeAutoSaveReplayCommand());
             }
 
             lastMatchMessage = (matchSettings, originalMessage);

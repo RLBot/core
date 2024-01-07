@@ -71,9 +71,17 @@ namespace RLBotCS.RLBotPacket
                 }
             };
 
+            rlbot.flat.CollisionShapeUnion collisionShape = new() {
+                Type = rlbot.flat.CollisionShape.SphereShape,
+                Value = new rlbot.flat.SphereShapeT() {
+                    Diameter = 91.25f * 2,
+                }
+            };
+
             rlbot.flat.BallInfoT ballInfo = new() {
                 Physics = ballPhysics,
-                LatestTouch = lastTouch
+                LatestTouch = lastTouch,
+                Shape = collisionShape,
             };
 
             rlbot.flat.GameStateType gameStateType = gameState switch
@@ -146,12 +154,11 @@ namespace RLBotCS.RLBotPacket
                             Z = gameCars[i].physics.angularVelocity.z,
                         },
                     },
-                    IsDemolished = gameCars[i].isDemolished,
-                    HasWheelContact = gameCars[i].hasWheelContact,
+                    AirState = gameCars[i].airState,
+                    DodgeTimeout = gameCars[i].dodgeTimeout,
+                    DemolishedTimeout = gameCars[i].demolishedTimeout,
                     IsSupersonic = gameCars[i].isSuperSonic,
                     IsBot = gameCars[i].isBot,
-                    Jumped = gameCars[i].jumped,
-                    DoubleJumped = gameCars[i].doubleJumped,
                     Name = gameCars[i].name,
                     Team = gameCars[i].team,
                     Boost = (int)Math.Floor(gameCars[i].boost),

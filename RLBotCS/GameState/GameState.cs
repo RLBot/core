@@ -1,5 +1,6 @@
 ﻿using RLBotCS.RLBotPacket;
 using RLBotModels.Message;
+using RLBotModels.Phys;
 
 namespace RLBotCS.GameState
 {
@@ -8,11 +9,25 @@ namespace RLBotCS.GameState
         public GameTickPacket gameTickPacket = new();
 
         public PlayerMapping playerMapping = new();
-        
+
         public List<BoostPadSpawn> boostPads = new();
 
         public void applyMessage(MessageBundle messageBundle)
         {
+            gameTickPacket.frameNum += messageBundle.physicsTickDelta;
+            gameTickPacket.secondsElapsed = gameTickPacket.frameNum / 120f;
+
+            // TODO: account for matches longer than 5 minutes
+            if (gameTickPacket.isUnlimitedTime)
+            {
+                gameTickPacket.gameTimeRemaining = float.MaxValue;
+            }
+            else
+            {
+                var max_game_time_seconds = 5 * 60;
+                gameTickPacket.gameTimeRemaining = max_game_time_seconds - gameTickPacket.secondsElapsed;
+            }
+
             foreach (var message in messageBundle.messages)
             {
                 if (message is CarSpawn carSpawn)
@@ -41,16 +56,9 @@ namespace RLBotCS.GameState
                 {
                     foreach (var carUpdate in physicsUpdate.carUpdates)
                     {
-                        var actorId = carUpdate.Key;
-                        var carPhysics = carUpdate.Value;
-                        var playerIndex = playerMapping.PlayerIndexFromActorId(actorId);
-                        if (playerIndex.HasValue)
-                        {
-                            var car = gameTickPacket.gameCars[playerIndex.Value];
-                            car.physics = carPhysics.physics;
-                            // TODO: car.jumped etc.
-                        }
+                        ProcessCarUpdate(carUpdate);
                     }
+
                     if (physicsUpdate.ballUpdate.HasValue)
                     {
                         gameTickPacket.ball.physics = physicsUpdate.ballUpdate.Value;
@@ -70,27 +78,6 @@ namespace RLBotCS.GameState
                     gameTickPacket.isOvertime = stateTransition.isOvertime;
                     gameTickPacket.gameState = stateTransition.gameState;
                 }
-                else if (message is ScoreboardTimeUpdate timeUpdate)
-                {
-                    if (gameTickPacket.isUnlimitedTime) {
-                        gameTickPacket.secondsElapsed = timeUpdate.scoreboardSeconds;
-                        gameTickPacket.gameTimeRemaining = float.MaxValue;
-                    } else {
-                        // TODO: account for matches longer than 5 minutes
-                        var total_game_time_seconds = 5 * 60;
-
-                        if (gameTickPacket.isOvertime) {
-                            // TODO: account for time-limited overtime
-                            gameTickPacket.gameTimeRemaining = float.MaxValue;
-                            // during overtime, the scoreboard counts up
-                            gameTickPacket.secondsElapsed = total_game_time_seconds + timeUpdate.scoreboardSeconds;
-                        } else {
-                            gameTickPacket.gameTimeRemaining = timeUpdate.scoreboardSeconds;
-                            // scoreboard counts down from 5:00, but secondsElapsed counts up from 0.
-                            gameTickPacket.secondsElapsed = total_game_time_seconds - timeUpdate.scoreboardSeconds;
-                        }
-                    }
-                }
                 else if (message is TeamScoreUpdate scoreUpdate)
                 {
                     gameTickPacket.teamScores[scoreUpdate.team] = scoreUpdate.score;
@@ -99,6 +86,8 @@ namespace RLBotCS.GameState
                 {
                     boostPads.Clear();
                     gameTickPacket.worldGravityZ = matchInfo.gravity.z;
+                    gameTickPacket.frameNum = 0;
+                    gameTickPacket.secondsElapsed = 0;
                 }
                 else if (message is BoostPadSpawn boostPadSpawn)
                 {
@@ -107,6 +96,68 @@ namespace RLBotCS.GameState
                 // TODO: lots more message handlers.
             }
         }
+
+        private void ProcessCarUpdate(KeyValuePair<ushort, CarPhysics> carUpdate)
+        {
+            var actorId = carUpdate.Key;
+            var carPhysics = carUpdate.Value;
+            var playerIndex = playerMapping.PlayerIndexFromActorId(actorId);
+            if (playerIndex.HasValue)
+            {
+                var car = gameTickPacket.gameCars[playerIndex.Value];
+                car.physics = carPhysics.physics;
+                car.isSuperSonic = car.physics.velocity.Magnitude() >= 2200;
+
+                switch (carPhysics.carState)
+                {
+                    case CarState.OnGround:
+                        car.airState = rlbot.flat.AirState.OnGround;
+                        car.dodgeTimeout = -1;
+                        car.demolishedTimeout = -1;
+                        car.lastJumpedFrame = gameTickPacket.frameNum;
+                        break;
+                    case CarState.Jumping:
+                        car.airState = rlbot.flat.AirState.Jumping;
+                        car.dodgeTimeout = 1.25f;
+                        car.demolishedTimeout = -1;
+                        car.lastJumpedFrame = gameTickPacket.frameNum;
+                        break;
+                    case CarState.DoubleJumping:
+                        car.airState = rlbot.flat.AirState.DoubleJumping;
+                        car.dodgeTimeout = -1;
+                        car.demolishedTimeout = -1;
+                        break;
+                    case CarState.Dodging:
+                        car.airState = rlbot.flat.AirState.Dodging;
+                        car.dodgeTimeout = -1;
+                        car.demolishedTimeout = -1;
+                        break;
+                    case CarState.InAir:
+                        car.airState = rlbot.flat.AirState.InAir;
+                        car.demolishedTimeout = -1;
+
+                        var a_frame_diff = gameTickPacket.frameNum - car.lastJumpedFrame;
+                        var a_time_left = 1.25f - a_frame_diff / 120f;
+                        car.dodgeTimeout = a_time_left < 0 ? -1 : a_time_left;
+                        break;
+                    case CarState.Demolished:
+                        car.dodgeTimeout = -1;
+
+                        var d_frame_diff = gameTickPacket.frameNum - car.firstDemolishedFrame;
+                        var d_time = d_frame_diff / 120f;
+                        // TODO: Support respawn time mutator
+                        if (d_time > 3)
+                        {
+                            car.firstDemolishedFrame = gameTickPacket.frameNum;
+                            d_time = 3;
+                        }
+
+                        car.demolishedTimeout = 3 - d_time;
+                        break;
+                }
+            }
+        }
+
 
         public bool NotMatchEnded()
         {

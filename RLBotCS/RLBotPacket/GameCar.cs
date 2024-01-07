@@ -5,12 +5,13 @@ namespace RLBotCS.RLBotPacket
     internal class GameCar
     {
         public Physics physics;
-        public bool isDemolished;
-        public bool hasWheelContact;
+        public rlbot.flat.AirState airState;
+        public float dodgeTimeout;
+        public float demolishedTimeout;
+        public int lastJumpedFrame;
+        public int firstDemolishedFrame;
         public bool isSuperSonic;
         public bool isBot;
-        public bool jumped;
-        public bool doubleJumped;
         public string name = "";
         public int team;
         public float boost;
