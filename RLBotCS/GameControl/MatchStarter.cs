@@ -43,6 +43,11 @@ namespace RLBotCS.GameControl
                 {
                     matchCommandSender.AddSetPausedCommand(paused.Val);
                 }
+
+                if (gameState.EndMatch is BoolT endMatch && endMatch.Val)
+                {
+                    matchCommandSender.AddMatchEndCommand();
+                }
             }
 
             for (var i = 0; i < desiredGameState.CarStates.Count; i++)

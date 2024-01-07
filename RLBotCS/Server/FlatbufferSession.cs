@@ -252,7 +252,6 @@ namespace RLBotCS.Server
             }
         }
 
-
         public void SendIntroData(TypedPayload matchSettings, GameState.GameState gameState)
         {
             if (matchSettings.type != DataType.MatchSettings)
