@@ -17,6 +17,7 @@ namespace RLBotCS.GameControl
         private bool isUnlimitedTime = false;
         private bool needsSpawnBots = true;
         private bool hasEverLoadedMap = false;
+        private bool stateSettingEnabled = true;
 
         public MatchStarter(TcpMessenger tcpMessenger, GameState.GameState gameState)
         {
@@ -42,6 +43,11 @@ namespace RLBotCS.GameControl
                 {
                     matchCommandSender.AddSetPausedCommand(paused.Val);
                 }
+
+                if (gameState.EndMatch is BoolT endMatch && endMatch.Val)
+                {
+                    matchCommandSender.AddMatchEndCommand();
+                }
             }
 
             for (var i = 0; i < desiredGameState.CarStates.Count; i++)
@@ -51,6 +57,11 @@ namespace RLBotCS.GameControl
                     if (carState.Physics is DesiredPhysicsT physics)
                     {
                         matchCommandSender.AddSetPhysicsCommand(actorId, FlatToModel.DesiredToPhysics(physics));
+                    }
+
+                    if (carState.BoostAmount is FloatT boostAmount)
+                    {
+                        matchCommandSender.AddSetBoostCommand(actorId, (int)boostAmount.Val);
                     }
                 }
             }
@@ -77,6 +88,8 @@ namespace RLBotCS.GameControl
                 matchCommandSender.AddConsoleCommand(FlatToCommand.MakeGravityCommandFromOption(mutatorSettings.GravityOption));
                 matchCommandSender.AddConsoleCommand(FlatToCommand.MakeGameSpeedCommandFromOption(mutatorSettings.GameSpeedOption));
             }
+
+            stateSettingEnabled = matchSettings.EnableStateSetting;
 
             if (matchSettings.AutoSaveReplay)
             {
@@ -173,5 +186,11 @@ namespace RLBotCS.GameControl
         {
             return isUnlimitedTime;
         }
+
+        internal bool IsStateSettingEnabled()
+        {
+            return stateSettingEnabled;
+        }
+
     }
 }

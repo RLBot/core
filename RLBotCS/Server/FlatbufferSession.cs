@@ -18,6 +18,7 @@ namespace RLBotCS.Server
         private SocketSpecStreamWriter socketSpecWriter;
         private Dictionary<int, List<ushort>> sessionRenderIds = new();
         private ushort? ballActorId;
+        private bool stateSettingIsEnabled = true;
 
         public bool IsReady
         { get; private set; }
@@ -97,6 +98,11 @@ namespace RLBotCS.Server
                     case DataType.QuickChat:
                         break;
                     case DataType.RenderGroup:
+                        if (!stateSettingIsEnabled)
+                        {
+                            break;
+                        }
+
                         var renderingGroup = RenderGroup.GetRootAsRenderGroup(byteBuffer).UnPack();
                         List<ushort> renderIds = new();
 
@@ -246,7 +252,6 @@ namespace RLBotCS.Server
             }
         }
 
-
         public void SendIntroData(TypedPayload matchSettings, GameState.GameState gameState)
         {
             if (matchSettings.type != DataType.MatchSettings)
@@ -254,7 +259,6 @@ namespace RLBotCS.Server
                 throw new Exception("Expected match settings, got " + matchSettings.type);
             }
 
-            Console.WriteLine("Core sent intro data to client.");
             socketSpecWriter.Write(matchSettings);
 
             List<BoostPadT> boostPads = new();
@@ -271,10 +275,10 @@ namespace RLBotCS.Server
                 });
             }
 
-            // TODO: Add goals
             FieldInfoT fieldInfoT = new()
             {
                 BoostPads = boostPads,
+                Goals = gameState.goals,
             };
 
             FlatBufferBuilder builder = new(1024);
@@ -283,12 +287,18 @@ namespace RLBotCS.Server
             var fieldInfo = TypedPayload.FromFlatBufferBuilder(DataType.FieldInfo, builder);
             socketSpecWriter.Write(fieldInfo);
 
+            Console.WriteLine("Core sent intro data to client.");
             NeedsIntroData = false;
         }
 
         public void SetBallActorId(ushort actorId)
         {
             ballActorId = actorId;
+        }
+
+        public void ToggleStateSetting(bool isEnabled)
+        {
+            stateSettingIsEnabled = isEnabled;
         }
 
         internal void SendPayloadToClient(TypedPayload payload)

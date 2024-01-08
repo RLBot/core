@@ -83,6 +83,7 @@ namespace RLBotCS.Server
                 }
 
                 session.SetBallActorId(gameState.gameTickPacket.ball.actorId);
+                session.ToggleStateSetting(matchStarter.IsStateSettingEnabled());
 
                 try
                 {
@@ -92,8 +93,6 @@ namespace RLBotCS.Server
                 {
                     Console.WriteLine("Core is dropping connection to session due to: {0}", e);
                     sessions_to_remove.Add(session);
-                    // tell the socket to close
-                    session.Close();
                 }
             }
 
@@ -101,6 +100,8 @@ namespace RLBotCS.Server
             foreach (FlatbufferSession session in sessions_to_remove)
             {
                 sessions.Remove(session);
+                // tell the socket to close
+                session.Close();
             }
         }
 
