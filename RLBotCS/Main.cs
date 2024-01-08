@@ -1,5 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-using RLBotCS.GameState;
+﻿using RLBotCS.GameState;
 using RLBotCS.Server;
 using RLBotModels.Message;
 using RLBotSecret.Conversion;
