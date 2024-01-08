@@ -18,6 +18,7 @@ namespace RLBotCS.Server
         PlayerMapping playerMapping;
         MatchStarter matchStarter;
         List<FlatbufferSession> sessions = new();
+        List<FlatbufferSession> sessions_to_remove = new();
         bool communicationStarted = false;
 
         public FlatbufferServer(int port, TcpMessenger tcpGameInterface, PlayerMapping playerMapping, MatchStarter matchStarter)
@@ -60,7 +61,6 @@ namespace RLBotCS.Server
         internal void SendGameStateToClients(GameState.GameState gameState)
         {
             TypedPayload gameTickPacket = gameState.gameTickPacket.ToFlatbuffer();
-            List<FlatbufferSession> sessions_to_remove = new();
 
             foreach (FlatbufferSession session in sessions)
             {
@@ -103,6 +103,8 @@ namespace RLBotCS.Server
                 // tell the socket to close
                 session.Close();
             }
+
+            sessions_to_remove.Clear();
         }
 
         public void HandleClient(TcpClient client)
@@ -122,7 +124,15 @@ namespace RLBotCS.Server
             while (!communicationStarted) {
                 Thread.Sleep(100);
             }
-            session.RunBlocking();
+            try
+            {
+                session.RunBlocking();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Core is dropping connection to session due to: {0}", e);
+                sessions_to_remove.Add(session);
+            }
         }
     }
 }
