@@ -16,6 +16,7 @@ namespace RLBotCS.GameControl
         private (MatchSettingsT, TypedPayload)? lastMatchMessage;
         private bool isUnlimitedTime = false;
         private bool needsSpawnBots = true;
+        // TODO - does not return to false if map is unloaded
         private bool hasEverLoadedMap = false;
         private bool stateSettingEnabled = true;
 
