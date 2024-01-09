@@ -187,12 +187,16 @@ namespace RLBotCS.GameControl
                         break;
                     case PlayerClass.PsyonixBotPlayer:
                         var skill = playerConfig.Variety.AsPsyonixBotPlayer().BotSkill;
-                        var skillEnum =
-                            skill < 0.5
-                                ? BotSkill.Easy
-                                : skill < 1
-                                    ? BotSkill.Medium
-                                    : BotSkill.Hard;
+                        var skillEnum = BotSkill.Hard;
+                        if (skill < 0.5)
+                        {
+                            skillEnum = BotSkill.Easy;
+                        }
+                        else if (skill < 1)
+                        {
+                            skillEnum = BotSkill.Medium;
+                        }
+
                         var psySpawnCommandId = matchCommandSender.AddBotSpawnCommand(
                             playerConfig.Name,
                             playerConfig.Team,
