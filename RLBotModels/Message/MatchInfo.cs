@@ -16,6 +16,5 @@ namespace RLBotModels.Message
         {
             this.mapName = mapName;
         }
-
     }
 }

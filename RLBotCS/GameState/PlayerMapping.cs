@@ -108,7 +108,10 @@ namespace RLBotCS.GameState
         {
             for (int candidate = 0; ; candidate++)
             {
-                if (!playerIndexToMetadata.ContainsKey(candidate) && !pendingSpawns.Any(s => s.desiredPlayerIndex == candidate))
+                if (
+                    !playerIndexToMetadata.ContainsKey(candidate)
+                    && !pendingSpawns.Any(s => s.desiredPlayerIndex == candidate)
+                )
                 {
                     return candidate;
                 }

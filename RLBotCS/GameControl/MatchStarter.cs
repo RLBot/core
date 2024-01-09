@@ -16,9 +16,11 @@ namespace RLBotCS.GameControl
         private (MatchSettingsT, TypedPayload)? lastMatchMessage;
         private bool isUnlimitedTime = false;
         private bool needsSpawnBots = true;
+
         // TODO - does not return to false if map is unloaded
         private bool hasEverLoadedMap = false;
-        private bool stateSettingEnabled = true;
+        private bool isStateSettingEnabled = true;
+        private bool isRenderingEnabled = true;
 
         public MatchStarter(TcpMessenger tcpMessenger, GameState.GameState gameState)
         {
@@ -53,7 +55,10 @@ namespace RLBotCS.GameControl
 
             for (var i = 0; i < desiredGameState.CarStates.Count; i++)
             {
-                if (desiredGameState.CarStates[i] is DesiredCarStateT carState && playerMapping.ActorIdFromPlayerIndex(i) is ushort actorId)
+                if (
+                    desiredGameState.CarStates[i] is DesiredCarStateT carState
+                    && playerMapping.ActorIdFromPlayerIndex(i) is ushort actorId
+                )
                 {
                     if (carState.Physics is DesiredPhysicsT physics)
                     {
@@ -73,7 +78,10 @@ namespace RLBotCS.GameControl
                 {
                     if (ballState.Physics is DesiredPhysicsT physics)
                     {
-                        matchCommandSender.AddSetPhysicsCommand(ballActorid.Value, FlatToModel.DesiredToPhysics(physics));
+                        matchCommandSender.AddSetPhysicsCommand(
+                            ballActorid.Value,
+                            FlatToModel.DesiredToPhysics(physics)
+                        );
                     }
                 }
             }
@@ -86,11 +94,16 @@ namespace RLBotCS.GameControl
             if (matchSettings.MutatorSettings is MutatorSettingsT mutatorSettings)
             {
                 isUnlimitedTime = mutatorSettings.MatchLength == MatchLength.Unlimited;
-                matchCommandSender.AddConsoleCommand(FlatToCommand.MakeGravityCommandFromOption(mutatorSettings.GravityOption));
-                matchCommandSender.AddConsoleCommand(FlatToCommand.MakeGameSpeedCommandFromOption(mutatorSettings.GameSpeedOption));
+                matchCommandSender.AddConsoleCommand(
+                    FlatToCommand.MakeGravityCommandFromOption(mutatorSettings.GravityOption)
+                );
+                matchCommandSender.AddConsoleCommand(
+                    FlatToCommand.MakeGameSpeedCommandFromOption(mutatorSettings.GameSpeedOption)
+                );
             }
 
-            stateSettingEnabled = matchSettings.EnableStateSetting;
+            isStateSettingEnabled = matchSettings.EnableStateSetting;
+            isRenderingEnabled = matchSettings.EnableRendering;
 
             if (matchSettings.AutoSaveReplay)
             {
@@ -99,7 +112,10 @@ namespace RLBotCS.GameControl
 
             lastMatchMessage = (matchSettings, originalMessage);
 
-            if (hasEverLoadedMap && matchSettings.ExistingMatchBehavior == ExistingMatchBehavior.Continue_And_Spawn)
+            if (
+                hasEverLoadedMap
+                && matchSettings.ExistingMatchBehavior == ExistingMatchBehavior.Continue_And_Spawn
+            )
             {
                 // No need to load a new map, just spawn the players.
                 SpawnBots(matchSettings);
@@ -134,7 +150,9 @@ namespace RLBotCS.GameControl
             {
                 var playerConfig = matchSettings.PlayerConfigurations[i];
 
-                var alreadySpawnedPlayer = playerMapping.getKnownPlayers().FirstOrDefault((kp) => playerConfig.SpawnId == kp.spawnId);
+                var alreadySpawnedPlayer = playerMapping
+                    .getKnownPlayers()
+                    .FirstOrDefault((kp) => playerConfig.SpawnId == kp.spawnId);
                 if (alreadySpawnedPlayer != null)
                 {
                     // We've already spawned this player, don't duplicate them.
@@ -143,33 +161,54 @@ namespace RLBotCS.GameControl
 
                 var loadout = FlatToModel.ToLoadout(playerConfig.Loadout, playerConfig.Team);
 
-                Console.WriteLine("Core is spawning player " + playerConfig.Name + " with spawn id " + playerConfig.SpawnId);
+                Console.WriteLine(
+                    "Core is spawning player " + playerConfig.Name + " with spawn id " + playerConfig.SpawnId
+                );
 
                 switch (playerConfig.Variety.Type)
                 {
                     case PlayerClass.RLBotPlayer:
-                        var rlbotSpawnCommandId = matchCommandSender.AddBotSpawnCommand(playerConfig.Name, playerConfig.Team, BotSkill.Custom, loadout);
+                        var rlbotSpawnCommandId = matchCommandSender.AddBotSpawnCommand(
+                            playerConfig.Name,
+                            playerConfig.Team,
+                            BotSkill.Custom,
+                            loadout
+                        );
 
-                        playerMapping.addPendingSpawn(new SpawnTracker()
-                        {
-                            commandId = rlbotSpawnCommandId,
-                            spawnId = playerConfig.SpawnId,
-                            desiredPlayerIndex = i,
-                            isCustomBot = true,
-                        });
+                        playerMapping.addPendingSpawn(
+                            new SpawnTracker()
+                            {
+                                commandId = rlbotSpawnCommandId,
+                                spawnId = playerConfig.SpawnId,
+                                desiredPlayerIndex = i,
+                                isCustomBot = true,
+                            }
+                        );
                         break;
                     case PlayerClass.PsyonixBotPlayer:
                         var skill = playerConfig.Variety.AsPsyonixBotPlayer().BotSkill;
-                        var skillEnum = skill < 0.5 ? BotSkill.Easy : skill < 1 ? BotSkill.Medium : BotSkill.Hard;
-                        var psySpawnCommandId = matchCommandSender.AddBotSpawnCommand(playerConfig.Name, playerConfig.Team, skillEnum, loadout);
+                        var skillEnum =
+                            skill < 0.5
+                                ? BotSkill.Easy
+                                : skill < 1
+                                    ? BotSkill.Medium
+                                    : BotSkill.Hard;
+                        var psySpawnCommandId = matchCommandSender.AddBotSpawnCommand(
+                            playerConfig.Name,
+                            playerConfig.Team,
+                            skillEnum,
+                            loadout
+                        );
 
-                        playerMapping.addPendingSpawn(new SpawnTracker()
-                        {
-                            commandId = psySpawnCommandId,
-                            spawnId = playerConfig.SpawnId,
-                            desiredPlayerIndex = i,
-                            isCustomBot = false
-                        });
+                        playerMapping.addPendingSpawn(
+                            new SpawnTracker()
+                            {
+                                commandId = psySpawnCommandId,
+                                spawnId = playerConfig.SpawnId,
+                                desiredPlayerIndex = i,
+                                isCustomBot = false
+                            }
+                        );
                         break;
                 }
             }
@@ -179,7 +218,8 @@ namespace RLBotCS.GameControl
             matchCommandSender.Send();
         }
 
-        public TypedPayload? GetMatchSettings() {
+        public TypedPayload? GetMatchSettings()
+        {
             return lastMatchMessage?.Item2;
         }
 
@@ -190,8 +230,12 @@ namespace RLBotCS.GameControl
 
         internal bool IsStateSettingEnabled()
         {
-            return stateSettingEnabled;
+            return isStateSettingEnabled;
         }
 
+        internal bool IsRenderingEnabled()
+        {
+            return isRenderingEnabled;
+        }
     }
 }

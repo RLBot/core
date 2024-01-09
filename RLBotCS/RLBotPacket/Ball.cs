@@ -7,14 +7,12 @@ namespace RLBotCS.RLBotPacket
     {
         public Physics physics;
         public BallTouch latestTouch;
-        public CollisionShapeUnion shape = new()
-        {
-            Type = CollisionShape.SphereShape,
-            Value = new SphereShape()
+        public CollisionShapeUnion shape =
+            new()
             {
-                Diameter = 91.25f,
-            }
-        };
+                Type = CollisionShape.SphereShape,
+                Value = new SphereShape() { Diameter = 91.25f, }
+            };
         public ushort actorId;
     }
 }

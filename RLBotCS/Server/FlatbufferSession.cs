@@ -6,7 +6,6 @@ using RLBotSecret.Conversion;
 
 namespace RLBotCS.Server
 {
-
     /**
      * Taken from https://codinginfinite.com/multi-threaded-tcp-server-core-example-csharp/
      */
@@ -19,46 +18,62 @@ namespace RLBotCS.Server
         private Dictionary<int, List<ushort>> sessionRenderIds = new();
         private ushort? ballActorId;
         private bool stateSettingIsEnabled = true;
+        private bool renderingIsEnabled = true;
 
-        public bool IsReady
-        { get; private set; }
+        public bool IsReady { get; private set; }
 
-        public bool NeedsIntroData
-        { get; private set; }
+        public bool NeedsIntroData { get; private set; }
 
-        public bool WantsBallPredictions
-        { get; private set; }
+        public bool WantsBallPredictions { get; private set; }
 
-        public bool WantsGameMessages
-        { get; private set; }
+        public bool WantsGameMessages { get; private set; }
 
-        public bool WantsQuickChat
-        { get; private set; }
+        public bool WantsQuickChat { get; private set; }
 
         public FlatbufferSession(Stream stream, GameController gameController, PlayerMapping playerMapping)
         {
             this.stream = stream;
             this.gameController = gameController;
             this.playerMapping = playerMapping;
-            this.socketSpecWriter = new SocketSpecStreamWriter(stream);
+            socketSpecWriter = new SocketSpecStreamWriter(stream);
         }
 
         public void RemoveRenders()
         {
             foreach (var renderIds in sessionRenderIds.Values)
             {
-                foreach (var renderId in renderIds)
+                for (var i = 0; i < renderIds.Count; i++)
                 {
-                    gameController.renderingSender.RemoveRenderItem(renderId);
+                    try
+                    {
+                        gameController.renderingSender.RemoveRenderItem(renderIds[i]);
+                    }
+                    catch (Exception)
+                    {
+                        gameController.renderingSender.Send();
+                        i = 0;
+                    }
                 }
+
+                gameController.renderingSender.Send();
             }
 
             sessionRenderIds.Clear();
         }
 
-        public void Close() {
-            RemoveRenders();
+        public void Close(bool wasDroppedCleanly)
+        {
+            // If we we're dropped cleanly,
+            // it's probably because the connection was terminated
+            // So we should skip sending the confirmation shutdown message
+            if (wasDroppedCleanly)
+            {
+                SendShutdownConfirmation();
+            }
+
             stream.Close();
+
+            RemoveRenders();
         }
 
         public void RunBlocking()
@@ -69,6 +84,9 @@ namespace RLBotCS.Server
 
                 switch (message.type)
                 {
+                    case DataType.None:
+                        // The client requested that we close the connection
+                        return;
                     case DataType.ReadyMessage:
                         var readyMsg = ReadyMessage.GetRootAsReadyMessage(byteBuffer);
                         IsReady = true;
@@ -87,23 +105,35 @@ namespace RLBotCS.Server
                         var actorId = playerMapping.ActorIdFromPlayerIndex(playerInputMsg.PlayerIndex);
                         if (actorId.HasValue)
                         {
-                            var playerInput = new RLBotModels.Control.PlayerInput() { actorId = actorId.Value, carInput = carInput };
+                            var playerInput = new RLBotModels.Control.PlayerInput()
+                            {
+                                actorId = actorId.Value,
+                                carInput = carInput
+                            };
                             gameController.playerInputSender.SendPlayerInput(playerInput);
                         }
                         else
                         {
-                            Console.WriteLine("Core got input from unknown player index {0}", playerInputMsg.PlayerIndex);
+                            Console.WriteLine(
+                                "Core got input from unknown player index {0}",
+                                playerInputMsg.PlayerIndex
+                            );
                         }
                         break;
                     case DataType.QuickChat:
                         break;
                     case DataType.RenderGroup:
-                        if (!stateSettingIsEnabled)
+                        if (!renderingIsEnabled)
                         {
                             break;
                         }
 
                         var renderingGroup = RenderGroup.GetRootAsRenderGroup(byteBuffer).UnPack();
+
+                        // If a group already exists with the same id,
+                        // remove the old render items
+                        RemoveRenderGroup(renderingGroup.Id);
+
                         List<ushort> renderIds = new();
 
                         // Create render requests
@@ -115,8 +145,6 @@ namespace RLBotCS.Server
                             }
                         }
 
-                        RemoveRenderGroup(renderingGroup.Id);
-
                         // Add the new render items to the tracker
                         sessionRenderIds[renderingGroup.Id] = renderIds;
 
@@ -124,10 +152,17 @@ namespace RLBotCS.Server
                         gameController.renderingSender.Send();
                         break;
                     case DataType.RemoveRenderGroup:
-                        var removeRenderGroup = rlbot.flat.RemoveRenderGroup.GetRootAsRemoveRenderGroup(byteBuffer).UnPack();
+                        var removeRenderGroup = rlbot
+                            .flat.RemoveRenderGroup.GetRootAsRemoveRenderGroup(byteBuffer)
+                            .UnPack();
                         RemoveRenderGroup(removeRenderGroup.Id);
                         break;
                     case DataType.DesiredGameState:
+                        if (!stateSettingIsEnabled)
+                        {
+                            break;
+                        }
+
                         var desiredGameState = DesiredGameState.GetRootAsDesiredGameState(byteBuffer).UnPack();
                         gameController.matchStarter.SetDesiredGameState(desiredGameState, ballActorId);
                         break;
@@ -136,6 +171,12 @@ namespace RLBotCS.Server
                         break;
                 }
             }
+        }
+
+        private void SendShutdownConfirmation()
+        {
+            TypedPayload msg = new() { type = DataType.None, payload = new ArraySegment<byte>([1]), };
+            SendPayloadToClient(msg);
         }
 
         private void RemoveRenderGroup(int renderGroupId)
@@ -148,9 +189,11 @@ namespace RLBotCS.Server
                 {
                     gameController.renderingSender.RemoveRenderItem(oldRenderId);
                 }
+
+                sessionRenderIds.Remove(renderGroupId);
+                gameController.renderingSender.Send();
             }
         }
-
 
         private ushort? RenderItem(RenderTypeUnion renderMessage)
         {
@@ -183,12 +226,14 @@ namespace RLBotCS.Server
                     List<RLBotModels.Phys.Vector3> points = new();
                     foreach (var point in polyLineData.Points)
                     {
-                        points.Add(new RLBotModels.Phys.Vector3()
-                        {
-                            x = point.X,
-                            y = point.Y,
-                            z = point.Z,
-                        });
+                        points.Add(
+                            new RLBotModels.Phys.Vector3()
+                            {
+                                x = point.X,
+                                y = point.Y,
+                                z = point.Z,
+                            }
+                        );
                     }
                     return gameController.renderingSender.AddLine3DSeries(
                         points,
@@ -264,22 +309,21 @@ namespace RLBotCS.Server
             List<BoostPadT> boostPads = new();
             foreach (var boostPad in gameState.boostPads)
             {
-                boostPads.Add(new BoostPadT()
-                {
-                    Location = new Vector3T() {
-                        X = boostPad.spawnPosition.x,
-                        Y = boostPad.spawnPosition.y,
-                        Z = boostPad.spawnPosition.z,
-                    },
-                    IsFullBoost = boostPad.isFullBoost,
-                });
+                boostPads.Add(
+                    new BoostPadT()
+                    {
+                        Location = new Vector3T()
+                        {
+                            X = boostPad.spawnPosition.x,
+                            Y = boostPad.spawnPosition.y,
+                            Z = boostPad.spawnPosition.z,
+                        },
+                        IsFullBoost = boostPad.isFullBoost,
+                    }
+                );
             }
 
-            FieldInfoT fieldInfoT = new()
-            {
-                BoostPads = boostPads,
-                Goals = gameState.goals,
-            };
+            FieldInfoT fieldInfoT = new() { BoostPads = boostPads, Goals = gameState.goals, };
 
             FlatBufferBuilder builder = new(1024);
             var offset = FieldInfo.Pack(builder, fieldInfoT);
@@ -287,6 +331,7 @@ namespace RLBotCS.Server
             var fieldInfo = TypedPayload.FromFlatBufferBuilder(DataType.FieldInfo, builder);
             socketSpecWriter.Write(fieldInfo);
 
+            socketSpecWriter.Send();
             Console.WriteLine("Core sent intro data to client.");
             NeedsIntroData = false;
         }
@@ -301,9 +346,15 @@ namespace RLBotCS.Server
             stateSettingIsEnabled = isEnabled;
         }
 
+        public void ToggleRendering(bool isEnabled)
+        {
+            stateSettingIsEnabled = isEnabled;
+        }
+
         internal void SendPayloadToClient(TypedPayload payload)
         {
             socketSpecWriter.Write(payload);
+            socketSpecWriter.Send();
         }
     }
 }

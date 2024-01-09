@@ -8,6 +8,5 @@ namespace RLBotCS.GameState
         public GameTickPacket gameTickPacket = new();
 
         public PlayerMapping playerMapping = new();
-
     }
 }

@@ -6,7 +6,7 @@ namespace RLBotSecret.Conversion
 {
     internal class FlatToModel
     {
-        static internal CarInput ToCarInput(rlbot.flat.ControllerState state)
+        internal static CarInput ToCarInput(rlbot.flat.ControllerState state)
         {
             float dodgeForward = -state.Pitch;
 
@@ -31,17 +31,27 @@ namespace RLBotSecret.Conversion
             };
         }
 
-        static internal Vector3 ToVector(rlbot.flat.Vector3 vec)
+        internal static Vector3 ToVector(rlbot.flat.Vector3 vec)
         {
-            return new Vector3() { x = vec.X, y = vec.Y, z = vec.Z };
+            return new Vector3()
+            {
+                x = vec.X,
+                y = vec.Y,
+                z = vec.Z
+            };
         }
 
-        static internal Rotator ToRotator(rlbot.flat.Rotator r)
+        internal static Rotator ToRotator(rlbot.flat.Rotator r)
         {
-            return new Rotator() { pitch = r.Pitch, yaw = r.Yaw, roll = r.Roll };
+            return new Rotator()
+            {
+                pitch = r.Pitch,
+                yaw = r.Yaw,
+                roll = r.Roll
+            };
         }
 
-        static internal Loadout ToLoadout(rlbot.flat.PlayerLoadoutT l, int team)
+        internal static Loadout ToLoadout(rlbot.flat.PlayerLoadoutT l, int team)
         {
             System.Drawing.Color primaryColor;
             if (l.PrimaryColorLookup is rlbot.flat.ColorT p)
@@ -65,16 +75,18 @@ namespace RLBotSecret.Conversion
 
             var lp = l.LoadoutPaint;
 
-            LoadoutPaint loadoutPaint = new() {
-                carPaintId = (byte)lp.CarPaintId,
-                decalPaintId = (byte)lp.DecalPaintId,
-                wheelsPaintId = (byte)lp.WheelsPaintId,
-                boostPaintId = (byte)lp.BoostPaintId,
-                antennaPaintId = (byte)lp.AntennaPaintId,
-                hatPaintId = (byte)lp.HatPaintId,
-                trailsPaintId = (byte)lp.TrailsPaintId,
-                goalExplosionPaintId = (byte)lp.GoalExplosionPaintId
-            };
+            LoadoutPaint loadoutPaint =
+                new()
+                {
+                    carPaintId = (byte)lp.CarPaintId,
+                    decalPaintId = (byte)lp.DecalPaintId,
+                    wheelsPaintId = (byte)lp.WheelsPaintId,
+                    boostPaintId = (byte)lp.BoostPaintId,
+                    antennaPaintId = (byte)lp.AntennaPaintId,
+                    hatPaintId = (byte)lp.HatPaintId,
+                    trailsPaintId = (byte)lp.TrailsPaintId,
+                    goalExplosionPaintId = (byte)lp.GoalExplosionPaintId
+                };
 
             return new Loadout()
             {
@@ -95,25 +107,27 @@ namespace RLBotSecret.Conversion
             };
         }
 
-        static internal Vector3 DesiredToVector(rlbot.flat.Vector3PartialT vec)
+        internal static Vector3 DesiredToVector(rlbot.flat.Vector3PartialT vec)
         {
-            return new Vector3() {
+            return new Vector3()
+            {
                 x = vec.X?.Val ?? 0,
                 y = vec.Y?.Val ?? 0,
                 z = vec.Z?.Val ?? 0
             };
         }
 
-        static internal Rotator DesiredToRotator(rlbot.flat.RotatorPartialT rot)
+        internal static Rotator DesiredToRotator(rlbot.flat.RotatorPartialT rot)
         {
-            return new Rotator() {
+            return new Rotator()
+            {
                 pitch = rot.Pitch?.Val ?? 0,
                 yaw = rot.Yaw?.Val ?? 0,
                 roll = rot.Roll?.Val ?? 0
             };
         }
 
-        static internal Physics DesiredToPhysics(rlbot.flat.DesiredPhysicsT p)
+        internal static Physics DesiredToPhysics(rlbot.flat.DesiredPhysicsT p)
         {
             return new Physics()
             {
@@ -123,6 +137,5 @@ namespace RLBotSecret.Conversion
                 angularVelocity = DesiredToVector(p.AngularVelocity),
             };
         }
-
     }
 }
