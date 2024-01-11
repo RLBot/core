@@ -146,6 +146,9 @@ namespace RLBotCS.GameControl
 
         private void SpawnBots(MatchSettingsT matchSettings)
         {
+            PlayerConfigurationT? humanConfig = null;
+            var humanIndex = -1;
+
             for (int i = 0; i < matchSettings.PlayerConfigurations.Count; i++)
             {
                 var playerConfig = matchSettings.PlayerConfigurations[i];
@@ -161,13 +164,16 @@ namespace RLBotCS.GameControl
 
                 var loadout = FlatToModel.ToLoadout(playerConfig.Loadout, playerConfig.Team);
 
-                Console.WriteLine(
-                    "Core is spawning player " + playerConfig.Name + " with spawn id " + playerConfig.SpawnId
-                );
-
                 switch (playerConfig.Variety.Type)
                 {
                     case PlayerClass.RLBotPlayer:
+                        Console.WriteLine(
+                            "Core is spawning player "
+                                + playerConfig.Name
+                                + " with spawn id "
+                                + playerConfig.SpawnId
+                        );
+
                         var rlbotSpawnCommandId = matchCommandSender.AddBotSpawnCommand(
                             playerConfig.Name,
                             playerConfig.Team,
@@ -214,10 +220,37 @@ namespace RLBotCS.GameControl
                             }
                         );
                         break;
+                    case PlayerClass.HumanPlayer:
+                        humanConfig = playerConfig;
+                        humanIndex = i;
+                        break;
                 }
             }
 
-            matchCommandSender.AddConsoleCommand("spectate");
+            if (humanConfig != null)
+            {
+                matchCommandSender.Send();
+
+                // For some reason if we send this command to early,
+                // the game will only half-spawn us
+                matchCommandSender.AddConsoleCommand("ChangeTeam " + humanConfig.Team);
+
+                playerMapping.addPendingSpawn(
+                    new SpawnTracker()
+                    {
+                        commandId = 0,
+                        spawnId = humanConfig.SpawnId,
+                        desiredPlayerIndex = humanIndex,
+                        isCustomBot = false,
+                    }
+                );
+            }
+            else
+            {
+                // If no human was requested for the match,
+                // then make the human spectate so we can start the match
+                matchCommandSender.AddConsoleCommand("spectate");
+            }
 
             matchCommandSender.Send();
         }
