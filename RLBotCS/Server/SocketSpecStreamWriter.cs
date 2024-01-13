@@ -1,10 +1,8 @@
-﻿using static RLBotCS.Server.SocketSpecStreamReader;
-
-namespace RLBotCS.Server
+﻿namespace RLBotCS.Server
 {
     /**
      * Communicates with bots and scripts over TCP according to the spec
-     * defined at https://github.com/RLBot/RLBot/wiki/Sockets-Specification
+     * defined at https://wiki.rlbot.org/framework/sockets-specification/
      */
     internal class SocketSpecStreamWriter
     {
@@ -38,15 +36,26 @@ namespace RLBotCS.Server
             if (message.payload.Count > ushort.MaxValue)
             {
                 // Can't send if the message size is bigger than our header can describe.
-                Console.WriteLine("Warning! Core cannot send message because size of {0} cannot be described by a ushort.", message.payload.Count);
+                Console.WriteLine(
+                    "Warning! Core cannot send message because size of {0} cannot be described by a ushort.",
+                    message.payload.Count
+                );
                 return;
             }
+
             PrepareDataType(message.type);
             PrepareMessageLength((ushort)message.payload.Count);
 
-            stream.Write(dataTypeBuffer, 0, dataTypeBuffer.Length);
-            stream.Write(messageLengthBuffer, 0, messageLengthBuffer.Length);
-            stream.Write(message.payload.Array, message.payload.Offset, message.payload.Count);
+            var messageBuffer = new byte[message.payload.Count + 4];
+            Array.Copy(dataTypeBuffer, 0, messageBuffer, 0, 2);
+            Array.Copy(messageLengthBuffer, 0, messageBuffer, 2, 2);
+            Array.Copy(message.payload.Array, message.payload.Offset, messageBuffer, 4, message.payload.Count);
+            stream.Write(messageBuffer, 0, messageBuffer.Length);
+        }
+
+        internal void Send()
+        {
+            stream.Flush();
         }
     }
 }

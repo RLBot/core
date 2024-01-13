@@ -1,10 +1,9 @@
-﻿using RLBotCS.GameState;
+﻿using RLBotCS.GameControl;
+using RLBotCS.GameState;
 using RLBotCS.Server;
-using RLBotModels.Message;
-using RLBotSecret.Conversion;
 using RLBotSecret.Controller;
+using RLBotSecret.Conversion;
 using RLBotSecret.TCP;
-using RLBotCS.GameControl;
 
 var converter = new Converter();
 
@@ -24,6 +23,22 @@ var flatbufferServer = new FlatbufferServer(23234, messenger, gameState.playerMa
 var serverListenerThread = new Thread(() => flatbufferServer.StartListener());
 serverListenerThread.Start();
 
+// catch sudden termination to clean up the server
+AppDomain.CurrentDomain.ProcessExit += (_, _) =>
+{
+    Console.WriteLine("Core is shutting down...");
+    flatbufferServer.Stop();
+    Console.WriteLine("Core has shut down successfully.");
+};
+
+// catch ctrl+c to clean up the server
+Console.CancelKeyPress += (_, _) =>
+{
+    Console.WriteLine("Core is shutting down...");
+    flatbufferServer.Stop();
+    Console.WriteLine("Core has shut down successfully.");
+};
+
 foreach (var messageClump in messenger)
 {
     if (!gotFirstMessage)
@@ -37,46 +52,18 @@ foreach (var messageClump in messenger)
     gameState.gameTickPacket.isUnlimitedTime = matchStarter.IsUnlimitedTime();
     gameState.applyMessage(messageBundle);
 
-    // this helps to wait for a new map to load 
+    // this helps to wait for a new map to load
     if (!gameState.MatchEnded())
     {
         matchStarter.applyMessageBundle(messageBundle);
     }
 
-    flatbufferServer.SendGameStateToClients(gameState);
-
-    MessAroundToProveThingsWork(playerInputSender, gameState, messageBundle);
-}
-
-void MessAroundToProveThingsWork(PlayerInputSender playerInputSender, GameState gameState, MessageBundle messageBundle)
-{
-    foreach (var message in messageBundle.messages)
+    try
     {
-        if (message is CarSpawn)
-        {
-            Console.WriteLine(((CarSpawn)message).name + " has spawned.");
-        }
-        if (message is SpectateViewChange)
-        {
-            var actorId = ((SpectateViewChange)message).spectatedActorId;
-
-            playerInputSender.SendPlayerInput(new RLBotModels.Control.PlayerInput()
-            {
-                actorId = actorId,
-                carInput = new RLBotModels.Control.CarInput { jump = true }
-            });
-            foreach (var otherActor in gameState.playerMapping.getKnownPlayers())
-            {
-                if (otherActor.actorId != actorId)
-                {
-                    playerInputSender.SendPlayerInput(new RLBotModels.Control.PlayerInput()
-                    {
-                        actorId = otherActor.actorId,
-                        carInput = new RLBotModels.Control.CarInput { jump = false }
-                    });
-                }
-            }
-            
-        }
+        flatbufferServer.SendGameStateToClients(gameState);
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine("Exception in Core: {0}", e);
     }
 }

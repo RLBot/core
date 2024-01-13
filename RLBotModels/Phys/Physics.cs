@@ -2,7 +2,9 @@
 {
     public struct Physics
     {
-        public Vector3 location, velocity, angularVelocity;
+        public Vector3 location,
+            velocity,
+            angularVelocity;
         public Rotator rotation;
     }
 }

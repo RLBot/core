@@ -12,7 +12,10 @@ namespace RLBotCS.Server
             return new TypedPayload()
             {
                 type = type,
-                payload = builder.DataBuffer.ToArraySegment(builder.DataBuffer.Position, builder.DataBuffer.Length - builder.DataBuffer.Position)
+                payload = builder.DataBuffer.ToArraySegment(
+                    builder.DataBuffer.Position,
+                    builder.DataBuffer.Length - builder.DataBuffer.Position
+                )
             };
         }
     }

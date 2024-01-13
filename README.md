@@ -22,8 +22,11 @@ compiled binaries at RLBotCS\bin\Release\net8.0.
 
 This project generates a RLBot.exe file and some DLLs. New deployment method is still TODO.
 
-
 ## Maintenance
+
+### Formatting
+
+This project uses the CSharpier formatter. You can run it with `dotnet csharpier .`
 
 ### Flatbuffers
 

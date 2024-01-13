@@ -117,24 +117,25 @@ namespace RLBotCS.GameState
                 }
                 else if (message is GoalSpawn goalSpawn)
                 {
-                    rlbot.flat.GoalInfoT goalInfo = new()
-                    {
-                        TeamNum = goalSpawn.team,
-                        Height = goalSpawn.height,
-                        Width = goalSpawn.width,
-                        Direction = new rlbot.flat.Vector3T()
+                    rlbot.flat.GoalInfoT goalInfo =
+                        new()
                         {
-                            X = goalSpawn.direction.x,
-                            Y = goalSpawn.direction.y,
-                            Z = goalSpawn.direction.z,
-                        },
-                        Location = new rlbot.flat.Vector3T()
-                        {
-                            X = goalSpawn.location.x,
-                            Y = goalSpawn.location.y,
-                            Z = goalSpawn.location.z,
-                        },
-                    };
+                            TeamNum = goalSpawn.team,
+                            Height = goalSpawn.height,
+                            Width = goalSpawn.width,
+                            Direction = new rlbot.flat.Vector3T()
+                            {
+                                X = goalSpawn.direction.x,
+                                Y = goalSpawn.direction.y,
+                                Z = goalSpawn.direction.z,
+                            },
+                            Location = new rlbot.flat.Vector3T()
+                            {
+                                X = goalSpawn.location.x,
+                                Y = goalSpawn.location.y,
+                                Z = goalSpawn.location.z,
+                            },
+                        };
                 }
             }
         }
@@ -199,7 +200,6 @@ namespace RLBotCS.GameState
                 }
             }
         }
-
 
         public bool MatchEnded()
         {

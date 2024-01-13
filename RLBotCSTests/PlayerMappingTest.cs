@@ -1,7 +1,7 @@
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RLBotCS.GameState;
 using RLBotModels.Message;
-using System;
 
 namespace RLBotCSTests
 {
@@ -45,14 +45,15 @@ namespace RLBotCSTests
 
             Assert.AreEqual(desiredIndex, playerMapping.PlayerIndexFromActorId(actorId));
 
-            playerMapping.applyCarSpawn(new CarSpawn()
-            {
-                actorId = 111,
-                commandId = 222,
-                name = "SomeHuman",
-                team = 0
-            });
-
+            playerMapping.applyCarSpawn(
+                new CarSpawn()
+                {
+                    actorId = 111,
+                    commandId = 222,
+                    name = "SomeHuman",
+                    team = 0
+                }
+            );
 
             Assert.AreEqual(0, playerMapping.PlayerIndexFromActorId(111));
             Assert.AreEqual(desiredIndex, playerMapping.PlayerIndexFromActorId(actorId));

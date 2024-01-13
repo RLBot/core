@@ -1,9 +1,10 @@
-﻿using RLBotCS.GameControl;
+﻿using System.Collections.Immutable;
+using System.Net;
+using System.Net.Sockets;
+using RLBotCS.GameControl;
 using RLBotCS.GameState;
 using RLBotSecret.Controller;
 using RLBotSecret.TCP;
-using System.Net;
-using System.Net.Sockets;
 
 namespace RLBotCS.Server
 {
@@ -12,15 +13,20 @@ namespace RLBotCS.Server
      */
     internal class FlatbufferServer
     {
-
         TcpListener server;
         TcpMessenger tcpGameInterface;
         PlayerMapping playerMapping;
         MatchStarter matchStarter;
-        List<FlatbufferSession> sessions = new();
+        int sessionCount = 0;
+        Dictionary<int, FlatbufferSession> sessions = new();
         bool communicationStarted = false;
 
-        public FlatbufferServer(int port, TcpMessenger tcpGameInterface, PlayerMapping playerMapping, MatchStarter matchStarter)
+        public FlatbufferServer(
+            int port,
+            TcpMessenger tcpGameInterface,
+            PlayerMapping playerMapping,
+            MatchStarter matchStarter
+        )
         {
             this.tcpGameInterface = tcpGameInterface;
             this.playerMapping = playerMapping;
@@ -31,7 +37,8 @@ namespace RLBotCS.Server
             server.Start();
         }
 
-        public void StartCommunications() {
+        public void StartCommunications()
+        {
             communicationStarted = true;
         }
 
@@ -50,9 +57,9 @@ namespace RLBotCS.Server
                     t.Start();
                 }
             }
-            catch (SocketException e)
+            catch (SocketException)
             {
-                Console.WriteLine("SocketException in Core: {0}", e);
+                Console.WriteLine("Core's TCP server was terminated.");
                 server.Stop();
             }
         }
@@ -60,10 +67,22 @@ namespace RLBotCS.Server
         internal void SendGameStateToClients(GameState.GameState gameState)
         {
             TypedPayload gameTickPacket = gameState.gameTickPacket.ToFlatbuffer();
-            List<FlatbufferSession> sessions_to_remove = new();
 
-            foreach (FlatbufferSession session in sessions)
+            // We need to make a copy of the keys because we might remove a session
+            var keys_copy = sessions.Keys.ToImmutableArray();
+            foreach (var i in keys_copy)
             {
+                if (!sessions.ContainsKey(i))
+                {
+                    continue;
+                }
+
+                var session = sessions[i];
+
+                session.SetBallActorId(gameState.gameTickPacket.ball.actorId);
+                session.ToggleStateSetting(matchStarter.IsStateSettingEnabled());
+                session.ToggleRendering(matchStarter.IsRenderingEnabled());
+
                 if (!session.IsReady)
                 {
                     continue;
@@ -82,9 +101,6 @@ namespace RLBotCS.Server
                     session.RemoveRenders();
                 }
 
-                session.SetBallActorId(gameState.gameTickPacket.ball.actorId);
-                session.ToggleStateSetting(matchStarter.IsStateSettingEnabled());
-
                 try
                 {
                     session.SendPayloadToClient(gameTickPacket);
@@ -92,17 +108,28 @@ namespace RLBotCS.Server
                 catch (IOException e)
                 {
                     Console.WriteLine("Core is dropping connection to session due to: {0}", e);
-                    sessions_to_remove.Add(session);
+                    sessions.Remove(i);
+                    session.Close(false);
+                }
+                catch (ObjectDisposedException e)
+                {
+                    Console.WriteLine("Core is dropping connection to session due to: {0}", e);
+                    sessions.Remove(i);
                 }
             }
+        }
 
-            // remove sessions that have disconnected
-            foreach (FlatbufferSession session in sessions_to_remove)
+        public void Stop()
+        {
+            foreach (var session in sessions.Values)
             {
-                sessions.Remove(session);
-                // tell the socket to close
-                session.Close();
+                session.Close(false);
             }
+
+            sessions.Clear();
+            server.Stop();
+            Thread.Sleep(100);
+            tcpGameInterface.Dispose();
         }
 
         public void HandleClient(TcpClient client)
@@ -114,15 +141,42 @@ namespace RLBotCS.Server
             var gameController = new GameController(playerInputSender, renderingSender, matchStarter);
 
             var session = new FlatbufferSession(stream, gameController, playerMapping);
-            sessions.Add(session);
+            var id = Interlocked.Increment(ref sessionCount);
+            sessions.Add(id, session);
 
             // wait until we get our first message from Rocket Leauge
             // before we start accepting messages from the client
             // they might make us do things before the game is ready
-            while (!communicationStarted) {
+            while (!communicationStarted)
+            {
                 Thread.Sleep(100);
             }
-            session.RunBlocking();
+
+            var wasDroppedCleanly = true;
+
+            try
+            {
+                session.RunBlocking();
+            }
+            catch (EndOfStreamException)
+            {
+                Console.WriteLine("Client unexpectedly terminated it's connection to core, dropping session.");
+                wasDroppedCleanly = false;
+            }
+            catch (IOException e) when (e.InnerException is SocketException)
+            {
+                Console.WriteLine("Client unexpectedly terminated it's connection to core, dropping session.");
+                wasDroppedCleanly = false;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Core is dropping connection to session due to: {0}", e);
+                wasDroppedCleanly = false;
+            }
+
+            sessions.Remove(id);
+            session.Close(wasDroppedCleanly);
+            client.Close();
         }
     }
 }

@@ -1,5 +1,5 @@
-﻿using RLBotModels.Message;
-using System.Drawing;
+﻿using System.Drawing;
+using RLBotModels.Message;
 
 namespace RLBotModels.Command
 {
@@ -25,9 +25,11 @@ namespace RLBotModels.Command
         public ushort goalExplosionId;
 
         public LoadoutPaint loadoutPaint;
+
         /// Sets the primary color of the car to the swatch that most closely matches the provided
         /// RGB color value. If set, this overrides teamColorId.
         public Color primaryColorLookup;
+
         /// Sets the secondary color of the car to the swatch that most closely matches the provided
         /// RGB color value. If set, this overrides customColorId.
         public Color secondaryColorLookup;

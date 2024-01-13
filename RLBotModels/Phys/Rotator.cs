@@ -2,6 +2,8 @@
 {
     public struct Rotator
     {
-        public float pitch, yaw, roll;
+        public float pitch,
+            yaw,
+            roll;
     }
 }

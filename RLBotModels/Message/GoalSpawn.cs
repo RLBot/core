@@ -11,5 +11,4 @@ namespace RLBotModels.Message
         public float width;
         public float height;
     }
-    
 }
