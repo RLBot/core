@@ -1,0 +1,85 @@
+[rlbot]
+# use_login_tricks = true or false
+# rocket_league_exe_path = "epicgames/path/to/rocketleague.exe"
+# either 'steam', 'epic' or 'epic_only'
+launcher_preference = "steam"
+# either the path to RLBot.exe or a parent folder of it
+main_executable_path = "../RLBotCS/bin/Release/"
+
+[match]
+# Number of bots/players which will be spawned.  We support up to max 64.
+num_participants = 3
+# What game mode the game should load.
+# Accepted values are "Soccer", "Hoops", "Dropshot", "Hockey", "Rumble", "Heatseeker", "Gridiron"
+game_mode = "Soccer"
+# Which map the game should load into
+game_map_upk = "Stadium_P"
+# Automatically skip replays after a goal. Also stops match replays from being saved.
+skip_replays = false
+# Skip the kickoff countdown
+start_without_countdown = false
+# What should we do if you click run while a match is already in progress?
+existing_match_behavior = "Restart"
+enable_rendering = true
+enable_state_setting = true
+auto_save_replay = false
+
+[mutators]
+# "5 Minutes", "10 Minutes", "20 Minutes", "Unlimited"
+match_length = "5 Minutes"
+# "Unlimited", "1 Goal", "3 Goals", "5 Goals",
+max_score = "Unlimited"
+# "Unlimited", "+5 Max, First Score", "+5 Max, Random Team"
+overtime = "Unlimited"
+# "Default", "Slo-Mo", "Time Warp"
+game_speed = "Default"
+# "Default", "Slow", "Fast", "Super Fast"
+ball_max_speed = "Default"
+# "Default", "Cube", "Puck", "Basketball"
+ball_type = "Default"
+# "Default", "Light", "Heavy", "Super Light"
+ball_weight = "Default"
+# "Default", "Small", "Large", "Gigantic"
+ball_size = "Default"
+# "Default", "Low", "High", "Super High"
+ball_bounciness = "Default"
+# "Normal_Boost", "Unlimited", "Recharge (Slow)", "Recharge (Fast)", "No Boost"
+boost_amount = "Normal_Boost"
+# "None", "Default", "Slow", "Civilized", "Destruction Derby", "Spring Loaded", "Spikes Only", "Spike Rush"
+rumble = "None"
+# "1x", "1.5x", "2x", "10x"
+boost_strength = "1x"
+# "Default", "Low", "High", "Super High"
+gravity = "Default"
+# "Default", "Disabled", "Friendly Fire", "On Contact", "On Contact (FF)"
+demolish = "Default"
+# "3 Seconds", "2 Seconds", "1 Second", "Disable Goal Reset"
+respawn_time = "3 Seconds"
+
+[[bots]]
+# The location of the configuration file for your agent here.
+# Only total_num_participants config files will be read!
+# Everything needs a config, even players and default bots.
+# We still set loadouts and names from config!
+config = "tests/agents/atba/atba.toml"
+# Which team the player should be on:
+# team 0 (blue) shoots on positive goal, team 1 (orange) shoots on negative goal
+team = 0
+# Accepted values are "human", "rlbot", "psyonix"
+# If no player is specified you will be spawned in as spectator!
+# human - not controlled by the framework
+# rlbot - controlled by the framework
+# psyonix - default bots (skill level can be changed with participant_bot_skill
+type = "rlbot"
+# If participant is a bot and not RLBot controlled, this value will be used to set bot skill.
+# 0.0 is Rookie, 0.5 is pro, 1.0 is all-star.  You can set values in-between as well.
+skill = 1
+
+[[bots]]
+config = "tests/agents/atba/atba.toml"
+team = 1
+# you don't have to specify type/skill for rlbots
+
+[[bots]]
+config = "tests/agents/atba/atba.toml"
+team = 0
