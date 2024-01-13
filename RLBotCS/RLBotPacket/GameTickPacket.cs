@@ -10,8 +10,9 @@ namespace RLBotCS.RLBotPacket
         public List<BoostPadStatus> gameBoosts = new();
         public Ball ball = new();
         public bool isOvertime = false;
-        public bool isUnlimitedTime = false;
+        public rlbot.flat.MatchLength matchLength = rlbot.flat.MatchLength.Five_Minutes;
         public GameStateType gameState = GameStateType.Inactive;
+        public float respawnTime = 3;
         public float worldGravityZ = -650;
         public float secondsElapsed = 0;
         public float gameTimeRemaining = 0;
@@ -125,7 +126,7 @@ namespace RLBotCS.RLBotPacket
                     SecondsElapsed = secondsElapsed,
                     GameTimeRemaining = gameTimeRemaining,
                     IsOvertime = isOvertime,
-                    IsUnlimitedTime = isUnlimitedTime,
+                    IsUnlimitedTime = matchLength == rlbot.flat.MatchLength.Unlimited,
                     GameStateType = gameStateType,
                     WorldGravityZ = worldGravityZ,
                     GameSpeed = gameSpeed,

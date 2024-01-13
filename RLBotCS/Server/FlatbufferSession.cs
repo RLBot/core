@@ -19,6 +19,7 @@ namespace RLBotCS.Server
         private ushort? ballActorId;
         private bool stateSettingIsEnabled = true;
         private bool renderingIsEnabled = true;
+        private GameStateType gameStateType = GameStateType.Ended;
 
         public bool IsReady { get; private set; }
 
@@ -97,7 +98,11 @@ namespace RLBotCS.Server
                         break;
                     case DataType.MatchSettings:
                         var matchSettings = rlbot.flat.MatchSettings.GetRootAsMatchSettings(byteBuffer);
-                        gameController.matchStarter.HandleMatchSettings(matchSettings.UnPack(), message);
+                        gameController.matchStarter.HandleMatchSettings(
+                            matchSettings.UnPack(),
+                            message,
+                            gameStateType
+                        );
                         break;
                     case DataType.PlayerInput:
                         var playerInputMsg = PlayerInput.GetRootAsPlayerInput(byteBuffer);
@@ -339,6 +344,11 @@ namespace RLBotCS.Server
         public void SetBallActorId(ushort actorId)
         {
             ballActorId = actorId;
+        }
+
+        public void SetGameStateType(GameStateType gameStateType)
+        {
+            this.gameStateType = gameStateType;
         }
 
         public void ToggleStateSetting(bool isEnabled)
