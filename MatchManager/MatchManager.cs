@@ -15,7 +15,7 @@ namespace MatchConfigManager
                 path = defaultConfigPath;
             }
             Console.WriteLine("Reading config file at " + path);
-            configParser.GetMatchSettings(path, matchSettings);
+            matchSettings = configParser.GetMatchSettings(path);
         }
     }
 

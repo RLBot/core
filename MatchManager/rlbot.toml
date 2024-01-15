@@ -73,7 +73,7 @@ team = 0
 type = "rlbot"
 # If participant is a bot and not RLBot controlled, this value will be used to set bot skill.
 # 0.0 is Rookie, 0.5 is pro, 1.0 is all-star.  You can set values in-between as well.
-skill = 1
+skill = 1.0
 
 [[bots]]
 config = "tests/agents/atba/atba.toml"
