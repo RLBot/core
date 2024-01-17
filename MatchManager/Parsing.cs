@@ -68,7 +68,7 @@ namespace MatchConfigManager
         {
              PlayerConfigurationT playerConfig = new();
 
-            /*  player contents:
+            /*  'player' contents:
              *      path (to bot.toml),
              *      type (rlbot, human, psyonix),
              *      team (0 or 1),
@@ -113,8 +113,7 @@ namespace MatchConfigManager
                     TrailsPaintId = (int)(long)playerLoadout["trails_paint_id"],
                     GoalExplosionPaintId = (int)(long)playerLoadout["goal_explosion_paint_id"],
                 },
-                PrimaryColorLookup = new ColorT(),
-                SecondaryColorLookup = new ColorT(), // TODO - GetPrimary/Secondary call?
+                // TODO - GetPrimary/Secondary call? Do any bots use this?
         };
 
 
