@@ -12,10 +12,32 @@ namespace MatchConfigManager
         public TomlTable tomlConfig = [];
         public bool tomlLoaded = false;
 
-        //TODO - Handle FileNotFound!
         public static TomlTable GetTable(string path)
         {
-            return Toml.ToModel(File.ReadAllText(path));
+            try
+            {
+                //TODO - catch any exceptions thrown by ToModel
+                return Toml.ToModel(File.ReadAllText(path));
+            }
+            catch (FileNotFoundException)
+            {
+                Console.WriteLine($"Warning! Could not read Toml file at '{0}'", path);
+                return [];
+            }
+        }
+        //GetTable retrieves a TomlTable from a file. ParseTable retrieves a table within another table
+
+        public static TomlTable ParseTable(TomlTable table, string key)
+        {
+            try
+            {
+                return (TomlTable)table[key];
+            }
+            catch (KeyNotFoundException)
+            {
+                Console.WriteLine($"Warning! Could not find the '{0}' table!", key);
+                return [];
+            }
         }
 
         //Generic to get the enum value of a given enum and the string name of the desired key
@@ -26,7 +48,58 @@ namespace MatchConfigManager
             }
             else
             {
-                Console.WriteLine($"Warning! Unable to read {0}, using default instead", key);
+                Console.WriteLine($"Warning! Unable to read '{0}', using default setting instead", key);
+                return fallback;
+            }
+        }
+
+        static public int ParseInt(TomlTable table, string key, int fallback)
+        {
+            try
+            {
+                return (int)(long)table[key];
+            }
+            catch (KeyNotFoundException) {
+                Console.WriteLine($"Could not find the '{0}' field in toml. Using default setting '{1}' instead", key, fallback);
+                return fallback;
+            }
+        }
+
+        static public float ParseFloat(TomlTable table, string key, float fallback)
+        {
+            try
+            {
+                return (float)(double)table[key];
+            }
+            catch (KeyNotFoundException)
+            {
+                Console.WriteLine($"Could not find the '{0}' field in toml. Using default setting '{1}' instead", key, fallback);
+                return fallback;
+            }
+        }
+
+        static public string ParseString(TomlTable table, string key,  string fallback)
+        {
+            try
+            {
+                return (string)table[key];
+            }
+            catch (KeyNotFoundException)
+            {
+                Console.WriteLine($"Could not find the '{0}' field in toml. Using default setting '{1}' instead", key, fallback);
+                return fallback;
+            }
+        }
+
+        static public bool ParseBool(TomlTable table, string key, bool fallback)
+        {
+            try
+            {
+                return (bool)table[key];
+            }
+            catch (KeyNotFoundException)
+            {
+                Console.WriteLine($"Could not find the '{0}' field in toml. Using default setting '{1}' instead", key, fallback);
                 return fallback;
             }
         }
@@ -46,7 +119,7 @@ namespace MatchConfigManager
                     playerClassUnion = PlayerClassUnion.FromHumanPlayer(new HumanPlayerT());
                     break;
                 case PlayerClass.PsyonixBotPlayer:
-                    float botSkill = (float)(long)player["skill"];
+                    float botSkill = ParseFloat(player, "skill", 1.0f);
                     playerClassUnion = PlayerClassUnion.FromPsyonixBotPlayer(new PsyonixBotPlayerT() { BotSkill = botSkill});
                     break;
                 case PlayerClass.PartyMemberBotPlayer:
@@ -66,66 +139,61 @@ namespace MatchConfigManager
 
         public static PlayerConfigurationT GetPlayerConfig(TomlTable player)
         {
-             PlayerConfigurationT playerConfig = new();
+            //Fetch the bot.toml file
+            TomlTable playerTable = GetTable(ParseString(player, "path", "PathNotReadable"));
 
-            /*  'player' contents:
-             *      path (to bot.toml),
-             *      type (rlbot, human, psyonix),
-             *      team (0 or 1),
-             *      skill (0.0 to 1.0 for psyonix types)
-             */
+            //Fetch the 'settings' table inside bot.toml
+            TomlTable playerSettings = ParseTable(playerTable, "settings");
+            string path = ParseString(playerSettings, "bot_starter", "PathNotReadable");
+            int maxTickRate = ParseInt(playerSettings, "max_tick_rate_preference", 120);
 
-            playerConfig.Variety = GetPlayerUnion(player); //Contains type and skill
-            playerConfig.Team = (int)(long)player["team"];
-
-            // parsing playerTable to get all the other goodies
-            TomlTable playerTable = GetTable((string)player["path"]);
-
-            TomlTable playerSettings = (TomlTable)playerTable["settings"];
-            string path = (string)playerSettings["bot_starter"];
-            playerConfig.Name = (string)playerSettings["name"];
-
-            //parsing loadout
-            TomlTable playerLoadout = GetTable((string)playerSettings["looks_config"]);
-            playerConfig.Loadout = new PlayerLoadoutT() 
+            //Now that we have the tables with the necessary information, we begin creation of the playerConfig
+            PlayerConfigurationT playerConfig = new()
             {
-                TeamColorId = (int)(long)playerLoadout["team_color_id"],
-                CustomColorId = (int)(long)playerLoadout["custom_color_id"],
-                CarId = (int)(long)playerLoadout["car_id"],
-                DecalId = (int)(long)playerLoadout["decal_id"],
-                WheelsId = (int)(long)playerLoadout["wheels_id"],
-                BoostId = (int)(long)playerLoadout["boost_id"],
-                AntennaId = (int)(long)playerLoadout["antenna_id"],
-                HatId = (int)(long)playerLoadout["hat_id"],
-                PaintFinishId = (int)(long)playerLoadout["paint_finish_id"],
-                CustomFinishId = (int)(long)playerLoadout["custom_finish_id"],
-                EngineAudioId = (int)(long)playerLoadout["engine_audio_id"],
-                TrailsId = (int)(long)playerLoadout["trails_id"],
-                GoalExplosionId = (int)(long)playerLoadout["goal_explosion_id"],
+                Variety = GetPlayerUnion(player),   //Contains type and skill
+                Team = ParseInt(player, "team", 0),
+                Name = ParseString(playerSettings, "name", "NameNotReadable"),
+            };
+
+            //Fetching the bot_appearance.toml
+            TomlTable playerLoadout = GetTable(ParseString(playerSettings, "looks_config", "PathNotReadable"));
+            playerConfig.Loadout = new PlayerLoadoutT()
+            {
+                TeamColorId = ParseInt(playerLoadout, "team_color_id", 0),
+                CustomColorId = ParseInt(playerLoadout, "custom_color_id", 0),
+                CarId = ParseInt(playerLoadout, "car_id", 0),
+                DecalId = ParseInt(playerLoadout, "decal_id", 0),
+                WheelsId = ParseInt(playerLoadout, "wheels_id", 0),
+                BoostId = ParseInt(playerLoadout, "boost_id", 0),
+                AntennaId = ParseInt(playerLoadout, "antenna_id", 0),
+                HatId = ParseInt(playerLoadout, "hat_id", 0),
+                PaintFinishId = ParseInt(playerLoadout, "paint_finish_id", 0),
+                CustomFinishId = ParseInt(playerLoadout, "custom_finish_id", 0),
+                EngineAudioId = ParseInt(playerLoadout, "engine_audio_id", 0),
+                TrailsId = ParseInt(playerLoadout, "trails_id", 0),
+                GoalExplosionId = ParseInt(playerLoadout, "goal_explosion_id", 0),
                 LoadoutPaint = new LoadoutPaintT()
                 {
-                    CarPaintId = (int)(long)playerLoadout["car_paint_id"],
-                    DecalPaintId = (int)(long)playerLoadout["decal_paint_id"],
-                    WheelsPaintId = (int)(long)playerLoadout["wheels_paint_id"],
-                    BoostPaintId = (int)(long)playerLoadout["boost_paint_id"],
-                    AntennaPaintId = (int)(long)playerLoadout["antenna_paint_id"],
-                    HatPaintId = (int)(long)playerLoadout["hat_paint_id"],
-                    TrailsPaintId = (int)(long)playerLoadout["trails_paint_id"],
-                    GoalExplosionPaintId = (int)(long)playerLoadout["goal_explosion_paint_id"],
+                    CarPaintId = ParseInt(playerLoadout, "car_paint_id", 0),
+                    DecalPaintId = ParseInt(playerLoadout, "decal_paint_id", 0),
+                    WheelsPaintId = ParseInt(playerLoadout, "wheels_paint_id", 0),
+                    BoostPaintId = ParseInt(playerLoadout, "boost_paint_id", 0),
+                    AntennaPaintId = ParseInt(playerLoadout, "antenna_paint_id", 0),
+                    HatPaintId = ParseInt(playerLoadout, "hat_paint_id", 0),
+                    TrailsPaintId = ParseInt(playerLoadout, "trails_paint_id", 0),
+                    GoalExplosionPaintId = ParseInt(playerLoadout, "goal_explosion_paint_id", 0),
                 },
-                // TODO - GetPrimary/Secondary call? Do any bots use this?
-        };
+                // TODO - GetPrimary/Secondary color? Do any bots use this?
+            };            
 
-
-            // TODO - what do we do with all this stuff ???
-            int maxTickRate = (int)(long)playerSettings["max_tick_rate_preference"];
-
-            TomlTable playerDetails = (TomlTable)playerTable["details"];
-            string description = (string)playerDetails["description"];
-            string funFact = (string)playerDetails["fun_fact"];
-            string developer = (string)playerDetails["developer"];
-            string language = (string)playerDetails["language"];
-            List<string> tags = (List<string>)playerDetails["tags"];
+            //Fetching the fun details from bot.toml
+            //TODO - unused
+            TomlTable playerDetails = ParseTable(playerTable, "details");
+            string description = ParseString(playerDetails, "description", "");
+            string funFact = ParseString(playerDetails, "fun_fact", "");
+            string developer = ParseString(playerDetails, "developer", "");
+            string language = ParseString(playerDetails, "language", "");
+            // List<string> tags = (List<string>)playerDetails["tags"]; //Currently no childproofed method for array
 
             return playerConfig;
         }
@@ -133,7 +201,6 @@ namespace MatchConfigManager
         public MatchSettingsT GetMatchSettings(string path)
         {
 
-            // TODO - there is little childproofing here. Will children ever use the toml file?
             if (!tomlLoaded)
             {
                 tomlConfig = GetTable(path);
@@ -142,20 +209,20 @@ namespace MatchConfigManager
 
             MatchSettingsT matchSettings = new();
 
-            TomlTable settings = (TomlTable)tomlConfig["match"];
+            TomlTable settings = ParseTable(tomlConfig, "match");
 
-            int num_bots = (int)(long)settings["num_participants"];
+            int num_bots = ParseInt(settings, "num_participants", 2);
 
             matchSettings.GameMode = ParseEnum(settings, "game_mode", rlbot.flat.GameMode.Soccer);
-            matchSettings.GameMapUpk = (string)settings["game_map_upk"];
-            matchSettings.SkipReplays = (bool)settings["skip_replays"];
-            matchSettings.InstantStart = (bool)settings["start_without_countdown"];
-            matchSettings.EnableRendering = (bool)settings["enable_rendering"];
-            matchSettings.EnableStateSetting = (bool)settings["enable_state_setting"];
+            matchSettings.GameMapUpk = ParseString(settings, "game_map_upk", "Stadium_P");
+            matchSettings.SkipReplays = ParseBool(settings, "skip_replays", false);
+            matchSettings.InstantStart = ParseBool(settings, "start_without_countdown", false);
+            matchSettings.EnableRendering = ParseBool(settings, "enable_rendering", false);
+            matchSettings.EnableStateSetting = ParseBool(settings, "enable_state_setting", false);
             matchSettings.ExistingMatchBehavior = ParseEnum(settings, "existing_match_behavior", ExistingMatchBehavior.Restart_If_Different);
-            matchSettings.AutoSaveReplay = (bool)settings["auto_save_replay"];
+            matchSettings.AutoSaveReplay = ParseBool(settings, "auto_save_replay", false);
 
-            TomlTable mutators = (TomlTable)tomlConfig["mutators"];
+            TomlTable mutators = ParseTable(tomlConfig, "mutators");
 
             matchSettings.MutatorSettings = new MutatorSettingsT()
             {
@@ -176,6 +243,7 @@ namespace MatchConfigManager
                 RespawnTimeOption = ParseEnum(mutators, "respawn_time", RespawnTimeOption.Three_Seconds),
             };
 
+            //TODO - not childproof
             TomlTableArray players = (TomlTableArray)tomlConfig["bots"];
             Console.WriteLine($"Bots array len: {0}", players.Count);
             
@@ -184,6 +252,7 @@ namespace MatchConfigManager
             foreach (TomlTable player in players){
                 playerConfigs.Add(GetPlayerConfig(player));
             }
+
             matchSettings.PlayerConfigurations = playerConfigs;
             return matchSettings;
         }
