@@ -1,10 +1,10 @@
 [rlbot]
 # use_login_tricks = true or false
 # rocket_league_exe_path = "epicgames/path/to/rocketleague.exe"
-# either 'steam', 'epic' or 'epic_only'
-launcher_preference = "steam"
-# either the path to RLBot.exe or a parent folder of it
-main_executable_path = "../RLBotCS/bin/Release/"
+# either "steam" or "epic"
+launcher = "steam"
+# Should RLBot start the bot processes automatically, or will a separate script start them
+auto_start_bots = true
 
 [match]
 # Number of bots/players which will be spawned.  We support up to max 64.
