@@ -60,8 +60,7 @@ respawn_time = "3 Seconds"
 # The location of the configuration file for your agent here.
 # Only total_num_participants config files will be read!
 # Everything needs a config, even players and default bots.
-# We still set loadouts and names from config!
-config = "tests/agents/atba/atba.toml"
+config = "./atba.toml"
 # Which team the player should be on:
 # team 0 (blue) shoots on positive goal, team 1 (orange) shoots on negative goal
 team = 0
@@ -76,10 +75,10 @@ type = "rlbot"
 skill = 1.0
 
 [[bots]]
-config = "tests/agents/atba/atba.toml"
+config = "./atba.toml"
 team = 1
 # you don't have to specify type/skill for rlbots
 
 [[bots]]
-config = "tests/agents/atba/atba.toml"
+config = "./atba.toml"
 team = 0

@@ -9,9 +9,6 @@ namespace MatchConfigManager
 {
     public class ConfigParser
     {
-        public TomlTable tomlConfig = [];
-        public bool tomlLoaded = false;
-
         public static TomlTable GetTable(string path)
         {
             try
@@ -105,10 +102,10 @@ namespace MatchConfigManager
         }
 
         //This stupid union is just because psyonix players have one extra property - sleep-deprived ddthj 
-        public static PlayerClassUnion GetPlayerUnion(TomlTable player)
+        public static PlayerClassUnion GetPlayerUnion(TomlTable rlbotPlayerTable)
         {
             PlayerClassUnion playerClassUnion;
-            PlayerClass playerClass = ParseEnum(player, "type", PlayerClass.PsyonixBotPlayer);
+            PlayerClass playerClass = ParseEnum(rlbotPlayerTable, "type", PlayerClass.PsyonixBotPlayer);
 
             switch (playerClass)
             {
@@ -119,7 +116,7 @@ namespace MatchConfigManager
                     playerClassUnion = PlayerClassUnion.FromHumanPlayer(new HumanPlayerT());
                     break;
                 case PlayerClass.PsyonixBotPlayer:
-                    float botSkill = ParseFloat(player, "skill", 1.0f);
+                    float botSkill = ParseFloat(rlbotPlayerTable, "skill", 1.0f);
                     playerClassUnion = PlayerClassUnion.FromPsyonixBotPlayer(new PsyonixBotPlayerT() { BotSkill = botSkill});
                     break;
                 case PlayerClass.PartyMemberBotPlayer:
@@ -137,58 +134,77 @@ namespace MatchConfigManager
             return playerClassUnion;
         }
 
-        public static PlayerConfigurationT GetPlayerConfig(TomlTable player)
+        public static PlayerConfigurationT GetPlayerConfig(TomlTable rlbotPlayerTable)
         {
-            //Fetch the bot.toml file
-            TomlTable playerTable = GetTable(ParseString(player, "path", "PathNotReadable"));
+            /* 
+             * rlbotPlayerTable is the the "bot" table in rlbot.toml. Contains team, path to bot.toml, and more
+             * "playerToml" is the entire bot.toml file
+             * "playerSettings" is the "settings" table in bot.toml. Contains name, directory, appearance path, etc
+             * "playerDetails" is the "details" table in bot.toml. Contains the fun facts about the bot
+             * "loadoutToml" is the entire bot_looks.toml. Contains appearance for orange and blue team
+             *  "teamLoadout" is either the "blue_loadout" or "orange_loadout" in bot_looks.toml, contains player items
+             *  "teamPaint" is the "paint" table within the loadout tables, contains paint colors of player items
+             */
+            
+            TomlTable playerToml = GetTable(ParseString(rlbotPlayerTable, "config", "BotPathUnreadable"));
+            TomlTable playerSettings = ParseTable(playerToml, "settings");
+            TomlTable playerDetails = ParseTable(playerToml, "details");
+            TomlTable loadoutToml = GetTable(ParseString(playerSettings, "looks_config", "LooksPathNotReadable"));
+            TomlTable teamLoadout;
 
-            //Fetch the 'settings' table inside bot.toml
-            TomlTable playerSettings = ParseTable(playerTable, "settings");
-            string path = ParseString(playerSettings, "bot_starter", "PathNotReadable");
-            int maxTickRate = ParseInt(playerSettings, "max_tick_rate_preference", 120);
+            if (ParseInt(rlbotPlayerTable, "team", 0) == 0)
+            {
+                teamLoadout = ParseTable(loadoutToml, "blue_loadout");
+            }
+            else
+            {
+                teamLoadout = ParseTable(loadoutToml, "orange_loadout");
+            }
 
-            //Now that we have the tables with the necessary information, we begin creation of the playerConfig
+            TomlTable teamPaint = ParseTable(teamLoadout, "paint");
+            
+            
+            // TODO - use?
+            int maxTickRate = ParseInt(playerSettings, "max_tick_rate", 120);
+
             PlayerConfigurationT playerConfig = new()
             {
-                Variety = GetPlayerUnion(player),   //Contains type and skill
-                Team = ParseInt(player, "team", 0),
+                Variety = GetPlayerUnion(rlbotPlayerTable),   //Contains type and psyonix skill
+                Team = ParseInt(rlbotPlayerTable, "team", 0),
                 Name = ParseString(playerSettings, "name", "NameNotReadable"),
+                Location = ParseString(playerSettings, "location", "PathNotReadable"),
+                RunCommand = ParseString(playerSettings, "run_command", ""),
+                Loadout = new PlayerLoadoutT()
+                {
+                    TeamColorId = ParseInt(teamLoadout, "team_color_id", 0),
+                    CustomColorId = ParseInt(teamLoadout, "custom_color_id", 0),
+                    CarId = ParseInt(teamLoadout, "car_id", 0),
+                    DecalId = ParseInt(teamLoadout, "decal_id", 0),
+                    WheelsId = ParseInt(teamLoadout, "wheels_id", 0),
+                    BoostId = ParseInt(teamLoadout, "boost_id", 0),
+                    AntennaId = ParseInt(teamLoadout, "antenna_id", 0),
+                    HatId = ParseInt(teamLoadout, "hat_id", 0),
+                    PaintFinishId = ParseInt(teamLoadout, "paint_finish_id", 0),
+                    CustomFinishId = ParseInt(teamLoadout, "custom_finish_id", 0),
+                    EngineAudioId = ParseInt(teamLoadout, "engine_audio_id", 0),
+                    TrailsId = ParseInt(teamLoadout, "trails_id", 0),
+                    GoalExplosionId = ParseInt(teamLoadout, "goal_explosion_id", 0),
+                    LoadoutPaint = new LoadoutPaintT()
+                    {
+                        CarPaintId = ParseInt(teamPaint, "car_paint_id", 0),
+                        DecalPaintId = ParseInt(teamPaint, "decal_paint_id", 0),
+                        WheelsPaintId = ParseInt(teamPaint, "wheels_paint_id", 0),
+                        BoostPaintId = ParseInt(teamPaint, "boost_paint_id", 0),
+                        AntennaPaintId = ParseInt(teamPaint, "antenna_paint_id", 0),
+                        HatPaintId = ParseInt(teamPaint, "hat_paint_id", 0),
+                        TrailsPaintId = ParseInt(teamPaint, "trails_paint_id", 0),
+                        GoalExplosionPaintId = ParseInt(teamPaint, "goal_explosion_paint_id", 0),
+                    },
+                    // TODO - GetPrimary/Secondary color? Do any bots use this?
+                }
             };
 
-            //Fetching the bot_appearance.toml
-            TomlTable playerLoadout = GetTable(ParseString(playerSettings, "looks_config", "PathNotReadable"));
-            playerConfig.Loadout = new PlayerLoadoutT()
-            {
-                TeamColorId = ParseInt(playerLoadout, "team_color_id", 0),
-                CustomColorId = ParseInt(playerLoadout, "custom_color_id", 0),
-                CarId = ParseInt(playerLoadout, "car_id", 0),
-                DecalId = ParseInt(playerLoadout, "decal_id", 0),
-                WheelsId = ParseInt(playerLoadout, "wheels_id", 0),
-                BoostId = ParseInt(playerLoadout, "boost_id", 0),
-                AntennaId = ParseInt(playerLoadout, "antenna_id", 0),
-                HatId = ParseInt(playerLoadout, "hat_id", 0),
-                PaintFinishId = ParseInt(playerLoadout, "paint_finish_id", 0),
-                CustomFinishId = ParseInt(playerLoadout, "custom_finish_id", 0),
-                EngineAudioId = ParseInt(playerLoadout, "engine_audio_id", 0),
-                TrailsId = ParseInt(playerLoadout, "trails_id", 0),
-                GoalExplosionId = ParseInt(playerLoadout, "goal_explosion_id", 0),
-                LoadoutPaint = new LoadoutPaintT()
-                {
-                    CarPaintId = ParseInt(playerLoadout, "car_paint_id", 0),
-                    DecalPaintId = ParseInt(playerLoadout, "decal_paint_id", 0),
-                    WheelsPaintId = ParseInt(playerLoadout, "wheels_paint_id", 0),
-                    BoostPaintId = ParseInt(playerLoadout, "boost_paint_id", 0),
-                    AntennaPaintId = ParseInt(playerLoadout, "antenna_paint_id", 0),
-                    HatPaintId = ParseInt(playerLoadout, "hat_paint_id", 0),
-                    TrailsPaintId = ParseInt(playerLoadout, "trails_paint_id", 0),
-                    GoalExplosionPaintId = ParseInt(playerLoadout, "goal_explosion_paint_id", 0),
-                },
-                // TODO - GetPrimary/Secondary color? Do any bots use this?
-            };            
-
-            //Fetching the fun details from bot.toml
             //TODO - unused
-            TomlTable playerDetails = ParseTable(playerTable, "details");
             string description = ParseString(playerDetails, "description", "");
             string funFact = ParseString(playerDetails, "fun_fact", "");
             string developer = ParseString(playerDetails, "developer", "");
@@ -200,60 +216,62 @@ namespace MatchConfigManager
 
         public MatchSettingsT GetMatchSettings(string path)
         {
+            /* 
+             * "rlbotToml" is the entire rlbot.toml file
+             * "rlbotTable" is the "rlbot" table in rlbot.toml. It contains rlbot-specific settings like game launch options
+             * "matchTable" is the "match" table in rlbot.toml. It contains match-specific matchTable like the map
+             * "mutatorTable" is the "mutators" table in rlbot.toml. It contains the match mutators
+             * "players" is the list of "bot" tables in rlbot.toml
+             * "playerToml" is the "bot" table in rlbot.toml. It contains the path to the bot.toml file
+             */
+            TomlTable rlbotToml = GetTable(path);
+            TomlTable rlbotTable = ParseTable(rlbotToml, "rlbot");
+            TomlTable matchTable = ParseTable(rlbotToml, "match");
+            TomlTable mutatorTable = ParseTable(rlbotToml, "mutators");
+            TomlTableArray players = (TomlTableArray)rlbotToml["bots"]; //TODO - not childproof
+            Console.WriteLine($"Bots array len: {0}", players.Count);
 
-            if (!tomlLoaded)
+            List<PlayerConfigurationT> playerConfigs = [];
+            MatchSettingsT matchSettings = new()
             {
-                tomlConfig = GetTable(path);
-                tomlLoaded = true;
-            }
-
-            MatchSettingsT matchSettings = new();
-
-            TomlTable settings = ParseTable(tomlConfig, "match");
-
-            int num_bots = ParseInt(settings, "num_participants", 2);
-
-            matchSettings.GameMode = ParseEnum(settings, "game_mode", rlbot.flat.GameMode.Soccer);
-            matchSettings.GameMapUpk = ParseString(settings, "game_map_upk", "Stadium_P");
-            matchSettings.SkipReplays = ParseBool(settings, "skip_replays", false);
-            matchSettings.InstantStart = ParseBool(settings, "start_without_countdown", false);
-            matchSettings.EnableRendering = ParseBool(settings, "enable_rendering", false);
-            matchSettings.EnableStateSetting = ParseBool(settings, "enable_state_setting", false);
-            matchSettings.ExistingMatchBehavior = ParseEnum(settings, "existing_match_behavior", ExistingMatchBehavior.Restart_If_Different);
-            matchSettings.AutoSaveReplay = ParseBool(settings, "auto_save_replay", false);
-
-            TomlTable mutators = ParseTable(tomlConfig, "mutators");
-
-            matchSettings.MutatorSettings = new MutatorSettingsT()
-            {
-                MatchLength = ParseEnum(mutators, "match_length", MatchLength.Five_Minutes),
-                MaxScore = ParseEnum(mutators, "max_score", MaxScore.Unlimited),
-                OvertimeOption = ParseEnum(mutators, "overtime", OvertimeOption.Unlimited),
-                GameSpeedOption = ParseEnum(mutators, "game_speed", GameSpeedOption.Default),
-                BallMaxSpeedOption = ParseEnum(mutators, "ball_max_speed", BallMaxSpeedOption.Default),
-                BallTypeOption = ParseEnum(mutators, "ball_type", BallTypeOption.Default),
-                BallWeightOption = ParseEnum(mutators, "ball_weight", BallWeightOption.Default),
-                BallSizeOption = ParseEnum(mutators, "ball_size", BallSizeOption.Default),
-                BallBouncinessOption = ParseEnum(mutators, "ball_bounciness", BallBouncinessOption.Default),
-                BoostOption = ParseEnum(mutators, "boost_amount", BoostOption.Normal_Boost),
-                RumbleOption = ParseEnum(mutators, "rumble", RumbleOption.Default),
-                BoostStrengthOption = ParseEnum(mutators, "boost_strength", BoostStrengthOption.One),
-                GravityOption = ParseEnum(mutators, "gravity", GravityOption.Default),
-                DemolishOption = ParseEnum(mutators, "demolish", DemolishOption.Default),
-                RespawnTimeOption = ParseEnum(mutators, "respawn_time", RespawnTimeOption.Three_Seconds),
+                Launcher = ParseEnum(rlbotTable, "launcher", Launcher.Steam),
+                AutoStartBots = ParseBool(rlbotTable, "auto_start_bots", true),
+                GameMode = ParseEnum(matchTable, "game_mode", rlbot.flat.GameMode.Soccer),
+                GameMapUpk = ParseString(matchTable, "game_map_upk", "Stadium_P"),
+                SkipReplays = ParseBool(matchTable, "skip_replays", false),
+                InstantStart = ParseBool(matchTable, "start_without_countdown", false),
+                EnableRendering = ParseBool(matchTable, "enable_rendering", false),
+                EnableStateSetting = ParseBool(matchTable, "enable_state_setting", false),
+                ExistingMatchBehavior = ParseEnum(matchTable, "existing_match_behavior", ExistingMatchBehavior.Restart_If_Different),
+                AutoSaveReplay = ParseBool(matchTable, "auto_save_replay", false),
+                MutatorSettings = new MutatorSettingsT()
+                {
+                    MatchLength = ParseEnum(mutatorTable, "match_length", MatchLength.Five_Minutes),
+                    MaxScore = ParseEnum(mutatorTable, "max_score", MaxScore.Unlimited),
+                    OvertimeOption = ParseEnum(mutatorTable, "overtime", OvertimeOption.Unlimited),
+                    GameSpeedOption = ParseEnum(mutatorTable, "game_speed", GameSpeedOption.Default),
+                    BallMaxSpeedOption = ParseEnum(mutatorTable, "ball_max_speed", BallMaxSpeedOption.Default),
+                    BallTypeOption = ParseEnum(mutatorTable, "ball_type", BallTypeOption.Default),
+                    BallWeightOption = ParseEnum(mutatorTable, "ball_weight", BallWeightOption.Default),
+                    BallSizeOption = ParseEnum(mutatorTable, "ball_size", BallSizeOption.Default),
+                    BallBouncinessOption = ParseEnum(mutatorTable, "ball_bounciness", BallBouncinessOption.Default),
+                    BoostOption = ParseEnum(mutatorTable, "boost_amount", BoostOption.Normal_Boost),
+                    RumbleOption = ParseEnum(mutatorTable, "rumble", RumbleOption.Default),
+                    BoostStrengthOption = ParseEnum(mutatorTable, "boost_strength", BoostStrengthOption.One),
+                    GravityOption = ParseEnum(mutatorTable, "gravity", GravityOption.Default),
+                    DemolishOption = ParseEnum(mutatorTable, "demolish", DemolishOption.Default),
+                    RespawnTimeOption = ParseEnum(mutatorTable, "respawn_time", RespawnTimeOption.Three_Seconds),
+                }
             };
 
-            //TODO - not childproof
-            TomlTableArray players = (TomlTableArray)tomlConfig["bots"];
-            Console.WriteLine($"Bots array len: {0}", players.Count);
-            
-            List<PlayerConfigurationT> playerConfigs = [];
-            
-            foreach (TomlTable player in players){
-                playerConfigs.Add(GetPlayerConfig(player));
+            // Gets the PlayerConfigT object for the number of players requested
+            // TODO - this will crash if num_participants is greater than the number of bots in rlbot.toml
+            int num_bots = ParseInt(matchTable, "num_participants", 2);
+            for (int i = 0; i < num_bots; i++){
+                playerConfigs.Add(GetPlayerConfig(players[i]));
             }
-
             matchSettings.PlayerConfigurations = playerConfigs;
+
             return matchSettings;
         }
     }
