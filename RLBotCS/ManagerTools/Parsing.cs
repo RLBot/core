@@ -1,11 +1,8 @@
 ﻿using rlbot.flat;
 using Tomlyn.Model;
 using Tomlyn;
-using System.ComponentModel.DataAnnotations;
-using RLBotModels.Message;
-using RLBotCS.Conversion;
 
-namespace MatchConfigManager
+namespace MatchManagement
 {
     public class ConfigParser
     {
@@ -148,7 +145,6 @@ namespace MatchConfigManager
             
             TomlTable playerToml = GetTable(ParseString(rlbotPlayerTable, "config", "BotPathUnreadable"));
             TomlTable playerSettings = ParseTable(playerToml, "settings");
-            TomlTable playerDetails = ParseTable(playerToml, "details");
             TomlTable loadoutToml = GetTable(ParseString(playerSettings, "looks_config", "LooksPathNotReadable"));
             TomlTable teamLoadout;
 
@@ -162,10 +158,6 @@ namespace MatchConfigManager
             }
 
             TomlTable teamPaint = ParseTable(teamLoadout, "paint");
-            
-            
-            // TODO - use?
-            int maxTickRate = ParseInt(playerSettings, "max_tick_rate", 120);
 
             PlayerConfigurationT playerConfig = new()
             {
@@ -203,13 +195,6 @@ namespace MatchConfigManager
                     // TODO - GetPrimary/Secondary color? Do any bots use this?
                 }
             };
-
-            //TODO - unused
-            string description = ParseString(playerDetails, "description", "");
-            string funFact = ParseString(playerDetails, "fun_fact", "");
-            string developer = ParseString(playerDetails, "developer", "");
-            string language = ParseString(playerDetails, "language", "");
-            // List<string> tags = (List<string>)playerDetails["tags"]; //Currently no childproofed method for array
 
             return playerConfig;
         }
@@ -265,9 +250,8 @@ namespace MatchConfigManager
             };
 
             // Gets the PlayerConfigT object for the number of players requested
-            // TODO - this will crash if num_participants is greater than the number of bots in rlbot.toml
-            int num_bots = ParseInt(matchTable, "num_participants", 2);
-            for (int i = 0; i < num_bots; i++){
+            int num_bots = ParseInt(matchTable, "num_participants", 0);
+            for (int i = 0; i < Math.Min(num_bots,players.Count); i++){
                 playerConfigs.Add(GetPlayerConfig(players[i]));
             }
             matchSettings.PlayerConfigurations = playerConfigs;
