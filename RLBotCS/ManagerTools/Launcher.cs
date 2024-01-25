@@ -1,29 +1,37 @@
 ﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
+using rlbot.flat;
 
 namespace RLBotCS.MatchManagement
 {
     internal class Launcher
     {
 
-        public static void LaunchRocketLeague(int port)
+        public static void LaunchRocketLeague(int port, rlbot.flat.Launcher launcher)
         {
-
+            switch (launcher)
+            {
+                case rlbot.flat.Launcher.Steam:
+                    break;
+                case rlbot.flat.Launcher.Epic:
+                    break;
+                case rlbot.flat.Launcher.Custom:
+                    break;
+                default:
+                    break;
+            }
 
         }
 
-        public static bool IsRocketLeagueRunning(int port)
+        public static bool IsRocketLeagueRunning()
         {
             // GetProcessByName uses the "friendly name" of the process, no extensions required.
             // Should be OS agnostic (?)
             Process[] candidates = Process.GetProcessesByName("RocketLeague");
 
-            foreach (Process process in candidates)
+            if (candidates.Length > 0)
             {
-                // TODO - OS-agnostic check for command line args to see if rocket league was started correctly
+                return true;
             }
-
-
             return false;
         }
     }
