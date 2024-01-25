@@ -21,6 +21,7 @@ namespace RLBotCS.Server
         FieldInfo,
 
         // Sent once when a match starts, or when you first connect.
+        StartCommand,
         MatchSettings,
         PlayerInput,
         DesiredGameState,
