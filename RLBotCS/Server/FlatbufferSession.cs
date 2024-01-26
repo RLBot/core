@@ -15,7 +15,6 @@ namespace RLBotCS.Server
         private Stream stream;
         private GameController gameController;
         private PlayerMapping playerMapping;
-        private ConfigParser configParser;
         private SocketSpecStreamWriter socketSpecWriter;
         private Dictionary<int, List<ushort>> sessionRenderIds = new();
         private ushort? ballActorId;
@@ -100,11 +99,18 @@ namespace RLBotCS.Server
                         break;
                     case DataType.StartCommand:
                         var startCommand = StartCommand.GetRootAsStartCommand(byteBuffer).UnPack();
-                        var tomlMatchSettings = configParser.GetMatchSettings(startCommand.ConfigPath);
+                        var tomlMatchSettings = ConfigParser.GetMatchSettings(startCommand.ConfigPath);
                         FlatBufferBuilder builder = new(1500);
                         builder.Finish(rlbot.flat.MatchSettings.Pack(builder, tomlMatchSettings).Value);
-                        TypedPayload matchSettingsMessage = TypedPayload.FromFlatBufferBuilder(DataType.MatchSettings, builder);
-                        gameController.matchStarter.HandleMatchSettings(tomlMatchSettings, matchSettingsMessage);
+                        TypedPayload matchSettingsMessage = TypedPayload.FromFlatBufferBuilder(
+                            DataType.MatchSettings,
+                            builder
+                        );
+                        gameController.matchStarter.HandleMatchSettings(
+                            tomlMatchSettings,
+                            matchSettingsMessage,
+                            gameStateType
+                        );
                         break;
                     case DataType.MatchSettings:
                         var matchSettings = rlbot.flat.MatchSettings.GetRootAsMatchSettings(byteBuffer);
@@ -165,6 +171,7 @@ namespace RLBotCS.Server
 
                         // Send the render requests
                         gameController.renderingSender.Send();
+
                         break;
                     case DataType.RemoveRenderGroup:
                         var removeRenderGroup = rlbot
