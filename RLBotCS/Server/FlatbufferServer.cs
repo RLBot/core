@@ -1,9 +1,12 @@
 ﻿using System.Collections.Immutable;
 using System.Net;
 using System.Net.Sockets;
+using Google.FlatBuffers;
 using RLBotCS.GameControl;
 using RLBotCS.GameState;
 using RLBotCS.RLBotPacket;
+using RLBotModels.Control;
+using RLBotModels.Message;
 using RLBotSecret.Controller;
 using RLBotSecret.TCP;
 
@@ -132,10 +135,8 @@ namespace RLBotCS.Server
             });
         }
 
-        internal void SendGameStateToClients(GameTickPacket gameTickPacket)
+        private void SendPayloadToReadySessions(TypedPayload payload)
         {
-            TypedPayload payload = gameTickPacket.ToFlatbuffer();
-
             TryRunOnEachSession(session =>
             {
                 if (!session.IsReady)
@@ -145,6 +146,93 @@ namespace RLBotCS.Server
 
                 session.SendPayloadToClient(payload);
             });
+        }
+
+        internal void SendMessagePacketToClients(MessageBundle messageBundle, float gameSeconds, int frameNum)
+        {
+            var messages = new rlbot.flat.MessagePacketT()
+            {
+                Messages = new List<rlbot.flat.GameMessageWrapperT>(),
+                GameSeconds = gameSeconds,
+                FrameNum = frameNum,
+            };
+            foreach (var message in messageBundle.messages)
+            {
+                if (message is PlayerInputUpdate update)
+                {
+                    if (playerMapping.PlayerIndexFromActorId(update.playerInput.actorId) is int playerIndex)
+                    {
+                        var playerInput = new rlbot.flat.PlayerInputChangeT()
+                        {
+                            PlayerIndex = playerIndex,
+                            ControllerState = new rlbot.flat.ControllerStateT()
+                            {
+                                Throttle = update.playerInput.carInput.throttle,
+                                Steer = update.playerInput.carInput.steer,
+                                Pitch = update.playerInput.carInput.pitch,
+                                Yaw = update.playerInput.carInput.yaw,
+                                Roll = update.playerInput.carInput.roll,
+                                Jump = update.playerInput.carInput.jump,
+                                Boost = update.playerInput.carInput.boost,
+                                Handbrake = update.playerInput.carInput.handbrake,
+                            },
+                            DodgeForward = update.playerInput.carInput.dodgeForward,
+                            DodgeRight = update.playerInput.carInput.dodgeStrafe,
+                        };
+
+                        messages.Messages.Add(
+                            new rlbot.flat.GameMessageWrapperT()
+                            {
+                                Message = rlbot.flat.GameMessageUnion.FromPlayerInputChange(playerInput),
+                            }
+                        );
+                    }
+                }
+                else if (message is SpectateViewChange change)
+                {
+                    if (playerMapping.PlayerIndexFromActorId(change.spectatedActorId) is int playerIndex)
+                    {
+                        var spectate = new rlbot.flat.PlayerSpectateT() { PlayerIndex = playerIndex, };
+
+                        messages.Messages.Add(
+                            new rlbot.flat.GameMessageWrapperT()
+                            {
+                                Message = rlbot.flat.GameMessageUnion.FromPlayerSpectate(spectate),
+                            }
+                        );
+                    }
+                }
+                else if (message is PlayerAccolade accolade)
+                {
+                    if (playerMapping.PlayerIndexFromActorId(accolade.actorId) is int playerIndex)
+                    {
+                        var playerAccolade = new rlbot.flat.PlayerStatEventT()
+                        {
+                            PlayerIndex = playerIndex,
+                            StatType = accolade.accolade,
+                        };
+
+                        messages.Messages.Add(
+                            new rlbot.flat.GameMessageWrapperT()
+                            {
+                                Message = rlbot.flat.GameMessageUnion.FromPlayerStatEvent(playerAccolade),
+                            }
+                        );
+                    }
+                }
+            }
+
+            var builder = new FlatBufferBuilder(1024);
+            builder.Finish(rlbot.flat.MessagePacket.Pack(builder, messages).Value);
+
+            var payload = TypedPayload.FromFlatBufferBuilder(DataType.MessagePacket, builder);
+            SendPayloadToReadySessions(payload);
+        }
+
+        internal void SendGameStateToClients(GameTickPacket gameTickPacket)
+        {
+            TypedPayload payload = gameTickPacket.ToFlatbuffer();
+            SendPayloadToReadySessions(payload);
         }
 
         public void Stop()

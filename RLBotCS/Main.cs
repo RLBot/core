@@ -68,6 +68,11 @@ foreach (var messageClump in messenger)
         }
 
         flatbufferServer.EnsureClientsPrepared(gameState);
+        flatbufferServer.SendMessagePacketToClients(
+            messageBundle,
+            gameState.gameTickPacket.secondsElapsed,
+            gameState.gameTickPacket.frameNum
+        );
         flatbufferServer.SendGameStateToClients(gameState.gameTickPacket);
     }
     catch (Exception e)
