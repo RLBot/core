@@ -5,7 +5,6 @@ namespace RLBotCS.MatchManagement
 {
     internal class Launcher
     {
-
         public static void LaunchRocketLeague(int port, rlbot.flat.Launcher launcher)
         {
             switch (launcher)
@@ -19,7 +18,6 @@ namespace RLBotCS.MatchManagement
                 default:
                     break;
             }
-
         }
 
         public static bool IsRocketLeagueRunning()

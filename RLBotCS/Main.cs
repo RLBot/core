@@ -46,10 +46,12 @@ foreach (var messageClump in messenger)
         Console.WriteLine("RLBot is now receiving messages from Rocket League!");
         gotFirstMessage = true;
         flatbufferServer.StartCommunications();
+        matchStarter.LoadDefferedMatch(gameState.gameTickPacket.gameState);
     }
 
     var messageBundle = converter.Convert(messageClump);
-    gameState.gameTickPacket.isUnlimitedTime = matchStarter.IsUnlimitedTime();
+    gameState.gameTickPacket.matchLength = matchStarter.MatchLength();
+    gameState.gameTickPacket.respawnTime = matchStarter.RespawnTime();
     gameState.applyMessage(messageBundle);
 
     // this helps to wait for a new map to load
@@ -60,7 +62,18 @@ foreach (var messageClump in messenger)
 
     try
     {
-        flatbufferServer.SendGameStateToClients(gameState);
+        if (gameState.MatchEnded())
+        {
+            flatbufferServer.RemoveRenders();
+        }
+
+        flatbufferServer.EnsureClientsPrepared(gameState);
+        flatbufferServer.SendMessagePacketToClients(
+            messageBundle,
+            gameState.gameTickPacket.secondsElapsed,
+            gameState.gameTickPacket.frameNum
+        );
+        flatbufferServer.SendGameStateToClients(gameState.gameTickPacket);
     }
     catch (Exception e)
     {

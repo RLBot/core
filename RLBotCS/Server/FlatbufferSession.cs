@@ -4,6 +4,7 @@ using rlbot.flat;
 using RLBotCS.GameControl;
 using RLBotCS.GameState;
 using RLBotSecret.Conversion;
+using GameStateType = RLBotModels.Message.GameStateType;
 
 namespace RLBotCS.Server
 {
@@ -15,12 +16,13 @@ namespace RLBotCS.Server
         private Stream stream;
         private GameController gameController;
         private PlayerMapping playerMapping;
-        private ConfigParser configParser;
         private SocketSpecStreamWriter socketSpecWriter;
         private Dictionary<int, List<ushort>> sessionRenderIds = new();
         private ushort? ballActorId;
         private bool stateSettingIsEnabled = true;
         private bool renderingIsEnabled = true;
+        private GameStateType gameStateType = GameStateType.Ended;
+        private bool startedCommunications = false;
 
         public bool IsReady { get; private set; }
 
@@ -32,11 +34,17 @@ namespace RLBotCS.Server
 
         public bool WantsQuickChat { get; private set; }
 
-        public FlatbufferSession(Stream stream, GameController gameController, PlayerMapping playerMapping)
+        public FlatbufferSession(
+            Stream stream,
+            GameController gameController,
+            PlayerMapping playerMapping,
+            bool startedCommunications
+        )
         {
             this.stream = stream;
             this.gameController = gameController;
             this.playerMapping = playerMapping;
+            this.startedCommunications = startedCommunications;
             socketSpecWriter = new SocketSpecStreamWriter(stream);
         }
 
@@ -99,15 +107,28 @@ namespace RLBotCS.Server
                         break;
                     case DataType.StartCommand:
                         var startCommand = StartCommand.GetRootAsStartCommand(byteBuffer).UnPack();
-                        var tomlMatchSettings = configParser.GetMatchSettings(startCommand.ConfigPath);
+                        var tomlMatchSettings = ConfigParser.GetMatchSettings(startCommand.ConfigPath);
                         FlatBufferBuilder builder = new(1500);
                         builder.Finish(rlbot.flat.MatchSettings.Pack(builder, tomlMatchSettings).Value);
-                        TypedPayload matchSettingsMessage = TypedPayload.FromFlatBufferBuilder(DataType.MatchSettings, builder);
-                        gameController.matchStarter.HandleMatchSettings(tomlMatchSettings, matchSettingsMessage);
+                        TypedPayload matchSettingsMessage = TypedPayload.FromFlatBufferBuilder(
+                            DataType.MatchSettings,
+                            builder
+                        );
+                        gameController.matchStarter.HandleMatchSettings(
+                            tomlMatchSettings,
+                            matchSettingsMessage,
+                            gameStateType,
+                            !startedCommunications
+                        );
                         break;
                     case DataType.MatchSettings:
                         var matchSettings = rlbot.flat.MatchSettings.GetRootAsMatchSettings(byteBuffer);
-                        gameController.matchStarter.HandleMatchSettings(matchSettings.UnPack(), message);
+                        gameController.matchStarter.HandleMatchSettings(
+                            matchSettings.UnPack(),
+                            message,
+                            gameStateType,
+                            !startedCommunications
+                        );
                         break;
                     case DataType.PlayerInput:
                         var playerInputMsg = PlayerInput.GetRootAsPlayerInput(byteBuffer);
@@ -160,6 +181,7 @@ namespace RLBotCS.Server
 
                         // Send the render requests
                         gameController.renderingSender.Send();
+
                         break;
                     case DataType.RemoveRenderGroup:
                         var removeRenderGroup = rlbot
@@ -351,6 +373,11 @@ namespace RLBotCS.Server
             ballActorId = actorId;
         }
 
+        public void SetGameStateType(GameStateType gameStateType)
+        {
+            this.gameStateType = gameStateType;
+        }
+
         public void ToggleStateSetting(bool isEnabled)
         {
             stateSettingIsEnabled = isEnabled;
@@ -365,6 +392,11 @@ namespace RLBotCS.Server
         {
             socketSpecWriter.Write(payload);
             socketSpecWriter.Send();
+        }
+
+        internal void SetStartCommunications(bool startedCommunications)
+        {
+            this.startedCommunications = startedCommunications;
         }
     }
 }

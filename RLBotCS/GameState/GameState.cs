@@ -18,15 +18,24 @@ namespace RLBotCS.GameState
             gameTickPacket.frameNum += messageBundle.physicsTickDelta;
             gameTickPacket.secondsElapsed = gameTickPacket.frameNum / 120f;
 
-            // TODO: account for matches longer than 5 minutes
-            if (gameTickPacket.isUnlimitedTime)
+            if (gameTickPacket.matchLength == rlbot.flat.MatchLength.Unlimited)
             {
                 gameTickPacket.gameTimeRemaining = float.MaxValue;
             }
             else
             {
-                var max_game_time_seconds = 5 * 60;
-                gameTickPacket.gameTimeRemaining = max_game_time_seconds - gameTickPacket.secondsElapsed;
+                var max_game_time = 5;
+
+                if (gameTickPacket.matchLength == rlbot.flat.MatchLength.Ten_Minutes)
+                {
+                    max_game_time = 10;
+                }
+                else if (gameTickPacket.matchLength == rlbot.flat.MatchLength.Twenty_Minutes)
+                {
+                    max_game_time = 20;
+                }
+
+                gameTickPacket.gameTimeRemaining = max_game_time * 60 - gameTickPacket.secondsElapsed;
             }
 
             foreach (var message in messageBundle.messages)
@@ -57,7 +66,7 @@ namespace RLBotCS.GameState
                 {
                     foreach (var carUpdate in physicsUpdate.carUpdates)
                     {
-                        ProcessCarUpdate(carUpdate);
+                        ProcessCarUpdate(carUpdate, gameTickPacket.respawnTime);
                     }
 
                     if (physicsUpdate.ballUpdate.HasValue)
@@ -140,7 +149,7 @@ namespace RLBotCS.GameState
             }
         }
 
-        private void ProcessCarUpdate(KeyValuePair<ushort, CarPhysics> carUpdate)
+        private void ProcessCarUpdate(KeyValuePair<ushort, CarPhysics> carUpdate, float respawnTime)
         {
             var actorId = carUpdate.Key;
             var carPhysics = carUpdate.Value;
@@ -188,14 +197,14 @@ namespace RLBotCS.GameState
 
                         var d_frame_diff = gameTickPacket.frameNum - car.firstDemolishedFrame;
                         var d_time = d_frame_diff / 120f;
-                        // TODO: Support respawn time mutator
-                        if (d_time > 3)
+
+                        if (d_time > respawnTime)
                         {
                             car.firstDemolishedFrame = gameTickPacket.frameNum;
-                            d_time = 3;
+                            d_time = respawnTime;
                         }
 
-                        car.demolishedTimeout = 3 - d_time;
+                        car.demolishedTimeout = respawnTime - d_time;
                         break;
                 }
             }

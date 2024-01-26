@@ -10,16 +10,15 @@ namespace RLBotCS.RLBotPacket
         public List<BoostPadStatus> gameBoosts = new();
         public Ball ball = new();
         public bool isOvertime = false;
-        public bool isUnlimitedTime = false;
+        public rlbot.flat.MatchLength matchLength = rlbot.flat.MatchLength.Five_Minutes;
         public GameStateType gameState = GameStateType.Inactive;
+        public float respawnTime = 3;
         public float worldGravityZ = -650;
         public float secondsElapsed = 0;
         public float gameTimeRemaining = 0;
         public float gameSpeed = 1;
         public int frameNum = 0;
         public List<int> teamScores = [0, 0];
-
-        // TODO: tile information?
 
         internal TypedPayload ToFlatbuffer()
         {
@@ -127,7 +126,7 @@ namespace RLBotCS.RLBotPacket
                     SecondsElapsed = secondsElapsed,
                     GameTimeRemaining = gameTimeRemaining,
                     IsOvertime = isOvertime,
-                    IsUnlimitedTime = isUnlimitedTime,
+                    IsUnlimitedTime = matchLength == rlbot.flat.MatchLength.Unlimited,
                     GameStateType = gameStateType,
                     WorldGravityZ = worldGravityZ,
                     GameSpeed = gameSpeed,
@@ -151,8 +150,10 @@ namespace RLBotCS.RLBotPacket
             {
                 if (!gameCars.ContainsKey(i))
                 {
-                    players.Add(new());
-                    continue;
+                    // Often, at the start of a match,
+                    // not all the car data will be present.
+                    // Just skip appending players for now.
+                    break;
                 }
 
                 players.Add(
@@ -229,7 +230,6 @@ namespace RLBotCS.RLBotPacket
                 Players = players,
             };
 
-            // A game tick packet is a bit over 8kb
             FlatBufferBuilder builder = new(8500);
             builder.Finish(rlbot.flat.GameTickPacket.Pack(builder, gameTickPacket).Value);
 
