@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using RLBotCS.GameControl;
 using RLBotCS.GameState;
+using RLBotCS.RLBotPacket;
 using RLBotSecret.Controller;
 using RLBotSecret.TCP;
 
@@ -19,7 +20,7 @@ namespace RLBotCS.Server
         MatchStarter matchStarter;
         int sessionCount = 0;
         Dictionary<int, FlatbufferSession> sessions = new();
-        bool communicationStarted = false;
+        bool startedCommunications = false;
 
         public FlatbufferServer(
             int port,
@@ -39,7 +40,12 @@ namespace RLBotCS.Server
 
         public void StartCommunications()
         {
-            communicationStarted = true;
+            startedCommunications = true;
+
+            foreach (var session in sessions.Values)
+            {
+                session.SetStartCommunications(true);
+            }
         }
 
         public void StartListener()
@@ -64,12 +70,9 @@ namespace RLBotCS.Server
             }
         }
 
-        internal void SendGameStateToClients(GameState.GameState gameState)
+        private void TryRunOnEachSession(Action<FlatbufferSession> action)
         {
-            TypedPayload gameTickPacket = gameState.gameTickPacket.ToFlatbuffer();
-
-            // We need to make a copy of the keys because we might remove a session
-            var keys_copy = sessions.Keys.ToImmutableArray();
+            ImmutableArray<int> keys_copy = sessions.Keys.ToImmutableArray();
             foreach (var i in keys_copy)
             {
                 if (!sessions.ContainsKey(i))
@@ -79,31 +82,9 @@ namespace RLBotCS.Server
 
                 var session = sessions[i];
 
-                session.SetBallActorId(gameState.gameTickPacket.ball.actorId);
-                session.ToggleStateSetting(matchStarter.IsStateSettingEnabled());
-                session.ToggleRendering(matchStarter.IsRenderingEnabled());
-
-                if (!session.IsReady)
-                {
-                    continue;
-                }
-
-                if (session.NeedsIntroData)
-                {
-                    if (matchStarter.GetMatchSettings() is TypedPayload matchSettings)
-                    {
-                        session.SendIntroData(matchSettings, gameState);
-                    }
-                }
-
-                if (gameState.MatchEnded())
-                {
-                    session.RemoveRenders();
-                }
-
                 try
                 {
-                    session.SendPayloadToClient(gameTickPacket);
+                    action(session);
                 }
                 catch (IOException e)
                 {
@@ -117,6 +98,53 @@ namespace RLBotCS.Server
                     sessions.Remove(i);
                 }
             }
+        }
+
+        internal void EnsureClientsPrepared(GameState.GameState gameState)
+        {
+            TryRunOnEachSession(session =>
+            {
+                session.SetBallActorId(gameState.gameTickPacket.ball.actorId);
+                session.SetGameStateType(gameState.gameTickPacket.gameState);
+                session.ToggleStateSetting(matchStarter.IsStateSettingEnabled());
+                session.ToggleRendering(matchStarter.IsRenderingEnabled());
+
+                if (!session.IsReady)
+                {
+                    return;
+                }
+
+                if (session.NeedsIntroData)
+                {
+                    if (matchStarter.GetMatchSettings() is TypedPayload matchSettings)
+                    {
+                        session.SendIntroData(matchSettings, gameState);
+                    }
+                }
+            });
+        }
+
+        internal void RemoveRenders()
+        {
+            TryRunOnEachSession(session =>
+            {
+                session.RemoveRenders();
+            });
+        }
+
+        internal void SendGameStateToClients(GameTickPacket gameTickPacket)
+        {
+            TypedPayload payload = gameTickPacket.ToFlatbuffer();
+
+            TryRunOnEachSession(session =>
+            {
+                if (!session.IsReady)
+                {
+                    return;
+                }
+
+                session.SendPayloadToClient(payload);
+            });
         }
 
         public void Stop()
@@ -140,17 +168,9 @@ namespace RLBotCS.Server
             var renderingSender = new RenderingSender(tcpGameInterface);
             var gameController = new GameController(playerInputSender, renderingSender, matchStarter);
 
-            var session = new FlatbufferSession(stream, gameController, playerMapping);
+            var session = new FlatbufferSession(stream, gameController, playerMapping, startedCommunications);
             var id = Interlocked.Increment(ref sessionCount);
             sessions.Add(id, session);
-
-            // wait until we get our first message from Rocket Leauge
-            // before we start accepting messages from the client
-            // they might make us do things before the game is ready
-            while (!communicationStarted)
-            {
-                Thread.Sleep(100);
-            }
 
             var wasDroppedCleanly = true;
 

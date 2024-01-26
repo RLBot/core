@@ -46,6 +46,7 @@ foreach (var messageClump in messenger)
         Console.WriteLine("RLBot is now receiving messages from Rocket League!");
         gotFirstMessage = true;
         flatbufferServer.StartCommunications();
+        matchStarter.LoadDefferedMatch(gameState.gameTickPacket.gameState);
     }
 
     var messageBundle = converter.Convert(messageClump);
@@ -61,7 +62,13 @@ foreach (var messageClump in messenger)
 
     try
     {
-        flatbufferServer.SendGameStateToClients(gameState);
+        if (gameState.MatchEnded())
+        {
+            flatbufferServer.RemoveRenders();
+        }
+
+        flatbufferServer.EnsureClientsPrepared(gameState);
+        flatbufferServer.SendGameStateToClients(gameState.gameTickPacket);
     }
     catch (Exception e)
     {

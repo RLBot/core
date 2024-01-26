@@ -1,5 +1,4 @@
-﻿using MatchManagement;
-using rlbot.flat;
+﻿using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotCS.GameState;
 using RLBotCS.Server;
@@ -7,7 +6,7 @@ using RLBotModels.Message;
 using RLBotSecret.Controller;
 using RLBotSecret.Conversion;
 using RLBotSecret.TCP;
-using GameStateType = rlbot.flat.GameStateType;
+using GameStateType = RLBotModels.Message.GameStateType;
 
 namespace RLBotCS.GameControl
 {
@@ -90,7 +89,7 @@ namespace RLBotCS.GameControl
             matchCommandSender.Send();
         }
 
-        public void HandleMatchSettings(
+        private void LoadMatch(
             MatchSettingsT matchSettings,
             TypedPayload originalMessage,
             GameStateType gameStateType
@@ -158,6 +157,31 @@ namespace RLBotCS.GameControl
             {
                 // No need to load a new map, just spawn the players.
                 SpawnBots(matchSettings);
+            }
+        }
+
+        public void LoadDefferedMatch(GameStateType gameStateType)
+        {
+            if (lastMatchMessage is (MatchSettingsT, TypedPayload) matchMessage)
+            {
+                LoadMatch(matchMessage.Item1, matchMessage.Item2, gameStateType);
+            }
+        }
+
+        public void HandleMatchSettings(
+            MatchSettingsT matchSettings,
+            TypedPayload originalMessage,
+            GameStateType gameStateType,
+            bool defferLoadMap
+        )
+        {
+            if (defferLoadMap)
+            {
+                lastMatchMessage = (matchSettings, originalMessage);
+            }
+            else
+            {
+                LoadMatch(matchSettings, originalMessage, gameStateType);
             }
         }
 
@@ -230,11 +254,6 @@ namespace RLBotCS.GameControl
                 return true;
             }
 
-            if (lastMutators.GameSpeedOption != mutators.GameSpeedOption)
-            {
-                return true;
-            }
-
             if (lastMutators.BallMaxSpeedOption != mutators.BallMaxSpeedOption)
             {
                 return true;
@@ -271,11 +290,6 @@ namespace RLBotCS.GameControl
             }
 
             if (lastMutators.BoostStrengthOption != mutators.BoostStrengthOption)
-            {
-                return true;
-            }
-
-            if (lastMutators.GravityOption != mutators.GravityOption)
             {
                 return true;
             }

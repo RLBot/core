@@ -4,6 +4,7 @@ using rlbot.flat;
 using RLBotCS.GameControl;
 using RLBotCS.GameState;
 using RLBotSecret.Conversion;
+using GameStateType = RLBotModels.Message.GameStateType;
 
 namespace RLBotCS.Server
 {
@@ -21,6 +22,7 @@ namespace RLBotCS.Server
         private bool stateSettingIsEnabled = true;
         private bool renderingIsEnabled = true;
         private GameStateType gameStateType = GameStateType.Ended;
+        private bool startedCommunications = false;
 
         public bool IsReady { get; private set; }
 
@@ -32,11 +34,17 @@ namespace RLBotCS.Server
 
         public bool WantsQuickChat { get; private set; }
 
-        public FlatbufferSession(Stream stream, GameController gameController, PlayerMapping playerMapping)
+        public FlatbufferSession(
+            Stream stream,
+            GameController gameController,
+            PlayerMapping playerMapping,
+            bool startedCommunications
+        )
         {
             this.stream = stream;
             this.gameController = gameController;
             this.playerMapping = playerMapping;
+            this.startedCommunications = startedCommunications;
             socketSpecWriter = new SocketSpecStreamWriter(stream);
         }
 
@@ -109,7 +117,8 @@ namespace RLBotCS.Server
                         gameController.matchStarter.HandleMatchSettings(
                             tomlMatchSettings,
                             matchSettingsMessage,
-                            gameStateType
+                            gameStateType,
+                            !startedCommunications
                         );
                         break;
                     case DataType.MatchSettings:
@@ -117,7 +126,8 @@ namespace RLBotCS.Server
                         gameController.matchStarter.HandleMatchSettings(
                             matchSettings.UnPack(),
                             message,
-                            gameStateType
+                            gameStateType,
+                            !startedCommunications
                         );
                         break;
                     case DataType.PlayerInput:
@@ -382,6 +392,11 @@ namespace RLBotCS.Server
         {
             socketSpecWriter.Write(payload);
             socketSpecWriter.Send();
+        }
+
+        internal void SetStartCommunications(bool startedCommunications)
+        {
+            this.startedCommunications = startedCommunications;
         }
     }
 }
