@@ -4,7 +4,6 @@ using rlbot.flat;
 using RLBotCS.GameControl;
 using RLBotCS.GameState;
 using RLBotSecret.Conversion;
-using GameStateType = RLBotModels.Message.GameStateType;
 
 namespace RLBotCS.Server
 {
@@ -18,10 +17,8 @@ namespace RLBotCS.Server
         private PlayerMapping playerMapping;
         private SocketSpecStreamWriter socketSpecWriter;
         private Dictionary<int, List<ushort>> sessionRenderIds = new();
-        private ushort? ballActorId;
         private bool stateSettingIsEnabled = true;
         private bool renderingIsEnabled = true;
-        private GameStateType gameStateType = GameStateType.Ended;
         private bool startedCommunications = false;
 
         public bool IsReady { get; private set; }
@@ -117,7 +114,6 @@ namespace RLBotCS.Server
                         gameController.matchStarter.HandleMatchSettings(
                             tomlMatchSettings,
                             matchSettingsMessage,
-                            gameStateType,
                             !startedCommunications
                         );
                         break;
@@ -126,7 +122,6 @@ namespace RLBotCS.Server
                         gameController.matchStarter.HandleMatchSettings(
                             matchSettings.UnPack(),
                             message,
-                            gameStateType,
                             !startedCommunications
                         );
                         break;
@@ -196,7 +191,7 @@ namespace RLBotCS.Server
                         }
 
                         var desiredGameState = DesiredGameState.GetRootAsDesiredGameState(byteBuffer).UnPack();
-                        gameController.matchStarter.SetDesiredGameState(desiredGameState, ballActorId);
+                        gameController.matchStarter.SetDesiredGameState(desiredGameState);
                         break;
                     default:
                         Console.WriteLine("Core got unexpected message type {0} from client.", message.type);
@@ -366,16 +361,6 @@ namespace RLBotCS.Server
             socketSpecWriter.Send();
             Console.WriteLine("Core sent intro data to client.");
             NeedsIntroData = false;
-        }
-
-        public void SetBallActorId(ushort actorId)
-        {
-            ballActorId = actorId;
-        }
-
-        public void SetGameStateType(GameStateType gameStateType)
-        {
-            this.gameStateType = gameStateType;
         }
 
         public void ToggleStateSetting(bool isEnabled)

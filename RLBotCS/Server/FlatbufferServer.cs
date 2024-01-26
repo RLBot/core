@@ -107,22 +107,17 @@ namespace RLBotCS.Server
         {
             TryRunOnEachSession(session =>
             {
-                session.SetBallActorId(gameState.gameTickPacket.ball.actorId);
-                session.SetGameStateType(gameState.gameTickPacket.gameState);
                 session.ToggleStateSetting(matchStarter.IsStateSettingEnabled());
                 session.ToggleRendering(matchStarter.IsRenderingEnabled());
 
-                if (!session.IsReady)
+                if (!session.IsReady || !session.NeedsIntroData)
                 {
                     return;
                 }
 
-                if (session.NeedsIntroData)
+                if (matchStarter.GetMatchSettings() is TypedPayload matchSettings)
                 {
-                    if (matchStarter.GetMatchSettings() is TypedPayload matchSettings)
-                    {
-                        session.SendIntroData(matchSettings, gameState);
-                    }
+                    session.SendIntroData(matchSettings, gameState);
                 }
             });
         }
@@ -132,19 +127,6 @@ namespace RLBotCS.Server
             TryRunOnEachSession(session =>
             {
                 session.RemoveRenders();
-            });
-        }
-
-        private void SendPayloadToReadySessions(TypedPayload payload)
-        {
-            TryRunOnEachSession(session =>
-            {
-                if (!session.IsReady)
-                {
-                    return;
-                }
-
-                session.SendPayloadToClient(payload);
             });
         }
 
@@ -226,13 +208,29 @@ namespace RLBotCS.Server
             builder.Finish(rlbot.flat.MessagePacket.Pack(builder, messages).Value);
 
             var payload = TypedPayload.FromFlatBufferBuilder(DataType.MessagePacket, builder);
-            SendPayloadToReadySessions(payload);
+            TryRunOnEachSession(session =>
+            {
+                if (!session.IsReady || !session.WantsGameMessages)
+                {
+                    return;
+                }
+
+                session.SendPayloadToClient(payload);
+            });
         }
 
         internal void SendGameStateToClients(GameTickPacket gameTickPacket)
         {
             TypedPayload payload = gameTickPacket.ToFlatbuffer();
-            SendPayloadToReadySessions(payload);
+            TryRunOnEachSession(session =>
+            {
+                if (!session.IsReady)
+                {
+                    return;
+                }
+
+                session.SendPayloadToClient(payload);
+            });
         }
 
         public void Stop()
