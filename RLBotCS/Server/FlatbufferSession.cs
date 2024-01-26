@@ -1,4 +1,5 @@
 ﻿using Google.FlatBuffers;
+using MatchManagement;
 using rlbot.flat;
 using RLBotCS.GameControl;
 using RLBotCS.GameState;
@@ -14,6 +15,7 @@ namespace RLBotCS.Server
         private Stream stream;
         private GameController gameController;
         private PlayerMapping playerMapping;
+        private ConfigParser configParser;
         private SocketSpecStreamWriter socketSpecWriter;
         private Dictionary<int, List<ushort>> sessionRenderIds = new();
         private ushort? ballActorId;
@@ -95,6 +97,14 @@ namespace RLBotCS.Server
                         WantsBallPredictions = readyMsg.WantsBallPredictions;
                         WantsGameMessages = readyMsg.WantsGameMessages;
                         WantsQuickChat = readyMsg.WantsQuickChat;
+                        break;
+                    case DataType.StartCommand:
+                        var startCommand = StartCommand.GetRootAsStartCommand(byteBuffer).UnPack();
+                        var tomlMatchSettings = configParser.GetMatchSettings(startCommand.ConfigPath);
+                        FlatBufferBuilder builder = new(1500);
+                        builder.Finish(rlbot.flat.MatchSettings.Pack(builder, tomlMatchSettings).Value);
+                        TypedPayload matchSettingsMessage = TypedPayload.FromFlatBufferBuilder(DataType.MatchSettings, builder);
+                        gameController.matchStarter.HandleMatchSettings(tomlMatchSettings, matchSettingsMessage);
                         break;
                     case DataType.MatchSettings:
                         var matchSettings = rlbot.flat.MatchSettings.GetRootAsMatchSettings(byteBuffer);

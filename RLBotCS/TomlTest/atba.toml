@@ -1,0 +1,25 @@
+[settings]
+# Path to loadout config from runner
+looks_config = "./atba_looks.toml"
+# The directory of your bots main file/executable
+location = ""
+# The command RLBot will call to start your bot.
+# ex: "bot.exe" for compiled bots. "python bot.py" if you don't want to freeze your python bot
+run_command = "python atba.py"
+
+# The name that will be displayed in game
+name = "AlwaysTowardsBallAgent"
+
+# The FPS you want your bot to run at. 120 is the maximum.
+maximum_tick_rate = 120
+
+[details]
+description = "Made possible by RLBot"
+fun_fact = "This is a test bot"
+github = "https://github.com/RLBot/RLBot"
+developer = "BotMaker"
+language = "Python 3"
+# ALL POSSIBLE TAGS: 1v1, teamplay, goalie, hoops, dropshot, snow-day, spike-rush, heatseaker, memebot
+# NOTE: Only add the goalie tag if your bot only plays as a goalie; this directly contrasts with the teamplay tag!
+# NOTE: Only add a tag for a special game mode if you bot properly supports it
+tags = []
