@@ -15,6 +15,7 @@ namespace RLBotCS.GameControl
         private PlayerMapping playerMapping;
         private MatchCommandSender matchCommandSender;
         private (MatchSettingsT, TypedPayload)? lastMatchMessage;
+        private (MatchSettingsT, TypedPayload)? deferredMatchMessage;
         private MatchLength matchLength = rlbot.flat.MatchLength.Five_Minutes;
         private float respawnTime = 3;
         private bool needsSpawnBots = true;
@@ -160,9 +161,9 @@ namespace RLBotCS.GameControl
             }
         }
 
-        public void LoadDefferedMatch(GameStateType gameStateType)
+        public void LoadDeferredMatch(GameStateType gameStateType)
         {
-            if (lastMatchMessage is (MatchSettingsT, TypedPayload) matchMessage)
+            if (deferredMatchMessage is (MatchSettingsT, TypedPayload) matchMessage)
             {
                 LoadMatch(matchMessage.Item1, matchMessage.Item2, gameStateType);
             }
@@ -172,12 +173,12 @@ namespace RLBotCS.GameControl
             MatchSettingsT matchSettings,
             TypedPayload originalMessage,
             GameStateType gameStateType,
-            bool defferLoadMap
+            bool deferLoadMap
         )
         {
-            if (defferLoadMap)
+            if (deferLoadMap)
             {
-                lastMatchMessage = (matchSettings, originalMessage);
+                deferredMatchMessage = (matchSettings, originalMessage);
             }
             else
             {
