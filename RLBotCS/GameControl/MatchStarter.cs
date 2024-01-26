@@ -12,6 +12,7 @@ namespace RLBotCS.GameControl
 {
     internal class MatchStarter
     {
+        private RLBotPacket.GameTickPacket gameTickPacket;
         private PlayerMapping playerMapping;
         private MatchCommandSender matchCommandSender;
         private (MatchSettingsT, TypedPayload)? lastMatchMessage;
@@ -25,11 +26,12 @@ namespace RLBotCS.GameControl
 
         public MatchStarter(TcpMessenger tcpMessenger, GameState.GameState gameState)
         {
+            this.gameTickPacket = gameState.gameTickPacket;
             this.playerMapping = gameState.playerMapping;
             this.matchCommandSender = new MatchCommandSender(tcpMessenger);
         }
 
-        public void SetDesiredGameState(DesiredGameStateT desiredGameState, ushort? ballActorid)
+        public void SetDesiredGameState(DesiredGameStateT desiredGameState)
         {
             if (desiredGameState.GameInfoState is DesiredGameInfoStateT gameState)
             {
@@ -63,7 +65,11 @@ namespace RLBotCS.GameControl
                 {
                     if (carState.Physics is DesiredPhysicsT physics)
                     {
-                        matchCommandSender.AddSetPhysicsCommand(actorId, FlatToModel.DesiredToPhysics(physics));
+                        var default_physics = gameTickPacket.gameCars[i].physics;
+                        matchCommandSender.AddSetPhysicsCommand(
+                            actorId,
+                            FlatToModel.DesiredToPhysics(physics, default_physics)
+                        );
                     }
 
                     if (carState.BoostAmount is FloatT boostAmount)
@@ -73,28 +79,21 @@ namespace RLBotCS.GameControl
                 }
             }
 
-            if (ballActorid is ushort)
+            if (desiredGameState.BallState is DesiredBallStateT ballState)
             {
-                if (desiredGameState.BallState is DesiredBallStateT ballState)
+                if (ballState.Physics is DesiredPhysicsT physics)
                 {
-                    if (ballState.Physics is DesiredPhysicsT physics)
-                    {
-                        matchCommandSender.AddSetPhysicsCommand(
-                            ballActorid.Value,
-                            FlatToModel.DesiredToPhysics(physics)
-                        );
-                    }
+                    matchCommandSender.AddSetPhysicsCommand(
+                        gameTickPacket.ball.actorId,
+                        FlatToModel.DesiredToPhysics(physics, gameTickPacket.ball.physics)
+                    );
                 }
             }
 
             matchCommandSender.Send();
         }
 
-        private void LoadMatch(
-            MatchSettingsT matchSettings,
-            TypedPayload originalMessage,
-            GameStateType gameStateType
-        )
+        private void LoadMatch(MatchSettingsT matchSettings, TypedPayload originalMessage)
         {
             if (matchSettings.MutatorSettings is MutatorSettingsT mutatorSettings)
             {
@@ -135,7 +134,7 @@ namespace RLBotCS.GameControl
 
             if (matchSettings.ExistingMatchBehavior == ExistingMatchBehavior.Continue_And_Spawn)
             {
-                shouldSpawnNewMap = !hasEverLoadedMap || gameStateType == GameStateType.Ended;
+                shouldSpawnNewMap = !hasEverLoadedMap || gameTickPacket.gameState == GameStateType.Ended;
             }
             else if (matchSettings.ExistingMatchBehavior == ExistingMatchBehavior.Restart_If_Different)
             {
@@ -161,18 +160,17 @@ namespace RLBotCS.GameControl
             }
         }
 
-        public void LoadDeferredMatch(GameStateType gameStateType)
+        public void LoadDeferredMatch()
         {
             if (deferredMatchMessage is (MatchSettingsT, TypedPayload) matchMessage)
             {
-                LoadMatch(matchMessage.Item1, matchMessage.Item2, gameStateType);
+                LoadMatch(matchMessage.Item1, matchMessage.Item2);
             }
         }
 
         public void HandleMatchSettings(
             MatchSettingsT matchSettings,
             TypedPayload originalMessage,
-            GameStateType gameStateType,
             bool deferLoadMap
         )
         {
@@ -182,7 +180,7 @@ namespace RLBotCS.GameControl
             }
             else
             {
-                LoadMatch(matchSettings, originalMessage, gameStateType);
+                LoadMatch(matchSettings, originalMessage);
             }
         }
 

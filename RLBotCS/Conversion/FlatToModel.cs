@@ -107,34 +107,48 @@ namespace RLBotSecret.Conversion
             };
         }
 
-        internal static Vector3 DesiredToVector(rlbot.flat.Vector3PartialT vec)
+        internal static Vector3 DesiredToVector(rlbot.flat.Vector3PartialT? part_vec, Vector3 default_vec)
         {
-            return new Vector3()
+            if (part_vec is rlbot.flat.Vector3PartialT vec)
             {
-                x = vec.X?.Val ?? 0,
-                y = vec.Y?.Val ?? 0,
-                z = vec.Z?.Val ?? 0
-            };
+                return new Vector3()
+                {
+                    x = vec.X?.Val ?? default_vec.x,
+                    y = vec.Y?.Val ?? default_vec.y,
+                    z = vec.Z?.Val ?? default_vec.z
+                };
+            }
+            else
+            {
+                return default_vec;
+            }
         }
 
-        internal static Rotator DesiredToRotator(rlbot.flat.RotatorPartialT rot)
+        internal static Rotator DesiredToRotator(rlbot.flat.RotatorPartialT? part_rot, Rotator default_rot)
         {
-            return new Rotator()
+            if (part_rot is rlbot.flat.RotatorPartialT rot)
             {
-                pitch = rot.Pitch?.Val ?? 0,
-                yaw = rot.Yaw?.Val ?? 0,
-                roll = rot.Roll?.Val ?? 0
-            };
+                return new Rotator()
+                {
+                    pitch = rot.Pitch?.Val ?? default_rot.pitch,
+                    yaw = rot.Yaw?.Val ?? default_rot.yaw,
+                    roll = rot.Roll?.Val ?? default_rot.roll
+                };
+            }
+            else
+            {
+                return default_rot;
+            }
         }
 
-        internal static Physics DesiredToPhysics(rlbot.flat.DesiredPhysicsT p)
+        internal static Physics DesiredToPhysics(rlbot.flat.DesiredPhysicsT p, Physics default_p)
         {
             return new Physics()
             {
-                location = DesiredToVector(p.Location),
-                rotation = DesiredToRotator(p.Rotation),
-                velocity = DesiredToVector(p.Velocity),
-                angularVelocity = DesiredToVector(p.AngularVelocity),
+                location = DesiredToVector(p.Location, default_p.location),
+                rotation = DesiredToRotator(p.Rotation, default_p.rotation),
+                velocity = DesiredToVector(p.Velocity, default_p.velocity),
+                angularVelocity = DesiredToVector(p.AngularVelocity, default_p.angularVelocity),
             };
         }
     }

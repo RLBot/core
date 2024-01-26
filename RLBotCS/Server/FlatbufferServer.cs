@@ -107,8 +107,6 @@ namespace RLBotCS.Server
         {
             TryRunOnEachSession(session =>
             {
-                session.SetBallActorId(gameState.gameTickPacket.ball.actorId);
-                session.SetGameStateType(gameState.gameTickPacket.gameState);
                 session.ToggleStateSetting(matchStarter.IsStateSettingEnabled());
                 session.ToggleRendering(matchStarter.IsRenderingEnabled());
 
