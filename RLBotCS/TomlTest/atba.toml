@@ -1,7 +1,7 @@
 [settings]
 # Path to loadout config from runner
 looks_config = "./atba_looks.toml"
-# The directory of your bots main file/executable
+# The directory of your bots main file/executable relative to this toml
 location = ""
 # The command RLBot will call to start your bot.
 # ex: "bot.exe" for compiled bots. "python bot.py" if you don't want to freeze your python bot

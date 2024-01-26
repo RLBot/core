@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
-    <AssemblyName>RLBot</AssemblyName>
+    <AssemblyName>RLBotServer</AssemblyName>
     <PublishAot>true</PublishAot>
   </PropertyGroup>
 
