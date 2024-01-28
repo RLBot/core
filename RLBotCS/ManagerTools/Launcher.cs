@@ -55,7 +55,7 @@ namespace RLBotCS.MatchManagement
 
         public static string GetSteamPath()
         {
-            using RegistryKey key = Registry.LocalMachine.OpenSubKey("Software\\Valve\\Steam");
+            using RegistryKey key = Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam");
             if (key != null)
             {
                 return key.GetValue("SteamExe").ToString();
