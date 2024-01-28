@@ -1,6 +1,6 @@
 # About
 
-The Core Project builds a RLBot.exe binary that allows custom bots and scripts
+The Core Project builds a RLBotServer.exe binary that allows custom bots and scripts
 to interface with Rocket League.
 
 This is a rewrite a C++ version that had lived at
