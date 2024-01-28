@@ -15,9 +15,9 @@ var messenger = new TcpMessenger(port);
 var gotFirstMessage = false;
 
 Console.WriteLine("RLBot is waiting for Rocket League to connect on port " + port);
-//Test to see if Launching the game works
-//Launcher rocketLeagueLauncher = new();
-//rocketLeagueLauncher.LaunchRocketLeague(rlbot.flat.Launcher.Steam);
+// Test to see if Launching the game works
+// Launcher rocketLeagueLauncher = new();
+// rocketLeagueLauncher.LaunchRocketLeague(rlbot.flat.Launcher.Steam);
 
 var playerInputSender = new PlayerInputSender(messenger);
 var gameState = new GameState();

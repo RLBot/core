@@ -25,7 +25,7 @@ namespace RLBotCS.MatchManagement
                         string steamPath = GetSteamPath();
                         rocketLeague.StartInfo.FileName = steamPath;
                         rocketLeague.StartInfo.Arguments = steamLaunchArgs;
-                        Console.WriteLine($"Starting Rocket League with args {0}, {1}", steamPath, steamLaunchArgs);
+                        Console.WriteLine($"Starting Rocket League with args {steamPath} {steamLaunchArgs}");
                         rocketLeague.Start();
                         break;
                     case rlbot.flat.Launcher.Epic:
