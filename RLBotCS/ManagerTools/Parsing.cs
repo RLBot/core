@@ -15,7 +15,7 @@ namespace MatchManagement
             }
             catch (FileNotFoundException)
             {
-                Console.WriteLine($"Warning! Could not read Toml file at '{0}'", path);
+                Console.WriteLine($"Warning! Could not read Toml file at '{path}'");
                 return [];
             }
         }
@@ -30,7 +30,7 @@ namespace MatchManagement
             }
             catch (KeyNotFoundException)
             {
-                Console.WriteLine($"Warning! Could not find the '{0}' table!", key);
+                Console.WriteLine($"Warning! Could not find the '{key}' table!");
                 return [];
             }
         }
@@ -39,13 +39,13 @@ namespace MatchManagement
         static public T ParseEnum<T>(TomlTable table, string key, T fallback)
             where T : struct, Enum
         {
-            if (Enum.TryParse((string)table[key], out T value))
+            if (Enum.TryParse((string)table[key], true, out T value))
             {
                 return value;
             }
             else
             {
-                Console.WriteLine($"Warning! Unable to read '{0}', using default setting instead", key);
+                Console.WriteLine($"Warning! Unable to read '{key}', using default setting instead");
                 return fallback;
             }
         }
@@ -59,9 +59,7 @@ namespace MatchManagement
             catch (KeyNotFoundException)
             {
                 Console.WriteLine(
-                    $"Could not find the '{0}' field in toml. Using default setting '{1}' instead",
-                    key,
-                    fallback
+                    $"Could not find the '{key}' field in toml. Using default setting '{fallback}' instead"
                 );
                 return fallback;
             }
@@ -76,9 +74,7 @@ namespace MatchManagement
             catch (KeyNotFoundException)
             {
                 Console.WriteLine(
-                    $"Could not find the '{0}' field in toml. Using default setting '{1}' instead",
-                    key,
-                    fallback
+                    $"Could not find the '{key}' field in toml. Using default setting '{fallback}' instead"
                 );
                 return fallback;
             }
@@ -93,9 +89,7 @@ namespace MatchManagement
             catch (KeyNotFoundException)
             {
                 Console.WriteLine(
-                    $"Could not find the '{0}' field in toml. Using default setting '{1}' instead",
-                    key,
-                    fallback
+                    $"Could not find the '{key}' field in toml. Using default setting '{fallback}' instead"
                 );
                 return fallback;
             }
@@ -110,9 +104,7 @@ namespace MatchManagement
             catch (KeyNotFoundException)
             {
                 Console.WriteLine(
-                    $"Could not find the '{0}' field in toml. Using default setting '{1}' instead",
-                    key,
-                    fallback
+                    $"Could not find the '{key}' field in toml. Using default setting '{fallback}' instead"
                 );
                 return fallback;
             }
@@ -148,6 +140,7 @@ namespace MatchManagement
                     Console.WriteLine("Warning! Could not determine player type, spawning human instead");
                     break;
             }
+
             playerClassUnion.Value = playerClass;
 
             return playerClassUnion;
@@ -164,10 +157,11 @@ namespace MatchManagement
              *  "teamLoadout" is either the "blue_loadout" or "orange_loadout" in bot_looks.toml, contains player items
              *  "teamPaint" is the "paint" table within the loadout tables, contains paint colors of player items
              */
-
-            TomlTable playerToml = GetTable(ParseString(rlbotPlayerTable, "config", "BotPathUnreadable"));
+            
+            // TODO: support for humans and psyonix bots
+            TomlTable playerToml = GetTable(ParseString(rlbotPlayerTable, "config", ""));
             TomlTable playerSettings = ParseTable(playerToml, "settings");
-            TomlTable loadoutToml = GetTable(ParseString(playerSettings, "looks_config", "LooksPathNotReadable"));
+            TomlTable loadoutToml = GetTable(ParseString(playerSettings, "looks_config", ""));
             TomlTable teamLoadout;
 
             if (ParseInt(rlbotPlayerTable, "team", 0) == 0)
@@ -186,8 +180,8 @@ namespace MatchManagement
                 {
                     Variety = GetPlayerUnion(rlbotPlayerTable), //Contains type and psyonix skill
                     Team = ParseInt(rlbotPlayerTable, "team", 0),
-                    Name = ParseString(playerSettings, "name", "NameNotReadable"),
-                    Location = ParseString(playerSettings, "location", "PathNotReadable"),
+                    Name = ParseString(playerSettings, "name", ""),
+                    Location = ParseString(playerSettings, "location", ""),
                     RunCommand = ParseString(playerSettings, "run_command", ""),
                     Loadout = new PlayerLoadoutT()
                     {
@@ -237,7 +231,7 @@ namespace MatchManagement
             TomlTable matchTable = ParseTable(rlbotToml, "match");
             TomlTable mutatorTable = ParseTable(rlbotToml, "mutators");
             TomlTableArray players = (TomlTableArray)rlbotToml["bots"]; //TODO - not childproof
-            Console.WriteLine($"Bots array len: {0}", players.Count);
+            Console.WriteLine($"Bots array len: {players.Count}");
 
             List<PlayerConfigurationT> playerConfigs = [];
             MatchSettingsT matchSettings =
@@ -245,7 +239,8 @@ namespace MatchManagement
                 {
                     Launcher = ParseEnum(rlbotTable, "launcher", Launcher.Steam),
                     AutoStartBots = ParseBool(rlbotTable, "auto_start_bots", true),
-                    GameMode = ParseEnum(matchTable, "game_mode", rlbot.flat.GameMode.Soccer),
+                    GamePath = ParseString(rlbotTable, "rocket_league_exe_path", ""),
+                    GameMode = ParseEnum(matchTable, "game_mode", GameMode.Soccer),
                     GameMapUpk = ParseString(matchTable, "game_map_upk", "Stadium_P"),
                     SkipReplays = ParseBool(matchTable, "skip_replays", false),
                     InstantStart = ParseBool(matchTable, "start_without_countdown", false),
@@ -292,6 +287,8 @@ namespace MatchManagement
                 playerConfigs.Add(GetPlayerConfig(players[i]));
             }
             matchSettings.PlayerConfigurations = playerConfigs;
+
+            matchSettings.ScriptConfigurations = [];
 
             return matchSettings;
         }

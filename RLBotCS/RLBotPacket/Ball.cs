@@ -6,7 +6,7 @@ namespace RLBotCS.RLBotPacket
     internal class Ball
     {
         public Physics physics;
-        public BallTouch latestTouch;
+        public BallTouch latestTouch = new();
         public CollisionShapeUnion shape =
             new()
             {

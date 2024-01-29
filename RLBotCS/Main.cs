@@ -1,10 +1,10 @@
 ﻿using RLBotCS.GameControl;
 using RLBotCS.GameState;
+using RLBotCS.MatchManagement;
 using RLBotCS.Server;
 using RLBotSecret.Controller;
 using RLBotSecret.Conversion;
 using RLBotSecret.TCP;
-using RLBotCS.MatchManagement;
 
 var converter = new Converter();
 
@@ -15,6 +15,7 @@ var messenger = new TcpMessenger(port);
 var gotFirstMessage = false;
 
 Console.WriteLine("RLBot is waiting for Rocket League to connect on port " + port);
+
 // Test to see if Launching the game works
 // Launcher rocketLeagueLauncher = new();
 // rocketLeagueLauncher.LaunchRocketLeague(rlbot.flat.Launcher.Steam);

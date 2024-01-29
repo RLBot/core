@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RLBotCS.Server
+﻿namespace RLBotCS.Server
 {
     /**
      * https://wiki.rlbot.org/framework/sockets-specification/#data-types
