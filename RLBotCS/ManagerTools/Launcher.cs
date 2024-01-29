@@ -1,18 +1,19 @@
 ﻿using System.Diagnostics;
-using rlbot.flat;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
+using rlbot.flat;
 
 namespace RLBotCS.MatchManagement
 {
     internal class Launcher
     {
-        public string steamLaunchArgs = "-applaunch " +
-            "252950 " +
-            "-rlbot " +
-            "RLBot_ControllerURL=127.0.0.1:23233 " +
-            "RLBot_PacketSendRate=240 " +
-            "-nomovie";
+        public string steamLaunchArgs =
+            "-applaunch "
+            + "252950 "
+            + "-rlbot "
+            + "RLBot_ControllerURL=127.0.0.1:23233 "
+            + "RLBot_PacketSendRate=240 "
+            + "-nomovie";
 
         public void LaunchRocketLeague(rlbot.flat.Launcher launcher)
         {
@@ -35,9 +36,7 @@ namespace RLBotCS.MatchManagement
                     default:
                         break;
                 }
-
             }
-            
         }
 
         public static bool IsRocketLeagueRunning()
@@ -62,7 +61,9 @@ namespace RLBotCS.MatchManagement
             }
             else
             {
-                throw new FileNotFoundException("Could not find registry entry for SteamExe... Is Steam installed?");
+                throw new FileNotFoundException(
+                    "Could not find registry entry for SteamExe... Is Steam installed?"
+                );
             }
         }
     }
