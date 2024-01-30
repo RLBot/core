@@ -140,7 +140,7 @@ namespace MatchManagement
                     );
                     return GetPsyonixConfig(rlbotPlayerTable, playerClassUnion);
                 case PlayerClass.PartyMember:
-                    playerClassUnion = PlayerClassUnion.FromPartyMember(new PartyMemberT());
+                    // playerClassUnion = PlayerClassUnion.FromPartyMember(new PartyMemberT());
                     throw new NotImplementedException("PartyMemeberBots are not implemented");
                 default:
                     throw new NotImplementedException("Bot type not implemented... How did we get here???");
@@ -320,11 +320,12 @@ namespace MatchManagement
             }
             matchSettings.PlayerConfigurations = playerConfigs;
 
-            
-            for (int i = 0; i < scripts.Count; i++)
+            int num_scripts = ParseInt(matchTable, "num_scripts", 0);
+            for (int i = 0; i < Math.Min(num_scripts, scripts.Count); i++)
             {
                 scriptConfigs.Add(GetScriptConfig(scripts[i]));
             }
+
             matchSettings.ScriptConfigurations = scriptConfigs;
 
             return matchSettings;

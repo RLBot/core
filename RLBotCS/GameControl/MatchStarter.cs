@@ -139,7 +139,7 @@ namespace RLBotCS.GameControl
             }
             else if (matchSettings.ExistingMatchBehavior == ExistingMatchBehavior.Restart_If_Different)
             {
-                shouldSpawnNewMap = isDifferentFromLast(matchSettings);
+                shouldSpawnNewMap = IsDifferentFromLast(matchSettings);
             }
 
             lastMatchMessage = (matchSettings, originalMessage);
@@ -189,7 +189,7 @@ namespace RLBotCS.GameControl
             }
         }
 
-        public bool isDifferentFromLast(MatchSettingsT matchSettings)
+        public bool IsDifferentFromLast(MatchSettingsT matchSettings)
         {
             // don't consider rendering/state setting because that can be enable/disabled without restarting the match
 
@@ -311,7 +311,7 @@ namespace RLBotCS.GameControl
             return false;
         }
 
-        public void applyMessageBundle(MessageBundle messageBundle)
+        public void ApplyMessageBundle(MessageBundle messageBundle)
         {
             if (needsSpawnBots && lastMatchMessage?.Item1 is MatchSettingsT matchSettings)
             {
@@ -326,12 +326,30 @@ namespace RLBotCS.GameControl
         private void SpawnBots(MatchSettingsT matchSettings)
         {
             PlayerConfigurationT? humanConfig = null;
+            Dictionary<String, int> playerNames = [];
             var humanIndex = -1;
             var indexOffset = 0;
 
             for (int i = 0; i < matchSettings.PlayerConfigurations.Count; i++)
             {
                 var playerConfig = matchSettings.PlayerConfigurations[i];
+                
+                // Truncate the player name to 28 characters and de-duplicating similar names
+                // Overwrites original value
+                // TODO - does this work if duplicate name is already spawned into the match?
+                string playerName = playerConfig.Name[..Math.Min(playerConfig.Name.Length,28)];
+                if (playerNames.TryGetValue(playerName, out int value))
+                {
+                    playerNames[playerName] = ++value;
+                    playerConfig.Name = playerName + $"({value})"; // "(x)"
+                }
+                else
+                {
+                    playerNames[playerName] = 0;
+                    playerConfig.Name = playerName;  
+                }
+
+                playerConfig.SpawnId = playerConfig.Name.GetHashCode();
 
                 var alreadySpawnedPlayer = playerMapping
                     .getKnownPlayers()
