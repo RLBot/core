@@ -333,11 +333,10 @@ namespace RLBotCS.GameControl
             for (int i = 0; i < matchSettings.PlayerConfigurations.Count; i++)
             {
                 var playerConfig = matchSettings.PlayerConfigurations[i];
-                
-                // Truncate the player name to 28 characters and de-duplicating similar names
-                // Overwrites original value
+
+                // De-duplicating similar names, Overwrites original value
                 // TODO - does this work if duplicate name is already spawned into the match?
-                string playerName = playerConfig.Name[..Math.Min(playerConfig.Name.Length,28)];
+                string playerName = playerConfig.Name;
                 if (playerNames.TryGetValue(playerName, out int value))
                 {
                     playerNames[playerName] = ++value;
