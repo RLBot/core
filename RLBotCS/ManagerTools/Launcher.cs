@@ -7,7 +7,7 @@ namespace RLBotCS.MatchManagement
 {
     internal class Launcher
     {
-        public string steamLaunchArgs =
+        public static string steamLaunchArgs =
             "-applaunch "
             + "252950 "
             + "-rlbot "
@@ -15,7 +15,7 @@ namespace RLBotCS.MatchManagement
             + "RLBot_PacketSendRate=240 "
             + "-nomovie";
 
-        public void LaunchRocketLeague(rlbot.flat.Launcher launcher)
+        public static void LaunchRocketLeague(rlbot.flat.Launcher launcher)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {

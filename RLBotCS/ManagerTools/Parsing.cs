@@ -110,43 +110,65 @@ namespace MatchManagement
             }
         }
 
-        //This stupid union is just because psyonix players have one extra property - sleep-deprived ddthj
-        public static PlayerClassUnion GetPlayerUnion(TomlTable rlbotPlayerTable)
+        public static PlayerConfigurationT GetPlayerConfig(TomlTable rlbotPlayerTable)
         {
             PlayerClassUnion playerClassUnion;
-            PlayerClass playerClass = ParseEnum(rlbotPlayerTable, "type", PlayerClass.PsyonixBotPlayer);
-
+            PlayerClass playerClass = ParseEnum(rlbotPlayerTable, "type", PlayerClass.Psyonix);
+    
             switch (playerClass)
             {
-                case PlayerClass.RLBotPlayer:
-                    playerClassUnion = PlayerClassUnion.FromRLBotPlayer(new RLBotPlayerT());
-                    break;
-                case PlayerClass.HumanPlayer:
-                    playerClassUnion = PlayerClassUnion.FromHumanPlayer(new HumanPlayerT());
-                    break;
-                case PlayerClass.PsyonixBotPlayer:
+                case PlayerClass.RLBot:
+                    playerClassUnion = PlayerClassUnion.FromRLBot(new RLBotT());
+                    return GetBotConfig(rlbotPlayerTable, playerClassUnion);
+                case PlayerClass.Human:
+                    playerClassUnion = PlayerClassUnion.FromHuman(new HumanT());
+                    return GetHumanConfig(rlbotPlayerTable, playerClassUnion);
+                case PlayerClass.Psyonix:
                     float botSkill = ParseFloat(rlbotPlayerTable, "skill", 1.0f);
-                    playerClassUnion = PlayerClassUnion.FromPsyonixBotPlayer(
-                        new PsyonixBotPlayerT() { BotSkill = botSkill }
+                    playerClassUnion = PlayerClassUnion.FromPsyonix(
+                        new PsyonixT() { BotSkill = botSkill }
                     );
-                    break;
-                case PlayerClass.PartyMemberBotPlayer:
-                    playerClassUnion = PlayerClassUnion.FromPartyMemberBotPlayer(new PartyMemberBotPlayerT());
-                    Console.WriteLine("TODO - PartyMemeberBots are not implemented");
-                    break;
+                    return GetPsyonixConfig(rlbotPlayerTable, playerClassUnion);
+                case PlayerClass.PartyMember:
+                    playerClassUnion = PlayerClassUnion.FromPartyMember(new PartyMemberT());
+                    throw new NotImplementedException("PartyMemeberBots are not implemented");
                 default:
-                    playerClassUnion = PlayerClassUnion.FromHumanPlayer(new HumanPlayerT());
-                    //TODO - this is lazy
-                    Console.WriteLine("Warning! Could not determine player type, spawning human instead");
-                    break;
+                    throw new NotImplementedException("Bot type not implemented... How did we get here???");
             }
-
-            playerClassUnion.Value = playerClass;
-
-            return playerClassUnion;
         }
 
-        public static PlayerConfigurationT GetPlayerConfig(TomlTable rlbotPlayerTable)
+        public static PlayerConfigurationT GetHumanConfig(TomlTable rlbotPlayerTable, PlayerClassUnion classUnion)
+        {
+            PlayerConfigurationT playerConfig =
+                new()
+                {
+                    Variety = classUnion,
+                    Team = ParseInt(rlbotPlayerTable, "team", 0),
+                    Name = "",
+                    Location = "",
+                    RunCommand = ""
+                };
+
+                return playerConfig;
+        }
+
+        public static PlayerConfigurationT GetPsyonixConfig(TomlTable rlbotPlayerTable, PlayerClassUnion classUnion)
+        {
+            // TODO - support psyonix bot loadouts
+            PlayerConfigurationT playerConfig =
+                new()
+                {
+                    Variety = classUnion,
+                    Team = ParseInt(rlbotPlayerTable, "team", 0),
+                    Name = "",
+                    Location = "",
+                    RunCommand = ""
+                };
+
+            return playerConfig;
+        }
+
+        public static PlayerConfigurationT GetBotConfig(TomlTable rlbotPlayerTable, PlayerClassUnion classUnion)
         {
             /*
              * rlbotPlayerTable is the the "bot" table in rlbot.toml. Contains team, path to bot.toml, and more
@@ -158,7 +180,6 @@ namespace MatchManagement
              *  "teamPaint" is the "paint" table within the loadout tables, contains paint colors of player items
              */
             
-            // TODO: support for humans and psyonix bots
             TomlTable playerToml = GetTable(ParseString(rlbotPlayerTable, "config", ""));
             TomlTable playerSettings = ParseTable(playerToml, "settings");
             TomlTable loadoutToml = GetTable(ParseString(playerSettings, "looks_config", ""));
@@ -178,7 +199,7 @@ namespace MatchManagement
             PlayerConfigurationT playerConfig =
                 new()
                 {
-                    Variety = GetPlayerUnion(rlbotPlayerTable), //Contains type and psyonix skill
+                    Variety = classUnion,
                     Team = ParseInt(rlbotPlayerTable, "team", 0),
                     Name = ParseString(playerSettings, "name", ""),
                     Location = ParseString(playerSettings, "location", ""),
@@ -230,8 +251,7 @@ namespace MatchManagement
             TomlTable rlbotTable = ParseTable(rlbotToml, "rlbot");
             TomlTable matchTable = ParseTable(rlbotToml, "match");
             TomlTable mutatorTable = ParseTable(rlbotToml, "mutators");
-            TomlTableArray players = (TomlTableArray)rlbotToml["bots"]; //TODO - not childproof
-            Console.WriteLine($"Bots array len: {players.Count}");
+            TomlTableArray players = (TomlTableArray)rlbotToml["cars"]; //TODO - not childproof
 
             List<PlayerConfigurationT> playerConfigs = [];
             MatchSettingsT matchSettings =
@@ -281,7 +301,7 @@ namespace MatchManagement
                 };
 
             // Gets the PlayerConfigT object for the number of players requested
-            int num_bots = ParseInt(matchTable, "num_participants", 0);
+            int num_bots = ParseInt(matchTable, "num_cars", 0);
             for (int i = 0; i < Math.Min(num_bots, players.Count); i++)
             {
                 playerConfigs.Add(GetPlayerConfig(players[i]));

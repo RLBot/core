@@ -1,14 +1,13 @@
 [rlbot]
-# use_login_tricks = true or false
 # rocket_league_exe_path = "epicgames/path/to/rocketleague.exe"
-# either "steam" or "epic"
+# "Steam", "Epic"
 launcher = "steam"
 # Should RLBot start the bot processes automatically, or will a separate script start them
 auto_start_bots = true
 
 [match]
 # Number of bots/players which will be spawned.  We support up to max 64.
-num_participants = 1
+num_cars = 1
 # What game mode the game should load.
 # Accepted values are "Soccer", "Hoops", "Dropshot", "Hockey", "Rumble", "Heatseeker", "Gridiron"
 game_mode = "Soccer"
@@ -26,37 +25,37 @@ enable_state_setting = true
 auto_save_replay = false
 
 [mutators]
-# "5 Minutes", "10 Minutes", "20 Minutes", "Unlimited"
-match_length = "5 Minutes"
-# "Unlimited", "1 Goal", "3 Goals", "5 Goals",
+# "Five_Minutes", "Ten_Minutes", "Twenty_Minutes", "Unlimited"
+match_length = "Five_Minutes"
+# "Unlimited", "One_Goal", "Three_Goals", "Five_Goals",
 max_score = "Unlimited"
-# "Unlimited", "+5 Max, First Score", "+5 Max, Random Team"
+# "Unlimited", "Five_Max_First_Score", "Five_Max_Random_Team"
 overtime = "Unlimited"
-# "Default", "Slo-Mo", "Time Warp"
+# "Default", "Slo_Mo", "Time_Warp"
 game_speed = "Default"
-# "Default", "Slow", "Fast", "Super Fast"
+# "Default", "Slow", "Fast", "Super_Fast"
 ball_max_speed = "Default"
 # "Default", "Cube", "Puck", "Basketball"
 ball_type = "Default"
-# "Default", "Light", "Heavy", "Super Light"
+# "Default", "Light", "Heavy", "Super_Light"
 ball_weight = "Default"
 # "Default", "Small", "Large", "Gigantic"
 ball_size = "Default"
-# "Default", "Low", "High", "Super High"
+# "Default", "Low", "High", "Super_High"
 ball_bounciness = "Default"
-# "Normal_Boost", "Unlimited", "Recharge (Slow)", "Recharge (Fast)", "No Boost"
+# "Normal_Boost", "Unlimited", "Slow_Recharge", "Rapid_Recharge", "No_Boost"
 boost_amount = "Normal_Boost"
-# "None", "Default", "Slow", "Civilized", "Destruction Derby", "Spring Loaded", "Spikes Only", "Spike Rush"
-rumble = "None"
-# "1x", "1.5x", "2x", "10x"
-boost_strength = "1x"
-# "Default", "Low", "High", "Super High"
+# "No_Rumble", "Default", "Slow", "Civilized", "Destruction_Derby", "Spring_Loaded", "Spikes_Only", "Spike_Rush"
+rumble = "No_Rumble"
+# "One", "OneAndAHalf", "Two", "Ten"
+boost_strength = "One"
+# "Default", "Low", "High", "Super_High"
 gravity = "Default"
-# "Default", "Disabled", "Friendly Fire", "On Contact", "On Contact (FF)"
+# "Default", "Disabled", "Friendly_Fire", "On_Contact", "On_Contact_FF"
 demolish = "Default"
-# "3 Seconds", "2 Seconds", "1 Second", "Disable Goal Reset"
-respawn_time = "3 Seconds"
+# "Three_Seconds", "Two_Seconds", "One_Seconds", "Disable_Goal_Reset"
+respawn_time = "Three_Seconds"
 
-[[bots]]
+[[cars]]
 type = "human"
 team = 0

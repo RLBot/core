@@ -7,6 +7,7 @@ using RLBotSecret.Controller;
 using RLBotSecret.Conversion;
 using RLBotSecret.TCP;
 using GameStateType = RLBotModels.Message.GameStateType;
+using MatchManagement;
 
 namespace RLBotCS.GameControl
 {
@@ -174,6 +175,10 @@ namespace RLBotCS.GameControl
             bool deferLoadMap
         )
         {
+            if (!MatchManagement.Launcher.IsRocketLeagueRunning())
+            {
+                MatchManagement.Launcher.LaunchRocketLeague(matchSettings.Launcher);
+            }
             if (deferLoadMap)
             {
                 deferredMatchMessage = (matchSettings, originalMessage);
@@ -337,11 +342,21 @@ namespace RLBotCS.GameControl
                     continue;
                 }
 
-                var loadout = FlatToModel.ToLoadout(playerConfig.Loadout, playerConfig.Team);
+                RLBotModels.Command.Loadout loadout;
+                if (playerConfig.Loadout is not null)
+                {
+                    loadout = FlatToModel.ToLoadout(playerConfig.Loadout, playerConfig.Team);
+                }
+                else
+                {
+                    loadout = FlatToModel.ToLoadout(new PlayerLoadoutT() { LoadoutPaint = new LoadoutPaintT() }, 0);
+                }
+
 
                 switch (playerConfig.Variety.Type)
                 {
-                    case PlayerClass.RLBotPlayer:
+                    case PlayerClass.RLBot:
+                        
                         Console.WriteLine(
                             "Core is spawning player "
                                 + playerConfig.Name
@@ -366,8 +381,8 @@ namespace RLBotCS.GameControl
                             }
                         );
                         break;
-                    case PlayerClass.PsyonixBotPlayer:
-                        var skill = playerConfig.Variety.AsPsyonixBotPlayer().BotSkill;
+                    case PlayerClass.Psyonix:
+                        var skill = playerConfig.Variety.AsPsyonix().BotSkill;
                         var skillEnum = BotSkill.Hard;
                         if (skill < 0.5)
                         {
@@ -395,7 +410,7 @@ namespace RLBotCS.GameControl
                             }
                         );
                         break;
-                    case PlayerClass.HumanPlayer:
+                    case PlayerClass.Human:
                         if (humanConfig != null)
                         {
                             // We can't spawn this human player,
