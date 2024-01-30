@@ -110,6 +110,16 @@ namespace MatchManagement
             }
         }
 
+        private static ScriptConfigurationT GetScriptConfig(TomlTable scriptTable)
+        {
+            TomlTable scriptToml = GetTable(ParseString(scriptTable, "config", ""));
+            ScriptConfigurationT scriptConfig = new() {
+                Location = ParseString(scriptToml, "location", ""),
+                RunCommand = ParseString(scriptToml, "run_command", "")
+            };
+            return scriptConfig;
+        }
+
         public static PlayerConfigurationT GetPlayerConfig(TomlTable rlbotPlayerTable)
         {
             PlayerClassUnion playerClassUnion;
@@ -251,9 +261,11 @@ namespace MatchManagement
             TomlTable rlbotTable = ParseTable(rlbotToml, "rlbot");
             TomlTable matchTable = ParseTable(rlbotToml, "match");
             TomlTable mutatorTable = ParseTable(rlbotToml, "mutators");
-            TomlTableArray players = (TomlTableArray)rlbotToml["cars"]; //TODO - not childproof
+            TomlTableArray players = (TomlTableArray)rlbotToml["cars"];     //TODO - not childproof
+            TomlTableArray scripts = (TomlTableArray)rlbotToml["scripts"];  //TODO - not childproof
 
             List<PlayerConfigurationT> playerConfigs = [];
+            List<ScriptConfigurationT> scriptConfigs = [];
             MatchSettingsT matchSettings =
                 new()
                 {
@@ -308,7 +320,12 @@ namespace MatchManagement
             }
             matchSettings.PlayerConfigurations = playerConfigs;
 
-            matchSettings.ScriptConfigurations = [];
+            
+            for (int i = 0; i < scripts.Count; i++)
+            {
+                scriptConfigs.Add(GetScriptConfig(scripts[i]));
+            }
+            matchSettings.ScriptConfigurations = scriptConfigs;
 
             return matchSettings;
         }
