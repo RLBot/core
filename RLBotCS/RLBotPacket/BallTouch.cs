@@ -10,11 +10,10 @@ namespace RLBotCS.RLBotPacket
         public Vector3 hitNormal;
         public byte team;
         public uint playerIndex;
+
         public BallTouch()
         {
             playerName = "";
         }
     }
-
-    
 }

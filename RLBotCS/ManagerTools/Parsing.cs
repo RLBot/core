@@ -35,6 +35,19 @@ namespace MatchManagement
             }
         }
 
+        public static TomlTableArray ParseTableArray(TomlTable table, string key)
+        {
+            try
+            {
+                return (TomlTableArray)table[key];
+            }
+            catch (KeyNotFoundException)
+            {
+                Console.WriteLine($"Warning! Could not find the '{key}' table!");
+                return [];
+            }
+        }
+
         //Generic to get the enum value of a given enum and the string name of the desired key
         static public T ParseEnum<T>(TomlTable table, string key, T fallback)
             where T : struct, Enum
@@ -128,10 +141,12 @@ namespace MatchManagement
         private static ScriptConfigurationT GetScriptConfig(TomlTable scriptTable)
         {
             TomlTable scriptToml = GetTable(ParseString(scriptTable, "config", ""));
-            ScriptConfigurationT scriptConfig = new() {
-                Location = ParseString(scriptToml, "location", ""),
-                RunCommand = ParseString(scriptToml, "run_command", "")
-            };
+            ScriptConfigurationT scriptConfig =
+                new()
+                {
+                    Location = ParseString(scriptToml, "location", ""),
+                    RunCommand = ParseString(scriptToml, "run_command", "")
+                };
             return scriptConfig;
         }
 
@@ -139,7 +154,7 @@ namespace MatchManagement
         {
             PlayerClassUnion playerClassUnion;
             PlayerClass playerClass = ParseEnum(rlbotPlayerTable, "type", PlayerClass.Psyonix);
-    
+
             switch (playerClass)
             {
                 case PlayerClass.RLBot:
@@ -150,9 +165,7 @@ namespace MatchManagement
                     return GetHumanConfig(rlbotPlayerTable, playerClassUnion);
                 case PlayerClass.Psyonix:
                     float botSkill = ParseFloat(rlbotPlayerTable, "skill", 1.0f);
-                    playerClassUnion = PlayerClassUnion.FromPsyonix(
-                        new PsyonixT() { BotSkill = botSkill }
-                    );
+                    playerClassUnion = PlayerClassUnion.FromPsyonix(new PsyonixT() { BotSkill = botSkill });
                     return GetPsyonixConfig(rlbotPlayerTable, playerClassUnion);
                 case PlayerClass.PartyMember:
                     // playerClassUnion = PlayerClassUnion.FromPartyMember(new PartyMemberT());
@@ -174,10 +187,13 @@ namespace MatchManagement
                     RunCommand = ""
                 };
 
-                return playerConfig;
+            return playerConfig;
         }
 
-        public static PlayerConfigurationT GetPsyonixConfig(TomlTable rlbotPlayerTable, PlayerClassUnion classUnion)
+        public static PlayerConfigurationT GetPsyonixConfig(
+            TomlTable rlbotPlayerTable,
+            PlayerClassUnion classUnion
+        )
         {
             // TODO - support psyonix bot loadouts
             PlayerConfigurationT playerConfig =
@@ -204,7 +220,7 @@ namespace MatchManagement
              *  "teamLoadout" is either the "blue_loadout" or "orange_loadout" in bot_looks.toml, contains player items
              *  "teamPaint" is the "paint" table within the loadout tables, contains paint colors of player items
              */
-            
+
             TomlTable playerToml = GetTable(ParseString(rlbotPlayerTable, "config", ""));
             TomlTable playerSettings = ParseTable(playerToml, "settings");
             TomlTable loadoutToml = GetTable(ParseString(playerSettings, "looks_config", ""));
@@ -276,8 +292,8 @@ namespace MatchManagement
             TomlTable rlbotTable = ParseTable(rlbotToml, "rlbot");
             TomlTable matchTable = ParseTable(rlbotToml, "match");
             TomlTable mutatorTable = ParseTable(rlbotToml, "mutators");
-            TomlTableArray players = (TomlTableArray)rlbotToml["cars"];     //TODO - not childproof
-            TomlTableArray scripts = (TomlTableArray)rlbotToml["scripts"];  //TODO - not childproof
+            TomlTableArray players = ParseTableArray(rlbotToml, "cars");
+            TomlTableArray scripts = ParseTableArray(rlbotToml, "scripts");
 
             List<PlayerConfigurationT> playerConfigs = [];
             List<ScriptConfigurationT> scriptConfigs = [];
