@@ -20,7 +20,7 @@ namespace RLBotCSTests
         public void TestSpawnProcess()
         {
             int spawnId = 2398249;
-            int desiredIndex = 2;
+            uint desiredIndex = 2;
             ushort actorId = 2398;
             ushort commandId = 9855;
 

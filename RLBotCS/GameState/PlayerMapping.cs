@@ -6,10 +6,10 @@ namespace RLBotCS.GameState
     {
         private List<SpawnTracker> pendingSpawns = new();
 
-        private Dictionary<ushort, int> actorIdToPlayerIndex = new();
-        private Dictionary<int, PlayerMetadata> playerIndexToMetadata = new();
+        private Dictionary<ushort, uint> actorIdToPlayerIndex = new();
+        private Dictionary<uint, PlayerMetadata> playerIndexToMetadata = new();
 
-        private void registerActorId(ushort actorId, int playerIndex)
+        private void registerActorId(ushort actorId, uint playerIndex)
         {
             actorIdToPlayerIndex[actorId] = playerIndex;
             if (playerIndexToMetadata.ContainsKey(playerIndex))
@@ -21,8 +21,8 @@ namespace RLBotCS.GameState
         public PlayerMetadata applyCarSpawn(CarSpawn carSpawn)
         {
             var playerMetadata = getPlayerMetadata(carSpawn);
-            playerIndexToMetadata[playerMetadata.playerIndex] = playerMetadata;
-            actorIdToPlayerIndex[playerMetadata.actorId] = playerMetadata.playerIndex;
+            playerIndexToMetadata[(uint)playerMetadata.playerIndex] = playerMetadata;
+            actorIdToPlayerIndex[playerMetadata.actorId] = (uint)playerMetadata.playerIndex;
             return playerMetadata;
         }
 
@@ -73,9 +73,9 @@ namespace RLBotCS.GameState
             return playerIndexToMetadata.Values;
         }
 
-        internal int? PlayerIndexFromActorId(ushort actorId)
+        internal uint? PlayerIndexFromActorId(ushort actorId)
         {
-            int playerIndex;
+            uint playerIndex;
             if (actorIdToPlayerIndex.TryGetValue(actorId, out playerIndex))
             {
                 return playerIndex;
@@ -83,7 +83,7 @@ namespace RLBotCS.GameState
             return null;
         }
 
-        internal ushort? ActorIdFromPlayerIndex(int playerIndex)
+        internal ushort? ActorIdFromPlayerIndex(uint playerIndex)
         {
             return playerIndexToMetadata[playerIndex]?.actorId;
         }
@@ -104,9 +104,9 @@ namespace RLBotCS.GameState
             return null;
         }
 
-        private int findUnusedPlayerIndex()
+        private uint findUnusedPlayerIndex()
         {
-            for (int candidate = 0; ; candidate++)
+            for (uint candidate = 0; ; candidate++)
             {
                 if (
                     !playerIndexToMetadata.ContainsKey(candidate)

@@ -65,6 +65,21 @@ namespace MatchManagement
             }
         }
 
+        public static uint ParseUint(TomlTable table, string key, uint fallback)
+        {
+            try
+            {
+                return (uint)(long)table[key];
+            }
+            catch (KeyNotFoundException)
+            {
+                Console.WriteLine(
+                    $"Could not find the '{key}' field in toml. Using default setting '{fallback}' instead"
+                );
+                return fallback;
+            }
+        }
+
         public static float ParseFloat(TomlTable table, string key, float fallback)
         {
             try
@@ -153,7 +168,7 @@ namespace MatchManagement
                 new()
                 {
                     Variety = classUnion,
-                    Team = ParseInt(rlbotPlayerTable, "team", 0),
+                    Team = ParseUint(rlbotPlayerTable, "team", 0),
                     Name = "",
                     Location = "",
                     RunCommand = ""
@@ -169,7 +184,7 @@ namespace MatchManagement
                 new()
                 {
                     Variety = classUnion,
-                    Team = ParseInt(rlbotPlayerTable, "team", 0),
+                    Team = ParseUint(rlbotPlayerTable, "team", 0),
                     Name = "",
                     Location = "",
                     RunCommand = ""
@@ -210,35 +225,35 @@ namespace MatchManagement
                 new()
                 {
                     Variety = classUnion,
-                    Team = ParseInt(rlbotPlayerTable, "team", 0),
+                    Team = ParseUint(rlbotPlayerTable, "team", 0),
                     Name = ParseString(playerSettings, "name", ""),
                     Location = ParseString(playerSettings, "location", ""),
                     RunCommand = ParseString(playerSettings, "run_command", ""),
                     Loadout = new PlayerLoadoutT()
                     {
-                        TeamColorId = ParseInt(teamLoadout, "team_color_id", 0),
-                        CustomColorId = ParseInt(teamLoadout, "custom_color_id", 0),
-                        CarId = ParseInt(teamLoadout, "car_id", 0),
-                        DecalId = ParseInt(teamLoadout, "decal_id", 0),
-                        WheelsId = ParseInt(teamLoadout, "wheels_id", 0),
-                        BoostId = ParseInt(teamLoadout, "boost_id", 0),
-                        AntennaId = ParseInt(teamLoadout, "antenna_id", 0),
-                        HatId = ParseInt(teamLoadout, "hat_id", 0),
-                        PaintFinishId = ParseInt(teamLoadout, "paint_finish_id", 0),
-                        CustomFinishId = ParseInt(teamLoadout, "custom_finish_id", 0),
-                        EngineAudioId = ParseInt(teamLoadout, "engine_audio_id", 0),
-                        TrailsId = ParseInt(teamLoadout, "trails_id", 0),
-                        GoalExplosionId = ParseInt(teamLoadout, "goal_explosion_id", 0),
+                        TeamColorId = ParseUint(teamLoadout, "team_color_id", 0),
+                        CustomColorId = ParseUint(teamLoadout, "custom_color_id", 0),
+                        CarId = ParseUint(teamLoadout, "car_id", 0),
+                        DecalId = ParseUint(teamLoadout, "decal_id", 0),
+                        WheelsId = ParseUint(teamLoadout, "wheels_id", 0),
+                        BoostId = ParseUint(teamLoadout, "boost_id", 0),
+                        AntennaId = ParseUint(teamLoadout, "antenna_id", 0),
+                        HatId = ParseUint(teamLoadout, "hat_id", 0),
+                        PaintFinishId = ParseUint(teamLoadout, "paint_finish_id", 0),
+                        CustomFinishId = ParseUint(teamLoadout, "custom_finish_id", 0),
+                        EngineAudioId = ParseUint(teamLoadout, "engine_audio_id", 0),
+                        TrailsId = ParseUint(teamLoadout, "trails_id", 0),
+                        GoalExplosionId = ParseUint(teamLoadout, "goal_explosion_id", 0),
                         LoadoutPaint = new LoadoutPaintT()
                         {
-                            CarPaintId = ParseInt(teamPaint, "car_paint_id", 0),
-                            DecalPaintId = ParseInt(teamPaint, "decal_paint_id", 0),
-                            WheelsPaintId = ParseInt(teamPaint, "wheels_paint_id", 0),
-                            BoostPaintId = ParseInt(teamPaint, "boost_paint_id", 0),
-                            AntennaPaintId = ParseInt(teamPaint, "antenna_paint_id", 0),
-                            HatPaintId = ParseInt(teamPaint, "hat_paint_id", 0),
-                            TrailsPaintId = ParseInt(teamPaint, "trails_paint_id", 0),
-                            GoalExplosionPaintId = ParseInt(teamPaint, "goal_explosion_paint_id", 0),
+                            CarPaintId = ParseUint(teamPaint, "car_paint_id", 0),
+                            DecalPaintId = ParseUint(teamPaint, "decal_paint_id", 0),
+                            WheelsPaintId = ParseUint(teamPaint, "wheels_paint_id", 0),
+                            BoostPaintId = ParseUint(teamPaint, "boost_paint_id", 0),
+                            AntennaPaintId = ParseUint(teamPaint, "antenna_paint_id", 0),
+                            HatPaintId = ParseUint(teamPaint, "hat_paint_id", 0),
+                            TrailsPaintId = ParseUint(teamPaint, "trails_paint_id", 0),
+                            GoalExplosionPaintId = ParseUint(teamPaint, "goal_explosion_paint_id", 0),
                         },
                         // TODO - GetPrimary/Secondary color? Do any bots use this?
                     }

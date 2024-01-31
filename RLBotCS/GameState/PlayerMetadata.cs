@@ -17,7 +17,7 @@
         /// <summary>
         /// The index of this car in the GameTickPacket's car list.
         /// </summary>
-        public int playerIndex;
+        public uint playerIndex;
 
         /// <summary>
         /// True if it's a custom bot or Psyonix bot, false if human.

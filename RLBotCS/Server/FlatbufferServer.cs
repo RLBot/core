@@ -130,7 +130,7 @@ namespace RLBotCS.Server
             });
         }
 
-        internal void SendMessagePacketToClients(MessageBundle messageBundle, float gameSeconds, int frameNum)
+        internal void SendMessagePacketToClients(MessageBundle messageBundle, float gameSeconds, uint frameNum)
         {
             var messages = new rlbot.flat.MessagePacketT()
             {
@@ -142,7 +142,7 @@ namespace RLBotCS.Server
             {
                 if (message is PlayerInputUpdate update)
                 {
-                    if (playerMapping.PlayerIndexFromActorId(update.playerInput.actorId) is int playerIndex)
+                    if (playerMapping.PlayerIndexFromActorId(update.playerInput.actorId) is uint playerIndex)
                     {
                         var playerInput = new rlbot.flat.PlayerInputChangeT()
                         {
@@ -172,7 +172,7 @@ namespace RLBotCS.Server
                 }
                 else if (message is SpectateViewChange change)
                 {
-                    if (playerMapping.PlayerIndexFromActorId(change.spectatedActorId) is int playerIndex)
+                    if (playerMapping.PlayerIndexFromActorId(change.spectatedActorId) is uint playerIndex)
                     {
                         var spectate = new rlbot.flat.PlayerSpectateT() { PlayerIndex = playerIndex, };
 
@@ -186,7 +186,7 @@ namespace RLBotCS.Server
                 }
                 else if (message is PlayerAccolade accolade)
                 {
-                    if (playerMapping.PlayerIndexFromActorId(accolade.actorId) is int playerIndex)
+                    if (playerMapping.PlayerIndexFromActorId(accolade.actorId) is uint playerIndex)
                     {
                         var playerAccolade = new rlbot.flat.PlayerStatEventT()
                         {

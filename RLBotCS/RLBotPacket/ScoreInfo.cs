@@ -2,12 +2,12 @@
 {
     internal struct ScoreInfo
     {
-        public int score;
-        public int goals;
-        public int ownGoals;
-        public int assists;
-        public int saves;
-        public int shots;
-        public int demolitions;
+        public uint score;
+        public uint goals;
+        public uint ownGoals;
+        public uint assists;
+        public uint saves;
+        public uint shots;
+        public uint demolitions;
     }
 }

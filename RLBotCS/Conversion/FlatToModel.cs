@@ -51,7 +51,7 @@ namespace RLBotSecret.Conversion
             };
         }
 
-        internal static Loadout ToLoadout(rlbot.flat.PlayerLoadoutT l, int team)
+        internal static Loadout ToLoadout(rlbot.flat.PlayerLoadoutT l, uint team)
         {
             System.Drawing.Color primaryColor;
             if (l.PrimaryColorLookup is rlbot.flat.ColorT p)

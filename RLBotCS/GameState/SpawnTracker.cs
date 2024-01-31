@@ -4,7 +4,7 @@
     {
         public int? spawnId;
         public ushort? commandId;
-        public int desiredPlayerIndex;
+        public uint desiredPlayerIndex;
         public bool isCustomBot;
     }
 }

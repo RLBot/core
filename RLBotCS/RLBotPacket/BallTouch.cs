@@ -9,7 +9,7 @@ namespace RLBotCS.RLBotPacket
         public Vector3 hitLocation;
         public Vector3 hitNormal;
         public byte team;
-        public int playerIndex;
+        public uint playerIndex;
         public BallTouch()
         {
             playerName = "";
