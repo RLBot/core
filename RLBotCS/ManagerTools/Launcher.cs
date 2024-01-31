@@ -1,19 +1,19 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
-using rlbot.flat;
 
 namespace RLBotCS.MatchManagement
 {
     internal class Launcher
     {
-        public static string steamLaunchArgs =
-            "-applaunch "
-            + "252950 "
-            + "-rlbot "
-            + "RLBot_ControllerURL=127.0.0.1:23233 "
-            + "RLBot_PacketSendRate=240 "
-            + "-nomovie";
+        public static string steamGameID = "252950";
+        public static string[] steamLaunchArgs =
+        [
+            "-rlbot",
+            "RLBot_ControllerURL=127.0.0.1:23233",
+            "RLBot_PacketSendRate=240",
+            "-nomovie"
+        ];
 
         public static void LaunchRocketLeague(rlbot.flat.Launcher launcher)
         {
@@ -23,10 +23,38 @@ namespace RLBotCS.MatchManagement
                 {
                     case rlbot.flat.Launcher.Steam:
                         Process rocketLeague = new();
+
                         string steamPath = GetSteamPath();
                         rocketLeague.StartInfo.FileName = steamPath;
-                        rocketLeague.StartInfo.Arguments = steamLaunchArgs;
+                        rocketLeague.StartInfo.Arguments =
+                            $"-applaunch {steamGameID} " + string.Join(" ", steamLaunchArgs);
+
                         Console.WriteLine($"Starting Rocket League with args {steamPath} {steamLaunchArgs}");
+                        rocketLeague.Start();
+                        break;
+                    case rlbot.flat.Launcher.Epic:
+                        break;
+                    case rlbot.flat.Launcher.Custom:
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                switch (launcher)
+                {
+                    case rlbot.flat.Launcher.Steam:
+                        Process rocketLeague = new();
+                        rocketLeague.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+
+                        string args = string.Join("%20", steamLaunchArgs);
+                        rocketLeague.StartInfo.FileName = "steam";
+                        rocketLeague.StartInfo.Arguments = $"steam://rungameid/{steamGameID}//{args}";
+
+                        Console.WriteLine(
+                            $"Starting Rocket League via Steam CLI with {rocketLeague.StartInfo.Arguments}"
+                        );
                         rocketLeague.Start();
                         break;
                     case rlbot.flat.Launcher.Epic:

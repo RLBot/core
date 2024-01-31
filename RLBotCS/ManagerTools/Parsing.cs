@@ -35,6 +35,19 @@ namespace MatchManagement
             }
         }
 
+        public static TomlTableArray ParseTableArray(TomlTable table, string key)
+        {
+            try
+            {
+                return (TomlTableArray)table[key];
+            }
+            catch (KeyNotFoundException)
+            {
+                Console.WriteLine($"Warning! Could not find the '{key}' table!");
+                return [];
+            }
+        }
+
         //Generic to get the enum value of a given enum and the string name of the desired key
         static public T ParseEnum<T>(TomlTable table, string key, T fallback)
             where T : struct, Enum
@@ -55,6 +68,21 @@ namespace MatchManagement
             try
             {
                 return (int)(long)table[key];
+            }
+            catch (KeyNotFoundException)
+            {
+                Console.WriteLine(
+                    $"Could not find the '{key}' field in toml. Using default setting '{fallback}' instead"
+                );
+                return fallback;
+            }
+        }
+
+        public static uint ParseUint(TomlTable table, string key, uint fallback)
+        {
+            try
+            {
+                return (uint)(long)table[key];
             }
             catch (KeyNotFoundException)
             {
@@ -113,10 +141,12 @@ namespace MatchManagement
         private static ScriptConfigurationT GetScriptConfig(TomlTable scriptTable)
         {
             TomlTable scriptToml = GetTable(ParseString(scriptTable, "config", ""));
-            ScriptConfigurationT scriptConfig = new() {
-                Location = ParseString(scriptToml, "location", ""),
-                RunCommand = ParseString(scriptToml, "run_command", "")
-            };
+            ScriptConfigurationT scriptConfig =
+                new()
+                {
+                    Location = ParseString(scriptToml, "location", ""),
+                    RunCommand = ParseString(scriptToml, "run_command", "")
+                };
             return scriptConfig;
         }
 
@@ -124,7 +154,7 @@ namespace MatchManagement
         {
             PlayerClassUnion playerClassUnion;
             PlayerClass playerClass = ParseEnum(rlbotPlayerTable, "type", PlayerClass.Psyonix);
-    
+
             switch (playerClass)
             {
                 case PlayerClass.RLBot:
@@ -135,9 +165,7 @@ namespace MatchManagement
                     return GetHumanConfig(rlbotPlayerTable, playerClassUnion);
                 case PlayerClass.Psyonix:
                     float botSkill = ParseFloat(rlbotPlayerTable, "skill", 1.0f);
-                    playerClassUnion = PlayerClassUnion.FromPsyonix(
-                        new PsyonixT() { BotSkill = botSkill }
-                    );
+                    playerClassUnion = PlayerClassUnion.FromPsyonix(new PsyonixT() { BotSkill = botSkill });
                     return GetPsyonixConfig(rlbotPlayerTable, playerClassUnion);
                 case PlayerClass.PartyMember:
                     // playerClassUnion = PlayerClassUnion.FromPartyMember(new PartyMemberT());
@@ -153,23 +181,26 @@ namespace MatchManagement
                 new()
                 {
                     Variety = classUnion,
-                    Team = ParseInt(rlbotPlayerTable, "team", 0),
+                    Team = ParseUint(rlbotPlayerTable, "team", 0),
                     Name = "",
                     Location = "",
                     RunCommand = ""
                 };
 
-                return playerConfig;
+            return playerConfig;
         }
 
-        public static PlayerConfigurationT GetPsyonixConfig(TomlTable rlbotPlayerTable, PlayerClassUnion classUnion)
+        public static PlayerConfigurationT GetPsyonixConfig(
+            TomlTable rlbotPlayerTable,
+            PlayerClassUnion classUnion
+        )
         {
             // TODO - support psyonix bot loadouts
             PlayerConfigurationT playerConfig =
                 new()
                 {
                     Variety = classUnion,
-                    Team = ParseInt(rlbotPlayerTable, "team", 0),
+                    Team = ParseUint(rlbotPlayerTable, "team", 0),
                     Name = "",
                     Location = "",
                     RunCommand = ""
@@ -189,7 +220,7 @@ namespace MatchManagement
              *  "teamLoadout" is either the "blue_loadout" or "orange_loadout" in bot_looks.toml, contains player items
              *  "teamPaint" is the "paint" table within the loadout tables, contains paint colors of player items
              */
-            
+
             TomlTable playerToml = GetTable(ParseString(rlbotPlayerTable, "config", ""));
             TomlTable playerSettings = ParseTable(playerToml, "settings");
             TomlTable loadoutToml = GetTable(ParseString(playerSettings, "looks_config", ""));
@@ -210,35 +241,35 @@ namespace MatchManagement
                 new()
                 {
                     Variety = classUnion,
-                    Team = ParseInt(rlbotPlayerTable, "team", 0),
+                    Team = ParseUint(rlbotPlayerTable, "team", 0),
                     Name = ParseString(playerSettings, "name", ""),
                     Location = ParseString(playerSettings, "location", ""),
                     RunCommand = ParseString(playerSettings, "run_command", ""),
                     Loadout = new PlayerLoadoutT()
                     {
-                        TeamColorId = ParseInt(teamLoadout, "team_color_id", 0),
-                        CustomColorId = ParseInt(teamLoadout, "custom_color_id", 0),
-                        CarId = ParseInt(teamLoadout, "car_id", 0),
-                        DecalId = ParseInt(teamLoadout, "decal_id", 0),
-                        WheelsId = ParseInt(teamLoadout, "wheels_id", 0),
-                        BoostId = ParseInt(teamLoadout, "boost_id", 0),
-                        AntennaId = ParseInt(teamLoadout, "antenna_id", 0),
-                        HatId = ParseInt(teamLoadout, "hat_id", 0),
-                        PaintFinishId = ParseInt(teamLoadout, "paint_finish_id", 0),
-                        CustomFinishId = ParseInt(teamLoadout, "custom_finish_id", 0),
-                        EngineAudioId = ParseInt(teamLoadout, "engine_audio_id", 0),
-                        TrailsId = ParseInt(teamLoadout, "trails_id", 0),
-                        GoalExplosionId = ParseInt(teamLoadout, "goal_explosion_id", 0),
+                        TeamColorId = ParseUint(teamLoadout, "team_color_id", 0),
+                        CustomColorId = ParseUint(teamLoadout, "custom_color_id", 0),
+                        CarId = ParseUint(teamLoadout, "car_id", 0),
+                        DecalId = ParseUint(teamLoadout, "decal_id", 0),
+                        WheelsId = ParseUint(teamLoadout, "wheels_id", 0),
+                        BoostId = ParseUint(teamLoadout, "boost_id", 0),
+                        AntennaId = ParseUint(teamLoadout, "antenna_id", 0),
+                        HatId = ParseUint(teamLoadout, "hat_id", 0),
+                        PaintFinishId = ParseUint(teamLoadout, "paint_finish_id", 0),
+                        CustomFinishId = ParseUint(teamLoadout, "custom_finish_id", 0),
+                        EngineAudioId = ParseUint(teamLoadout, "engine_audio_id", 0),
+                        TrailsId = ParseUint(teamLoadout, "trails_id", 0),
+                        GoalExplosionId = ParseUint(teamLoadout, "goal_explosion_id", 0),
                         LoadoutPaint = new LoadoutPaintT()
                         {
-                            CarPaintId = ParseInt(teamPaint, "car_paint_id", 0),
-                            DecalPaintId = ParseInt(teamPaint, "decal_paint_id", 0),
-                            WheelsPaintId = ParseInt(teamPaint, "wheels_paint_id", 0),
-                            BoostPaintId = ParseInt(teamPaint, "boost_paint_id", 0),
-                            AntennaPaintId = ParseInt(teamPaint, "antenna_paint_id", 0),
-                            HatPaintId = ParseInt(teamPaint, "hat_paint_id", 0),
-                            TrailsPaintId = ParseInt(teamPaint, "trails_paint_id", 0),
-                            GoalExplosionPaintId = ParseInt(teamPaint, "goal_explosion_paint_id", 0),
+                            CarPaintId = ParseUint(teamPaint, "car_paint_id", 0),
+                            DecalPaintId = ParseUint(teamPaint, "decal_paint_id", 0),
+                            WheelsPaintId = ParseUint(teamPaint, "wheels_paint_id", 0),
+                            BoostPaintId = ParseUint(teamPaint, "boost_paint_id", 0),
+                            AntennaPaintId = ParseUint(teamPaint, "antenna_paint_id", 0),
+                            HatPaintId = ParseUint(teamPaint, "hat_paint_id", 0),
+                            TrailsPaintId = ParseUint(teamPaint, "trails_paint_id", 0),
+                            GoalExplosionPaintId = ParseUint(teamPaint, "goal_explosion_paint_id", 0),
                         },
                         // TODO - GetPrimary/Secondary color? Do any bots use this?
                     }
@@ -261,8 +292,8 @@ namespace MatchManagement
             TomlTable rlbotTable = ParseTable(rlbotToml, "rlbot");
             TomlTable matchTable = ParseTable(rlbotToml, "match");
             TomlTable mutatorTable = ParseTable(rlbotToml, "mutators");
-            TomlTableArray players = (TomlTableArray)rlbotToml["cars"];     //TODO - not childproof
-            TomlTableArray scripts = (TomlTableArray)rlbotToml["scripts"];  //TODO - not childproof
+            TomlTableArray players = ParseTableArray(rlbotToml, "cars");
+            TomlTableArray scripts = ParseTableArray(rlbotToml, "scripts");
 
             List<PlayerConfigurationT> playerConfigs = [];
             List<ScriptConfigurationT> scriptConfigs = [];

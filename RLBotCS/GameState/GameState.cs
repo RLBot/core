@@ -15,7 +15,7 @@ namespace RLBotCS.GameState
 
         public void applyMessage(MessageBundle messageBundle)
         {
-            gameTickPacket.frameNum += messageBundle.physicsTickDelta;
+            gameTickPacket.frameNum += (uint)messageBundle.physicsTickDelta;
             gameTickPacket.secondsElapsed = gameTickPacket.frameNum / 120f;
 
             if (gameTickPacket.matchLength == rlbot.flat.MatchLength.Unlimited)

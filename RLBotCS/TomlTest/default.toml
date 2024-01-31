@@ -6,8 +6,10 @@ launcher = "steam"
 auto_start_bots = true
 
 [match]
-# Number of bots/players which will be spawned.  We support up to max 64.
+# Number of bots/players which will be spawned.
 num_cars = 1
+# Number of scripts which will be spawned.
+num_scripts = 0
 # What game mode the game should load.
 # Accepted values are "Soccer", "Hoops", "Dropshot", "Hockey", "Rumble", "Heatseeker", "Gridiron"
 game_mode = "Soccer"
@@ -59,6 +61,3 @@ respawn_time = "Three_Seconds"
 [[cars]]
 type = "human"
 team = 0
-
-[[scripts]]
-config = "config.toml"

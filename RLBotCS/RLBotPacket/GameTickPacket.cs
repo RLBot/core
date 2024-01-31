@@ -6,7 +6,7 @@ namespace RLBotCS.RLBotPacket
 {
     internal class GameTickPacket
     {
-        public SortedDictionary<int, GameCar> gameCars = new();
+        public SortedDictionary<uint, GameCar> gameCars = new();
         public List<BoostPadStatus> gameBoosts = new();
         public Ball ball = new();
         public bool isOvertime = false;
@@ -17,8 +17,8 @@ namespace RLBotCS.RLBotPacket
         public float secondsElapsed = 0;
         public float gameTimeRemaining = 0;
         public float gameSpeed = 1;
-        public int frameNum = 0;
-        public List<int> teamScores = [0, 0];
+        public uint frameNum = 0;
+        public List<uint> teamScores = [0, 0];
 
         internal TypedPayload ToFlatbuffer()
         {
@@ -136,7 +136,7 @@ namespace RLBotCS.RLBotPacket
             List<rlbot.flat.TeamInfoT> teams = new();
             for (var i = 0; i < teamScores.Count; i++)
             {
-                teams.Add(new() { TeamIndex = i, Score = teamScores[i], });
+                teams.Add(new() { TeamIndex = (uint)i, Score = teamScores[i], });
             }
 
             List<rlbot.flat.BoostPadStateT> boostStates = new();
@@ -146,7 +146,7 @@ namespace RLBotCS.RLBotPacket
             }
 
             List<rlbot.flat.PlayerInfoT> players = new();
-            for (var i = 0; i < gameCars.Count; i++)
+            for (uint i = 0; i < (uint)gameCars.Count; i++)
             {
                 if (!gameCars.ContainsKey(i))
                 {
@@ -193,7 +193,7 @@ namespace RLBotCS.RLBotPacket
                         IsBot = gameCars[i].isBot,
                         Name = gameCars[i].name,
                         Team = gameCars[i].team,
-                        Boost = (int)Math.Floor(gameCars[i].boost),
+                        Boost = (uint)Math.Floor(gameCars[i].boost),
                         SpawnId = gameCars[i].spawnId,
                         ScoreInfo = new()
                         {

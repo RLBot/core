@@ -1,4 +1,5 @@
-﻿using rlbot.flat;
+﻿using MatchManagement;
+using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotCS.GameState;
 using RLBotCS.Server;
@@ -7,7 +8,6 @@ using RLBotSecret.Controller;
 using RLBotSecret.Conversion;
 using RLBotSecret.TCP;
 using GameStateType = RLBotModels.Message.GameStateType;
-using MatchManagement;
 
 namespace RLBotCS.GameControl
 {
@@ -61,12 +61,12 @@ namespace RLBotCS.GameControl
             {
                 if (
                     desiredGameState.CarStates[i] is DesiredCarStateT carState
-                    && playerMapping.ActorIdFromPlayerIndex(i) is ushort actorId
+                    && playerMapping.ActorIdFromPlayerIndex((uint)i) is ushort actorId
                 )
                 {
                     if (carState.Physics is DesiredPhysicsT physics)
                     {
-                        var default_physics = gameTickPacket.gameCars[i].physics;
+                        var default_physics = gameTickPacket.gameCars[(uint)i].physics;
                         matchCommandSender.AddSetPhysicsCommand(
                             actorId,
                             FlatToModel.DesiredToPhysics(physics, default_physics)
@@ -345,7 +345,7 @@ namespace RLBotCS.GameControl
                 else
                 {
                     playerNames[playerName] = 0;
-                    playerConfig.Name = playerName;  
+                    playerConfig.Name = playerName;
                 }
 
                 playerConfig.SpawnId = playerConfig.Name.GetHashCode();
@@ -359,21 +359,25 @@ namespace RLBotCS.GameControl
                     continue;
                 }
 
-                RLBotModels.Command.Loadout loadout;
-                if (playerConfig.Loadout is not null)
+                if (playerConfig.Loadout is null)
                 {
-                    loadout = FlatToModel.ToLoadout(playerConfig.Loadout, playerConfig.Team);
-                }
-                else
-                {
-                    loadout = FlatToModel.ToLoadout(new PlayerLoadoutT() { LoadoutPaint = new LoadoutPaintT() }, 0);
+                    playerConfig.Loadout = new PlayerLoadoutT();
                 }
 
+                if (playerConfig.Loadout.LoadoutPaint is null)
+                {
+                    playerConfig.Loadout.LoadoutPaint = new LoadoutPaintT();
+                }
+
+                RLBotModels.Command.Loadout loadout = FlatToModel.ToLoadout(
+                    playerConfig.Loadout,
+                    playerConfig.Team
+                );
 
                 switch (playerConfig.Variety.Type)
                 {
                     case PlayerClass.RLBot:
-                        
+
                         Console.WriteLine(
                             "Core is spawning player "
                                 + playerConfig.Name
@@ -383,7 +387,7 @@ namespace RLBotCS.GameControl
 
                         var rlbotSpawnCommandId = matchCommandSender.AddBotSpawnCommand(
                             playerConfig.Name,
-                            playerConfig.Team,
+                            (int)playerConfig.Team,
                             BotSkill.Custom,
                             loadout
                         );
@@ -393,7 +397,7 @@ namespace RLBotCS.GameControl
                             {
                                 commandId = rlbotSpawnCommandId,
                                 spawnId = playerConfig.SpawnId,
-                                desiredPlayerIndex = i - indexOffset,
+                                desiredPlayerIndex = (uint)(i - indexOffset),
                                 isCustomBot = true,
                             }
                         );
@@ -412,7 +416,7 @@ namespace RLBotCS.GameControl
 
                         var psySpawnCommandId = matchCommandSender.AddBotSpawnCommand(
                             playerConfig.Name,
-                            playerConfig.Team,
+                            (int)playerConfig.Team,
                             skillEnum,
                             loadout
                         );
@@ -422,7 +426,7 @@ namespace RLBotCS.GameControl
                             {
                                 commandId = psySpawnCommandId,
                                 spawnId = playerConfig.SpawnId,
-                                desiredPlayerIndex = i - indexOffset,
+                                desiredPlayerIndex = (uint)(i - indexOffset),
                                 isCustomBot = false
                             }
                         );
@@ -462,7 +466,7 @@ namespace RLBotCS.GameControl
                     {
                         commandId = 0,
                         spawnId = humanConfig.SpawnId,
-                        desiredPlayerIndex = humanIndex,
+                        desiredPlayerIndex = (uint)humanIndex,
                         isCustomBot = false,
                     }
                 );

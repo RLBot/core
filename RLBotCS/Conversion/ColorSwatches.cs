@@ -4,13 +4,13 @@ namespace RLBotSecret.Conversion
 {
     internal class ColorSwatches
     {
-        internal static Color GetPrimary(int colorId, int team)
+        internal static Color GetPrimary(uint colorId, uint team)
         {
             var swatches = team == 0 ? blueSwatches : orangeSwatches;
             return Color.FromArgb(255, swatches[colorId, 0], swatches[colorId, 1], swatches[colorId, 2]);
         }
 
-        internal static Color GetSecondary(int colorId)
+        internal static Color GetSecondary(uint colorId)
         {
             var swatches = secondarySwatches;
             return Color.FromArgb(255, swatches[colorId, 0], swatches[colorId, 1], swatches[colorId, 2]);
