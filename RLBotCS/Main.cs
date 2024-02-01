@@ -17,7 +17,7 @@ Console.WriteLine("RLBot is waiting for Rocket League to connect on port " + por
 
 var playerInputSender = new PlayerInputSender(messenger);
 var gameState = new GameState();
-var matchStarter = new MatchStarter(messenger, gameState);
+var matchStarter = new MatchStarter(messenger, gameState, port);
 
 var flatbufferServer = new FlatbufferServer(23234, messenger, gameState.playerMapping, matchStarter);
 var serverListenerThread = new Thread(() => flatbufferServer.StartListener());
@@ -46,8 +46,9 @@ foreach (var messageClump in messenger)
         Console.WriteLine("RLBot is now receiving messages from Rocket League!");
         gotFirstMessage = true;
         flatbufferServer.StartCommunications();
-        matchStarter.LoadDeferredMatch();
     }
+
+    matchStarter.LoadDeferredMatch();
 
     var messageBundle = converter.Convert(messageClump);
     gameState.gameTickPacket.matchLength = matchStarter.MatchLength();

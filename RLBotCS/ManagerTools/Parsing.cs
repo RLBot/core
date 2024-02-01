@@ -52,13 +52,23 @@ namespace MatchManagement
         static public T ParseEnum<T>(TomlTable table, string key, T fallback)
             where T : struct, Enum
         {
-            if (Enum.TryParse((string)table[key], true, out T value))
+            try
             {
-                return value;
+                if (Enum.TryParse((string)table[key], true, out T value))
+                {
+                    return value;
+                }
+                else
+                {
+                    Console.WriteLine($"Warning! Unable to read '{key}', using default setting instead");
+                    return fallback;
+                }
             }
-            else
+            catch (KeyNotFoundException)
             {
-                Console.WriteLine($"Warning! Unable to read '{key}', using default setting instead");
+                Console.WriteLine(
+                    $"Warning! Could not find the '{key}' field in toml. Using default setting instead"
+                );
                 return fallback;
             }
         }
@@ -97,7 +107,7 @@ namespace MatchManagement
         {
             try
             {
-                return (float)(double)table[key];
+                return Convert.ToSingle(table[key]);
             }
             catch (KeyNotFoundException)
             {
@@ -138,10 +148,10 @@ namespace MatchManagement
             }
         }
 
-        private static ScriptConfigurationT GetScriptConfig(TomlTable scriptTable)
+        private static ScriptConfigurationT GetScriptConfig(TomlTable scriptTable, string playerTomlPath)
         {
             string scriptTomlPath = ParseString(scriptTable, "config", "");
-            TomlTable scriptToml = GetTable(scriptTomlPath);
+            TomlTable scriptToml = GetTable(Path.Combine(playerTomlPath, scriptTomlPath));
             string tomlParent = Path.GetDirectoryName(scriptTomlPath) ?? "";
 
             ScriptConfigurationT scriptConfig =
@@ -153,7 +163,7 @@ namespace MatchManagement
             return scriptConfig;
         }
 
-        public static PlayerConfigurationT GetPlayerConfig(TomlTable rlbotPlayerTable)
+        public static PlayerConfigurationT GetPlayerConfig(TomlTable rlbotPlayerTable, string matchConfigPath)
         {
             PlayerClassUnion playerClassUnion;
             PlayerClass playerClass = ParseEnum(rlbotPlayerTable, "type", PlayerClass.Psyonix);
@@ -162,7 +172,7 @@ namespace MatchManagement
             {
                 case PlayerClass.RLBot:
                     playerClassUnion = PlayerClassUnion.FromRLBot(new RLBotT());
-                    return GetBotConfig(rlbotPlayerTable, playerClassUnion);
+                    return GetBotConfig(rlbotPlayerTable, playerClassUnion, matchConfigPath);
                 case PlayerClass.Human:
                     playerClassUnion = PlayerClassUnion.FromHuman(new HumanT());
                     return GetHumanConfig(rlbotPlayerTable, playerClassUnion);
@@ -212,7 +222,11 @@ namespace MatchManagement
             return playerConfig;
         }
 
-        public static PlayerConfigurationT GetBotConfig(TomlTable rlbotPlayerTable, PlayerClassUnion classUnion)
+        public static PlayerConfigurationT GetBotConfig(
+            TomlTable rlbotPlayerTable,
+            PlayerClassUnion classUnion,
+            string matchConfigPath
+        )
         {
             /*
              * rlbotPlayerTable is the the "bot" table in rlbot.toml. Contains team, path to bot.toml, and more
@@ -225,7 +239,7 @@ namespace MatchManagement
              */
 
             string playerTomlPath = ParseString(rlbotPlayerTable, "config", "");
-            TomlTable playerToml = GetTable(playerTomlPath);
+            TomlTable playerToml = GetTable(Path.Combine(matchConfigPath, playerTomlPath));
             string tomlParent = Path.GetDirectoryName(playerTomlPath) ?? "";
 
             TomlTable playerSettings = ParseTable(playerToml, "settings");
@@ -353,14 +367,14 @@ namespace MatchManagement
             int num_bots = ParseInt(matchTable, "num_cars", 0);
             for (int i = 0; i < Math.Min(num_bots, players.Count); i++)
             {
-                playerConfigs.Add(GetPlayerConfig(players[i]));
+                playerConfigs.Add(GetPlayerConfig(players[i], path));
             }
             matchSettings.PlayerConfigurations = playerConfigs;
 
             int num_scripts = ParseInt(matchTable, "num_scripts", 0);
             for (int i = 0; i < Math.Min(num_scripts, scripts.Count); i++)
             {
-                scriptConfigs.Add(GetScriptConfig(scripts[i]));
+                scriptConfigs.Add(GetScriptConfig(scripts[i], path));
             }
 
             matchSettings.ScriptConfigurations = scriptConfigs;

@@ -23,12 +23,14 @@ namespace RLBotCS.GameControl
         private bool hasEverLoadedMap = false;
         private bool isStateSettingEnabled = true;
         private bool isRenderingEnabled = true;
+        private int gamePort;
 
-        public MatchStarter(TcpMessenger tcpMessenger, GameState.GameState gameState)
+        public MatchStarter(TcpMessenger tcpMessenger, GameState.GameState gameState, int gamePort)
         {
             this.gameTickPacket = gameState.gameTickPacket;
             this.playerMapping = gameState.playerMapping;
             this.matchCommandSender = new MatchCommandSender(tcpMessenger);
+            this.gamePort = gamePort;
         }
 
         public void SetDesiredGameState(DesiredGameStateT desiredGameState)
@@ -176,8 +178,15 @@ namespace RLBotCS.GameControl
         {
             if (!MatchManagement.Launcher.IsRocketLeagueRunning())
             {
-                MatchManagement.Launcher.LaunchRocketLeague(matchSettings.Launcher);
+                MatchManagement.Launcher.LaunchRocketLeague(matchSettings.Launcher, gamePort);
             }
+
+            if (matchSettings.AutoStartBots)
+            {
+                MatchManagement.Launcher.LaunchBots(matchSettings.PlayerConfigurations);
+                MatchManagement.Launcher.LaunchScripts(matchSettings.ScriptConfigurations);
+            }
+
             if (deferLoadMap)
             {
                 deferredMatchMessage = (matchSettings, originalMessage);
