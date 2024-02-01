@@ -1,5 +1,4 @@
-﻿using MatchManagement;
-using rlbot.flat;
+﻿using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotCS.GameState;
 using RLBotCS.Server;
@@ -326,7 +325,7 @@ namespace RLBotCS.GameControl
         private void SpawnBots(MatchSettingsT matchSettings)
         {
             PlayerConfigurationT? humanConfig = null;
-            Dictionary<String, int> playerNames = [];
+            Dictionary<string, int> playerNames = [];
             var humanIndex = -1;
             var indexOffset = 0;
 

@@ -5,7 +5,6 @@ using Google.FlatBuffers;
 using RLBotCS.GameControl;
 using RLBotCS.GameState;
 using RLBotCS.RLBotPacket;
-using RLBotModels.Control;
 using RLBotModels.Message;
 using RLBotSecret.Controller;
 using RLBotSecret.TCP;
@@ -59,8 +58,8 @@ namespace RLBotCS.Server
                 {
                     Console.WriteLine("Core Flatbuffer Server waiting for client connections...");
                     TcpClient client = server.AcceptTcpClient();
-                    var ipEndpoint = (IPEndPoint)client.Client.RemoteEndPoint;
-                    Console.WriteLine("Core is now serving a client that connected from port " + ipEndpoint.Port);
+                    var ipEndpoint = client.Client.RemoteEndPoint as IPEndPoint;
+                    Console.WriteLine("Core is now serving a client that connected from port " + ipEndpoint?.Port);
 
                     Thread t = new Thread(() => HandleClient(client));
                     t.Start();
