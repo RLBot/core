@@ -140,11 +140,14 @@ namespace MatchManagement
 
         private static ScriptConfigurationT GetScriptConfig(TomlTable scriptTable)
         {
-            TomlTable scriptToml = GetTable(ParseString(scriptTable, "config", ""));
+            string scriptTomlPath = ParseString(scriptTable, "config", "");
+            TomlTable scriptToml = GetTable(scriptTomlPath);
+            string tomlParent = Path.GetDirectoryName(scriptTomlPath) ?? "";
+
             ScriptConfigurationT scriptConfig =
                 new()
                 {
-                    Location = ParseString(scriptToml, "location", ""),
+                    Location = Path.Combine(tomlParent, ParseString(scriptToml, "location", "")),
                     RunCommand = ParseString(scriptToml, "run_command", "")
                 };
             return scriptConfig;
@@ -221,7 +224,10 @@ namespace MatchManagement
              *  "teamPaint" is the "paint" table within the loadout tables, contains paint colors of player items
              */
 
-            TomlTable playerToml = GetTable(ParseString(rlbotPlayerTable, "config", ""));
+            string playerTomlPath = ParseString(rlbotPlayerTable, "config", "");
+            TomlTable playerToml = GetTable(playerTomlPath);
+            string tomlParent = Path.GetDirectoryName(playerTomlPath) ?? "";
+
             TomlTable playerSettings = ParseTable(playerToml, "settings");
             TomlTable loadoutToml = GetTable(ParseString(playerSettings, "looks_config", ""));
             TomlTable teamLoadout;
@@ -243,7 +249,7 @@ namespace MatchManagement
                     Variety = classUnion,
                     Team = ParseUint(rlbotPlayerTable, "team", 0),
                     Name = ParseString(playerSettings, "name", ""),
-                    Location = ParseString(playerSettings, "location", ""),
+                    Location = Path.Combine(tomlParent, ParseString(playerSettings, "location", "")),
                     RunCommand = ParseString(playerSettings, "run_command", ""),
                     Loadout = new PlayerLoadoutT()
                     {
