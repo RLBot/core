@@ -31,6 +31,8 @@ namespace RLBotCS.Server
 
         public bool WantsComms { get; private set; }
 
+        public bool CloseAfterMatch { get; private set; }
+
         public FlatbufferSession(
             Stream stream,
             GameController gameController,
@@ -100,7 +102,8 @@ namespace RLBotCS.Server
                         NeedsIntroData = true;
                         WantsBallPredictions = readyMsg.WantsBallPredictions;
                         WantsGameMessages = readyMsg.WantsGameMessages;
-                        WantsComms = readyMsg.WantsQuickChat;
+                        WantsComms = readyMsg.WantsComms;
+                        CloseAfterMatch = readyMsg.CloseAfterMatch;
                         break;
                     case DataType.StopCommand:
                         // TODO :)

@@ -145,6 +145,7 @@ namespace RLBotCS.GameState
                                 Z = goalSpawn.location.z,
                             },
                         };
+                    goals.Add(goalInfo);
                 }
             }
         }
