@@ -29,7 +29,7 @@ namespace RLBotCS.Server
 
         public bool WantsGameMessages { get; private set; }
 
-        public bool WantsQuickChat { get; private set; }
+        public bool WantsComms { get; private set; }
 
         public FlatbufferSession(
             Stream stream,
@@ -100,8 +100,11 @@ namespace RLBotCS.Server
                         NeedsIntroData = true;
                         WantsBallPredictions = readyMsg.WantsBallPredictions;
                         WantsGameMessages = readyMsg.WantsGameMessages;
-                        WantsQuickChat = readyMsg.WantsQuickChat;
+                        WantsComms = readyMsg.WantsQuickChat;
                         break;
+                    case DataType.StopCommand:
+                        // TODO :)
+                        throw new NotImplementedException("RLBot cannot be stopped");
                     case DataType.StartCommand:
                         var startCommand = StartCommand.GetRootAsStartCommand(byteBuffer).UnPack();
                         var tomlMatchSettings = ConfigParser.GetMatchSettings(startCommand.ConfigPath);
@@ -146,7 +149,7 @@ namespace RLBotCS.Server
                             );
                         }
                         break;
-                    case DataType.QuickChat:
+                    case DataType.MatchComms:
                         break;
                     case DataType.RenderGroup:
                         if (!renderingIsEnabled)
