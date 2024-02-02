@@ -147,13 +147,14 @@ namespace RLBotCS.GameControl
 
             if (shouldSpawnNewMap)
             {
+                needsSpawnBots = true;
+                hasEverLoadedMap = true;
+
                 // Load the map, then spawn the players AFTER the map loads.
                 var load_map_command = FlatToCommand.MakeOpenCommand(matchSettings);
                 Console.WriteLine("Core is about to start match with command: " + load_map_command);
                 matchCommandSender.AddConsoleCommand(load_map_command);
                 matchCommandSender.Send();
-                needsSpawnBots = true;
-                hasEverLoadedMap = true;
             }
             else
             {
@@ -167,6 +168,7 @@ namespace RLBotCS.GameControl
             if (deferredMatchMessage is (MatchSettingsT, TypedPayload) matchMessage)
             {
                 LoadMatch(matchMessage.Item1, matchMessage.Item2);
+                deferredMatchMessage = null;
             }
         }
 
@@ -179,6 +181,26 @@ namespace RLBotCS.GameControl
             if (!MatchManagement.Launcher.IsRocketLeagueRunning())
             {
                 MatchManagement.Launcher.LaunchRocketLeague(matchSettings.Launcher, gamePort);
+            }
+
+            Dictionary<string, int> playerNames = [];
+
+            foreach (var playerConfig in matchSettings.PlayerConfigurations)
+            {
+                // De-duplicating similar names, Overwrites original value
+                string playerName = playerConfig.Name;
+                if (playerNames.TryGetValue(playerName, out int value))
+                {
+                    playerNames[playerName] = value++;
+                    playerConfig.Name = playerName + $" ({value})"; // " (x)"
+                }
+                else
+                {
+                    playerNames[playerName] = 0;
+                    playerConfig.Name = playerName;
+                }
+
+                playerConfig.SpawnId = playerConfig.Name.GetHashCode();
             }
 
             if (matchSettings.AutoStartBots)
@@ -341,22 +363,6 @@ namespace RLBotCS.GameControl
             for (int i = 0; i < matchSettings.PlayerConfigurations.Count; i++)
             {
                 var playerConfig = matchSettings.PlayerConfigurations[i];
-
-                // De-duplicating similar names, Overwrites original value
-                // TODO - does this work if duplicate name is already spawned into the match?
-                string playerName = playerConfig.Name;
-                if (playerNames.TryGetValue(playerName, out int value))
-                {
-                    playerNames[playerName] = ++value;
-                    playerConfig.Name = playerName + $"({value})"; // "(x)"
-                }
-                else
-                {
-                    playerNames[playerName] = 0;
-                    playerConfig.Name = playerName;
-                }
-
-                playerConfig.SpawnId = playerConfig.Name.GetHashCode();
 
                 var alreadySpawnedPlayer = playerMapping
                     .getKnownPlayers()

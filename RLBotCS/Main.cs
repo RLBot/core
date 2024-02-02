@@ -53,7 +53,7 @@ foreach (var messageClump in messenger)
     var messageBundle = converter.Convert(messageClump);
     gameState.gameTickPacket.matchLength = matchStarter.MatchLength();
     gameState.gameTickPacket.respawnTime = matchStarter.RespawnTime();
-    gameState.applyMessage(messageBundle);
+    gameState.ApplyMessageBundle(messageBundle);
 
     // this helps to wait for a new map to load
     if (!gameState.MatchEnded())

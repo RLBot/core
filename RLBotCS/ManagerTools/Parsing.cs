@@ -166,7 +166,7 @@ namespace MatchManagement
         public static PlayerConfigurationT GetPlayerConfig(TomlTable rlbotPlayerTable, string matchConfigPath)
         {
             PlayerClassUnion playerClassUnion;
-            PlayerClass playerClass = ParseEnum(rlbotPlayerTable, "type", PlayerClass.Psyonix);
+            PlayerClass playerClass = ParseEnum(rlbotPlayerTable, "type", PlayerClass.RLBot);
 
             switch (playerClass)
             {
@@ -237,13 +237,16 @@ namespace MatchManagement
              *  "teamLoadout" is either the "blue_loadout" or "orange_loadout" in bot_looks.toml, contains player items
              *  "teamPaint" is the "paint" table within the loadout tables, contains paint colors of player items
              */
+            string matchConfigParent = Path.GetDirectoryName(matchConfigPath) ?? "";
 
-            string playerTomlPath = ParseString(rlbotPlayerTable, "config", "");
-            TomlTable playerToml = GetTable(Path.Combine(matchConfigPath, playerTomlPath));
+            string playerTomlPath = Path.Combine(matchConfigParent, ParseString(rlbotPlayerTable, "config", ""));
+            TomlTable playerToml = GetTable(Path.Combine(matchConfigParent, playerTomlPath));
             string tomlParent = Path.GetDirectoryName(playerTomlPath) ?? "";
 
             TomlTable playerSettings = ParseTable(playerToml, "settings");
-            TomlTable loadoutToml = GetTable(ParseString(playerSettings, "looks_config", ""));
+            string loadoutTomlPath = Path.Combine(tomlParent, ParseString(playerSettings, "looks_config", ""));
+            TomlTable loadoutToml = GetTable(loadoutTomlPath);
+
             TomlTable teamLoadout;
 
             if (ParseInt(rlbotPlayerTable, "team", 0) == 0)

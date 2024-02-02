@@ -32,6 +32,9 @@ namespace RLBotCS.MatchManagement
                 string[] command = player.RunCommand.Split(' ');
                 botProcess.StartInfo.FileName = command[0];
                 botProcess.StartInfo.Arguments = string.Join(" ", command[1..]);
+
+                botProcess.StartInfo.EnvironmentVariables["BOT_SPAWN_ID"] = player.SpawnId.ToString();
+
                 botProcess.Start();
             }
         }

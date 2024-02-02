@@ -85,7 +85,12 @@ namespace RLBotCS.GameState
 
         internal ushort? ActorIdFromPlayerIndex(uint playerIndex)
         {
-            return playerIndexToMetadata[playerIndex]?.actorId;
+            if (playerIndexToMetadata.TryGetValue(playerIndex, out var playerMetadata))
+            {
+                return playerMetadata.actorId;
+            }
+
+            return null;
         }
 
         internal PlayerMetadata? tryRemoveActorId(ushort actorId)
