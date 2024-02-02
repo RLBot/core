@@ -21,7 +21,7 @@
         DesiredGameState,
         RenderGroup,
         RemoveRenderGroup,
-        QuickChat,
+        MatchComms,
 
         // Sent every time the ball diverges from the previous prediction,
         // or when the previous prediction no longer gives a full 6 seconds into the future
@@ -32,5 +32,8 @@
 
         // List of messages, having one of several possible sub-types.
         MessagePacket,
+
+        // used to end a match and shut down bots (optionally the server as well)
+        StopCommand
     };
 }
