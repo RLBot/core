@@ -1,5 +1,6 @@
 ﻿using RLBotCS.GameControl;
 using RLBotCS.GameState;
+using RLBotCS.MatchManagement;
 using RLBotCS.Server;
 using RLBotSecret.Controller;
 using RLBotSecret.Conversion;
@@ -11,7 +12,7 @@ var converter = new Converter();
 var port = args.Length > 0 ? int.Parse(args[0]) : 23233;
 
 var messenger = new TcpMessenger(port);
-var gotFirstMessage = false;
+var gotFirstMessage = Launcher.IsRocketLeagueRunning();
 
 Console.WriteLine("RLBot is waiting for Rocket League to connect on port " + port);
 

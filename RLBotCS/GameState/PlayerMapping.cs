@@ -21,7 +21,7 @@ namespace RLBotCS.GameState
         public PlayerMetadata applyCarSpawn(CarSpawn carSpawn)
         {
             var playerMetadata = getPlayerMetadata(carSpawn);
-            playerIndexToMetadata[(uint)playerMetadata.playerIndex] = playerMetadata;
+            playerIndexToMetadata[playerMetadata.playerIndex] = playerMetadata;
             actorIdToPlayerIndex[playerMetadata.actorId] = (uint)playerMetadata.playerIndex;
             return playerMetadata;
         }
