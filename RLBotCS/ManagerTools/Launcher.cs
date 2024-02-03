@@ -118,15 +118,17 @@ namespace RLBotCS.MatchManagement
 
         public static bool IsRocketLeagueRunning()
         {
-            // GetProcessByName uses the "friendly name" of the process, no extensions required.
-            // Should be OS agnostic (?)
-            Process[] candidates = Process.GetProcessesByName("RocketLeague");
-
-            if (candidates.Length > 0)
+            Process[] candidates = Process.GetProcesses();
+            foreach (var candidate in candidates)
             {
-                return true;
+                if (candidate.ProcessName.Contains("RocketLeague"))
+                {
+                    Console.WriteLine("Rocket League is already running.");
+                    return true;
+                }
             }
-            return false;
+
+            return candidates.Length > 0;
         }
 
         private static string GetSteamPath()

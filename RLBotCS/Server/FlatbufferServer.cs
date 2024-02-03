@@ -23,6 +23,7 @@ namespace RLBotCS.Server
         int sessionCount = 0;
         Dictionary<int, FlatbufferSession> sessions = new();
         bool startedCommunications = false;
+        private bool requestedServerStop = false;
 
         public FlatbufferServer(
             int port,
@@ -54,7 +55,7 @@ namespace RLBotCS.Server
         {
             try
             {
-                while (true)
+                while (!requestedServerStop)
                 {
                     Console.WriteLine("Core Flatbuffer Server waiting for client connections...");
                     TcpClient client = server.AcceptTcpClient();
@@ -100,6 +101,51 @@ namespace RLBotCS.Server
                     sessions.Remove(i);
                 }
             }
+        }
+
+        internal bool CheckRequestStopServer()
+        {
+            return requestedServerStop;
+        }
+
+        internal void BlockingStop()
+        {
+            while (sessions.Count != 0)
+            {
+                Console.WriteLine("Core is waiting for all connections to close");
+                Thread.Sleep(1000);
+            }
+
+            server.Stop();
+            Thread.Sleep(100);
+            tcpGameInterface.Dispose();
+        }
+
+        internal void EndMatchIfNeeded()
+        {
+            if (!sessions.Values.Any(session => session.HasRequestedMatchStop()))
+            {
+                return;
+            }
+
+            Console.WriteLine("Core has received a request to end the match.");
+            matchStarter.EndMatch();
+
+            if (sessions.Values.Any(session => session.HasRequestedServerStop()))
+            {
+                requestedServerStop = true;
+                Console.WriteLine("Core has received a request to stop the server.");
+            }
+
+            Console.WriteLine("Core has ended the match.");
+
+            TryRunOnEachSession(session =>
+            {
+                if (requestedServerStop || session.CloseAfterMatch)
+                {
+                    session.SetMatchEnded();
+                }
+            });
         }
 
         internal void EnsureClientsPrepared(GameState.GameState gameState)

@@ -27,10 +27,16 @@ namespace RLBotCS.GameControl
 
         public MatchStarter(TcpMessenger tcpMessenger, GameState.GameState gameState, int gamePort)
         {
-            this.gameTickPacket = gameState.gameTickPacket;
-            this.playerMapping = gameState.playerMapping;
-            this.matchCommandSender = new MatchCommandSender(tcpMessenger);
+            gameTickPacket = gameState.gameTickPacket;
+            playerMapping = gameState.playerMapping;
+            matchCommandSender = new MatchCommandSender(tcpMessenger);
             this.gamePort = gamePort;
+        }
+
+        public void EndMatch()
+        {
+            matchCommandSender.AddMatchEndCommand();
+            matchCommandSender.Send();
         }
 
         public void SetDesiredGameState(DesiredGameStateT desiredGameState)

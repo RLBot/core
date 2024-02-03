@@ -1,11 +1,13 @@
-﻿namespace RLBotCS.Server
+﻿using System.Net.Sockets;
+
+namespace RLBotCS.Server
 {
     /**
      * https://wiki.rlbot.org/framework/sockets-specification/
      */
     static class SocketSpecStreamReader
     {
-        internal static IEnumerable<TypedPayload> Read(Stream stream)
+        internal static IEnumerable<TypedPayload> Read(NetworkStream stream)
         {
             var buffer = new BufferedStream(stream, ushort.MaxValue);
 
