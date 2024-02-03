@@ -21,7 +21,7 @@ namespace RLBotCS.GameState
         public PlayerMetadata applyCarSpawn(CarSpawn carSpawn)
         {
             var playerMetadata = getPlayerMetadata(carSpawn);
-            playerIndexToMetadata[(uint)playerMetadata.playerIndex] = playerMetadata;
+            playerIndexToMetadata[playerMetadata.playerIndex] = playerMetadata;
             actorIdToPlayerIndex[playerMetadata.actorId] = (uint)playerMetadata.playerIndex;
             return playerMetadata;
         }
@@ -85,7 +85,12 @@ namespace RLBotCS.GameState
 
         internal ushort? ActorIdFromPlayerIndex(uint playerIndex)
         {
-            return playerIndexToMetadata[playerIndex]?.actorId;
+            if (playerIndexToMetadata.TryGetValue(playerIndex, out var playerMetadata))
+            {
+                return playerMetadata.actorId;
+            }
+
+            return null;
         }
 
         internal PlayerMetadata? tryRemoveActorId(ushort actorId)

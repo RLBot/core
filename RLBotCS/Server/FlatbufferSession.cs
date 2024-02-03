@@ -1,4 +1,5 @@
-﻿using Google.FlatBuffers;
+﻿using System.Net.Sockets;
+using Google.FlatBuffers;
 using MatchManagement;
 using rlbot.flat;
 using RLBotCS.GameControl;
@@ -12,7 +13,7 @@ namespace RLBotCS.Server
      */
     internal class FlatbufferSession
     {
-        private Stream stream;
+        private NetworkStream stream;
         private GameController gameController;
         private PlayerMapping playerMapping;
         private SocketSpecStreamWriter socketSpecWriter;
@@ -20,6 +21,9 @@ namespace RLBotCS.Server
         private bool stateSettingIsEnabled = true;
         private bool renderingIsEnabled = true;
         private bool startedCommunications = false;
+        private bool requestedServerStop = false;
+        private bool requestedMatchStop = false;
+        private bool matchEnded = false;
 
         public bool IsReady { get; private set; }
 
@@ -31,13 +35,16 @@ namespace RLBotCS.Server
 
         public bool WantsComms { get; private set; }
 
+        public bool CloseAfterMatch { get; private set; }
+
         public FlatbufferSession(
-            Stream stream,
+            NetworkStream stream,
             GameController gameController,
             PlayerMapping playerMapping,
             bool startedCommunications
         )
         {
+            stream.ReadTimeout = 32;
             this.stream = stream;
             this.gameController = gameController;
             this.playerMapping = playerMapping;
@@ -87,6 +94,12 @@ namespace RLBotCS.Server
         {
             foreach (var message in SocketSpecStreamReader.Read(stream))
             {
+                if (matchEnded)
+                {
+                    Console.WriteLine("Session is exiting because the match has ended.");
+                    return;
+                }
+
                 var byteBuffer = new ByteBuffer(message.payload.Array, message.payload.Offset);
 
                 switch (message.type)
@@ -100,11 +113,15 @@ namespace RLBotCS.Server
                         NeedsIntroData = true;
                         WantsBallPredictions = readyMsg.WantsBallPredictions;
                         WantsGameMessages = readyMsg.WantsGameMessages;
-                        WantsComms = readyMsg.WantsQuickChat;
+                        WantsComms = readyMsg.WantsComms;
+                        CloseAfterMatch = readyMsg.CloseAfterMatch;
                         break;
                     case DataType.StopCommand:
-                        // TODO :)
-                        throw new NotImplementedException("RLBot cannot be stopped");
+                        requestedMatchStop = true;
+                        var stopCommand = StopCommand.GetRootAsStopCommand(byteBuffer).UnPack();
+                        requestedServerStop = stopCommand.ShutdownServer;
+                        Console.WriteLine("Core got stop command from client.");
+                        break;
                     case DataType.StartCommand:
                         var startCommand = StartCommand.GetRootAsStartCommand(byteBuffer).UnPack();
                         var tomlMatchSettings = ConfigParser.GetMatchSettings(startCommand.ConfigPath);
@@ -385,6 +402,34 @@ namespace RLBotCS.Server
         internal void SetStartCommunications(bool startedCommunications)
         {
             this.startedCommunications = startedCommunications;
+        }
+
+        internal bool HasRequestedServerStop()
+        {
+            if (requestedServerStop)
+            {
+                requestedServerStop = false;
+                return true;
+            }
+
+            return false;
+        }
+
+        internal bool HasRequestedMatchStop()
+        {
+            if (requestedMatchStop)
+            {
+                requestedMatchStop = false;
+                return true;
+            }
+
+            return false;
+        }
+
+        internal void SetMatchEnded()
+        {
+            Console.WriteLine("Setting match ended in session.");
+            matchEnded = true;
         }
     }
 }

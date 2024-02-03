@@ -1,5 +1,4 @@
-﻿using MatchManagement;
-using rlbot.flat;
+﻿using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotCS.GameState;
 using RLBotCS.Server;
@@ -24,12 +23,20 @@ namespace RLBotCS.GameControl
         private bool hasEverLoadedMap = false;
         private bool isStateSettingEnabled = true;
         private bool isRenderingEnabled = true;
+        private int gamePort;
 
-        public MatchStarter(TcpMessenger tcpMessenger, GameState.GameState gameState)
+        public MatchStarter(TcpMessenger tcpMessenger, GameState.GameState gameState, int gamePort)
         {
-            this.gameTickPacket = gameState.gameTickPacket;
-            this.playerMapping = gameState.playerMapping;
-            this.matchCommandSender = new MatchCommandSender(tcpMessenger);
+            gameTickPacket = gameState.gameTickPacket;
+            playerMapping = gameState.playerMapping;
+            matchCommandSender = new MatchCommandSender(tcpMessenger);
+            this.gamePort = gamePort;
+        }
+
+        public void EndMatch()
+        {
+            matchCommandSender.AddMatchEndCommand();
+            matchCommandSender.Send();
         }
 
         public void SetDesiredGameState(DesiredGameStateT desiredGameState)
@@ -146,13 +153,14 @@ namespace RLBotCS.GameControl
 
             if (shouldSpawnNewMap)
             {
+                needsSpawnBots = true;
+                hasEverLoadedMap = true;
+
                 // Load the map, then spawn the players AFTER the map loads.
                 var load_map_command = FlatToCommand.MakeOpenCommand(matchSettings);
                 Console.WriteLine("Core is about to start match with command: " + load_map_command);
                 matchCommandSender.AddConsoleCommand(load_map_command);
                 matchCommandSender.Send();
-                needsSpawnBots = true;
-                hasEverLoadedMap = true;
             }
             else
             {
@@ -166,6 +174,7 @@ namespace RLBotCS.GameControl
             if (deferredMatchMessage is (MatchSettingsT, TypedPayload) matchMessage)
             {
                 LoadMatch(matchMessage.Item1, matchMessage.Item2);
+                deferredMatchMessage = null;
             }
         }
 
@@ -177,8 +186,35 @@ namespace RLBotCS.GameControl
         {
             if (!MatchManagement.Launcher.IsRocketLeagueRunning())
             {
-                MatchManagement.Launcher.LaunchRocketLeague(matchSettings.Launcher);
+                MatchManagement.Launcher.LaunchRocketLeague(matchSettings.Launcher, gamePort);
             }
+
+            Dictionary<string, int> playerNames = [];
+
+            foreach (var playerConfig in matchSettings.PlayerConfigurations)
+            {
+                // De-duplicating similar names, Overwrites original value
+                string playerName = playerConfig.Name;
+                if (playerNames.TryGetValue(playerName, out int value))
+                {
+                    playerNames[playerName] = value++;
+                    playerConfig.Name = playerName + $" ({value})"; // " (x)"
+                }
+                else
+                {
+                    playerNames[playerName] = 0;
+                    playerConfig.Name = playerName;
+                }
+
+                playerConfig.SpawnId = playerConfig.Name.GetHashCode();
+            }
+
+            if (matchSettings.AutoStartBots)
+            {
+                MatchManagement.Launcher.LaunchBots(matchSettings.PlayerConfigurations);
+                MatchManagement.Launcher.LaunchScripts(matchSettings.ScriptConfigurations);
+            }
+
             if (deferLoadMap)
             {
                 deferredMatchMessage = (matchSettings, originalMessage);
@@ -326,29 +362,13 @@ namespace RLBotCS.GameControl
         private void SpawnBots(MatchSettingsT matchSettings)
         {
             PlayerConfigurationT? humanConfig = null;
-            Dictionary<String, int> playerNames = [];
+            Dictionary<string, int> playerNames = [];
             var humanIndex = -1;
             var indexOffset = 0;
 
             for (int i = 0; i < matchSettings.PlayerConfigurations.Count; i++)
             {
                 var playerConfig = matchSettings.PlayerConfigurations[i];
-
-                // De-duplicating similar names, Overwrites original value
-                // TODO - does this work if duplicate name is already spawned into the match?
-                string playerName = playerConfig.Name;
-                if (playerNames.TryGetValue(playerName, out int value))
-                {
-                    playerNames[playerName] = ++value;
-                    playerConfig.Name = playerName + $"({value})"; // "(x)"
-                }
-                else
-                {
-                    playerNames[playerName] = 0;
-                    playerConfig.Name = playerName;
-                }
-
-                playerConfig.SpawnId = playerConfig.Name.GetHashCode();
 
                 var alreadySpawnedPlayer = playerMapping
                     .getKnownPlayers()

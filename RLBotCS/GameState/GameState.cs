@@ -13,7 +13,7 @@ namespace RLBotCS.GameState
         public List<BoostPadSpawn> boostPads = new();
         public List<rlbot.flat.GoalInfoT> goals = new();
 
-        public void applyMessage(MessageBundle messageBundle)
+        public void ApplyMessageBundle(MessageBundle messageBundle)
         {
             gameTickPacket.frameNum += (uint)messageBundle.physicsTickDelta;
             gameTickPacket.secondsElapsed = gameTickPacket.frameNum / 120f;
@@ -145,6 +145,7 @@ namespace RLBotCS.GameState
                                 Z = goalSpawn.location.z,
                             },
                         };
+                    goals.Add(goalInfo);
                 }
             }
         }

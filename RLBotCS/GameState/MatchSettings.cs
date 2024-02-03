@@ -1,5 +1,4 @@
 ﻿using RLBotCS.RLBotPacket;
-using RLBotModels.Message;
 
 namespace RLBotCS.GameState
 {

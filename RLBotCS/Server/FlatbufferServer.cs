@@ -5,7 +5,6 @@ using Google.FlatBuffers;
 using RLBotCS.GameControl;
 using RLBotCS.GameState;
 using RLBotCS.RLBotPacket;
-using RLBotModels.Control;
 using RLBotModels.Message;
 using RLBotSecret.Controller;
 using RLBotSecret.TCP;
@@ -24,6 +23,7 @@ namespace RLBotCS.Server
         int sessionCount = 0;
         Dictionary<int, FlatbufferSession> sessions = new();
         bool startedCommunications = false;
+        private bool requestedServerStop = false;
 
         public FlatbufferServer(
             int port,
@@ -55,12 +55,12 @@ namespace RLBotCS.Server
         {
             try
             {
-                while (true)
+                while (!requestedServerStop)
                 {
                     Console.WriteLine("Core Flatbuffer Server waiting for client connections...");
                     TcpClient client = server.AcceptTcpClient();
-                    var ipEndpoint = (IPEndPoint)client.Client.RemoteEndPoint;
-                    Console.WriteLine("Core is now serving a client that connected from port " + ipEndpoint.Port);
+                    var ipEndpoint = client.Client.RemoteEndPoint as IPEndPoint;
+                    Console.WriteLine("Core is now serving a client that connected from port " + ipEndpoint?.Port);
 
                     Thread t = new Thread(() => HandleClient(client));
                     t.Start();
@@ -101,6 +101,51 @@ namespace RLBotCS.Server
                     sessions.Remove(i);
                 }
             }
+        }
+
+        internal bool CheckRequestStopServer()
+        {
+            return requestedServerStop;
+        }
+
+        internal void BlockingStop()
+        {
+            while (sessions.Count != 0)
+            {
+                Console.WriteLine("Core is waiting for all connections to close");
+                Thread.Sleep(1000);
+            }
+
+            server.Stop();
+            Thread.Sleep(100);
+            tcpGameInterface.Dispose();
+        }
+
+        internal void EndMatchIfNeeded()
+        {
+            if (!sessions.Values.Any(session => session.HasRequestedMatchStop()))
+            {
+                return;
+            }
+
+            Console.WriteLine("Core has received a request to end the match.");
+            matchStarter.EndMatch();
+
+            if (sessions.Values.Any(session => session.HasRequestedServerStop()))
+            {
+                requestedServerStop = true;
+                Console.WriteLine("Core has received a request to stop the server.");
+            }
+
+            Console.WriteLine("Core has ended the match.");
+
+            TryRunOnEachSession(session =>
+            {
+                if (requestedServerStop || session.CloseAfterMatch)
+                {
+                    session.SetMatchEnded();
+                }
+            });
         }
 
         internal void EnsureClientsPrepared(GameState.GameState gameState)

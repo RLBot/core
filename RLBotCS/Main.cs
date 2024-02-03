@@ -2,7 +2,6 @@
 using RLBotCS.GameState;
 using RLBotCS.MatchManagement;
 using RLBotCS.Server;
-using RLBotSecret.Controller;
 using RLBotSecret.Conversion;
 using RLBotSecret.TCP;
 
@@ -10,19 +9,15 @@ var converter = new Converter();
 
 // read the port from the command line arg or default to 23233
 var port = args.Length > 0 ? int.Parse(args[0]) : 23233;
+Console.WriteLine("RLBot using port " + port);
 
 var messenger = new TcpMessenger(port);
-var gotFirstMessage = false;
+var gotFirstMessage = Launcher.IsRocketLeagueRunning();
 
 Console.WriteLine("RLBot is waiting for Rocket League to connect on port " + port);
 
-// Test to see if Launching the game works
-// Launcher rocketLeagueLauncher = new();
-// rocketLeagueLauncher.LaunchRocketLeague(rlbot.flat.Launcher.Steam);
-
-var playerInputSender = new PlayerInputSender(messenger);
 var gameState = new GameState();
-var matchStarter = new MatchStarter(messenger, gameState);
+var matchStarter = new MatchStarter(messenger, gameState, port);
 
 var flatbufferServer = new FlatbufferServer(23234, messenger, gameState.playerMapping, matchStarter);
 var serverListenerThread = new Thread(() => flatbufferServer.StartListener());
@@ -51,13 +46,14 @@ foreach (var messageClump in messenger)
         Console.WriteLine("RLBot is now receiving messages from Rocket League!");
         gotFirstMessage = true;
         flatbufferServer.StartCommunications();
-        matchStarter.LoadDeferredMatch();
     }
+
+    matchStarter.LoadDeferredMatch();
 
     var messageBundle = converter.Convert(messageClump);
     gameState.gameTickPacket.matchLength = matchStarter.MatchLength();
     gameState.gameTickPacket.respawnTime = matchStarter.RespawnTime();
-    gameState.applyMessage(messageBundle);
+    gameState.ApplyMessageBundle(messageBundle);
 
     // this helps to wait for a new map to load
     if (!gameState.MatchEnded())
@@ -84,4 +80,13 @@ foreach (var messageClump in messenger)
     {
         Console.WriteLine("Exception in Core: {0}", e);
     }
+
+    flatbufferServer.EndMatchIfNeeded();
+
+    if (flatbufferServer.CheckRequestStopServer())
+    {
+        break;
+    }
 }
+
+flatbufferServer.BlockingStop();

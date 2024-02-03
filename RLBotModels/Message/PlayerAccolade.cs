@@ -1,6 +1,4 @@
-﻿using RLBotModels.Phys;
-
-namespace RLBotModels.Message
+﻿namespace RLBotModels.Message
 {
     public class PlayerAccolade : IMessage
     {
