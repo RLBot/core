@@ -9,14 +9,14 @@ This is a rewrite a C++ version that had lived at
 ## Developer Setup
 
 - Install .NET 8 SDK [https://dotnet.microsoft.com/en-us/download/dotnet/8.0]
-- Install an IDE
-  - Visual Studio 2022 was used for initial development.
-  - Rider is also known to work.
+- Install an IDE (Visual Studio 2022 or Rider)
+- Run `git submodule update --init` to get the Flatbuffers submodule
+- Run `generate-flatbuffers.bat` to generate the Flatbuffers models
 
 ## Building
 
-In Visual Studio 2022, you can build the solution in Release mode, and find the
-compiled binaries at RLBotCS\bin\Release\net8.0.
+In VS2022 or Rider, build the solution in Release mode. The compiled binaries are at
+RLBotCS\bin\Release\net8.0.
 
 ## Deployment
 
