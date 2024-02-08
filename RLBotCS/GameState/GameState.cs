@@ -58,7 +58,7 @@ namespace RLBotCS.GameState
                 {
                     foreach (var carUpdate in physicsUpdate.carUpdates)
                     {
-                        ProcessCarUpdate(carUpdate, gameTickPacket.respawnTime);
+                        ProcessCarUpdate(carUpdate.Key, carUpdate.Value, gameTickPacket.respawnTime);
                     }
 
                     if (physicsUpdate.ballUpdate.HasValue)
@@ -142,10 +142,8 @@ namespace RLBotCS.GameState
             }
         }
 
-        private void ProcessCarUpdate(KeyValuePair<ushort, CarPhysics> carUpdate, float respawnTime)
+        private void ProcessCarUpdate(ushort actorId, CarPhysics carPhysics, float respawnTime)
         {
-            var actorId = carUpdate.Key;
-            var carPhysics = carUpdate.Value;
             var playerIndex = playerMapping.PlayerIndexFromActorId(actorId);
             if (playerIndex.HasValue)
             {
