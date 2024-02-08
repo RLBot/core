@@ -203,9 +203,6 @@ namespace RLBotCS.GameState
             }
         }
 
-        public bool MatchEnded()
-        {
-            return gameTickPacket.gameState == GameStateType.Ended;
-        }
+        public bool MatchEnded() => gameTickPacket.gameState == GameStateType.Ended;
     }
 }
