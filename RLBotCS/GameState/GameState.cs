@@ -1,6 +1,9 @@
-﻿using RLBotCS.RLBotPacket;
+﻿using rlbot.flat;
+using RLBotCS.RLBotPacket;
 using RLBotModels.Message;
 using RLBotModels.Phys;
+using GameStateType = RLBotModels.Message.GameStateType;
+using GameTickPacket = RLBotCS.RLBotPacket.GameTickPacket;
 
 namespace RLBotCS.GameState
 {
@@ -18,25 +21,14 @@ namespace RLBotCS.GameState
             gameTickPacket.frameNum += (uint)messageBundle.physicsTickDelta;
             gameTickPacket.secondsElapsed = gameTickPacket.frameNum / 120f;
 
-            if (gameTickPacket.matchLength == rlbot.flat.MatchLength.Unlimited)
+            gameTickPacket.gameTimeRemaining = gameTickPacket.matchLength switch
             {
-                gameTickPacket.gameTimeRemaining = float.MaxValue;
-            }
-            else
-            {
-                var max_game_time = 5;
-
-                if (gameTickPacket.matchLength == rlbot.flat.MatchLength.Ten_Minutes)
-                {
-                    max_game_time = 10;
-                }
-                else if (gameTickPacket.matchLength == rlbot.flat.MatchLength.Twenty_Minutes)
-                {
-                    max_game_time = 20;
-                }
-
-                gameTickPacket.gameTimeRemaining = max_game_time * 60 - gameTickPacket.secondsElapsed;
-            }
+                MatchLength.Five_Minutes => 5 * 60 - gameTickPacket.secondsElapsed,
+                MatchLength.Ten_Minutes => 10 * 60 - gameTickPacket.secondsElapsed,
+                MatchLength.Twenty_Minutes => 20 * 60 - gameTickPacket.secondsElapsed,
+                MatchLength.Unlimited => float.MaxValue,
+                _ => throw new ArgumentOutOfRangeException()
+            };
 
             foreach (var message in messageBundle.messages)
             {
