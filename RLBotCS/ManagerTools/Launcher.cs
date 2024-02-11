@@ -6,7 +6,7 @@ namespace RLBotCS.MatchManagement
 {
     internal class Launcher
     {
-        public static string steamGameID = "252950";
+        public static string SteamGameId = "252950";
 
         public static string[] GetIdealArgs(int gamePort)
         {
@@ -74,7 +74,7 @@ namespace RLBotCS.MatchManagement
                         string steamPath = GetSteamPath();
                         rocketLeague.StartInfo.FileName = steamPath;
                         rocketLeague.StartInfo.Arguments =
-                            $"-applaunch {steamGameID} " + string.Join(" ", GetIdealArgs(gamePort));
+                            $"-applaunch {SteamGameId} " + string.Join(" ", GetIdealArgs(gamePort));
 
                         Console.WriteLine(
                             $"Starting Rocket League with args {steamPath} {rocketLeague.StartInfo.Arguments}"
@@ -99,7 +99,7 @@ namespace RLBotCS.MatchManagement
 
                         string args = string.Join("%20", GetIdealArgs(gamePort));
                         rocketLeague.StartInfo.FileName = "steam";
-                        rocketLeague.StartInfo.Arguments = $"steam://rungameid/{steamGameID}//{args}";
+                        rocketLeague.StartInfo.Arguments = $"steam://rungameid/{SteamGameId}//{args}";
 
                         Console.WriteLine(
                             $"Starting Rocket League via Steam CLI with {rocketLeague.StartInfo.Arguments}"

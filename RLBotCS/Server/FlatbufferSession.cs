@@ -14,17 +14,17 @@ namespace RLBotCS.Server
      */
     internal class FlatbufferSession
     {
-        private NetworkStream stream;
-        private GameController gameController;
-        private PlayerMapping playerMapping;
-        private SocketSpecStreamWriter socketSpecWriter;
-        private Dictionary<int, List<ushort>> sessionRenderIds = new();
-        private bool stateSettingIsEnabled = true;
-        private bool renderingIsEnabled = true;
-        private bool startedCommunications = false;
-        private bool requestedServerStop = false;
-        private bool requestedMatchStop = false;
-        private bool matchEnded = false;
+        private NetworkStream _stream;
+        private GameController _gameController;
+        private PlayerMapping _playerMapping;
+        private SocketSpecStreamWriter _socketSpecWriter;
+        private Dictionary<int, List<ushort>> _sessionRenderIds = new();
+        private bool _stateSettingIsEnabled = true;
+        private bool _renderingIsEnabled = true;
+        private bool _startedCommunications = false;
+        private bool _requestedServerStop = false;
+        private bool _requestedMatchStop = false;
+        private bool _matchEnded = false;
 
         public bool IsReady { get; private set; }
 
@@ -46,34 +46,34 @@ namespace RLBotCS.Server
         )
         {
             stream.ReadTimeout = 32;
-            this.stream = stream;
-            this.gameController = gameController;
-            this.playerMapping = playerMapping;
-            this.startedCommunications = startedCommunications;
-            socketSpecWriter = new SocketSpecStreamWriter(stream);
+            this._stream = stream;
+            this._gameController = gameController;
+            this._playerMapping = playerMapping;
+            this._startedCommunications = startedCommunications;
+            _socketSpecWriter = new SocketSpecStreamWriter(stream);
         }
 
         public void RemoveRenders()
         {
-            foreach (var renderIds in sessionRenderIds.Values)
+            foreach (var renderIds in _sessionRenderIds.Values)
             {
                 for (var i = 0; i < renderIds.Count; i++)
                 {
                     try
                     {
-                        gameController.renderingSender.RemoveRenderItem(renderIds[i]);
+                        _gameController.RenderingSender.RemoveRenderItem(renderIds[i]);
                     }
                     catch (Exception)
                     {
-                        gameController.renderingSender.Send();
+                        _gameController.RenderingSender.Send();
                         i = 0;
                     }
                 }
 
-                gameController.renderingSender.Send();
+                _gameController.RenderingSender.Send();
             }
 
-            sessionRenderIds.Clear();
+            _sessionRenderIds.Clear();
         }
 
         public void Close(bool wasDroppedCleanly)
@@ -86,16 +86,16 @@ namespace RLBotCS.Server
                 SendShutdownConfirmation();
             }
 
-            stream.Close();
+            _stream.Close();
 
             RemoveRenders();
         }
 
         public void RunBlocking()
         {
-            foreach (var message in SocketSpecStreamReader.Read(stream))
+            foreach (var message in SocketSpecStreamReader.Read(_stream))
             {
-                if (matchEnded)
+                if (_matchEnded)
                 {
                     Console.WriteLine("Session is exiting because the match has ended.");
                     return;
@@ -118,9 +118,9 @@ namespace RLBotCS.Server
                         CloseAfterMatch = readyMsg.CloseAfterMatch;
                         break;
                     case DataType.StopCommand:
-                        requestedMatchStop = true;
+                        _requestedMatchStop = true;
                         var stopCommand = StopCommand.GetRootAsStopCommand(byteBuffer).UnPack();
-                        requestedServerStop = stopCommand.ShutdownServer;
+                        _requestedServerStop = stopCommand.ShutdownServer;
                         Console.WriteLine("Core got stop command from client.");
                         break;
                     case DataType.StartCommand:
@@ -132,24 +132,24 @@ namespace RLBotCS.Server
                             DataType.MatchSettings,
                             builder
                         );
-                        gameController.matchStarter.HandleMatchSettings(
+                        _gameController.MatchStarter.HandleMatchSettings(
                             tomlMatchSettings,
                             matchSettingsMessage,
-                            !startedCommunications
+                            !_startedCommunications
                         );
                         break;
                     case DataType.MatchSettings:
                         var matchSettings = rlbot.flat.MatchSettings.GetRootAsMatchSettings(byteBuffer);
-                        gameController.matchStarter.HandleMatchSettings(
+                        _gameController.MatchStarter.HandleMatchSettings(
                             matchSettings.UnPack(),
                             message,
-                            !startedCommunications
+                            !_startedCommunications
                         );
                         break;
                     case DataType.PlayerInput:
                         var playerInputMsg = PlayerInput.GetRootAsPlayerInput(byteBuffer);
                         var carInput = FlatToModel.ToCarInput(playerInputMsg.ControllerState.Value);
-                        var actorId = playerMapping.ActorIdFromPlayerIndex(playerInputMsg.PlayerIndex);
+                        var actorId = _playerMapping.ActorIdFromPlayerIndex(playerInputMsg.PlayerIndex);
                         if (actorId.HasValue)
                         {
                             var playerInput = new RLBotSecret.Models.Control.PlayerInput()
@@ -157,7 +157,7 @@ namespace RLBotCS.Server
                                 ActorId = actorId.Value,
                                 CarInput = carInput
                             };
-                            gameController.playerInputSender.SendPlayerInput(playerInput);
+                            _gameController.PlayerInputSender.SendPlayerInput(playerInput);
                         }
                         else
                         {
@@ -170,7 +170,7 @@ namespace RLBotCS.Server
                     case DataType.MatchComms:
                         break;
                     case DataType.RenderGroup:
-                        if (!renderingIsEnabled)
+                        if (!_renderingIsEnabled)
                         {
                             break;
                         }
@@ -193,10 +193,10 @@ namespace RLBotCS.Server
                         }
 
                         // Add the new render items to the tracker
-                        sessionRenderIds[renderingGroup.Id] = renderIds;
+                        _sessionRenderIds[renderingGroup.Id] = renderIds;
 
                         // Send the render requests
-                        gameController.renderingSender.Send();
+                        _gameController.RenderingSender.Send();
 
                         break;
                     case DataType.RemoveRenderGroup:
@@ -206,13 +206,13 @@ namespace RLBotCS.Server
                         RemoveRenderGroup(removeRenderGroup.Id);
                         break;
                     case DataType.DesiredGameState:
-                        if (!stateSettingIsEnabled)
+                        if (!_stateSettingIsEnabled)
                         {
                             break;
                         }
 
                         var desiredGameState = DesiredGameState.GetRootAsDesiredGameState(byteBuffer).UnPack();
-                        gameController.matchStarter.SetDesiredGameState(desiredGameState);
+                        _gameController.MatchStarter.SetDesiredGameState(desiredGameState);
                         break;
                     default:
                         Console.WriteLine("Core got unexpected message type {0} from client.", message.Type);
@@ -231,15 +231,15 @@ namespace RLBotCS.Server
         {
             // If a group already exists with the same id,
             // remove the old render items
-            if (sessionRenderIds.ContainsKey(renderGroupId))
+            if (_sessionRenderIds.ContainsKey(renderGroupId))
             {
-                foreach (var oldRenderId in sessionRenderIds[renderGroupId])
+                foreach (var oldRenderId in _sessionRenderIds[renderGroupId])
                 {
-                    gameController.renderingSender.RemoveRenderItem(oldRenderId);
+                    _gameController.RenderingSender.RemoveRenderItem(oldRenderId);
                 }
 
-                sessionRenderIds.Remove(renderGroupId);
-                gameController.renderingSender.Send();
+                _sessionRenderIds.Remove(renderGroupId);
+                _gameController.RenderingSender.Send();
             }
         }
 
@@ -249,7 +249,7 @@ namespace RLBotCS.Server
             {
                 case RenderType.Line3D:
                     var lineData = renderMessage.AsLine3D();
-                    return gameController.renderingSender.AddLine3D(
+                    return _gameController.RenderingSender.AddLine3D(
                         new RLBotSecret.Models.Phys.Vector3()
                         {
                             x = lineData.Start.X,
@@ -283,7 +283,7 @@ namespace RLBotCS.Server
                             }
                         );
                     }
-                    return gameController.renderingSender.AddLine3DSeries(
+                    return _gameController.RenderingSender.AddLine3DSeries(
                         points,
                         System.Drawing.Color.FromArgb(
                             polyLineData.Color.A,
@@ -294,7 +294,7 @@ namespace RLBotCS.Server
                     );
                 case RenderType.String2D:
                     var string2DData = renderMessage.AsString2D();
-                    return gameController.renderingSender.AddText2D(
+                    return _gameController.RenderingSender.AddText2D(
                         string2DData.Text,
                         string2DData.X,
                         string2DData.Y,
@@ -316,7 +316,7 @@ namespace RLBotCS.Server
                     );
                 case RenderType.String3D:
                     var string3DData = renderMessage.AsString3D();
-                    return gameController.renderingSender.AddText3D(
+                    return _gameController.RenderingSender.AddText3D(
                         string3DData.Text,
                         new RLBotSecret.Models.Phys.Vector3()
                         {
@@ -352,7 +352,7 @@ namespace RLBotCS.Server
                 throw new Exception("Expected match settings, got " + matchSettings.Type);
             }
 
-            socketSpecWriter.Write(matchSettings);
+            _socketSpecWriter.Write(matchSettings);
 
             List<BoostPadT> boostPads = new();
             foreach (var boostPad in gameState.BoostPads)
@@ -377,39 +377,39 @@ namespace RLBotCS.Server
             var offset = FieldInfo.Pack(builder, fieldInfoT);
             builder.Finish(offset.Value);
             var fieldInfo = TypedPayload.FromFlatBufferBuilder(DataType.FieldInfo, builder);
-            socketSpecWriter.Write(fieldInfo);
+            _socketSpecWriter.Write(fieldInfo);
 
-            socketSpecWriter.Send();
+            _socketSpecWriter.Send();
             Console.WriteLine("Core sent intro data to client.");
             NeedsIntroData = false;
         }
 
         public void ToggleStateSetting(bool isEnabled)
         {
-            stateSettingIsEnabled = isEnabled;
+            _stateSettingIsEnabled = isEnabled;
         }
 
         public void ToggleRendering(bool isEnabled)
         {
-            stateSettingIsEnabled = isEnabled;
+            _stateSettingIsEnabled = isEnabled;
         }
 
         internal void SendPayloadToClient(TypedPayload payload)
         {
-            socketSpecWriter.Write(payload);
-            socketSpecWriter.Send();
+            _socketSpecWriter.Write(payload);
+            _socketSpecWriter.Send();
         }
 
         internal void SetStartCommunications(bool startedCommunications)
         {
-            this.startedCommunications = startedCommunications;
+            this._startedCommunications = startedCommunications;
         }
 
         internal bool HasRequestedServerStop()
         {
-            if (requestedServerStop)
+            if (_requestedServerStop)
             {
-                requestedServerStop = false;
+                _requestedServerStop = false;
                 return true;
             }
 
@@ -418,9 +418,9 @@ namespace RLBotCS.Server
 
         internal bool HasRequestedMatchStop()
         {
-            if (requestedMatchStop)
+            if (_requestedMatchStop)
             {
-                requestedMatchStop = false;
+                _requestedMatchStop = false;
                 return true;
             }
 
@@ -430,7 +430,7 @@ namespace RLBotCS.Server
         internal void SetMatchEnded()
         {
             Console.WriteLine("Setting match ended in session.");
-            matchEnded = true;
+            _matchEnded = true;
         }
     }
 }

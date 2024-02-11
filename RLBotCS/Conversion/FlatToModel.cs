@@ -107,48 +107,48 @@ namespace RLBotSecret.Conversion
             };
         }
 
-        internal static Vector3 DesiredToVector(rlbot.flat.Vector3PartialT? part_vec, Vector3 default_vec)
+        internal static Vector3 DesiredToVector(rlbot.flat.Vector3PartialT? partVec, Vector3 defaultVec)
         {
-            if (part_vec is rlbot.flat.Vector3PartialT vec)
+            if (partVec is rlbot.flat.Vector3PartialT vec)
             {
                 return new Vector3()
                 {
-                    x = vec.X?.Val ?? default_vec.x,
-                    y = vec.Y?.Val ?? default_vec.y,
-                    z = vec.Z?.Val ?? default_vec.z
+                    x = vec.X?.Val ?? defaultVec.x,
+                    y = vec.Y?.Val ?? defaultVec.y,
+                    z = vec.Z?.Val ?? defaultVec.z
                 };
             }
             else
             {
-                return default_vec;
+                return defaultVec;
             }
         }
 
-        internal static Rotator DesiredToRotator(rlbot.flat.RotatorPartialT? part_rot, Rotator default_rot)
+        internal static Rotator DesiredToRotator(rlbot.flat.RotatorPartialT? partRot, Rotator defaultRot)
         {
-            if (part_rot is rlbot.flat.RotatorPartialT rot)
+            if (partRot is rlbot.flat.RotatorPartialT rot)
             {
                 return new Rotator()
                 {
-                    pitch = rot.Pitch?.Val ?? default_rot.pitch,
-                    yaw = rot.Yaw?.Val ?? default_rot.yaw,
-                    roll = rot.Roll?.Val ?? default_rot.roll
+                    pitch = rot.Pitch?.Val ?? defaultRot.pitch,
+                    yaw = rot.Yaw?.Val ?? defaultRot.yaw,
+                    roll = rot.Roll?.Val ?? defaultRot.roll
                 };
             }
             else
             {
-                return default_rot;
+                return defaultRot;
             }
         }
 
-        internal static Physics DesiredToPhysics(rlbot.flat.DesiredPhysicsT p, Physics default_p)
+        internal static Physics DesiredToPhysics(rlbot.flat.DesiredPhysicsT p, Physics defaultP)
         {
             return new Physics()
             {
-                location = DesiredToVector(p.Location, default_p.location),
-                rotation = DesiredToRotator(p.Rotation, default_p.rotation),
-                velocity = DesiredToVector(p.Velocity, default_p.velocity),
-                angularVelocity = DesiredToVector(p.AngularVelocity, default_p.angularVelocity),
+                location = DesiredToVector(p.Location, defaultP.location),
+                rotation = DesiredToRotator(p.Rotation, defaultP.rotation),
+                velocity = DesiredToVector(p.Velocity, defaultP.velocity),
+                angularVelocity = DesiredToVector(p.AngularVelocity, defaultP.angularVelocity),
             };
         }
     }

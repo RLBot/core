@@ -8,12 +8,12 @@ namespace RLBotCSTests
     [TestClass]
     public class PlayerMappingTest
     {
-        private PlayerMapping playerMapping;
+        private PlayerMapping _playerMapping;
 
         [TestInitialize]
-        public void init()
+        public void Init()
         {
-            playerMapping = new PlayerMapping();
+            _playerMapping = new PlayerMapping();
         }
 
         [TestMethod]
@@ -32,7 +32,7 @@ namespace RLBotCSTests
                 IsCustomBot = true
             };
 
-            playerMapping.AddPendingSpawn(spawnTracker);
+            _playerMapping.AddPendingSpawn(spawnTracker);
 
             var carSpawn = new CarSpawn()
             {
@@ -41,11 +41,11 @@ namespace RLBotCSTests
                 Name = "MyBot",
                 Team = 1
             };
-            playerMapping.ApplyCarSpawn(carSpawn);
+            _playerMapping.ApplyCarSpawn(carSpawn);
 
-            Assert.AreEqual(desiredIndex, playerMapping.PlayerIndexFromActorId(actorId));
+            Assert.AreEqual(desiredIndex, _playerMapping.PlayerIndexFromActorId(actorId));
 
-            playerMapping.ApplyCarSpawn(
+            _playerMapping.ApplyCarSpawn(
                 new CarSpawn()
                 {
                     ActorId = 111,
@@ -55,8 +55,8 @@ namespace RLBotCSTests
                 }
             );
 
-            Assert.AreEqual(0, playerMapping.PlayerIndexFromActorId(111));
-            Assert.AreEqual(desiredIndex, playerMapping.PlayerIndexFromActorId(actorId));
+            Assert.AreEqual(0, _playerMapping.PlayerIndexFromActorId(111));
+            Assert.AreEqual(desiredIndex, _playerMapping.PlayerIndexFromActorId(actorId));
             Console.Write("Good");
         }
     }

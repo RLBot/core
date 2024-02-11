@@ -12,31 +12,31 @@ namespace RLBotCS.GameControl
 {
     internal class MatchStarter
     {
-        private GameState gameState;
-        private PlayerMapping playerMapping;
-        private MatchCommandSender matchCommandSender;
-        private (MatchSettingsT, TypedPayload)? lastMatchMessage;
-        private (MatchSettingsT, TypedPayload)? deferredMatchMessage;
-        private MatchLength matchLength = rlbot.flat.MatchLength.Five_Minutes;
-        private float respawnTime = 3;
-        private bool needsSpawnBots = true;
-        private bool hasEverLoadedMap = false;
-        private bool isStateSettingEnabled = true;
-        private bool isRenderingEnabled = true;
-        private int gamePort;
+        private GameState _gameState;
+        private PlayerMapping _playerMapping;
+        private MatchCommandSender _matchCommandSender;
+        private (MatchSettingsT, TypedPayload)? _lastMatchMessage;
+        private (MatchSettingsT, TypedPayload)? _deferredMatchMessage;
+        private MatchLength _matchLength = rlbot.flat.MatchLength.Five_Minutes;
+        private float _respawnTime = 3;
+        private bool _needsSpawnBots = true;
+        private bool _hasEverLoadedMap = false;
+        private bool _isStateSettingEnabled = true;
+        private bool _isRenderingEnabled = true;
+        private int _gamePort;
 
         public MatchStarter(TcpMessenger tcpMessenger, GameState gameState, int gamePort)
         {
-            this.gameState = gameState;
-            playerMapping = gameState.PlayerMapping;
-            matchCommandSender = new MatchCommandSender(tcpMessenger);
-            this.gamePort = gamePort;
+            this._gameState = gameState;
+            _playerMapping = gameState.PlayerMapping;
+            _matchCommandSender = new MatchCommandSender(tcpMessenger);
+            this._gamePort = gamePort;
         }
 
         public void EndMatch()
         {
-            matchCommandSender.AddMatchEndCommand();
-            matchCommandSender.Send();
+            _matchCommandSender.AddMatchEndCommand();
+            _matchCommandSender.Send();
         }
 
         public void SetDesiredGameState(DesiredGameStateT desiredGameState)
@@ -45,22 +45,22 @@ namespace RLBotCS.GameControl
             {
                 if (gameState.WorldGravityZ is FloatT worldGravityZ)
                 {
-                    matchCommandSender.AddConsoleCommand(FlatToCommand.MakeGravityCommand(worldGravityZ.Val));
+                    _matchCommandSender.AddConsoleCommand(FlatToCommand.MakeGravityCommand(worldGravityZ.Val));
                 }
 
                 if (gameState.GameSpeed is FloatT gameSpeed)
                 {
-                    matchCommandSender.AddConsoleCommand(FlatToCommand.MakeGameSpeedCommand(gameSpeed.Val));
+                    _matchCommandSender.AddConsoleCommand(FlatToCommand.MakeGameSpeedCommand(gameSpeed.Val));
                 }
 
                 if (gameState.Paused is BoolT paused)
                 {
-                    matchCommandSender.AddSetPausedCommand(paused.Val);
+                    _matchCommandSender.AddSetPausedCommand(paused.Val);
                 }
 
                 if (gameState.EndMatch is BoolT endMatch && endMatch.Val)
                 {
-                    matchCommandSender.AddMatchEndCommand();
+                    _matchCommandSender.AddMatchEndCommand();
                 }
             }
 
@@ -68,21 +68,21 @@ namespace RLBotCS.GameControl
             {
                 if (
                     desiredGameState.CarStates[i] is DesiredCarStateT carState
-                    && playerMapping.ActorIdFromPlayerIndex((uint)i) is ushort actorId
+                    && _playerMapping.ActorIdFromPlayerIndex((uint)i) is ushort actorId
                 )
                 {
                     if (carState.Physics is DesiredPhysicsT physics)
                     {
-                        var default_physics = this.gameState.GameCars[(uint)i].Physics;
-                        matchCommandSender.AddSetPhysicsCommand(
+                        var defaultPhysics = this._gameState.GameCars[(uint)i].Physics;
+                        _matchCommandSender.AddSetPhysicsCommand(
                             actorId,
-                            FlatToModel.DesiredToPhysics(physics, default_physics)
+                            FlatToModel.DesiredToPhysics(physics, defaultPhysics)
                         );
                     }
 
                     if (carState.BoostAmount is FloatT boostAmount)
                     {
-                        matchCommandSender.AddSetBoostCommand(actorId, (int)boostAmount.Val);
+                        _matchCommandSender.AddSetBoostCommand(actorId, (int)boostAmount.Val);
                     }
                 }
             }
@@ -91,25 +91,25 @@ namespace RLBotCS.GameControl
             {
                 if (ballState.Physics is DesiredPhysicsT physics)
                 {
-                    matchCommandSender.AddSetPhysicsCommand(
-                        this.gameState.Ball.ActorId,
-                        FlatToModel.DesiredToPhysics(physics, this.gameState.Ball.Physics)
+                    _matchCommandSender.AddSetPhysicsCommand(
+                        this._gameState.Ball.ActorId,
+                        FlatToModel.DesiredToPhysics(physics, this._gameState.Ball.Physics)
                     );
                 }
             }
 
-            matchCommandSender.Send();
+            _matchCommandSender.Send();
         }
 
         private void LoadMatch(MatchSettingsT matchSettings, TypedPayload originalMessage)
         {
             if (matchSettings.MutatorSettings is MutatorSettingsT mutatorSettings)
             {
-                matchLength = mutatorSettings.MatchLength;
-                matchCommandSender.AddConsoleCommand(
+                _matchLength = mutatorSettings.MatchLength;
+                _matchCommandSender.AddConsoleCommand(
                     FlatToCommand.MakeGravityCommandFromOption(mutatorSettings.GravityOption)
                 );
-                matchCommandSender.AddConsoleCommand(
+                _matchCommandSender.AddConsoleCommand(
                     FlatToCommand.MakeGameSpeedCommandFromOption(mutatorSettings.GameSpeedOption)
                 );
 
@@ -117,50 +117,50 @@ namespace RLBotCS.GameControl
                 {
                     if (respawnTimeOption == RespawnTimeOption.Two_Seconds)
                     {
-                        respawnTime = 2;
+                        _respawnTime = 2;
                     }
                     else if (respawnTimeOption == RespawnTimeOption.One_Seconds)
                     {
-                        respawnTime = 1;
+                        _respawnTime = 1;
                     }
                     else
                     {
-                        respawnTime = 3;
+                        _respawnTime = 3;
                     }
                 }
             }
 
-            isStateSettingEnabled = matchSettings.EnableStateSetting;
-            isRenderingEnabled = matchSettings.EnableRendering;
+            _isStateSettingEnabled = matchSettings.EnableStateSetting;
+            _isRenderingEnabled = matchSettings.EnableRendering;
 
             if (matchSettings.AutoSaveReplay)
             {
-                matchCommandSender.AddConsoleCommand(FlatToCommand.MakeAutoSaveReplayCommand());
+                _matchCommandSender.AddConsoleCommand(FlatToCommand.MakeAutoSaveReplayCommand());
             }
 
             var shouldSpawnNewMap = true;
 
             if (matchSettings.ExistingMatchBehavior == ExistingMatchBehavior.Continue_And_Spawn)
             {
-                shouldSpawnNewMap = !hasEverLoadedMap || gameState.GameStateType == GameStateType.Ended;
+                shouldSpawnNewMap = !_hasEverLoadedMap || _gameState.GameStateType == GameStateType.Ended;
             }
             else if (matchSettings.ExistingMatchBehavior == ExistingMatchBehavior.Restart_If_Different)
             {
                 shouldSpawnNewMap = IsDifferentFromLast(matchSettings);
             }
 
-            lastMatchMessage = (matchSettings, originalMessage);
+            _lastMatchMessage = (matchSettings, originalMessage);
 
             if (shouldSpawnNewMap)
             {
-                needsSpawnBots = true;
-                hasEverLoadedMap = true;
+                _needsSpawnBots = true;
+                _hasEverLoadedMap = true;
 
                 // Load the map, then spawn the players AFTER the map loads.
-                var load_map_command = FlatToCommand.MakeOpenCommand(matchSettings);
-                Console.WriteLine("Core is about to start match with command: " + load_map_command);
-                matchCommandSender.AddConsoleCommand(load_map_command);
-                matchCommandSender.Send();
+                var loadMapCommand = FlatToCommand.MakeOpenCommand(matchSettings);
+                Console.WriteLine("Core is about to start match with command: " + loadMapCommand);
+                _matchCommandSender.AddConsoleCommand(loadMapCommand);
+                _matchCommandSender.Send();
             }
             else
             {
@@ -171,10 +171,10 @@ namespace RLBotCS.GameControl
 
         public void LoadDeferredMatch()
         {
-            if (deferredMatchMessage is (MatchSettingsT, TypedPayload) matchMessage)
+            if (_deferredMatchMessage is (MatchSettingsT, TypedPayload) matchMessage)
             {
                 LoadMatch(matchMessage.Item1, matchMessage.Item2);
-                deferredMatchMessage = null;
+                _deferredMatchMessage = null;
             }
         }
 
@@ -186,7 +186,7 @@ namespace RLBotCS.GameControl
         {
             if (!MatchManagement.Launcher.IsRocketLeagueRunning())
             {
-                MatchManagement.Launcher.LaunchRocketLeague(matchSettings.Launcher, gamePort);
+                MatchManagement.Launcher.LaunchRocketLeague(matchSettings.Launcher, _gamePort);
             }
 
             Dictionary<string, int> playerNames = [];
@@ -217,7 +217,7 @@ namespace RLBotCS.GameControl
 
             if (deferLoadMap)
             {
-                deferredMatchMessage = (matchSettings, originalMessage);
+                _deferredMatchMessage = (matchSettings, originalMessage);
             }
             else
             {
@@ -229,7 +229,7 @@ namespace RLBotCS.GameControl
         {
             // don't consider rendering/state setting because that can be enable/disabled without restarting the match
 
-            var lastMatchSettings = lastMatchMessage?.Item1;
+            var lastMatchSettings = _lastMatchMessage?.Item1;
             if (lastMatchSettings == null)
             {
                 return true;
@@ -349,12 +349,12 @@ namespace RLBotCS.GameControl
 
         public void ApplyMessageBundle(MessageBundle messageBundle)
         {
-            if (needsSpawnBots && lastMatchMessage?.Item1 is MatchSettingsT matchSettings)
+            if (_needsSpawnBots && _lastMatchMessage?.Item1 is MatchSettingsT matchSettings)
             {
                 if (messageBundle.Messages.Any(message => message is MatchInfo))
                 {
                     SpawnBots(matchSettings);
-                    needsSpawnBots = false;
+                    _needsSpawnBots = false;
                 }
             }
         }
@@ -370,7 +370,7 @@ namespace RLBotCS.GameControl
             {
                 var playerConfig = matchSettings.PlayerConfigurations[i];
 
-                var alreadySpawnedPlayer = playerMapping
+                var alreadySpawnedPlayer = _playerMapping
                     .GetKnownPlayers()
                     .FirstOrDefault((kp) => playerConfig.SpawnId == kp.SpawnId);
                 if (alreadySpawnedPlayer != null)
@@ -405,14 +405,14 @@ namespace RLBotCS.GameControl
                                 + playerConfig.SpawnId
                         );
 
-                        var rlbotSpawnCommandId = matchCommandSender.AddBotSpawnCommand(
+                        var rlbotSpawnCommandId = _matchCommandSender.AddBotSpawnCommand(
                             playerConfig.Name,
                             (int)playerConfig.Team,
                             BotSkill.Custom,
                             loadout
                         );
 
-                        playerMapping.AddPendingSpawn(
+                        _playerMapping.AddPendingSpawn(
                             new SpawnTracker()
                             {
                                 CommandId = rlbotSpawnCommandId,
@@ -434,14 +434,14 @@ namespace RLBotCS.GameControl
                             skillEnum = BotSkill.Medium;
                         }
 
-                        var psySpawnCommandId = matchCommandSender.AddBotSpawnCommand(
+                        var psySpawnCommandId = _matchCommandSender.AddBotSpawnCommand(
                             playerConfig.Name,
                             (int)playerConfig.Team,
                             skillEnum,
                             loadout
                         );
 
-                        playerMapping.AddPendingSpawn(
+                        _playerMapping.AddPendingSpawn(
                             new SpawnTracker()
                             {
                                 CommandId = psySpawnCommandId,
@@ -475,13 +475,13 @@ namespace RLBotCS.GameControl
 
             if (humanConfig != null)
             {
-                matchCommandSender.Send();
+                _matchCommandSender.Send();
 
                 // For some reason if we send this command to early,
                 // the game will only half-spawn us
-                matchCommandSender.AddConsoleCommand("ChangeTeam " + humanConfig.Team);
+                _matchCommandSender.AddConsoleCommand("ChangeTeam " + humanConfig.Team);
 
-                playerMapping.AddPendingSpawn(
+                _playerMapping.AddPendingSpawn(
                     new SpawnTracker()
                     {
                         CommandId = 0,
@@ -495,35 +495,35 @@ namespace RLBotCS.GameControl
             {
                 // If no human was requested for the match,
                 // then make the human spectate so we can start the match
-                matchCommandSender.AddConsoleCommand("spectate");
+                _matchCommandSender.AddConsoleCommand("spectate");
             }
 
-            matchCommandSender.Send();
+            _matchCommandSender.Send();
         }
 
         public TypedPayload? GetMatchSettings()
         {
-            return lastMatchMessage?.Item2;
+            return _lastMatchMessage?.Item2;
         }
 
         public MatchLength MatchLength()
         {
-            return matchLength;
+            return _matchLength;
         }
 
         public float RespawnTime()
         {
-            return respawnTime;
+            return _respawnTime;
         }
 
         internal bool IsStateSettingEnabled()
         {
-            return isStateSettingEnabled;
+            return _isStateSettingEnabled;
         }
 
         internal bool IsRenderingEnabled()
         {
-            return isRenderingEnabled;
+            return _isRenderingEnabled;
         }
     }
 }

@@ -4,9 +4,9 @@ namespace RLBotCS.GameControl
 {
     internal class GameController
     {
-        public PlayerInputSender playerInputSender;
-        public RenderingSender renderingSender;
-        public MatchStarter matchStarter;
+        public PlayerInputSender PlayerInputSender;
+        public RenderingSender RenderingSender;
+        public MatchStarter MatchStarter;
 
         public GameController(
             PlayerInputSender playerInputSender,
@@ -14,9 +14,9 @@ namespace RLBotCS.GameControl
             MatchStarter matchStarter
         )
         {
-            this.playerInputSender = playerInputSender;
-            this.renderingSender = renderingSender;
-            this.matchStarter = matchStarter;
+            this.PlayerInputSender = playerInputSender;
+            this.RenderingSender = renderingSender;
+            this.MatchStarter = matchStarter;
         }
     }
 }

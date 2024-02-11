@@ -367,15 +367,15 @@ namespace MatchManagement
                 };
 
             // Gets the PlayerConfigT object for the number of players requested
-            int num_bots = ParseInt(matchTable, "num_cars", 0);
-            for (int i = 0; i < Math.Min(num_bots, players.Count); i++)
+            int numBots = ParseInt(matchTable, "num_cars", 0);
+            for (int i = 0; i < Math.Min(numBots, players.Count); i++)
             {
                 playerConfigs.Add(GetPlayerConfig(players[i], path));
             }
             matchSettings.PlayerConfigurations = playerConfigs;
 
-            int num_scripts = ParseInt(matchTable, "num_scripts", 0);
-            for (int i = 0; i < Math.Min(num_scripts, scripts.Count); i++)
+            int numScripts = ParseInt(matchTable, "num_scripts", 0);
+            for (int i = 0; i < Math.Min(numScripts, scripts.Count); i++)
             {
                 scriptConfigs.Add(GetScriptConfig(scripts[i], path));
             }

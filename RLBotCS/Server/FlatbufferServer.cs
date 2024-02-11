@@ -16,14 +16,14 @@ namespace RLBotCS.Server
      */
     internal class FlatbufferServer
     {
-        TcpListener server;
-        TcpMessenger tcpGameInterface;
-        PlayerMapping playerMapping;
-        MatchStarter matchStarter;
-        int sessionCount = 0;
-        Dictionary<int, FlatbufferSession> sessions = new();
-        bool startedCommunications = false;
-        private bool requestedServerStop = false;
+        TcpListener _server;
+        TcpMessenger _tcpGameInterface;
+        PlayerMapping _playerMapping;
+        MatchStarter _matchStarter;
+        int _sessionCount = 0;
+        Dictionary<int, FlatbufferSession> _sessions = new();
+        bool _startedCommunications = false;
+        private bool _requestedServerStop = false;
 
         public FlatbufferServer(
             int port,
@@ -32,20 +32,20 @@ namespace RLBotCS.Server
             MatchStarter matchStarter
         )
         {
-            this.tcpGameInterface = tcpGameInterface;
-            this.playerMapping = playerMapping;
-            this.matchStarter = matchStarter;
+            this._tcpGameInterface = tcpGameInterface;
+            this._playerMapping = playerMapping;
+            this._matchStarter = matchStarter;
 
             IPAddress localAddr = IPAddress.Parse("127.0.0.1");
-            server = new TcpListener(localAddr, port);
-            server.Start();
+            _server = new TcpListener(localAddr, port);
+            _server.Start();
         }
 
         public void StartCommunications()
         {
-            startedCommunications = true;
+            _startedCommunications = true;
 
-            foreach (var session in sessions.Values)
+            foreach (var session in _sessions.Values)
             {
                 session.SetStartCommunications(true);
             }
@@ -55,10 +55,10 @@ namespace RLBotCS.Server
         {
             try
             {
-                while (!requestedServerStop)
+                while (!_requestedServerStop)
                 {
                     Console.WriteLine("Core Flatbuffer Server waiting for client connections...");
-                    TcpClient client = server.AcceptTcpClient();
+                    TcpClient client = _server.AcceptTcpClient();
                     var ipEndpoint = client.Client.RemoteEndPoint as IPEndPoint;
                     Console.WriteLine("Core is now serving a client that connected from port " + ipEndpoint?.Port);
 
@@ -69,21 +69,21 @@ namespace RLBotCS.Server
             catch (SocketException)
             {
                 Console.WriteLine("Core's TCP server was terminated.");
-                server.Stop();
+                _server.Stop();
             }
         }
 
         private void TryRunOnEachSession(Action<FlatbufferSession> action)
         {
-            ImmutableArray<int> keys_copy = sessions.Keys.ToImmutableArray();
-            foreach (var i in keys_copy)
+            ImmutableArray<int> keysCopy = _sessions.Keys.ToImmutableArray();
+            foreach (var i in keysCopy)
             {
-                if (!sessions.ContainsKey(i))
+                if (!_sessions.ContainsKey(i))
                 {
                     continue;
                 }
 
-                var session = sessions[i];
+                var session = _sessions[i];
 
                 try
                 {
@@ -92,48 +92,48 @@ namespace RLBotCS.Server
                 catch (IOException e)
                 {
                     Console.WriteLine("Core is dropping connection to session due to: {0}", e);
-                    sessions.Remove(i);
+                    _sessions.Remove(i);
                     session.Close(false);
                 }
                 catch (ObjectDisposedException e)
                 {
                     Console.WriteLine("Core is dropping connection to session due to: {0}", e);
-                    sessions.Remove(i);
+                    _sessions.Remove(i);
                 }
             }
         }
 
         internal bool CheckRequestStopServer()
         {
-            return requestedServerStop;
+            return _requestedServerStop;
         }
 
         internal void BlockingStop()
         {
-            while (sessions.Count != 0)
+            while (_sessions.Count != 0)
             {
                 Console.WriteLine("Core is waiting for all connections to close");
                 Thread.Sleep(1000);
             }
 
-            server.Stop();
+            _server.Stop();
             Thread.Sleep(100);
-            tcpGameInterface.Dispose();
+            _tcpGameInterface.Dispose();
         }
 
         internal void EndMatchIfNeeded()
         {
-            if (!sessions.Values.Any(session => session.HasRequestedMatchStop()))
+            if (!_sessions.Values.Any(session => session.HasRequestedMatchStop()))
             {
                 return;
             }
 
             Console.WriteLine("Core has received a request to end the match.");
-            matchStarter.EndMatch();
+            _matchStarter.EndMatch();
 
-            if (sessions.Values.Any(session => session.HasRequestedServerStop()))
+            if (_sessions.Values.Any(session => session.HasRequestedServerStop()))
             {
-                requestedServerStop = true;
+                _requestedServerStop = true;
                 Console.WriteLine("Core has received a request to stop the server.");
             }
 
@@ -141,7 +141,7 @@ namespace RLBotCS.Server
 
             TryRunOnEachSession(session =>
             {
-                if (requestedServerStop || session.CloseAfterMatch)
+                if (_requestedServerStop || session.CloseAfterMatch)
                 {
                     session.SetMatchEnded();
                 }
@@ -152,15 +152,15 @@ namespace RLBotCS.Server
         {
             TryRunOnEachSession(session =>
             {
-                session.ToggleStateSetting(matchStarter.IsStateSettingEnabled());
-                session.ToggleRendering(matchStarter.IsRenderingEnabled());
+                session.ToggleStateSetting(_matchStarter.IsStateSettingEnabled());
+                session.ToggleRendering(_matchStarter.IsRenderingEnabled());
 
                 if (!session.IsReady || !session.NeedsIntroData)
                 {
                     return;
                 }
 
-                if (matchStarter.GetMatchSettings() is TypedPayload matchSettings)
+                if (_matchStarter.GetMatchSettings() is TypedPayload matchSettings)
                 {
                     session.SendIntroData(matchSettings, gameState);
                 }
@@ -187,7 +187,7 @@ namespace RLBotCS.Server
             {
                 if (message is PlayerInputUpdate update)
                 {
-                    if (playerMapping.PlayerIndexFromActorId(update.PlayerInput.ActorId) is uint playerIndex)
+                    if (_playerMapping.PlayerIndexFromActorId(update.PlayerInput.ActorId) is uint playerIndex)
                     {
                         var playerInput = new rlbot.flat.PlayerInputChangeT()
                         {
@@ -217,7 +217,7 @@ namespace RLBotCS.Server
                 }
                 else if (message is SpectateViewChange change)
                 {
-                    if (playerMapping.PlayerIndexFromActorId(change.SpectatedActorId) is uint playerIndex)
+                    if (_playerMapping.PlayerIndexFromActorId(change.SpectatedActorId) is uint playerIndex)
                     {
                         var spectate = new rlbot.flat.PlayerSpectateT() { PlayerIndex = playerIndex, };
 
@@ -231,7 +231,7 @@ namespace RLBotCS.Server
                 }
                 else if (message is PlayerAccolade accolade)
                 {
-                    if (playerMapping.PlayerIndexFromActorId(accolade.ActorId) is uint playerIndex)
+                    if (_playerMapping.PlayerIndexFromActorId(accolade.ActorId) is uint playerIndex)
                     {
                         var playerAccolade = new rlbot.flat.PlayerStatEventT()
                         {
@@ -280,28 +280,28 @@ namespace RLBotCS.Server
 
         public void Stop()
         {
-            foreach (var session in sessions.Values)
+            foreach (var session in _sessions.Values)
             {
                 session.Close(false);
             }
 
-            sessions.Clear();
-            server.Stop();
+            _sessions.Clear();
+            _server.Stop();
             Thread.Sleep(100);
-            tcpGameInterface.Dispose();
+            _tcpGameInterface.Dispose();
         }
 
         public void HandleClient(TcpClient client)
         {
             var stream = client.GetStream();
 
-            var playerInputSender = new PlayerInputSender(tcpGameInterface);
-            var renderingSender = new RenderingSender(tcpGameInterface);
-            var gameController = new GameController(playerInputSender, renderingSender, matchStarter);
+            var playerInputSender = new PlayerInputSender(_tcpGameInterface);
+            var renderingSender = new RenderingSender(_tcpGameInterface);
+            var gameController = new GameController(playerInputSender, renderingSender, _matchStarter);
 
-            var session = new FlatbufferSession(stream, gameController, playerMapping, startedCommunications);
-            var id = Interlocked.Increment(ref sessionCount);
-            sessions.Add(id, session);
+            var session = new FlatbufferSession(stream, gameController, _playerMapping, _startedCommunications);
+            var id = Interlocked.Increment(ref _sessionCount);
+            _sessions.Add(id, session);
 
             var wasDroppedCleanly = true;
 
@@ -325,7 +325,7 @@ namespace RLBotCS.Server
                 wasDroppedCleanly = false;
             }
 
-            sessions.Remove(id);
+            _sessions.Remove(id);
             session.Close(wasDroppedCleanly);
             client.Close();
         }

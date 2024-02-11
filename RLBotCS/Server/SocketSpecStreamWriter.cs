@@ -8,23 +8,23 @@ namespace RLBotCS.Server
      */
     internal class SocketSpecStreamWriter
     {
-        Stream stream;
-        byte[] dataTypeBuffer = new byte[2];
-        byte[] messageLengthBuffer = new byte[2];
+        Stream _stream;
+        byte[] _dataTypeBuffer = new byte[2];
+        byte[] _messageLengthBuffer = new byte[2];
 
         public SocketSpecStreamWriter(Stream stream)
         {
-            this.stream = stream;
+            this._stream = stream;
         }
 
         void PrepareMessageLength(ushort length)
         {
-            WriteBigEndian(length, messageLengthBuffer);
+            WriteBigEndian(length, _messageLengthBuffer);
         }
 
         void PrepareDataType(DataType dataType)
         {
-            WriteBigEndian((ushort)dataType, dataTypeBuffer);
+            WriteBigEndian((ushort)dataType, _dataTypeBuffer);
         }
 
         void WriteBigEndian(ushort value, byte[] buffer)
@@ -49,15 +49,15 @@ namespace RLBotCS.Server
             PrepareMessageLength((ushort)message.Payload.Count);
 
             var messageBuffer = new byte[message.Payload.Count + 4];
-            Array.Copy(dataTypeBuffer, 0, messageBuffer, 0, 2);
-            Array.Copy(messageLengthBuffer, 0, messageBuffer, 2, 2);
+            Array.Copy(_dataTypeBuffer, 0, messageBuffer, 0, 2);
+            Array.Copy(_messageLengthBuffer, 0, messageBuffer, 2, 2);
             Array.Copy(message.Payload.Array, message.Payload.Offset, messageBuffer, 4, message.Payload.Count);
-            stream.Write(messageBuffer, 0, messageBuffer.Length);
+            _stream.Write(messageBuffer, 0, messageBuffer.Length);
         }
 
         internal void Send()
         {
-            stream.Flush();
+            _stream.Flush();
         }
     }
 }
