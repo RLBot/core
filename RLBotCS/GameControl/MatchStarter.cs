@@ -7,12 +7,13 @@ using RLBotSecret.Models.Message;
 using RLBotSecret.TCP;
 using RLBotSecret.Types;
 using GameStateType = RLBotSecret.Models.Message.GameStateType;
+using GameTickPacket = RLBotSecret.Packet.GameTickPacket;
 
 namespace RLBotCS.GameControl
 {
     internal class MatchStarter
     {
-        private RLBotSecret.Packet.GameTickPacket gameTickPacket;
+        private RLBotSecret.Packet.GameTickPacket gameState;
         private PlayerMapping playerMapping;
         private MatchCommandSender matchCommandSender;
         private (MatchSettingsT, TypedPayload)? lastMatchMessage;
@@ -25,9 +26,9 @@ namespace RLBotCS.GameControl
         private bool isRenderingEnabled = true;
         private int gamePort;
 
-        public MatchStarter(TcpMessenger tcpMessenger, GameState gameState, int gamePort)
+        public MatchStarter(TcpMessenger tcpMessenger, GameTickPacket gameState, int gamePort)
         {
-            gameTickPacket = gameState.gameTickPacket;
+            this.gameState = gameState;
             playerMapping = gameState.playerMapping;
             matchCommandSender = new MatchCommandSender(tcpMessenger);
             this.gamePort = gamePort;
@@ -73,7 +74,7 @@ namespace RLBotCS.GameControl
                 {
                     if (carState.Physics is DesiredPhysicsT physics)
                     {
-                        var default_physics = gameTickPacket.gameCars[(uint)i].physics;
+                        var default_physics = this.gameState.gameCars[(uint)i].physics;
                         matchCommandSender.AddSetPhysicsCommand(
                             actorId,
                             FlatToModel.DesiredToPhysics(physics, default_physics)
@@ -92,8 +93,8 @@ namespace RLBotCS.GameControl
                 if (ballState.Physics is DesiredPhysicsT physics)
                 {
                     matchCommandSender.AddSetPhysicsCommand(
-                        gameTickPacket.ball.actorId,
-                        FlatToModel.DesiredToPhysics(physics, gameTickPacket.ball.physics)
+                        this.gameState.ball.actorId,
+                        FlatToModel.DesiredToPhysics(physics, this.gameState.ball.physics)
                     );
                 }
             }
@@ -142,7 +143,7 @@ namespace RLBotCS.GameControl
 
             if (matchSettings.ExistingMatchBehavior == ExistingMatchBehavior.Continue_And_Spawn)
             {
-                shouldSpawnNewMap = !hasEverLoadedMap || gameTickPacket.gameState == GameStateType.Ended;
+                shouldSpawnNewMap = !hasEverLoadedMap || gameState.gameState == GameStateType.Ended;
             }
             else if (matchSettings.ExistingMatchBehavior == ExistingMatchBehavior.Restart_If_Different)
             {

@@ -149,7 +149,7 @@ namespace RLBotCS.Server
             });
         }
 
-        internal void EnsureClientsPrepared(GameState gameState)
+        internal void EnsureClientsPrepared(GameTickPacket gameState)
         {
             TryRunOnEachSession(session =>
             {

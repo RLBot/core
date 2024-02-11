@@ -6,6 +6,7 @@ using RLBotCS.GameControl;
 using RLBotSecret.Conversion;
 using RLBotSecret.GameState;
 using RLBotSecret.Types;
+using GameTickPacket = RLBotSecret.Packet.GameTickPacket;
 
 namespace RLBotCS.Server
 {
@@ -345,7 +346,7 @@ namespace RLBotCS.Server
             }
         }
 
-        public void SendIntroData(TypedPayload matchSettings, GameState gameState)
+        public void SendIntroData(TypedPayload matchSettings, GameTickPacket gameState)
         {
             if (matchSettings.type != DataType.MatchSettings)
             {

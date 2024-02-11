@@ -1,9 +1,9 @@
 ﻿using RLBotCS.GameControl;
-using RLBotCS.MatchManagement;
 using RLBotCS.Server;
 using RLBotSecret.Conversion;
 using RLBotSecret.GameState;
 using RLBotSecret.TCP;
+using Launcher = RLBotCS.MatchManagement.Launcher;
 
 var converter = new Converter();
 
@@ -16,7 +16,7 @@ var gotFirstMessage = Launcher.IsRocketLeagueRunning();
 
 Console.WriteLine("RLBot is waiting for Rocket League to connect on port " + port);
 
-var gameState = new GameState();
+var gameState = new RLBotSecret.Packet.GameTickPacket();
 var matchStarter = new MatchStarter(messenger, gameState, port);
 
 var flatbufferServer = new FlatbufferServer(23234, messenger, gameState.playerMapping, matchStarter);
@@ -51,30 +51,26 @@ foreach (var messageClump in messenger.Read())
     matchStarter.LoadDeferredMatch();
 
     var messageBundle = converter.Convert(messageClump);
-    gameState.gameTickPacket.matchLength = matchStarter.MatchLength();
-    gameState.gameTickPacket.respawnTime = matchStarter.RespawnTime();
-    gameState.ApplyMessageBundle(messageBundle);
+    gameState.matchLength = matchStarter.MatchLength();
+    gameState.respawnTime = matchStarter.RespawnTime();
+    gameState = StateTransformer.ApplyMessagesToState(messageBundle, gameState);
 
     // this helps to wait for a new map to load
-    if (!gameState.MatchEnded())
-    {
+    if (!gameState.MatchEnded)
         matchStarter.ApplyMessageBundle(messageBundle);
-    }
 
     try
     {
-        if (gameState.MatchEnded())
-        {
+        if (gameState.MatchEnded)
             flatbufferServer.RemoveRenders();
-        }
 
         flatbufferServer.EnsureClientsPrepared(gameState);
         flatbufferServer.SendMessagePacketToClients(
             messageBundle,
-            gameState.gameTickPacket.secondsElapsed,
-            gameState.gameTickPacket.frameNum
+            gameState.secondsElapsed,
+            gameState.frameNum
         );
-        flatbufferServer.SendGameStateToClients(gameState.gameTickPacket);
+        flatbufferServer.SendGameStateToClients(gameState);
     }
     catch (Exception e)
     {
