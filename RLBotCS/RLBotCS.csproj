@@ -26,5 +26,8 @@
       <HintPath>RLBotSecret.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="FlatBuffer\" />
+  </ItemGroup>
 
 </Project>

@@ -3,8 +3,9 @@ using Google.FlatBuffers;
 using MatchManagement;
 using rlbot.flat;
 using RLBotCS.GameControl;
-using RLBotCS.GameState;
 using RLBotSecret.Conversion;
+using RLBotSecret.GameState;
+using RLBotSecret.Types;
 
 namespace RLBotCS.Server
 {
@@ -151,7 +152,7 @@ namespace RLBotCS.Server
                         var actorId = playerMapping.ActorIdFromPlayerIndex(playerInputMsg.PlayerIndex);
                         if (actorId.HasValue)
                         {
-                            var playerInput = new RLBotModels.Control.PlayerInput()
+                            var playerInput = new RLBotSecret.Models.Control.PlayerInput()
                             {
                                 actorId = actorId.Value,
                                 carInput = carInput
@@ -249,13 +250,13 @@ namespace RLBotCS.Server
                 case RenderType.Line3D:
                     var lineData = renderMessage.AsLine3D();
                     return gameController.renderingSender.AddLine3D(
-                        new RLBotModels.Phys.Vector3()
+                        new RLBotSecret.Models.Phys.Vector3()
                         {
                             x = lineData.Start.X,
                             y = lineData.Start.Y,
                             z = lineData.Start.Z,
                         },
-                        new RLBotModels.Phys.Vector3()
+                        new RLBotSecret.Models.Phys.Vector3()
                         {
                             x = lineData.End.X,
                             y = lineData.End.Y,
@@ -270,11 +271,11 @@ namespace RLBotCS.Server
                     );
                 case RenderType.PolyLine3D:
                     var polyLineData = renderMessage.AsPolyLine3D();
-                    List<RLBotModels.Phys.Vector3> points = new();
+                    List<RLBotSecret.Models.Phys.Vector3> points = new();
                     foreach (var point in polyLineData.Points)
                     {
                         points.Add(
-                            new RLBotModels.Phys.Vector3()
+                            new RLBotSecret.Models.Phys.Vector3()
                             {
                                 x = point.X,
                                 y = point.Y,
@@ -317,7 +318,7 @@ namespace RLBotCS.Server
                     var string3DData = renderMessage.AsString3D();
                     return gameController.renderingSender.AddText3D(
                         string3DData.Text,
-                        new RLBotModels.Phys.Vector3()
+                        new RLBotSecret.Models.Phys.Vector3()
                         {
                             x = string3DData.Position.X,
                             y = string3DData.Position.Y,
@@ -344,7 +345,7 @@ namespace RLBotCS.Server
             }
         }
 
-        public void SendIntroData(TypedPayload matchSettings, GameState.GameState gameState)
+        public void SendIntroData(TypedPayload matchSettings, GameState gameState)
         {
             if (matchSettings.type != DataType.MatchSettings)
             {

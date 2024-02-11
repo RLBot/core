@@ -1,8 +1,8 @@
 ﻿using RLBotCS.GameControl;
-using RLBotCS.GameState;
 using RLBotCS.MatchManagement;
 using RLBotCS.Server;
 using RLBotSecret.Conversion;
+using RLBotSecret.GameState;
 using RLBotSecret.TCP;
 
 var converter = new Converter();
@@ -39,7 +39,7 @@ Console.CancelKeyPress += (_, _) =>
     Console.WriteLine("Core has shut down successfully.");
 };
 
-foreach (var messageClump in messenger)
+foreach (var messageClump in messenger.Read())
 {
     if (!gotFirstMessage)
     {

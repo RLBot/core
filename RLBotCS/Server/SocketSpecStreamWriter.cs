@@ -1,4 +1,6 @@
-﻿namespace RLBotCS.Server
+﻿using RLBotSecret.Types;
+
+namespace RLBotCS.Server
 {
     /**
      * Communicates with bots and scripts over TCP according to the spec

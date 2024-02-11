@@ -3,11 +3,12 @@ using System.Net;
 using System.Net.Sockets;
 using Google.FlatBuffers;
 using RLBotCS.GameControl;
-using RLBotCS.GameState;
-using RLBotCS.RLBotPacket;
-using RLBotModels.Message;
 using RLBotSecret.Controller;
+using RLBotSecret.GameState;
+using RLBotSecret.Models.Message;
+using RLBotSecret.Packet;
 using RLBotSecret.TCP;
+using RLBotSecret.Types;
 
 namespace RLBotCS.Server
 {
@@ -148,7 +149,7 @@ namespace RLBotCS.Server
             });
         }
 
-        internal void EnsureClientsPrepared(GameState.GameState gameState)
+        internal void EnsureClientsPrepared(GameState gameState)
         {
             TryRunOnEachSession(session =>
             {

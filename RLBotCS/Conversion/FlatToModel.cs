@@ -1,6 +1,6 @@
-﻿using RLBotModels.Command;
-using RLBotModels.Control;
-using RLBotModels.Phys;
+﻿using RLBotSecret.Models.Command;
+using RLBotSecret.Models.Control;
+using RLBotSecret.Models.Phys;
 
 namespace RLBotSecret.Conversion
 {

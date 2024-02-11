@@ -1,18 +1,18 @@
 ﻿using rlbot.flat;
 using RLBotCS.Conversion;
-using RLBotCS.GameState;
-using RLBotCS.Server;
-using RLBotModels.Message;
 using RLBotSecret.Controller;
 using RLBotSecret.Conversion;
+using RLBotSecret.GameState;
+using RLBotSecret.Models.Message;
 using RLBotSecret.TCP;
-using GameStateType = RLBotModels.Message.GameStateType;
+using RLBotSecret.Types;
+using GameStateType = RLBotSecret.Models.Message.GameStateType;
 
 namespace RLBotCS.GameControl
 {
     internal class MatchStarter
     {
-        private RLBotPacket.GameTickPacket gameTickPacket;
+        private RLBotSecret.Packet.GameTickPacket gameTickPacket;
         private PlayerMapping playerMapping;
         private MatchCommandSender matchCommandSender;
         private (MatchSettingsT, TypedPayload)? lastMatchMessage;
@@ -25,7 +25,7 @@ namespace RLBotCS.GameControl
         private bool isRenderingEnabled = true;
         private int gamePort;
 
-        public MatchStarter(TcpMessenger tcpMessenger, GameState.GameState gameState, int gamePort)
+        public MatchStarter(TcpMessenger tcpMessenger, GameState gameState, int gamePort)
         {
             gameTickPacket = gameState.gameTickPacket;
             playerMapping = gameState.playerMapping;
@@ -389,7 +389,7 @@ namespace RLBotCS.GameControl
                     playerConfig.Loadout.LoadoutPaint = new LoadoutPaintT();
                 }
 
-                RLBotModels.Command.Loadout loadout = FlatToModel.ToLoadout(
+                var loadout = FlatToModel.ToLoadout(
                     playerConfig.Loadout,
                     playerConfig.Team
                 );
