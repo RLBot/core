@@ -1,7 +1,7 @@
 ﻿using RLBotCS.GameControl;
 using RLBotCS.Server;
 using RLBotSecret.Conversion;
-using RLBotSecret.GameState;
+using RLBotSecret.State;
 using RLBotSecret.TCP;
 using Launcher = RLBotCS.MatchManagement.Launcher;
 

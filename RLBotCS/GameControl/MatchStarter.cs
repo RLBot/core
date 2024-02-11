@@ -2,7 +2,7 @@
 using RLBotCS.Conversion;
 using RLBotSecret.Controller;
 using RLBotSecret.Conversion;
-using RLBotSecret.GameState;
+using RLBotSecret.State;
 using RLBotSecret.Models.Message;
 using RLBotSecret.TCP;
 using RLBotSecret.Types;

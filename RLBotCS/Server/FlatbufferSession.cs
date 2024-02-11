@@ -4,7 +4,7 @@ using MatchManagement;
 using rlbot.flat;
 using RLBotCS.GameControl;
 using RLBotSecret.Conversion;
-using RLBotSecret.GameState;
+using RLBotSecret.State;
 using RLBotSecret.Types;
 
 namespace RLBotCS.Server

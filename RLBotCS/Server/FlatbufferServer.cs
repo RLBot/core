@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using Google.FlatBuffers;
 using RLBotCS.GameControl;
 using RLBotSecret.Controller;
-using RLBotSecret.GameState;
+using RLBotSecret.State;
 using RLBotSecret.Models.Message;
 using RLBotSecret.TCP;
 using RLBotSecret.Types;
