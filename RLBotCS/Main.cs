@@ -16,7 +16,7 @@ var gotFirstMessage = Launcher.IsRocketLeagueRunning();
 
 Console.WriteLine("RLBot is waiting for Rocket League to connect on port " + port);
 
-var gameState = new RLBotSecret.Packet.GameTickPacket();
+var gameState = new GameState();
 var matchStarter = new MatchStarter(messenger, gameState, port);
 
 var flatbufferServer = new FlatbufferServer(23234, messenger, gameState.playerMapping, matchStarter);

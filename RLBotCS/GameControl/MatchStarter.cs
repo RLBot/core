@@ -7,13 +7,12 @@ using RLBotSecret.Models.Message;
 using RLBotSecret.TCP;
 using RLBotSecret.Types;
 using GameStateType = RLBotSecret.Models.Message.GameStateType;
-using GameTickPacket = RLBotSecret.Packet.GameTickPacket;
 
 namespace RLBotCS.GameControl
 {
     internal class MatchStarter
     {
-        private RLBotSecret.Packet.GameTickPacket gameState;
+        private GameState gameState;
         private PlayerMapping playerMapping;
         private MatchCommandSender matchCommandSender;
         private (MatchSettingsT, TypedPayload)? lastMatchMessage;
@@ -26,7 +25,7 @@ namespace RLBotCS.GameControl
         private bool isRenderingEnabled = true;
         private int gamePort;
 
-        public MatchStarter(TcpMessenger tcpMessenger, GameTickPacket gameState, int gamePort)
+        public MatchStarter(TcpMessenger tcpMessenger, GameState gameState, int gamePort)
         {
             this.gameState = gameState;
             playerMapping = gameState.playerMapping;

@@ -6,7 +6,6 @@ using RLBotCS.GameControl;
 using RLBotSecret.Controller;
 using RLBotSecret.GameState;
 using RLBotSecret.Models.Message;
-using RLBotSecret.Packet;
 using RLBotSecret.TCP;
 using RLBotSecret.Types;
 
@@ -149,7 +148,7 @@ namespace RLBotCS.Server
             });
         }
 
-        internal void EnsureClientsPrepared(GameTickPacket gameState)
+        internal void EnsureClientsPrepared(GameState gameState)
         {
             TryRunOnEachSession(session =>
             {
@@ -265,7 +264,7 @@ namespace RLBotCS.Server
             });
         }
 
-        internal void SendGameStateToClients(GameTickPacket gameTickPacket)
+        internal void SendGameStateToClients(GameState gameTickPacket)
         {
             TypedPayload payload = gameTickPacket.ToFlatbuffer();
             TryRunOnEachSession(session =>
