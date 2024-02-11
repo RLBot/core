@@ -28,7 +28,7 @@ namespace RLBotCS.GameControl
         public MatchStarter(TcpMessenger tcpMessenger, GameState gameState, int gamePort)
         {
             this.gameState = gameState;
-            playerMapping = gameState.playerMapping;
+            playerMapping = gameState.PlayerMapping;
             matchCommandSender = new MatchCommandSender(tcpMessenger);
             this.gamePort = gamePort;
         }
@@ -73,7 +73,7 @@ namespace RLBotCS.GameControl
                 {
                     if (carState.Physics is DesiredPhysicsT physics)
                     {
-                        var default_physics = this.gameState.gameCars[(uint)i].physics;
+                        var default_physics = this.gameState.GameCars[(uint)i].Physics;
                         matchCommandSender.AddSetPhysicsCommand(
                             actorId,
                             FlatToModel.DesiredToPhysics(physics, default_physics)
@@ -92,8 +92,8 @@ namespace RLBotCS.GameControl
                 if (ballState.Physics is DesiredPhysicsT physics)
                 {
                     matchCommandSender.AddSetPhysicsCommand(
-                        this.gameState.ball.actorId,
-                        FlatToModel.DesiredToPhysics(physics, this.gameState.ball.physics)
+                        this.gameState.Ball.ActorId,
+                        FlatToModel.DesiredToPhysics(physics, this.gameState.Ball.Physics)
                     );
                 }
             }
@@ -142,7 +142,7 @@ namespace RLBotCS.GameControl
 
             if (matchSettings.ExistingMatchBehavior == ExistingMatchBehavior.Continue_And_Spawn)
             {
-                shouldSpawnNewMap = !hasEverLoadedMap || gameState.gameState == GameStateType.Ended;
+                shouldSpawnNewMap = !hasEverLoadedMap || gameState.GameStateType == GameStateType.Ended;
             }
             else if (matchSettings.ExistingMatchBehavior == ExistingMatchBehavior.Restart_If_Different)
             {
@@ -351,7 +351,7 @@ namespace RLBotCS.GameControl
         {
             if (needsSpawnBots && lastMatchMessage?.Item1 is MatchSettingsT matchSettings)
             {
-                if (messageBundle.messages.Any(message => message is MatchInfo))
+                if (messageBundle.Messages.Any(message => message is MatchInfo))
                 {
                     SpawnBots(matchSettings);
                     needsSpawnBots = false;
@@ -371,8 +371,8 @@ namespace RLBotCS.GameControl
                 var playerConfig = matchSettings.PlayerConfigurations[i];
 
                 var alreadySpawnedPlayer = playerMapping
-                    .getKnownPlayers()
-                    .FirstOrDefault((kp) => playerConfig.SpawnId == kp.spawnId);
+                    .GetKnownPlayers()
+                    .FirstOrDefault((kp) => playerConfig.SpawnId == kp.SpawnId);
                 if (alreadySpawnedPlayer != null)
                 {
                     // We've already spawned this player, don't duplicate them.
@@ -412,13 +412,13 @@ namespace RLBotCS.GameControl
                             loadout
                         );
 
-                        playerMapping.addPendingSpawn(
+                        playerMapping.AddPendingSpawn(
                             new SpawnTracker()
                             {
-                                commandId = rlbotSpawnCommandId,
-                                spawnId = playerConfig.SpawnId,
-                                desiredPlayerIndex = (uint)(i - indexOffset),
-                                isCustomBot = true,
+                                CommandId = rlbotSpawnCommandId,
+                                SpawnId = playerConfig.SpawnId,
+                                DesiredPlayerIndex = (uint)(i - indexOffset),
+                                IsCustomBot = true,
                             }
                         );
                         break;
@@ -441,13 +441,13 @@ namespace RLBotCS.GameControl
                             loadout
                         );
 
-                        playerMapping.addPendingSpawn(
+                        playerMapping.AddPendingSpawn(
                             new SpawnTracker()
                             {
-                                commandId = psySpawnCommandId,
-                                spawnId = playerConfig.SpawnId,
-                                desiredPlayerIndex = (uint)(i - indexOffset),
-                                isCustomBot = false
+                                CommandId = psySpawnCommandId,
+                                SpawnId = playerConfig.SpawnId,
+                                DesiredPlayerIndex = (uint)(i - indexOffset),
+                                IsCustomBot = false
                             }
                         );
                         break;
@@ -481,13 +481,13 @@ namespace RLBotCS.GameControl
                 // the game will only half-spawn us
                 matchCommandSender.AddConsoleCommand("ChangeTeam " + humanConfig.Team);
 
-                playerMapping.addPendingSpawn(
+                playerMapping.AddPendingSpawn(
                     new SpawnTracker()
                     {
-                        commandId = 0,
-                        spawnId = humanConfig.SpawnId,
-                        desiredPlayerIndex = (uint)humanIndex,
-                        isCustomBot = false,
+                        CommandId = 0,
+                        SpawnId = humanConfig.SpawnId,
+                        DesiredPlayerIndex = (uint)humanIndex,
+                        IsCustomBot = false,
                     }
                 );
             }

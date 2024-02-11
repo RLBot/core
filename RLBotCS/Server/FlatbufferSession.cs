@@ -101,9 +101,9 @@ namespace RLBotCS.Server
                     return;
                 }
 
-                var byteBuffer = new ByteBuffer(message.payload.Array, message.payload.Offset);
+                var byteBuffer = new ByteBuffer(message.Payload.Array, message.Payload.Offset);
 
-                switch (message.type)
+                switch (message.Type)
                 {
                     case DataType.None:
                         // The client requested that we close the connection
@@ -154,8 +154,8 @@ namespace RLBotCS.Server
                         {
                             var playerInput = new RLBotSecret.Models.Control.PlayerInput()
                             {
-                                actorId = actorId.Value,
-                                carInput = carInput
+                                ActorId = actorId.Value,
+                                CarInput = carInput
                             };
                             gameController.playerInputSender.SendPlayerInput(playerInput);
                         }
@@ -215,7 +215,7 @@ namespace RLBotCS.Server
                         gameController.matchStarter.SetDesiredGameState(desiredGameState);
                         break;
                     default:
-                        Console.WriteLine("Core got unexpected message type {0} from client.", message.type);
+                        Console.WriteLine("Core got unexpected message type {0} from client.", message.Type);
                         break;
                 }
             }
@@ -223,7 +223,7 @@ namespace RLBotCS.Server
 
         private void SendShutdownConfirmation()
         {
-            TypedPayload msg = new() { type = DataType.None, payload = new ArraySegment<byte>([1]), };
+            TypedPayload msg = new() { Type = DataType.None, Payload = new ArraySegment<byte>([1]), };
             SendPayloadToClient(msg);
         }
 
@@ -347,31 +347,31 @@ namespace RLBotCS.Server
 
         public void SendIntroData(TypedPayload matchSettings, GameState gameState)
         {
-            if (matchSettings.type != DataType.MatchSettings)
+            if (matchSettings.Type != DataType.MatchSettings)
             {
-                throw new Exception("Expected match settings, got " + matchSettings.type);
+                throw new Exception("Expected match settings, got " + matchSettings.Type);
             }
 
             socketSpecWriter.Write(matchSettings);
 
             List<BoostPadT> boostPads = new();
-            foreach (var boostPad in gameState.boostPads)
+            foreach (var boostPad in gameState.BoostPads)
             {
                 boostPads.Add(
                     new BoostPadT()
                     {
                         Location = new Vector3T()
                         {
-                            X = boostPad.spawnPosition.x,
-                            Y = boostPad.spawnPosition.y,
-                            Z = boostPad.spawnPosition.z,
+                            X = boostPad.SpawnPosition.x,
+                            Y = boostPad.SpawnPosition.y,
+                            Z = boostPad.SpawnPosition.z,
                         },
-                        IsFullBoost = boostPad.isFullBoost,
+                        IsFullBoost = boostPad.IsFullBoost,
                     }
                 );
             }
 
-            FieldInfoT fieldInfoT = new() { BoostPads = boostPads, Goals = gameState.goals, };
+            FieldInfoT fieldInfoT = new() { BoostPads = boostPads, Goals = gameState.Goals, };
 
             FlatBufferBuilder builder = new(1024);
             var offset = FieldInfo.Pack(builder, fieldInfoT);

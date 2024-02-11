@@ -30,7 +30,7 @@ namespace RLBotCS.Server
                 var payloadReaderSpan = new Span<byte>(payloadReader, 0, payloadSize);
                 buffer.ReadExactly(payloadReaderSpan);
 
-                yield return new() { type = dataType, payload = new(payloadReader, 0, payloadSize) };
+                yield return new() { Type = dataType, Payload = new(payloadReader, 0, payloadSize) };
             }
         }
 

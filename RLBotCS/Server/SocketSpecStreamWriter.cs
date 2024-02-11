@@ -35,23 +35,23 @@ namespace RLBotCS.Server
 
         internal void Write(TypedPayload message)
         {
-            if (message.payload.Count > ushort.MaxValue)
+            if (message.Payload.Count > ushort.MaxValue)
             {
                 // Can't send if the message size is bigger than our header can describe.
                 Console.WriteLine(
                     "Warning! Core cannot send message because size of {0} cannot be described by a ushort.",
-                    message.payload.Count
+                    message.Payload.Count
                 );
                 return;
             }
 
-            PrepareDataType(message.type);
-            PrepareMessageLength((ushort)message.payload.Count);
+            PrepareDataType(message.Type);
+            PrepareMessageLength((ushort)message.Payload.Count);
 
-            var messageBuffer = new byte[message.payload.Count + 4];
+            var messageBuffer = new byte[message.Payload.Count + 4];
             Array.Copy(dataTypeBuffer, 0, messageBuffer, 0, 2);
             Array.Copy(messageLengthBuffer, 0, messageBuffer, 2, 2);
-            Array.Copy(message.payload.Array, message.payload.Offset, messageBuffer, 4, message.payload.Count);
+            Array.Copy(message.Payload.Array, message.Payload.Offset, messageBuffer, 4, message.Payload.Count);
             stream.Write(messageBuffer, 0, messageBuffer.Length);
         }
 

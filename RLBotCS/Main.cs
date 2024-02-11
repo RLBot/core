@@ -19,7 +19,7 @@ Console.WriteLine("RLBot is waiting for Rocket League to connect on port " + por
 var gameState = new GameState();
 var matchStarter = new MatchStarter(messenger, gameState, port);
 
-var flatbufferServer = new FlatbufferServer(23234, messenger, gameState.playerMapping, matchStarter);
+var flatbufferServer = new FlatbufferServer(23234, messenger, gameState.PlayerMapping, matchStarter);
 var serverListenerThread = new Thread(() => flatbufferServer.StartListener());
 serverListenerThread.Start();
 
@@ -51,8 +51,8 @@ foreach (var messageClump in messenger.Read())
     matchStarter.LoadDeferredMatch();
 
     var messageBundle = converter.Convert(messageClump);
-    gameState.matchLength = matchStarter.MatchLength();
-    gameState.respawnTime = matchStarter.RespawnTime();
+    gameState.MatchLength = matchStarter.MatchLength();
+    gameState.RespawnTime = matchStarter.RespawnTime();
     gameState = StateTransformer.ApplyMessagesToState(messageBundle, gameState);
 
     // this helps to wait for a new map to load
@@ -67,8 +67,8 @@ foreach (var messageClump in messenger.Read())
         flatbufferServer.EnsureClientsPrepared(gameState);
         flatbufferServer.SendMessagePacketToClients(
             messageBundle,
-            gameState.secondsElapsed,
-            gameState.frameNum
+            gameState.SecondsElapsed,
+            gameState.FrameNum
         );
         flatbufferServer.SendGameStateToClients(gameState);
     }

@@ -17,17 +17,17 @@ namespace RLBotSecret.Conversion
 
             return new CarInput()
             {
-                throttle = state.Throttle,
-                steer = state.Steer,
-                pitch = state.Pitch,
-                yaw = state.Yaw,
-                roll = state.Roll,
-                jump = state.Jump,
-                boost = state.Boost,
-                handbrake = state.Handbrake,
-                useItem = state.UseItem,
-                dodgeForward = dodgeForward,
-                dodgeStrafe = dodgeStrafe,
+                Throttle = state.Throttle,
+                Steer = state.Steer,
+                Pitch = state.Pitch,
+                Yaw = state.Yaw,
+                Roll = state.Roll,
+                Jump = state.Jump,
+                Boost = state.Boost,
+                Handbrake = state.Handbrake,
+                UseItem = state.UseItem,
+                DodgeForward = dodgeForward,
+                DodgeStrafe = dodgeStrafe,
             };
         }
 
@@ -78,32 +78,32 @@ namespace RLBotSecret.Conversion
             LoadoutPaint loadoutPaint =
                 new()
                 {
-                    carPaintId = (byte)lp.CarPaintId,
-                    decalPaintId = (byte)lp.DecalPaintId,
-                    wheelsPaintId = (byte)lp.WheelsPaintId,
-                    boostPaintId = (byte)lp.BoostPaintId,
-                    antennaPaintId = (byte)lp.AntennaPaintId,
-                    hatPaintId = (byte)lp.HatPaintId,
-                    trailsPaintId = (byte)lp.TrailsPaintId,
-                    goalExplosionPaintId = (byte)lp.GoalExplosionPaintId
+                    CarPaintId = (byte)lp.CarPaintId,
+                    DecalPaintId = (byte)lp.DecalPaintId,
+                    WheelsPaintId = (byte)lp.WheelsPaintId,
+                    BoostPaintId = (byte)lp.BoostPaintId,
+                    AntennaPaintId = (byte)lp.AntennaPaintId,
+                    HatPaintId = (byte)lp.HatPaintId,
+                    TrailsPaintId = (byte)lp.TrailsPaintId,
+                    GoalExplosionPaintId = (byte)lp.GoalExplosionPaintId
                 };
 
             return new Loadout()
             {
-                carId = (ushort)l.CarId,
-                antennaId = (ushort)l.AntennaId,
-                boostId = (ushort)l.BoostId,
-                engineAudioId = (ushort)l.EngineAudioId,
-                customFinishId = (ushort)l.CustomFinishId,
-                decalId = (ushort)l.DecalId,
-                goalExplosionId = (ushort)l.GoalExplosionId,
-                hatId = (ushort)l.HatId,
-                paintFinishId = (ushort)l.PaintFinishId,
-                trailsId = (ushort)l.TrailsId,
-                wheelsId = (ushort)l.WheelsId,
-                loadoutPaint = loadoutPaint,
-                primaryColorLookup = primaryColor,
-                secondaryColorLookup = secondaryColor
+                CarId = (ushort)l.CarId,
+                AntennaId = (ushort)l.AntennaId,
+                BoostId = (ushort)l.BoostId,
+                EngineAudioId = (ushort)l.EngineAudioId,
+                CustomFinishId = (ushort)l.CustomFinishId,
+                DecalId = (ushort)l.DecalId,
+                GoalExplosionId = (ushort)l.GoalExplosionId,
+                HatId = (ushort)l.HatId,
+                PaintFinishId = (ushort)l.PaintFinishId,
+                TrailsId = (ushort)l.TrailsId,
+                WheelsId = (ushort)l.WheelsId,
+                LoadoutPaint = loadoutPaint,
+                PrimaryColorLookup = primaryColor,
+                SecondaryColorLookup = secondaryColor
             };
         }
 

@@ -183,28 +183,28 @@ namespace RLBotCS.Server
                 GameSeconds = gameSeconds,
                 FrameNum = frameNum,
             };
-            foreach (var message in messageBundle.messages)
+            foreach (var message in messageBundle.Messages)
             {
                 if (message is PlayerInputUpdate update)
                 {
-                    if (playerMapping.PlayerIndexFromActorId(update.playerInput.actorId) is uint playerIndex)
+                    if (playerMapping.PlayerIndexFromActorId(update.PlayerInput.ActorId) is uint playerIndex)
                     {
                         var playerInput = new rlbot.flat.PlayerInputChangeT()
                         {
                             PlayerIndex = playerIndex,
                             ControllerState = new rlbot.flat.ControllerStateT()
                             {
-                                Throttle = update.playerInput.carInput.throttle,
-                                Steer = update.playerInput.carInput.steer,
-                                Pitch = update.playerInput.carInput.pitch,
-                                Yaw = update.playerInput.carInput.yaw,
-                                Roll = update.playerInput.carInput.roll,
-                                Jump = update.playerInput.carInput.jump,
-                                Boost = update.playerInput.carInput.boost,
-                                Handbrake = update.playerInput.carInput.handbrake,
+                                Throttle = update.PlayerInput.CarInput.Throttle,
+                                Steer = update.PlayerInput.CarInput.Steer,
+                                Pitch = update.PlayerInput.CarInput.Pitch,
+                                Yaw = update.PlayerInput.CarInput.Yaw,
+                                Roll = update.PlayerInput.CarInput.Roll,
+                                Jump = update.PlayerInput.CarInput.Jump,
+                                Boost = update.PlayerInput.CarInput.Boost,
+                                Handbrake = update.PlayerInput.CarInput.Handbrake,
                             },
-                            DodgeForward = update.playerInput.carInput.dodgeForward,
-                            DodgeRight = update.playerInput.carInput.dodgeStrafe,
+                            DodgeForward = update.PlayerInput.CarInput.DodgeForward,
+                            DodgeRight = update.PlayerInput.CarInput.DodgeStrafe,
                         };
 
                         messages.Messages.Add(
@@ -217,7 +217,7 @@ namespace RLBotCS.Server
                 }
                 else if (message is SpectateViewChange change)
                 {
-                    if (playerMapping.PlayerIndexFromActorId(change.spectatedActorId) is uint playerIndex)
+                    if (playerMapping.PlayerIndexFromActorId(change.SpectatedActorId) is uint playerIndex)
                     {
                         var spectate = new rlbot.flat.PlayerSpectateT() { PlayerIndex = playerIndex, };
 
@@ -231,12 +231,12 @@ namespace RLBotCS.Server
                 }
                 else if (message is PlayerAccolade accolade)
                 {
-                    if (playerMapping.PlayerIndexFromActorId(accolade.actorId) is uint playerIndex)
+                    if (playerMapping.PlayerIndexFromActorId(accolade.ActorId) is uint playerIndex)
                     {
                         var playerAccolade = new rlbot.flat.PlayerStatEventT()
                         {
                             PlayerIndex = playerIndex,
-                            StatType = accolade.accolade,
+                            StatType = accolade.Accolade,
                         };
 
                         messages.Messages.Add(

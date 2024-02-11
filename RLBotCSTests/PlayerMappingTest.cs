@@ -26,32 +26,32 @@ namespace RLBotCSTests
 
             var spawnTracker = new SpawnTracker()
             {
-                spawnId = spawnId,
-                commandId = commandId,
-                desiredPlayerIndex = desiredIndex,
-                isCustomBot = true
+                SpawnId = spawnId,
+                CommandId = commandId,
+                DesiredPlayerIndex = desiredIndex,
+                IsCustomBot = true
             };
 
-            playerMapping.addPendingSpawn(spawnTracker);
+            playerMapping.AddPendingSpawn(spawnTracker);
 
             var carSpawn = new CarSpawn()
             {
-                actorId = actorId,
-                commandId = commandId,
-                name = "MyBot",
-                team = 1
+                ActorId = actorId,
+                CommandId = commandId,
+                Name = "MyBot",
+                Team = 1
             };
-            playerMapping.applyCarSpawn(carSpawn);
+            playerMapping.ApplyCarSpawn(carSpawn);
 
             Assert.AreEqual(desiredIndex, playerMapping.PlayerIndexFromActorId(actorId));
 
-            playerMapping.applyCarSpawn(
+            playerMapping.ApplyCarSpawn(
                 new CarSpawn()
                 {
-                    actorId = 111,
-                    commandId = 222,
-                    name = "SomeHuman",
-                    team = 0
+                    ActorId = 111,
+                    CommandId = 222,
+                    Name = "SomeHuman",
+                    Team = 0
                 }
             );
 
