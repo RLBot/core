@@ -2,7 +2,7 @@ using rlbot.flat;
 
 namespace RLBotCS.Conversion
 {
-    internal class FlatToCommand
+    internal static class FlatToCommand
     {
         static string MapGameMode(GameMode gameMode) =>
             gameMode switch
