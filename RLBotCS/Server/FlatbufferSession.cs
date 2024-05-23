@@ -1,224 +1,207 @@
-﻿using System.Net.Sockets;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
+using System.Threading.Channels;
 using Google.FlatBuffers;
 using MatchManagement;
 using rlbot.flat;
-using RLBotCS.GameControl;
-using RLBotSecret.Conversion;
-using RLBotSecret.State;
 using RLBotSecret.Types;
 
 namespace RLBotCS.Server
 {
-    /**
-     * Taken from https://codinginfinite.com/multi-threaded-tcp-server-core-example-csharp/
-     */
+    internal enum SessionMessageType
+    {
+        DistributeGameState,
+        StopMatch,
+    }
+
+    internal class SessionMessage
+    {
+        private SessionMessageType _type;
+        private TypedPayload _gameState;
+
+        public static SessionMessage DistributeGameState(TypedPayload gameState)
+        {
+            return new SessionMessage { _type = SessionMessageType.DistributeGameState, _gameState = gameState };
+        }
+
+        public static SessionMessage StopMatch()
+        {
+            return new SessionMessage { _type = SessionMessageType.StopMatch };
+        }
+
+        public SessionMessageType Type()
+        {
+            return _type;
+        }
+
+        public TypedPayload GetGameState()
+        {
+            return _gameState;
+        }
+    }
+
     internal class FlatbufferSession
     {
-        private NetworkStream _stream;
-        private GameController _gameController;
-        private PlayerMapping _playerMapping;
+        private TcpClient _client;
+        private SocketSpecStreamReader _socketSpecReader;
         private SocketSpecStreamWriter _socketSpecWriter;
-        private Dictionary<int, List<ushort>> _sessionRenderIds = new();
-        private bool _stateSettingIsEnabled = true;
-        private bool _renderingIsEnabled = true;
-        private bool _startedCommunications = false;
-        private bool _requestedServerStop = false;
-        private bool _requestedMatchStop = false;
-        private bool _matchEnded = false;
 
-        public bool IsReady { get; private set; }
+        private ChannelReader<SessionMessage> _incomingMessages;
+        private ChannelWriter<ServerMessage> _rlbotServer;
 
-        public bool NeedsIntroData { get; private set; }
+        private bool _isReady = false;
+        private bool _needsIntroData = false;
 
-        public bool WantsBallPredictions { get; private set; }
-
-        public bool WantsGameMessages { get; private set; }
-
-        public bool WantsComms { get; private set; }
-
-        public bool CloseAfterMatch { get; private set; }
+        private bool _wantsBallPredictions = false;
+        private bool _wantsGameMessages = false;
+        private bool _wantsComms = false;
+        private bool _closeAfterMatch = false;
 
         public FlatbufferSession(
-            NetworkStream stream,
-            GameController gameController,
-            PlayerMapping playerMapping,
-            bool startedCommunications
+            TcpClient client,
+            ChannelReader<SessionMessage> incomingMessages,
+            ChannelWriter<ServerMessage> rlbotServer
         )
         {
-            stream.ReadTimeout = 32;
-            this._stream = stream;
-            this._gameController = gameController;
-            this._playerMapping = playerMapping;
-            this._startedCommunications = startedCommunications;
-            _socketSpecWriter = new SocketSpecStreamWriter(stream);
+            _client = client;
+            _socketSpecReader = new SocketSpecStreamReader(_client);
+            _socketSpecWriter = new SocketSpecStreamWriter(_client.GetStream());
+            _incomingMessages = incomingMessages;
+            _rlbotServer = rlbotServer;
         }
 
-        public void RemoveRenders()
+        private bool ParseClientMessage(TypedPayload message)
         {
-            foreach (var renderIds in _sessionRenderIds.Values)
-            {
-                for (var i = 0; i < renderIds.Count; i++)
-                {
-                    try
-                    {
-                        _gameController.RenderingSender.RemoveRenderItem(renderIds[i]);
-                    }
-                    catch (Exception)
-                    {
-                        _gameController.RenderingSender.Send();
-                        i = 0;
-                    }
-                }
+            var byteBuffer = new ByteBuffer(message.Payload.Array, message.Payload.Offset);
 
-                _gameController.RenderingSender.Send();
+            switch (message.Type)
+            {
+                case DataType.None:
+                    // The client requested that we close the connection
+                    return false;
+
+                case DataType.ReadyMessage:
+                    var readyMsg = ReadyMessage.GetRootAsReadyMessage(byteBuffer);
+
+                    _isReady = true;
+                    _needsIntroData = true;
+                    _wantsBallPredictions = readyMsg.WantsBallPredictions;
+                    _wantsGameMessages = readyMsg.WantsGameMessages;
+                    _wantsComms = readyMsg.WantsComms;
+                    _closeAfterMatch = readyMsg.CloseAfterMatch;
+
+                    break;
+
+                case DataType.StopCommand:
+                    Console.WriteLine("Core got stop command from client.");
+                    var stopCommand = StopCommand.GetRootAsStopCommand(byteBuffer).UnPack();
+                    _rlbotServer.TryWrite(ServerMessage.StopMatch(stopCommand.ShutdownServer));
+                    break;
+
+                case DataType.StartCommand:
+                    Console.WriteLine("Core got start command from client.");
+                    var startCommand = StartCommand.GetRootAsStartCommand(byteBuffer).UnPack();
+                    var tomlMatchSettings = ConfigParser.GetMatchSettings(startCommand.ConfigPath);
+
+                    FlatBufferBuilder builder = new(1500);
+                    builder.Finish(MatchSettings.Pack(builder, tomlMatchSettings).Value);
+                    TypedPayload matchSettingsMessage = TypedPayload.FromFlatBufferBuilder(
+                        DataType.MatchSettings,
+                        builder
+                    );
+
+                    _rlbotServer.TryWrite(ServerMessage.StartMatch(matchSettingsMessage, tomlMatchSettings));
+                    break;
+
+                case DataType.MatchSettings:
+                    var matchSettings = MatchSettings.GetRootAsMatchSettings(byteBuffer).UnPack();
+                    _rlbotServer.TryWrite(ServerMessage.StartMatch(message, matchSettings));
+                    break;
+
+                // case DataType.PlayerInput:
+                //     var playerInputMsg = PlayerInput.GetRootAsPlayerInput(byteBuffer);
+                //     var carInput = FlatToModel.ToCarInput(playerInputMsg.ControllerState.Value);
+                //     var actorId = _playerMapping.ActorIdFromPlayerIndex(playerInputMsg.PlayerIndex);
+                //     if (actorId.HasValue)
+                //     {
+                //         var playerInput = new RLBotSecret.Models.Control.PlayerInput()
+                //         {
+                //             ActorId = actorId.Value,
+                //             CarInput = carInput
+                //         };
+                //         _gameController.PlayerInputSender.SendPlayerInput(playerInput);
+                //     }
+                //     else
+                //     {
+                //         Console.WriteLine(
+                //             "Core got input from unknown player index {0}",
+                //             playerInputMsg.PlayerIndex
+                //         );
+                //     }
+                //     break;
+
+                case DataType.MatchComms:
+                    break;
+
+                // case DataType.RenderGroup:
+                //     if (!_renderingIsEnabled)
+                //     {
+                //         break;
+                //     }
+
+                //     var renderingGroup = RenderGroup.GetRootAsRenderGroup(byteBuffer).UnPack();
+
+                //     // If a group already exists with the same id,
+                //     // remove the old render items
+                //     RemoveRenderGroup(renderingGroup.Id);
+
+                //     List<ushort> renderIds = new();
+
+                //     // Create render requests
+                //     foreach (var renderMessage in renderingGroup.RenderMessages)
+                //     {
+                //         if (RenderItem(renderMessage.Variety) is ushort renderId)
+                //         {
+                //             renderIds.Add(renderId);
+                //         }
+                //     }
+
+                //     // Add the new render items to the tracker
+                //     _sessionRenderIds[renderingGroup.Id] = renderIds;
+
+                //     // Send the render requests
+                //     _gameController.RenderingSender.Send();
+
+                //     break;
+
+                // case DataType.RemoveRenderGroup:
+                //     var removeRenderGroup = rlbot
+                //         .flat.RemoveRenderGroup.GetRootAsRemoveRenderGroup(byteBuffer)
+                //         .UnPack();
+                //     RemoveRenderGroup(removeRenderGroup.Id);
+                //     break;
+
+                // case DataType.DesiredGameState:
+                //     if (!_stateSettingIsEnabled)
+                //     {
+                //         break;
+                //     }
+
+                //     var desiredGameState = DesiredGameState.GetRootAsDesiredGameState(byteBuffer).UnPack();
+                //     _gameController.MatchStarter.SetDesiredGameState(desiredGameState);
+                //     break;
+                default:
+                    Console.WriteLine("Core got unexpected message type {0} from client.", message.Type);
+                    break;
             }
 
-            _sessionRenderIds.Clear();
+            return true;
         }
 
-        public void Close(bool wasDroppedCleanly)
+        private void SendPayloadToClient(TypedPayload payload)
         {
-            // If we we're dropped cleanly,
-            // it's probably because the connection was terminated
-            // So we should skip sending the confirmation shutdown message
-            if (wasDroppedCleanly)
-            {
-                SendShutdownConfirmation();
-            }
-
-            _stream.Close();
-
-            RemoveRenders();
-        }
-
-        public void RunBlocking()
-        {
-            foreach (var message in SocketSpecStreamReader.Read(_stream))
-            {
-                if (_matchEnded)
-                {
-                    Console.WriteLine("Session is exiting because the match has ended.");
-                    return;
-                }
-
-                var byteBuffer = new ByteBuffer(message.Payload.Array, message.Payload.Offset);
-
-                switch (message.Type)
-                {
-                    case DataType.None:
-                        // The client requested that we close the connection
-                        return;
-                    case DataType.ReadyMessage:
-                        var readyMsg = ReadyMessage.GetRootAsReadyMessage(byteBuffer);
-                        IsReady = true;
-                        NeedsIntroData = true;
-                        WantsBallPredictions = readyMsg.WantsBallPredictions;
-                        WantsGameMessages = readyMsg.WantsGameMessages;
-                        WantsComms = readyMsg.WantsComms;
-                        CloseAfterMatch = readyMsg.CloseAfterMatch;
-                        break;
-                    case DataType.StopCommand:
-                        _requestedMatchStop = true;
-                        var stopCommand = StopCommand.GetRootAsStopCommand(byteBuffer).UnPack();
-                        _requestedServerStop = stopCommand.ShutdownServer;
-                        Console.WriteLine("Core got stop command from client.");
-                        break;
-                    case DataType.StartCommand:
-                        var startCommand = StartCommand.GetRootAsStartCommand(byteBuffer).UnPack();
-                        var tomlMatchSettings = ConfigParser.GetMatchSettings(startCommand.ConfigPath);
-                        FlatBufferBuilder builder = new(1500);
-                        builder.Finish(rlbot.flat.MatchSettings.Pack(builder, tomlMatchSettings).Value);
-                        TypedPayload matchSettingsMessage = TypedPayload.FromFlatBufferBuilder(
-                            DataType.MatchSettings,
-                            builder
-                        );
-                        _gameController.MatchStarter.HandleMatchSettings(
-                            tomlMatchSettings,
-                            matchSettingsMessage,
-                            !_startedCommunications
-                        );
-                        break;
-                    case DataType.MatchSettings:
-                        var matchSettings = rlbot.flat.MatchSettings.GetRootAsMatchSettings(byteBuffer);
-                        _gameController.MatchStarter.HandleMatchSettings(
-                            matchSettings.UnPack(),
-                            message,
-                            !_startedCommunications
-                        );
-                        break;
-                    case DataType.PlayerInput:
-                        var playerInputMsg = PlayerInput.GetRootAsPlayerInput(byteBuffer);
-                        var carInput = FlatToModel.ToCarInput(playerInputMsg.ControllerState.Value);
-                        var actorId = _playerMapping.ActorIdFromPlayerIndex(playerInputMsg.PlayerIndex);
-                        if (actorId.HasValue)
-                        {
-                            var playerInput = new RLBotSecret.Models.Control.PlayerInput()
-                            {
-                                ActorId = actorId.Value,
-                                CarInput = carInput
-                            };
-                            _gameController.PlayerInputSender.SendPlayerInput(playerInput);
-                        }
-                        else
-                        {
-                            Console.WriteLine(
-                                "Core got input from unknown player index {0}",
-                                playerInputMsg.PlayerIndex
-                            );
-                        }
-                        break;
-                    case DataType.MatchComms:
-                        break;
-                    case DataType.RenderGroup:
-                        if (!_renderingIsEnabled)
-                        {
-                            break;
-                        }
-
-                        var renderingGroup = RenderGroup.GetRootAsRenderGroup(byteBuffer).UnPack();
-
-                        // If a group already exists with the same id,
-                        // remove the old render items
-                        RemoveRenderGroup(renderingGroup.Id);
-
-                        List<ushort> renderIds = new();
-
-                        // Create render requests
-                        foreach (var renderMessage in renderingGroup.RenderMessages)
-                        {
-                            if (RenderItem(renderMessage.Variety) is ushort renderId)
-                            {
-                                renderIds.Add(renderId);
-                            }
-                        }
-
-                        // Add the new render items to the tracker
-                        _sessionRenderIds[renderingGroup.Id] = renderIds;
-
-                        // Send the render requests
-                        _gameController.RenderingSender.Send();
-
-                        break;
-                    case DataType.RemoveRenderGroup:
-                        var removeRenderGroup = rlbot
-                            .flat.RemoveRenderGroup.GetRootAsRemoveRenderGroup(byteBuffer)
-                            .UnPack();
-                        RemoveRenderGroup(removeRenderGroup.Id);
-                        break;
-                    case DataType.DesiredGameState:
-                        if (!_stateSettingIsEnabled)
-                        {
-                            break;
-                        }
-
-                        var desiredGameState = DesiredGameState.GetRootAsDesiredGameState(byteBuffer).UnPack();
-                        _gameController.MatchStarter.SetDesiredGameState(desiredGameState);
-                        break;
-                    default:
-                        Console.WriteLine("Core got unexpected message type {0} from client.", message.Type);
-                        break;
-                }
-            }
+            _socketSpecWriter.Write(payload);
+            _socketSpecWriter.Send();
         }
 
         private void SendShutdownConfirmation()
@@ -227,210 +210,71 @@ namespace RLBotCS.Server
             SendPayloadToClient(msg);
         }
 
-        private void RemoveRenderGroup(int renderGroupId)
+        private bool IsConnected()
         {
-            // If a group already exists with the same id,
-            // remove the old render items
-            if (_sessionRenderIds.ContainsKey(renderGroupId))
+            var state = IPGlobalProperties
+                .GetIPGlobalProperties()
+                .GetActiveTcpConnections()
+                .SingleOrDefault(x => x.RemoteEndPoint.Equals(_client.Client.RemoteEndPoint));
+            return state != null && state.State == TcpState.Established;
+        }
+
+        public void BlockingRun()
+        {
+            SpinWait spinWait = new SpinWait();
+
+            while (IsConnected())
             {
-                foreach (var oldRenderId in _sessionRenderIds[renderGroupId])
+                bool handledSomething = false;
+
+                if (_incomingMessages.Completion.IsCompleted)
                 {
-                    _gameController.RenderingSender.RemoveRenderItem(oldRenderId);
+                    SendShutdownConfirmation();
+                    return;
                 }
 
-                _sessionRenderIds.Remove(renderGroupId);
-                _gameController.RenderingSender.Send();
-            }
-        }
+                // check for messages from the server
+                while (_incomingMessages.TryRead(out SessionMessage message))
+                {
+                    handledSomething = true;
 
-        private ushort? RenderItem(RenderTypeUnion renderMessage)
-        {
-            switch (renderMessage.Type)
-            {
-                case RenderType.Line3D:
-                    var lineData = renderMessage.AsLine3D();
-                    return _gameController.RenderingSender.AddLine3D(
-                        new RLBotSecret.Models.Phys.Vector3()
-                        {
-                            x = lineData.Start.X,
-                            y = lineData.Start.Y,
-                            z = lineData.Start.Z,
-                        },
-                        new RLBotSecret.Models.Phys.Vector3()
-                        {
-                            x = lineData.End.X,
-                            y = lineData.End.Y,
-                            z = lineData.End.Z,
-                        },
-                        System.Drawing.Color.FromArgb(
-                            lineData.Color.A,
-                            lineData.Color.R,
-                            lineData.Color.G,
-                            lineData.Color.B
-                        )
-                    );
-                case RenderType.PolyLine3D:
-                    var polyLineData = renderMessage.AsPolyLine3D();
-                    List<RLBotSecret.Models.Phys.Vector3> points = new();
-                    foreach (var point in polyLineData.Points)
+                    switch (message.Type())
                     {
-                        points.Add(
-                            new RLBotSecret.Models.Phys.Vector3()
+                        case SessionMessageType.DistributeGameState:
+                            SendPayloadToClient(message.GetGameState());
+                            break;
+                        case SessionMessageType.StopMatch:
+                            if (_closeAfterMatch)
                             {
-                                x = point.X,
-                                y = point.Y,
-                                z = point.Z,
+                                SendShutdownConfirmation();
+                                return;
                             }
-                        );
+
+                            break;
                     }
-                    return _gameController.RenderingSender.AddLine3DSeries(
-                        points,
-                        System.Drawing.Color.FromArgb(
-                            polyLineData.Color.A,
-                            polyLineData.Color.R,
-                            polyLineData.Color.G,
-                            polyLineData.Color.B
-                        )
-                    );
-                case RenderType.String2D:
-                    var string2DData = renderMessage.AsString2D();
-                    return _gameController.RenderingSender.AddText2D(
-                        string2DData.Text,
-                        string2DData.X,
-                        string2DData.Y,
-                        System.Drawing.Color.FromArgb(
-                            string2DData.Foreground.A,
-                            string2DData.Foreground.R,
-                            string2DData.Foreground.G,
-                            string2DData.Foreground.B
-                        ),
-                        System.Drawing.Color.FromArgb(
-                            string2DData.Background.A,
-                            string2DData.Background.R,
-                            string2DData.Background.G,
-                            string2DData.Background.B
-                        ),
-                        (byte)string2DData.HAlign,
-                        (byte)string2DData.VAlign,
-                        string2DData.Scale
-                    );
-                case RenderType.String3D:
-                    var string3DData = renderMessage.AsString3D();
-                    return _gameController.RenderingSender.AddText3D(
-                        string3DData.Text,
-                        new RLBotSecret.Models.Phys.Vector3()
-                        {
-                            x = string3DData.Position.X,
-                            y = string3DData.Position.Y,
-                            z = string3DData.Position.Z,
-                        },
-                        System.Drawing.Color.FromArgb(
-                            string3DData.Foreground.A,
-                            string3DData.Foreground.R,
-                            string3DData.Foreground.G,
-                            string3DData.Foreground.B
-                        ),
-                        System.Drawing.Color.FromArgb(
-                            string3DData.Background.A,
-                            string3DData.Background.R,
-                            string3DData.Background.G,
-                            string3DData.Background.B
-                        ),
-                        (byte)string3DData.HAlign,
-                        (byte)string3DData.VAlign,
-                        string3DData.Scale
-                    );
-                default:
-                    return null;
-            }
-        }
+                }
 
-        public void SendIntroData(TypedPayload matchSettings, GameState gameState)
-        {
-            if (matchSettings.Type != DataType.MatchSettings)
-            {
-                throw new Exception("Expected match settings, got " + matchSettings.Type);
-            }
-
-            _socketSpecWriter.Write(matchSettings);
-
-            List<BoostPadT> boostPads = new();
-            foreach (var boostPad in gameState.BoostPads)
-            {
-                boostPads.Add(
-                    new BoostPadT()
+                // check for messages from the client
+                while (_socketSpecReader.TryRead(out TypedPayload message))
+                {
+                    handledSomething = true;
+                    if (!ParseClientMessage(message))
                     {
-                        Location = new Vector3T()
-                        {
-                            X = boostPad.SpawnPosition.x,
-                            Y = boostPad.SpawnPosition.y,
-                            Z = boostPad.SpawnPosition.z,
-                        },
-                        IsFullBoost = boostPad.IsFullBoost,
+                        return;
                     }
-                );
+                }
+
+                if (!handledSomething)
+                {
+                    spinWait.SpinOnce();
+                }
             }
-
-            FieldInfoT fieldInfoT = new() { BoostPads = boostPads, Goals = gameState.Goals, };
-
-            FlatBufferBuilder builder = new(1024);
-            var offset = FieldInfo.Pack(builder, fieldInfoT);
-            builder.Finish(offset.Value);
-            var fieldInfo = TypedPayload.FromFlatBufferBuilder(DataType.FieldInfo, builder);
-            _socketSpecWriter.Write(fieldInfo);
-
-            _socketSpecWriter.Send();
-            Console.WriteLine("Core sent intro data to client.");
-            NeedsIntroData = false;
         }
 
-        public void ToggleStateSetting(bool isEnabled)
+        public void Cleanup()
         {
-            _stateSettingIsEnabled = isEnabled;
-        }
-
-        public void ToggleRendering(bool isEnabled)
-        {
-            _stateSettingIsEnabled = isEnabled;
-        }
-
-        internal void SendPayloadToClient(TypedPayload payload)
-        {
-            _socketSpecWriter.Write(payload);
-            _socketSpecWriter.Send();
-        }
-
-        internal void SetStartCommunications(bool startedCommunications)
-        {
-            this._startedCommunications = startedCommunications;
-        }
-
-        internal bool HasRequestedServerStop()
-        {
-            if (_requestedServerStop)
-            {
-                _requestedServerStop = false;
-                return true;
-            }
-
-            return false;
-        }
-
-        internal bool HasRequestedMatchStop()
-        {
-            if (_requestedMatchStop)
-            {
-                _requestedMatchStop = false;
-                return true;
-            }
-
-            return false;
-        }
-
-        internal void SetMatchEnded()
-        {
-            Console.WriteLine("Setting match ended in session.");
-            _matchEnded = true;
+            Console.WriteLine("Session closed.");
+            _client.Close();
         }
     }
 }

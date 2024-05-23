@@ -1,7 +1,7 @@
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RLBotSecret.State;
 using RLBotSecret.Models.Message;
+using RLBotSecret.State;
 
 namespace RLBotCSTests
 {

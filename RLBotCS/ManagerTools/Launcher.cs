@@ -118,16 +118,7 @@ namespace RLBotCS.MatchManagement
 
         public static bool IsRocketLeagueRunning()
         {
-            Process[] candidates = Process.GetProcesses();
-            foreach (var candidate in candidates)
-            {
-                if (candidate.ProcessName.Contains("RocketLeague"))
-                {
-                    Console.WriteLine("Rocket League is already running.");
-                    return true;
-                }
-            }
-
+            Process[] candidates = Process.GetProcessesByName("RocketLeague");
             return candidates.Length > 0;
         }
 

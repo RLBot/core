@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RLBotCS\RLBotCS.csproj" />
-    <ProjectReference Include="..\RLBotModels\RLBotModels.csproj" />
   </ItemGroup>
 
   <ItemGroup>

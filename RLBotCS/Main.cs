@@ -1,33 +1,61 @@
-﻿using RLBotCS.GameControl;
+﻿using System.Threading.Channels;
+using RLBotCS.GameControl;
 using RLBotCS.Server;
-using RLBotSecret.Conversion;
-using RLBotSecret.State;
 using RLBotSecret.TCP;
-using Launcher = RLBotCS.MatchManagement.Launcher;
-
-var converter = new Converter();
 
 // read the port from the command line arg or default to 23233
-var port = args.Length > 0 ? int.Parse(args[0]) : 23233;
-Console.WriteLine("RLBot using port " + port);
+// TODO: Don't accept from command line, find a proper port ourself
+// basically port gateway utils from python to core
+int gamePort = args.Length > 0 ? int.Parse(args[0]) : 23233;
+Console.WriteLine("RLBot is waiting for Rocket League to connect on port " + gamePort);
 
-var messenger = new TcpMessenger(port);
-var gotFirstMessage = Launcher.IsRocketLeagueRunning();
+TcpMessenger tcpMessenger = new TcpMessenger(gamePort);
+Mutex tcpSync = new Mutex();
 
-Console.WriteLine("RLBot is waiting for Rocket League to connect on port " + port);
+// Setup the tcp server for rlbots
+Channel<ServerMessage> serverChannel = Channel.CreateUnbounded<ServerMessage>();
+ChannelWriter<ServerMessage> serverWriter = serverChannel.Writer;
 
-var gameState = new GameState();
-var matchStarter = new MatchStarter(messenger, gameState, port);
+Thread rlbotServer = new Thread(() =>
+{
+    MatchStarter matchStarter = new MatchStarter(tcpMessenger, tcpSync, gamePort);
+    FlatbufferServer flatbufferServer = new FlatbufferServer(gamePort, 23234, serverChannel, matchStarter);
+    flatbufferServer.BlockingRun();
+    flatbufferServer.Cleanup();
+});
+rlbotServer.Start();
 
-var flatbufferServer = new FlatbufferServer(23234, messenger, gameState.PlayerMapping, matchStarter);
-var serverListenerThread = new Thread(() => flatbufferServer.StartListener());
-serverListenerThread.Start();
+// Setup the handler to use bridge to talk with the game
+Channel<BridgeMessage> bridgeChannel = Channel.CreateUnbounded<BridgeMessage>();
+ChannelWriter<BridgeMessage> bridgeWriter = bridgeChannel.Writer;
+
+Thread bridgeHandler = new Thread(() =>
+{
+    BridgeHandler bridgeHandler = new BridgeHandler(serverWriter, bridgeChannel.Reader, tcpMessenger, tcpSync);
+    bridgeHandler.BlockingRun();
+    bridgeHandler.Cleanup();
+});
+bridgeHandler.Start();
+
+// block until everything properly shuts down
+void WaitForShutdown()
+{
+    rlbotServer.Join();
+    Console.WriteLine("RLBot server has shut down successfully.");
+
+    bridgeWriter.TryWrite(BridgeMessage.Stop());
+    bridgeWriter.TryComplete();
+    bridgeHandler.Join();
+    Console.WriteLine("Bridge handler has shut down successfully.");
+}
 
 // catch sudden termination to clean up the server
 AppDomain.CurrentDomain.ProcessExit += (_, _) =>
 {
     Console.WriteLine("Core is shutting down...");
-    flatbufferServer.Stop();
+    serverWriter.TryComplete();
+
+    WaitForShutdown();
     Console.WriteLine("Core has shut down successfully.");
 };
 
@@ -35,54 +63,11 @@ AppDomain.CurrentDomain.ProcessExit += (_, _) =>
 Console.CancelKeyPress += (_, _) =>
 {
     Console.WriteLine("Core is shutting down...");
-    flatbufferServer.Stop();
+    serverWriter.TryComplete();
+
+    WaitForShutdown();
     Console.WriteLine("Core has shut down successfully.");
 };
 
-foreach (var messageClump in messenger.Read())
-{
-    if (!gotFirstMessage)
-    {
-        Console.WriteLine("RLBot is now receiving messages from Rocket League!");
-        gotFirstMessage = true;
-        flatbufferServer.StartCommunications();
-    }
-
-    matchStarter.LoadDeferredMatch();
-
-    var messageBundle = converter.Convert(messageClump);
-    gameState.MatchLength = matchStarter.MatchLength();
-    gameState.RespawnTime = matchStarter.RespawnTime();
-    gameState = StateTransformer.ApplyMessagesToState(messageBundle, gameState);
-
-    // this helps to wait for a new map to load
-    if (!gameState.MatchEnded)
-        matchStarter.ApplyMessageBundle(messageBundle);
-
-    try
-    {
-        if (gameState.MatchEnded)
-            flatbufferServer.RemoveRenders();
-
-        flatbufferServer.EnsureClientsPrepared(gameState);
-        flatbufferServer.SendMessagePacketToClients(
-            messageBundle,
-            gameState.SecondsElapsed,
-            gameState.FrameNum
-        );
-        flatbufferServer.SendGameStateToClients(gameState);
-    }
-    catch (Exception e)
-    {
-        Console.WriteLine("Exception in Core: {0}", e);
-    }
-
-    flatbufferServer.EndMatchIfNeeded();
-
-    if (flatbufferServer.CheckRequestStopServer())
-    {
-        break;
-    }
-}
-
-flatbufferServer.BlockingStop();
+// wait for a normal shutdown
+WaitForShutdown();

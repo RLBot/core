@@ -1,37 +1,46 @@
-﻿using RLBotSecret.Types;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Net.Sockets;
+using RLBotSecret.Types;
 
 namespace RLBotCS.Server
 {
     /**
      * https://wiki.rlbot.org/framework/sockets-specification/
      */
-    static class SocketSpecStreamReader
+    class SocketSpecStreamReader
     {
-        internal static IEnumerable<TypedPayload> Read(NetworkStream stream)
+        private TcpClient _client;
+        private BufferedStream _bufferedStream;
+        private byte[] _ushortReader = new byte[2];
+        private byte[] _payloadReader = new byte[ushort.MaxValue];
+
+        public SocketSpecStreamReader(TcpClient client)
         {
-            var buffer = new BufferedStream(stream, ushort.MaxValue);
+            _client = client;
+            _bufferedStream = new BufferedStream(client.GetStream(), 4 + ushort.MaxValue);
+        }
 
-            var ushortReader = new byte[2];
-            var payloadReader = new byte[ushort.MaxValue];
-
-            // block until we get a message, then yield it
-            // stop blocking when the stream is closed
-            while (true)
+        public bool TryRead([MaybeNullWhen(false)] out TypedPayload item)
+        {
+            if (_client.Available == 0)
             {
-                var ushortReaderSpan = new Span<byte>(ushortReader);
-
-                buffer.ReadExactly(ushortReaderSpan);
-                var dataType = ReadDataType(ushortReaderSpan);
-
-                buffer.ReadExactly(ushortReaderSpan);
-                var payloadSize = ReadPayloadSize(ushortReaderSpan);
-
-                var payloadReaderSpan = new Span<byte>(payloadReader, 0, payloadSize);
-                buffer.ReadExactly(payloadReaderSpan);
-
-                yield return new() { Type = dataType, Payload = new(payloadReader, 0, payloadSize) };
+                item = null;
+                return false;
             }
+
+            var ushortReaderSpan = new Span<byte>(_ushortReader);
+
+            _bufferedStream.ReadExactly(ushortReaderSpan);
+            var dataType = ReadDataType(ushortReaderSpan);
+
+            _bufferedStream.ReadExactly(ushortReaderSpan);
+            var payloadSize = ReadPayloadSize(ushortReaderSpan);
+
+            var payloadReaderSpan = new Span<byte>(_payloadReader, 0, payloadSize);
+            _bufferedStream.ReadExactly(payloadReaderSpan);
+
+            item = new() { Type = dataType, Payload = new(_payloadReader, 0, payloadSize) };
+            return true;
         }
 
         private static DataType ReadDataType(Span<byte> bytes)
