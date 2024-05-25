@@ -14,6 +14,7 @@ namespace RLBotCS.Server
         DistributeGameState,
         StartMatch,
         MapSpawned,
+        SessionClosed,
         StopMatch,
     }
 
@@ -24,6 +25,7 @@ namespace RLBotCS.Server
         private GameState _gameState;
         private TypedPayload _matchSettingsPayload;
         private MatchSettingsT _matchSettings;
+        private int _clientId;
         private bool _shutdownServer;
 
         public static ServerMessage StartCommunication()
@@ -51,6 +53,11 @@ namespace RLBotCS.Server
             return new ServerMessage { _type = ServerMessageType.MapSpawned };
         }
 
+        public static ServerMessage SessionClosed(int clientId)
+        {
+            return new ServerMessage { _type = ServerMessageType.SessionClosed, _clientId = clientId };
+        }
+
         public static ServerMessage StopMatch(bool shutdownServer)
         {
             return new ServerMessage { _type = ServerMessageType.StopMatch, _shutdownServer = shutdownServer };
@@ -74,6 +81,11 @@ namespace RLBotCS.Server
         public TypedPayload GetMatchSettingsPayload()
         {
             return _matchSettingsPayload;
+        }
+
+        public int GetClientId()
+        {
+            return _clientId;
         }
 
         public bool GetShutdownServer()
@@ -122,6 +134,9 @@ namespace RLBotCS.Server
             {
                 session.Item2.Join();
             }
+
+            // remove all sessions
+            _sessions.Clear();
         }
 
         private void DistributeGameState(GameState gameState)
@@ -140,10 +155,13 @@ namespace RLBotCS.Server
             Channel<SessionMessage> sessionChannel = Channel.CreateUnbounded<SessionMessage>();
             client.NoDelay = true;
 
+            int clientId = client.Client.Handle.ToInt32();
+
             Thread sessionThread = new Thread(() =>
             {
                 FlatbufferSession session = new FlatbufferSession(
                     client,
+                    clientId,
                     sessionChannel.Reader,
                     _incomingMessagesWriter
                 );
@@ -152,7 +170,7 @@ namespace RLBotCS.Server
             });
             sessionThread.Start();
 
-            _sessions.Add(client.Client.Handle.ToInt32(), (sessionChannel.Writer, sessionThread));
+            _sessions.Add(clientId, (sessionChannel.Writer, sessionThread));
             Console.WriteLine("New session added.");
         }
 
@@ -184,6 +202,10 @@ namespace RLBotCS.Server
                             break;
                         case ServerMessageType.MapSpawned:
                             _matchStarter.MapSpawned();
+                            break;
+                        case ServerMessageType.SessionClosed:
+                            _sessions.Remove(message.GetClientId());
+                            Console.WriteLine("Session closed.");
                             break;
                         case ServerMessageType.StopMatch:
                             if (message.GetShutdownServer())

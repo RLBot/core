@@ -168,8 +168,17 @@ namespace RLBotCS.MatchManagement
 
         public static bool IsRocketLeagueRunning()
         {
-            Process[] candidates = Process.GetProcessesByName("RocketLeague");
-            return candidates.Length > 0;
+            Process[] candidates = Process.GetProcesses();
+
+            foreach (var candidate in candidates)
+            {
+                if (candidate.ProcessName.Contains("RocketLeague"))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static string GetSteamPath()

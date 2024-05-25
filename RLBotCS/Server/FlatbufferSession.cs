@@ -43,6 +43,7 @@ namespace RLBotCS.Server
     internal class FlatbufferSession
     {
         private TcpClient _client;
+        private int _clientId;
         private SocketSpecStreamReader _socketSpecReader;
         private SocketSpecStreamWriter _socketSpecWriter;
 
@@ -59,11 +60,13 @@ namespace RLBotCS.Server
 
         public FlatbufferSession(
             TcpClient client,
+            int clientId,
             ChannelReader<SessionMessage> incomingMessages,
             ChannelWriter<ServerMessage> rlbotServer
         )
         {
             _client = client;
+            _clientId = clientId;
             _socketSpecReader = new SocketSpecStreamReader(_client);
             _socketSpecWriter = new SocketSpecStreamWriter(_client.GetStream());
             _incomingMessages = incomingMessages;
@@ -223,13 +226,29 @@ namespace RLBotCS.Server
         {
             SpinWait spinWait = new SpinWait();
 
-            while (IsConnected())
+            while (true)
             {
                 bool handledSomething = false;
 
                 if (_incomingMessages.Completion.IsCompleted)
                 {
                     SendShutdownConfirmation();
+                    return;
+                }
+
+                // check for messages from the client
+                while (_socketSpecReader.TryRead(out TypedPayload message))
+                {
+                    handledSomething = true;
+                    if (!ParseClientMessage(message))
+                    {
+                        return;
+                    }
+                }
+
+                if (!IsConnected())
+                {
+                    // ensure that upon disconnect, we handled messages first
                     return;
                 }
 
@@ -254,16 +273,6 @@ namespace RLBotCS.Server
                     }
                 }
 
-                // check for messages from the client
-                while (_socketSpecReader.TryRead(out TypedPayload message))
-                {
-                    handledSomething = true;
-                    if (!ParseClientMessage(message))
-                    {
-                        return;
-                    }
-                }
-
                 if (!handledSomething)
                 {
                     spinWait.SpinOnce();
@@ -273,8 +282,8 @@ namespace RLBotCS.Server
 
         public void Cleanup()
         {
-            Console.WriteLine("Session closed.");
             _client.Close();
+            _rlbotServer.TryWrite(ServerMessage.SessionClosed(_clientId));
         }
     }
 }
