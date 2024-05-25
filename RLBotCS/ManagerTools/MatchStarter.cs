@@ -126,7 +126,7 @@ namespace RLBotCS.GameControl
                 var loadMapCommand = FlatToCommand.MakeOpenCommand(matchSettings);
                 Console.WriteLine("Core is about to start match with command: " + loadMapCommand);
                 _matchCommandSender.AddConsoleCommand(loadMapCommand);
-                
+
                 _commandSenderSync.WaitOne();
                 _matchCommandSender.Send();
                 _commandSenderSync.ReleaseMutex();

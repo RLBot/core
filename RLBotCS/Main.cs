@@ -1,12 +1,10 @@
 ﻿using System.Threading.Channels;
 using RLBotCS.GameControl;
+using RLBotCS.MatchManagement;
 using RLBotCS.Server;
 using RLBotSecret.TCP;
 
-// read the port from the command line arg or default to 23233
-// TODO: Don't accept from command line, find a proper port ourself
-// basically port gateway utils from python to core
-int gamePort = args.Length > 0 ? int.Parse(args[0]) : 23233;
+int gamePort = Launcher.FindUsableGamePort();
 Console.WriteLine("RLBot is waiting for Rocket League to connect on port " + gamePort);
 
 TcpMessenger tcpMessenger = new TcpMessenger(gamePort);
@@ -19,7 +17,12 @@ ChannelWriter<ServerMessage> serverWriter = serverChannel.Writer;
 Thread rlbotServer = new Thread(() =>
 {
     MatchStarter matchStarter = new MatchStarter(tcpMessenger, tcpSync, gamePort);
-    FlatbufferServer flatbufferServer = new FlatbufferServer(gamePort, 23234, serverChannel, matchStarter);
+    FlatbufferServer flatbufferServer = new FlatbufferServer(
+        gamePort,
+        Launcher.RLBotSocketsPort,
+        serverChannel,
+        matchStarter
+    );
     flatbufferServer.BlockingRun();
     flatbufferServer.Cleanup();
 });
