@@ -4,7 +4,6 @@ using System.Threading.Channels;
 using rlbot.flat;
 using RLBotCS.GameControl;
 using RLBotSecret.State;
-using RLBotSecret.TCP;
 using RLBotSecret.Types;
 
 namespace RLBotCS.Server
@@ -106,7 +105,7 @@ namespace RLBotCS.Server
             _incomingMessagesWriter = incomingMessages.Writer;
             _matchStarter = matchStarter;
 
-            IPAddress rlbotClients = new IPAddress(new byte[] { 127, 0, 0, 1 });
+            IPAddress rlbotClients = new IPAddress(new byte[] { 0, 0, 0, 0 });
             _server = new TcpListener(rlbotClients, rlbotPort);
         }
 
