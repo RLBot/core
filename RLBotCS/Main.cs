@@ -7,9 +7,6 @@ using RLBotSecret.TCP;
 int gamePort = Launcher.FindUsableGamePort();
 Console.WriteLine("RLBot is waiting for Rocket League to connect on port " + gamePort);
 
-TcpMessenger tcpMessenger = new TcpMessenger(gamePort);
-Mutex tcpSync = new Mutex();
-
 // Setup the handler to use bridge to talk with the game
 Channel<BridgeMessage> bridgeChannel = Channel.CreateUnbounded<BridgeMessage>();
 ChannelWriter<BridgeMessage> bridgeWriter = bridgeChannel.Writer;
@@ -33,7 +30,8 @@ rlbotServer.Start();
 
 Thread bridgeHandler = new Thread(() =>
 {
-    BridgeHandler bridgeHandler = new BridgeHandler(serverWriter, bridgeChannel.Reader, tcpMessenger, tcpSync);
+    TcpMessenger tcpMessenger = new TcpMessenger(gamePort);
+    BridgeHandler bridgeHandler = new BridgeHandler(serverWriter, bridgeChannel.Reader, tcpMessenger);
     bridgeHandler.BlockingRun();
     bridgeHandler.Cleanup();
 });
@@ -47,6 +45,7 @@ void WaitForShutdown()
 
     bridgeWriter.TryWrite(BridgeMessage.Stop());
     bridgeWriter.TryComplete();
+
     bridgeHandler.Join();
     Console.WriteLine("Bridge handler has shut down successfully.");
 }

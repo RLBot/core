@@ -1,4 +1,3 @@
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading.Channels;
 using Google.FlatBuffers;
@@ -67,10 +66,12 @@ namespace RLBotCS.Server
         {
             _client = client;
             _clientId = clientId;
-            _socketSpecReader = new SocketSpecStreamReader(_client);
-            _socketSpecWriter = new SocketSpecStreamWriter(_client.GetStream());
             _incomingMessages = incomingMessages;
             _rlbotServer = rlbotServer;
+
+            NetworkStream stream = _client.GetStream();
+            _socketSpecReader = new SocketSpecStreamReader(stream);
+            _socketSpecWriter = new SocketSpecStreamWriter(stream);
         }
 
         private bool ParseClientMessage(TypedPayload message)
@@ -207,81 +208,58 @@ namespace RLBotCS.Server
             _socketSpecWriter.Send();
         }
 
-        private void SendShutdownConfirmation()
+        private async Task HandleIncomingMessages()
         {
-            TypedPayload msg = new() { Type = DataType.None, Payload = new ArraySegment<byte>([1]), };
-            SendPayloadToClient(msg);
-        }
-
-        private bool IsConnected()
-        {
-            var state = IPGlobalProperties
-                .GetIPGlobalProperties()
-                .GetActiveTcpConnections()
-                .FirstOrDefault(x => x.RemoteEndPoint.Equals(_client.Client.RemoteEndPoint));
-            return state != null && state.State == TcpState.Established;
-        }
-
-        public void BlockingRun()
-        {
-            SpinWait spinWait = new SpinWait();
-
-            while (true)
+            await foreach (SessionMessage message in _incomingMessages.ReadAllAsync())
             {
-                bool handledSomething = false;
-
-                // check for messages from the client
-                while (_socketSpecReader.TryRead(out TypedPayload message))
+                switch (message.Type())
                 {
-                    handledSomething = true;
-                    if (!ParseClientMessage(message))
-                    {
-                        return;
-                    }
-                }
+                    case SessionMessageType.DistributeGameState:
+                        SendPayloadToClient(message.GetGameState());
+                        break;
+                    case SessionMessageType.StopMatch:
+                        if (_closeAfterMatch)
+                        {
+                            return;
+                        }
 
-                if (!IsConnected())
-                {
-                    // ensure that upon disconnect, we handled messages first
-                    return;
-                }
-
-                if (_incomingMessages.Completion.IsCompleted)
-                {
-                    SendShutdownConfirmation();
-                    return;
-                }
-
-                // check for messages from the server
-                while (_incomingMessages.TryRead(out SessionMessage message))
-                {
-                    handledSomething = true;
-
-                    switch (message.Type())
-                    {
-                        case SessionMessageType.DistributeGameState:
-                            SendPayloadToClient(message.GetGameState());
-                            break;
-                        case SessionMessageType.StopMatch:
-                            if (_closeAfterMatch)
-                            {
-                                SendShutdownConfirmation();
-                                return;
-                            }
-
-                            break;
-                    }
-                }
-
-                if (!handledSomething)
-                {
-                    spinWait.SpinOnce();
+                        break;
                 }
             }
         }
 
+        private async Task HandleClientMessages()
+        {
+            await foreach (TypedPayload message in _socketSpecReader.ReadAllAsync())
+            {
+                if (!ParseClientMessage(message))
+                {
+                    return;
+                }
+            }
+        }
+
+        public void BlockingRun()
+        {
+            Task incomingMessagesTask = HandleIncomingMessages();
+            Task clientMessagesTask = HandleClientMessages();
+
+            Task.WhenAny(incomingMessagesTask, clientMessagesTask).Wait();
+        }
+
         public void Cleanup()
         {
+            // try to politely close the connection
+            try
+            {
+                TypedPayload msg = new() { Type = DataType.None, Payload = new ArraySegment<byte>([1]), };
+                SendPayloadToClient(msg);
+            }
+            catch (Exception)
+            {
+                // client disconnected first
+            }
+
             _client.Close();
             _rlbotServer.TryWrite(ServerMessage.SessionClosed(_clientId));
         }

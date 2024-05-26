@@ -212,79 +212,73 @@ namespace RLBotCS.Server
             _sessions.Add(clientId, (sessionChannel.Writer, sessionThread));
         }
 
-        public void BlockingRun()
+        private async Task HandleIncomingMessages()
         {
-            SpinWait spinWait = new SpinWait();
-            _server.Start();
-
-            while (!_incomingMessages.Completion.IsCompleted)
+            await foreach (ServerMessage message in _incomingMessages.ReadAllAsync())
             {
-                bool handledSomething = false;
-
-                // start listening to the channel
-                while (_incomingMessages.TryRead(out ServerMessage message))
+                switch (message.Type())
                 {
-                    handledSomething = true;
+                    case ServerMessageType.StartCommunication:
+                        _matchStarter.StartCommunication();
+                        break;
+                    case ServerMessageType.StartMatch:
+                        _matchSettingsPayload = message.GetMatchSettingsPayload();
+                        _matchStarter.StartMatch(message.GetMatchSettings());
+                        break;
+                    case ServerMessageType.DistributeGameState:
+                        GameState gameState = message.GetGameState();
 
-                    switch (message.Type())
-                    {
-                        case ServerMessageType.StartCommunication:
-                            _matchStarter.StartCommunication();
-                            break;
-                        case ServerMessageType.StartMatch:
-                            _matchSettingsPayload = message.GetMatchSettingsPayload();
-                            _matchStarter.StartMatch(message.GetMatchSettings());
-                            break;
-                        case ServerMessageType.DistributeGameState:
-                            GameState gameState = message.GetGameState();
+                        UpdateFieldInfo(gameState);
+                        DistributeGameState(gameState);
+                        break;
+                    case ServerMessageType.MapSpawned:
+                        _fieldInfo = null;
+                        _shouldUpdateFieldInfo = true;
 
-                            UpdateFieldInfo(gameState);
-                            DistributeGameState(gameState);
-                            break;
-                        case ServerMessageType.MapSpawned:
-                            _fieldInfo = null;
-                            _shouldUpdateFieldInfo = true;
+                        _matchStarter.MapSpawned();
+                        break;
+                    case ServerMessageType.SessionClosed:
+                        _sessions.Remove(message.GetClientId());
+                        Console.WriteLine("Session closed.");
+                        break;
+                    case ServerMessageType.StopMatch:
+                        _matchSettingsPayload = null;
+                        _fieldInfo = null;
+                        _shouldUpdateFieldInfo = false;
 
-                            _matchStarter.MapSpawned();
-                            break;
-                        case ServerMessageType.SessionClosed:
-                            _sessions.Remove(message.GetClientId());
-                            Console.WriteLine("Session closed.");
-                            break;
-                        case ServerMessageType.StopMatch:
-                            _matchSettingsPayload = null;
-                            _fieldInfo = null;
-                            _shouldUpdateFieldInfo = false;
+                        if (message.GetShutdownServer())
+                        {
+                            _incomingMessagesWriter.TryComplete();
+                            return;
+                        }
 
-                            if (message.GetShutdownServer())
-                            {
-                                _incomingMessagesWriter.TryComplete();
-                                return;
-                            }
-
-                            StopSessions();
-                            break;
-                    }
-                }
-
-                // try to accept a new tcp client
-                if (_server.Pending())
-                {
-                    handledSomething = true;
-                    AddSession(_server.AcceptTcpClient());
-                }
-
-                if (!handledSomething)
-                {
-                    // prevent busy waiting
-                    spinWait.SpinOnce();
+                        StopSessions();
+                        break;
                 }
             }
         }
 
+        private async Task HandleServer()
+        {
+            _server.Start();
+
+            while (true)
+            {
+                TcpClient client = await _server.AcceptTcpClientAsync();
+                AddSession(client);
+            }
+        }
+
+        public void BlockingRun()
+        {
+            Task incomingMessagesTask = Task.Run(HandleIncomingMessages);
+            Task serverTask = Task.Run(HandleServer);
+
+            Task.WhenAny(incomingMessagesTask, serverTask).Wait();
+        }
+
         public void Cleanup()
         {
-            Console.WriteLine("Server channel was closed.");
             StopSessions();
             _server.Stop();
         }

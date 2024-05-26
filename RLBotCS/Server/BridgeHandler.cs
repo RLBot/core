@@ -104,15 +104,16 @@ namespace RLBotCS.Server
 
         private TcpMessenger _messenger;
         private MatchCommandSender _matchCommandSender;
-        private Mutex _messengerSync;
 
         private bool _gotFirstMessage = false;
+        private bool _matchHasStarted = false;
+        private bool _queuedMatchCommands = false;
+        private bool _delayMatchCommandSend = false;
 
         public BridgeHandler(
             ChannelWriter<ServerMessage> rlbotServer,
             ChannelReader<BridgeMessage> incomingMessages,
-            TcpMessenger messenger,
-            Mutex messengerSync
+            TcpMessenger messenger
         )
         {
             _rlbotServer = rlbotServer;
@@ -120,7 +121,6 @@ namespace RLBotCS.Server
 
             _messenger = messenger;
             _matchCommandSender = new MatchCommandSender(messenger);
-            _messengerSync = messengerSync;
         }
 
         private void SpawnMap(MatchSettingsT matchSettings)
@@ -129,10 +129,7 @@ namespace RLBotCS.Server
             Console.WriteLine("Core is about to start match with command: " + loadMapCommand);
 
             _matchCommandSender.AddConsoleCommand(loadMapCommand);
-
-            _messengerSync.WaitOne();
             _matchCommandSender.Send();
-            _messengerSync.ReleaseMutex();
         }
 
         private void SpawnHuman(PlayerConfigurationT humanConfig, uint desiredIndex)
@@ -196,115 +193,86 @@ namespace RLBotCS.Server
             );
         }
 
-        public void BlockingRun()
+        private async Task HandleIncommingMessages()
         {
-            SpinWait spinWait = new SpinWait();
-            ArraySegment<byte> messageClump = null;
-
-            _messengerSync.WaitOne();
-            _messenger.WaitForConnection();
-            _messengerSync.ReleaseMutex();
-
-            bool matchHasStarted = false;
-            bool queuedMatchCommands = false;
-            bool delayMatchCommandSend = false;
-
-            while (true)
+            await foreach (BridgeMessage message in _incomingMessages.ReadAllAsync())
             {
-                bool handledSomething = false;
-
-                while (_incomingMessages.TryRead(out BridgeMessage message))
+                switch (message.Type())
                 {
-                    handledSomething = true;
+                    case BridgeMessageType.Stop:
+                        return;
+                    case BridgeMessageType.SpawnMap:
+                        _matchHasStarted = false;
+                        _delayMatchCommandSend = true;
 
-                    switch (message.Type())
-                    {
-                        case BridgeMessageType.Stop:
-                            return;
-                        case BridgeMessageType.SpawnMap:
-                            matchHasStarted = false;
-                            delayMatchCommandSend = true;
+                        SpawnMap(message.MatchSettings());
+                        break;
+                    case BridgeMessageType.ConsoleCommand:
+                        _queuedMatchCommands = true;
 
-                            SpawnMap(message.MatchSettings());
-                            break;
-                        case BridgeMessageType.ConsoleCommand:
-                            queuedMatchCommands = true;
+                        _matchCommandSender.AddConsoleCommand(message.ConsoleCommand());
+                        break;
+                    case BridgeMessageType.SpawnBot:
+                        _queuedMatchCommands = true;
 
-                            _matchCommandSender.AddConsoleCommand(message.ConsoleCommand());
-                            break;
-                        case BridgeMessageType.SpawnBot:
-                            queuedMatchCommands = true;
+                        var (playerConfig, skill, desiredIndex, isCustomBot) = message.BotSpawn();
+                        SpawnBot(playerConfig, skill, desiredIndex, isCustomBot);
+                        break;
+                    case BridgeMessageType.SpawnHuman:
+                        _queuedMatchCommands = true;
 
-                            var (playerConfig, skill, desiredIndex, isCustomBot) = message.BotSpawn();
-                            SpawnBot(playerConfig, skill, desiredIndex, isCustomBot);
-                            break;
-                        case BridgeMessageType.SpawnHuman:
-                            queuedMatchCommands = true;
+                        var (humanConfig, humanIndex) = message.SpawnHuman();
+                        SpawnHuman(humanConfig, humanIndex);
+                        break;
+                }
+            }
+        }
 
-                            var (humanConfig, humanIndex) = message.SpawnHuman();
-                            SpawnHuman(humanConfig, humanIndex);
-                            break;
-                    }
+        private async Task HandleServer()
+        {
+            await _messenger.WaitForConnectionAsync();
+
+            await foreach (var messageClump in _messenger.ReadAllAsync())
+            {
+                if (!_gotFirstMessage)
+                {
+                    _gotFirstMessage = true;
+                    _rlbotServer.TryWrite(ServerMessage.StartCommunication());
                 }
 
-                // if the channel has closed and somehow there was no Stop command,
-                // exit anyways to be safe
-                if (_incomingMessages.Completion.IsCompleted)
+                _gameState = MessageHandler.CreateUpdatedState(messageClump, _gameState);
+
+                var matchStarted = MessageHandler.ReceivedMatchInfo(messageClump);
+                if (matchStarted)
                 {
-                    return;
+                    _matchHasStarted = true;
+                    _rlbotServer.TryWrite(ServerMessage.MapSpawned());
                 }
 
-                _messengerSync.WaitOne();
-
-                if (!delayMatchCommandSend && queuedMatchCommands)
+                if (
+                    _delayMatchCommandSend
+                    && _queuedMatchCommands
+                    && _matchHasStarted
+                    && _gameState.GameStateType == GameStateType.Paused
+                )
                 {
-                    queuedMatchCommands = false;
+                    // if we send the commands before the map has spawned, nothing will happen
+                    _delayMatchCommandSend = false;
+                    _queuedMatchCommands = false;
 
                     _matchCommandSender.Send();
                 }
 
-                if (_messenger.TryRead(out messageClump))
-                {
-                    handledSomething = true;
-
-                    if (!_gotFirstMessage)
-                    {
-                        _gotFirstMessage = true;
-                        _rlbotServer.TryWrite(ServerMessage.StartCommunication());
-                    }
-
-                    _gameState = MessageHandler.CreateUpdatedState(messageClump, _gameState);
-
-                    var matchStarted = MessageHandler.ReceivedMatchInfo(messageClump);
-                    if (matchStarted)
-                    {
-                        matchHasStarted = true;
-                        _rlbotServer.TryWrite(ServerMessage.MapSpawned());
-                    }
-
-                    if (
-                        delayMatchCommandSend
-                        && queuedMatchCommands
-                        && matchHasStarted
-                        && _gameState.GameStateType == GameStateType.Paused
-                    )
-                    {
-                        // if we send the commands before the map has spawned, nothing will happen
-                        delayMatchCommandSend = false;
-                        queuedMatchCommands = false;
-
-                        _matchCommandSender.Send();
-                    }
-
-                    _rlbotServer.TryWrite(ServerMessage.DistributeGameState(_gameState));
-                }
-                _messengerSync.ReleaseMutex();
-
-                if (!handledSomething)
-                {
-                    spinWait.SpinOnce();
-                }
+                _rlbotServer.TryWrite(ServerMessage.DistributeGameState(_gameState));
             }
+        }
+
+        public void BlockingRun()
+        {
+            Task incommingMessagesTask = Task.Run(HandleIncommingMessages);
+            Task serverTask = Task.Run(HandleServer);
+
+            Task.WhenAny(incommingMessagesTask, serverTask).Wait();
         }
 
         public void Cleanup()
