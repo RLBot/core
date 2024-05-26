@@ -218,7 +218,7 @@ namespace RLBotCS.Server
             var state = IPGlobalProperties
                 .GetIPGlobalProperties()
                 .GetActiveTcpConnections()
-                .SingleOrDefault(x => x.RemoteEndPoint.Equals(_client.Client.RemoteEndPoint));
+                .FirstOrDefault(x => x.RemoteEndPoint.Equals(_client.Client.RemoteEndPoint));
             return state != null && state.State == TcpState.Established;
         }
 
@@ -229,12 +229,6 @@ namespace RLBotCS.Server
             while (true)
             {
                 bool handledSomething = false;
-
-                if (_incomingMessages.Completion.IsCompleted)
-                {
-                    SendShutdownConfirmation();
-                    return;
-                }
 
                 // check for messages from the client
                 while (_socketSpecReader.TryRead(out TypedPayload message))
@@ -249,6 +243,12 @@ namespace RLBotCS.Server
                 if (!IsConnected())
                 {
                     // ensure that upon disconnect, we handled messages first
+                    return;
+                }
+
+                if (_incomingMessages.Completion.IsCompleted)
+                {
+                    SendShutdownConfirmation();
                     return;
                 }
 

@@ -101,18 +101,14 @@ namespace RLBotCS.Server
         private ChannelWriter<ServerMessage> _incomingMessagesWriter;
         private Dictionary<int, (ChannelWriter<SessionMessage>, Thread)> _sessions = new();
 
-        private int _gamePort;
-        private TypedPayload? _matchSettingsPayload;
+        private TypedPayload? _matchSettingsPayload = null;
+        private FieldInfoT? _fieldInfo = null;
+        private bool _shouldUpdateFieldInfo = false;
+
         private MatchStarter _matchStarter;
 
-        public FlatbufferServer(
-            int gamePort,
-            int rlbotPort,
-            Channel<ServerMessage> incomingMessages,
-            MatchStarter matchStarter
-        )
+        public FlatbufferServer(int rlbotPort, Channel<ServerMessage> incomingMessages, MatchStarter matchStarter)
         {
-            _gamePort = gamePort;
             _incomingMessages = incomingMessages.Reader;
             _incomingMessagesWriter = incomingMessages.Writer;
             _matchStarter = matchStarter;
@@ -137,6 +133,40 @@ namespace RLBotCS.Server
 
             // remove all sessions
             _sessions.Clear();
+        }
+
+        private void UpdateFieldInfo(GameState gameState)
+        {
+            if (!_shouldUpdateFieldInfo)
+            {
+                return;
+            }
+
+            if (_fieldInfo == null)
+            {
+                _fieldInfo = new FieldInfoT() { Goals = gameState.Goals, BoostPads = new List<BoostPadT>() };
+            }
+            else
+            {
+                _fieldInfo.Goals = gameState.Goals;
+                _fieldInfo.BoostPads.Clear();
+            }
+
+            foreach (var boostPad in gameState.BoostPads)
+            {
+                _fieldInfo.BoostPads.Add(
+                    new BoostPadT
+                    {
+                        Location = new Vector3T()
+                        {
+                            X = boostPad.SpawnPosition.x,
+                            Y = boostPad.SpawnPosition.y,
+                            Z = boostPad.SpawnPosition.z
+                        },
+                        IsFullBoost = boostPad.IsFullBoost,
+                    }
+                );
+            }
         }
 
         private void DistributeGameState(GameState gameState)
@@ -165,13 +195,21 @@ namespace RLBotCS.Server
                     sessionChannel.Reader,
                     _incomingMessagesWriter
                 );
-                session.BlockingRun();
+
+                try
+                {
+                    session.BlockingRun();
+                }
+                catch (IOException)
+                {
+                    Console.WriteLine("Session suddenly terminated the connection?");
+                }
+
                 session.Cleanup();
             });
             sessionThread.Start();
 
             _sessions.Add(clientId, (sessionChannel.Writer, sessionThread));
-            Console.WriteLine("New session added.");
         }
 
         public void BlockingRun()
@@ -198,9 +236,15 @@ namespace RLBotCS.Server
                             _matchStarter.StartMatch(message.GetMatchSettings());
                             break;
                         case ServerMessageType.DistributeGameState:
-                            DistributeGameState(message.GetGameState());
+                            GameState gameState = message.GetGameState();
+
+                            UpdateFieldInfo(gameState);
+                            DistributeGameState(gameState);
                             break;
                         case ServerMessageType.MapSpawned:
+                            _fieldInfo = null;
+                            _shouldUpdateFieldInfo = true;
+
                             _matchStarter.MapSpawned();
                             break;
                         case ServerMessageType.SessionClosed:
@@ -208,6 +252,10 @@ namespace RLBotCS.Server
                             Console.WriteLine("Session closed.");
                             break;
                         case ServerMessageType.StopMatch:
+                            _matchSettingsPayload = null;
+                            _fieldInfo = null;
+                            _shouldUpdateFieldInfo = false;
+
                             if (message.GetShutdownServer())
                             {
                                 _incomingMessagesWriter.TryComplete();
