@@ -16,6 +16,7 @@ namespace RLBotCS.Server
         ConsoleCommand,
         SpawnBot,
         SpawnHuman,
+        PlayerInput,
         Stop,
     }
 
@@ -27,6 +28,7 @@ namespace RLBotCS.Server
         private string _consoleCommand;
         private (PlayerConfigurationT, BotSkill, uint, bool) _spawnBot;
         private (PlayerConfigurationT, uint) _spawnHuman;
+        private PlayerInput playerInput;
 
         public static BridgeMessage Stop()
         {
@@ -70,6 +72,11 @@ namespace RLBotCS.Server
             };
         }
 
+        public static BridgeMessage PlayerInput(PlayerInput playerInput)
+        {
+            return new BridgeMessage { _type = BridgeMessageType.PlayerInput, playerInput = playerInput };
+        }
+
         public BridgeMessageType Type()
         {
             return _type;
@@ -94,6 +101,11 @@ namespace RLBotCS.Server
         {
             return _spawnHuman;
         }
+
+        public PlayerInput PlayerInput()
+        {
+            return playerInput;
+        }
     }
 
     internal class BridgeHandler
@@ -104,6 +116,7 @@ namespace RLBotCS.Server
 
         private TcpMessenger _messenger;
         private MatchCommandSender _matchCommandSender;
+        private PlayerInputSender _playerInputSender;
 
         private bool _gotFirstMessage = false;
         private bool _matchHasStarted = false;
@@ -121,6 +134,7 @@ namespace RLBotCS.Server
 
             _messenger = messenger;
             _matchCommandSender = new MatchCommandSender(messenger);
+            _playerInputSender = new PlayerInputSender(messenger);
         }
 
         private void SpawnMap(MatchSettingsT matchSettings)
@@ -223,6 +237,28 @@ namespace RLBotCS.Server
 
                         var (humanConfig, humanIndex) = message.SpawnHuman();
                         SpawnHuman(humanConfig, humanIndex);
+                        break;
+                    case BridgeMessageType.PlayerInput:
+                        var playerInputMsg = message.PlayerInput();
+                        var carInput = FlatToModel.ToCarInput(playerInputMsg.ControllerState.Value);
+                        var actorId = _gameState.PlayerMapping.ActorIdFromPlayerIndex(playerInputMsg.PlayerIndex);
+
+                        if (actorId.HasValue)
+                        {
+                            var playerInput = new RLBotSecret.Models.Control.PlayerInput()
+                            {
+                                ActorId = actorId.Value,
+                                CarInput = carInput
+                            };
+                            _playerInputSender.SendPlayerInput(playerInput);
+                        }
+                        else
+                        {
+                            Console.WriteLine(
+                                "Core got input from unknown player index {0}",
+                                playerInputMsg.PlayerIndex
+                            );
+                        }
                         break;
                 }
             }

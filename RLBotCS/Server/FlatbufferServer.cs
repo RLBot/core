@@ -134,12 +134,19 @@ namespace RLBotCS.Server
         private List<ChannelWriter<FieldInfoT>> _fieldInfoWriters = new();
 
         private MatchStarter _matchStarter;
+        private ChannelWriter<BridgeMessage> _bridge;
 
-        public FlatbufferServer(int rlbotPort, Channel<ServerMessage> incomingMessages, MatchStarter matchStarter)
+        public FlatbufferServer(
+            int rlbotPort,
+            Channel<ServerMessage> incomingMessages,
+            MatchStarter matchStarter,
+            ChannelWriter<BridgeMessage> bridge
+        )
         {
             _incomingMessages = incomingMessages.Reader;
             _incomingMessagesWriter = incomingMessages.Writer;
             _matchStarter = matchStarter;
+            _bridge = bridge;
 
             IPAddress rlbotClients = new IPAddress(new byte[] { 0, 0, 0, 0 });
             _server = new TcpListener(rlbotClients, rlbotPort);
@@ -229,7 +236,8 @@ namespace RLBotCS.Server
                     client,
                     clientId,
                     sessionChannel.Reader,
-                    _incomingMessagesWriter
+                    _incomingMessagesWriter,
+                    _bridge
                 );
 
                 try

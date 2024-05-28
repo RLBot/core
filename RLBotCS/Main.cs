@@ -21,7 +21,8 @@ Thread rlbotServer = new Thread(() =>
     FlatbufferServer flatbufferServer = new FlatbufferServer(
         Launcher.RLBotSocketsPort,
         serverChannel,
-        matchStarter
+        matchStarter,
+        bridgeWriter
     );
     flatbufferServer.BlockingRun();
     flatbufferServer.Cleanup();

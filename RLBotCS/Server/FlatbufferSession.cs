@@ -3,6 +3,7 @@ using System.Threading.Channels;
 using Google.FlatBuffers;
 using MatchManagement;
 using rlbot.flat;
+using RLBotSecret.Conversion;
 using RLBotSecret.Types;
 
 namespace RLBotCS.Server
@@ -48,6 +49,7 @@ namespace RLBotCS.Server
 
         private ChannelReader<SessionMessage> _incomingMessages;
         private ChannelWriter<ServerMessage> _rlbotServer;
+        private ChannelWriter<BridgeMessage> _bridge;
 
         private bool _isReady = false;
         private bool _wantsBallPredictions = false;
@@ -65,13 +67,15 @@ namespace RLBotCS.Server
             TcpClient client,
             int clientId,
             ChannelReader<SessionMessage> incomingMessages,
-            ChannelWriter<ServerMessage> rlbotServer
+            ChannelWriter<ServerMessage> rlbotServer,
+            ChannelWriter<BridgeMessage> bridge
         )
         {
             _client = client;
             _clientId = clientId;
             _incomingMessages = incomingMessages;
             _rlbotServer = rlbotServer;
+            _bridge = bridge;
 
             NetworkStream stream = _client.GetStream();
             _socketSpecReader = new SocketSpecStreamReader(stream);
@@ -146,27 +150,10 @@ namespace RLBotCS.Server
                     _rlbotServer.TryWrite(ServerMessage.StartMatch(message, matchSettingsT));
                     break;
 
-                // case DataType.PlayerInput:
-                //     var playerInputMsg = PlayerInput.GetRootAsPlayerInput(byteBuffer);
-                //     var carInput = FlatToModel.ToCarInput(playerInputMsg.ControllerState.Value);
-                //     var actorId = _playerMapping.ActorIdFromPlayerIndex(playerInputMsg.PlayerIndex);
-                //     if (actorId.HasValue)
-                //     {
-                //         var playerInput = new RLBotSecret.Models.Control.PlayerInput()
-                //         {
-                //             ActorId = actorId.Value,
-                //             CarInput = carInput
-                //         };
-                //         _gameController.PlayerInputSender.SendPlayerInput(playerInput);
-                //     }
-                //     else
-                //     {
-                //         Console.WriteLine(
-                //             "Core got input from unknown player index {0}",
-                //             playerInputMsg.PlayerIndex
-                //         );
-                //     }
-                //     break;
+                case DataType.PlayerInput:
+                    var playerInputMsg = PlayerInput.GetRootAsPlayerInput(byteBuffer);
+                    _bridge.TryWrite(BridgeMessage.PlayerInput(playerInputMsg));
+                    break;
 
                 case DataType.MatchComms:
                     break;
