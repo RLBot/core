@@ -11,6 +11,7 @@ namespace RLBotCS.Server
     internal enum ServerMessageType
     {
         StartCommunication,
+        IntroDataRequest,
         DistributeGameState,
         StartMatch,
         MapSpawned,
@@ -22,6 +23,8 @@ namespace RLBotCS.Server
     {
         private ServerMessageType _type;
 
+        private ChannelWriter<TypedPayload> _matchSettingsWriter;
+        private ChannelWriter<FieldInfoT> _fieldInfoWriter;
         private GameState _gameState;
         private TypedPayload _matchSettingsPayload;
         private MatchSettingsT _matchSettings;
@@ -31,6 +34,19 @@ namespace RLBotCS.Server
         public static ServerMessage StartCommunication()
         {
             return new ServerMessage { _type = ServerMessageType.StartCommunication };
+        }
+
+        public static ServerMessage IntroDataRequest(
+            ChannelWriter<TypedPayload> matchSettingsWriter,
+            ChannelWriter<FieldInfoT> fieldInfoWriter
+        )
+        {
+            return new ServerMessage
+            {
+                _type = ServerMessageType.IntroDataRequest,
+                _matchSettingsWriter = matchSettingsWriter,
+                _fieldInfoWriter = fieldInfoWriter
+            };
         }
 
         public static ServerMessage DistributeGameState(GameState gameState)
@@ -66,6 +82,16 @@ namespace RLBotCS.Server
         public ServerMessageType Type()
         {
             return _type;
+        }
+
+        public ChannelWriter<TypedPayload> GetMatchSettingsWriter()
+        {
+            return _matchSettingsWriter;
+        }
+
+        public ChannelWriter<FieldInfoT> GetFieldInfoWriter()
+        {
+            return _fieldInfoWriter;
         }
 
         public GameState GetGameState()
@@ -104,6 +130,8 @@ namespace RLBotCS.Server
         private TypedPayload? _matchSettingsPayload = null;
         private FieldInfoT? _fieldInfo = null;
         private bool _shouldUpdateFieldInfo = false;
+        private List<ChannelWriter<TypedPayload>> _matchSettingsWriters = new();
+        private List<ChannelWriter<FieldInfoT>> _fieldInfoWriters = new();
 
         private MatchStarter _matchStarter;
 
@@ -167,6 +195,14 @@ namespace RLBotCS.Server
                     }
                 );
             }
+
+            // distribute the field info to all waiting sessions
+            foreach (var writer in _fieldInfoWriters)
+            {
+                writer.TryWrite(_fieldInfo);
+                writer.TryComplete();
+            }
+            _fieldInfoWriters.Clear();
         }
 
         private void DistributeGameState(GameState gameState)
@@ -221,9 +257,42 @@ namespace RLBotCS.Server
                     case ServerMessageType.StartCommunication:
                         _matchStarter.StartCommunication();
                         break;
+                    case ServerMessageType.IntroDataRequest:
+                        ChannelWriter<TypedPayload> matchSettingsWriter = message.GetMatchSettingsWriter();
+                        ChannelWriter<FieldInfoT> fieldInfoWriter = message.GetFieldInfoWriter();
+
+                        if (_matchSettingsPayload != null)
+                        {
+                            matchSettingsWriter.TryWrite(_matchSettingsPayload);
+                            matchSettingsWriter.TryComplete();
+                        }
+                        else
+                        {
+                            _matchSettingsWriters.Add(matchSettingsWriter);
+                        }
+
+                        if (_fieldInfo != null)
+                        {
+                            fieldInfoWriter.TryWrite(_fieldInfo);
+                            fieldInfoWriter.TryComplete();
+                        }
+                        else
+                        {
+                            _fieldInfoWriters.Add(fieldInfoWriter);
+                        }
+
+                        break;
                     case ServerMessageType.StartMatch:
                         _matchSettingsPayload = message.GetMatchSettingsPayload();
                         _matchStarter.StartMatch(message.GetMatchSettings());
+
+                        // distribute the match settings to all waiting sessions
+                        foreach (var writer in _matchSettingsWriters)
+                        {
+                            writer.TryWrite(_matchSettingsPayload);
+                            writer.TryComplete();
+                        }
+                        _matchSettingsWriters.Clear();
                         break;
                     case ServerMessageType.DistributeGameState:
                         GameState gameState = message.GetGameState();

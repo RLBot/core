@@ -50,12 +50,16 @@ namespace RLBotCS.Server
         private ChannelWriter<ServerMessage> _rlbotServer;
 
         private bool _isReady = false;
-        private bool _needsIntroData = false;
-
         private bool _wantsBallPredictions = false;
         private bool _wantsGameMessages = false;
         private bool _wantsComms = false;
         private bool _closeAfterMatch = false;
+
+        // Allocate 50kb to avoid failing to decode large messages
+        // Match settings and render messages can be quite large
+        // We don't want to limit bot devs - and it's only 50kb
+        // That's 6.4mb of ram at 128 connections, which isn't much
+        private FlatBufferBuilder _builder = new(51200);
 
         public FlatbufferSession(
             TcpClient client,
@@ -74,7 +78,7 @@ namespace RLBotCS.Server
             _socketSpecWriter = new SocketSpecStreamWriter(stream);
         }
 
-        private bool ParseClientMessage(TypedPayload message)
+        private async Task<bool> ParseClientMessage(TypedPayload message)
         {
             var byteBuffer = new ByteBuffer(message.Payload.Array, message.Payload.Offset);
 
@@ -87,13 +91,33 @@ namespace RLBotCS.Server
                 case DataType.ReadyMessage:
                     var readyMsg = ReadyMessage.GetRootAsReadyMessage(byteBuffer);
 
-                    _isReady = true;
-                    _needsIntroData = true;
                     _wantsBallPredictions = readyMsg.WantsBallPredictions;
                     _wantsGameMessages = readyMsg.WantsGameMessages;
                     _wantsComms = readyMsg.WantsComms;
                     _closeAfterMatch = readyMsg.CloseAfterMatch;
 
+                    Channel<TypedPayload> matchSettingsChannel = Channel.CreateUnbounded<TypedPayload>();
+                    Channel<FieldInfoT> fieldInfoChannel = Channel.CreateUnbounded<FieldInfoT>();
+
+                    _rlbotServer.TryWrite(
+                        ServerMessage.IntroDataRequest(matchSettingsChannel.Writer, fieldInfoChannel.Writer)
+                    );
+
+                    TypedPayload matchSettings = await matchSettingsChannel.Reader.ReadAsync();
+                    await SendPayloadToClientAsync(matchSettings);
+                    Console.WriteLine("Sent match settings to client.");
+
+                    FieldInfoT fieldInfo = await fieldInfoChannel.Reader.ReadAsync();
+
+                    _builder.Finish(FieldInfo.Pack(_builder, fieldInfo).Value);
+                    TypedPayload fieldInfoMessage = TypedPayload.FromFlatBufferBuilder(
+                        DataType.FieldInfo,
+                        _builder
+                    );
+                    await SendPayloadToClientAsync(fieldInfoMessage);
+                    Console.WriteLine("Sent field info to client.");
+
+                    _isReady = true;
                     break;
 
                 case DataType.StopCommand:
@@ -107,19 +131,19 @@ namespace RLBotCS.Server
                     var startCommand = StartCommand.GetRootAsStartCommand(byteBuffer).UnPack();
                     var tomlMatchSettings = ConfigParser.GetMatchSettings(startCommand.ConfigPath);
 
-                    FlatBufferBuilder builder = new(1500);
-                    builder.Finish(MatchSettings.Pack(builder, tomlMatchSettings).Value);
+                    _builder.Clear();
+                    _builder.Finish(MatchSettings.Pack(_builder, tomlMatchSettings).Value);
                     TypedPayload matchSettingsMessage = TypedPayload.FromFlatBufferBuilder(
                         DataType.MatchSettings,
-                        builder
+                        _builder
                     );
 
                     _rlbotServer.TryWrite(ServerMessage.StartMatch(matchSettingsMessage, tomlMatchSettings));
                     break;
 
                 case DataType.MatchSettings:
-                    var matchSettings = MatchSettings.GetRootAsMatchSettings(byteBuffer).UnPack();
-                    _rlbotServer.TryWrite(ServerMessage.StartMatch(message, matchSettings));
+                    var matchSettingsT = MatchSettings.GetRootAsMatchSettings(byteBuffer).UnPack();
+                    _rlbotServer.TryWrite(ServerMessage.StartMatch(message, matchSettingsT));
                     break;
 
                 // case DataType.PlayerInput:
@@ -195,17 +219,17 @@ namespace RLBotCS.Server
                 //     _gameController.MatchStarter.SetDesiredGameState(desiredGameState);
                 //     break;
                 default:
-                    Console.WriteLine("Core got unexpected message type {0} from client.", message.Type);
+                    // Console.WriteLine("Core got unexpected message type {0} from client.", message.Type);
                     break;
             }
 
             return true;
         }
 
-        private void SendPayloadToClient(TypedPayload payload)
+        private async Task SendPayloadToClientAsync(TypedPayload payload)
         {
-            _socketSpecWriter.Write(payload);
-            _socketSpecWriter.Send();
+            await _socketSpecWriter.WriteAsync(payload);
+            await _socketSpecWriter.SendAsync();
         }
 
         private async Task HandleIncomingMessages()
@@ -215,11 +239,15 @@ namespace RLBotCS.Server
                 switch (message.Type())
                 {
                     case SessionMessageType.DistributeGameState:
-                        SendPayloadToClient(message.GetGameState());
+                        if (_isReady)
+                        {
+                            await SendPayloadToClientAsync(message.GetGameState());
+                        }
                         break;
                     case SessionMessageType.StopMatch:
-                        if (_closeAfterMatch)
+                        if (_isReady && _closeAfterMatch)
                         {
+                            Console.WriteLine("Core got stop match message from server.");
                             return;
                         }
 
@@ -232,8 +260,10 @@ namespace RLBotCS.Server
         {
             await foreach (TypedPayload message in _socketSpecReader.ReadAllAsync())
             {
-                if (!ParseClientMessage(message))
+                bool keepRunning = await ParseClientMessage(message);
+                if (!keepRunning)
                 {
+                    Console.WriteLine("Core got close message from client.");
                     return;
                 }
             }
@@ -253,15 +283,15 @@ namespace RLBotCS.Server
             try
             {
                 TypedPayload msg = new() { Type = DataType.None, Payload = new ArraySegment<byte>([1]), };
-                SendPayloadToClient(msg);
+                SendPayloadToClientAsync(msg).Wait();
             }
             catch (Exception)
             {
                 // client disconnected first
             }
 
-            _client.Close();
             _rlbotServer.TryWrite(ServerMessage.SessionClosed(_clientId));
+            _client.Close();
         }
     }
 }
