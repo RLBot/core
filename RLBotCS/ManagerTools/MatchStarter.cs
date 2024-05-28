@@ -80,7 +80,7 @@ namespace RLBotCS.GameControl
                 string playerName = playerConfig.Name;
                 if (playerNames.TryGetValue(playerName, out int value))
                 {
-                    playerNames[playerName] = value++;
+                    playerNames[playerName] = ++value;
                     playerConfig.Name = playerName + $" ({value})";
                 }
                 else
