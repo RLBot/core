@@ -3,7 +3,6 @@ using System.Threading.Channels;
 using Google.FlatBuffers;
 using MatchManagement;
 using rlbot.flat;
-using RLBotSecret.Conversion;
 using RLBotSecret.Types;
 
 namespace RLBotCS.Server
@@ -57,11 +56,7 @@ namespace RLBotCS.Server
         private bool _wantsComms = false;
         private bool _closeAfterMatch = false;
 
-        // Allocate 50kb to avoid failing to decode large messages
-        // Match settings and render messages can be quite large
-        // We don't want to limit bot devs - and it's only 50kb
-        // That's 6.4mb of ram at 128 connections, which isn't much
-        private FlatBufferBuilder _builder = new(51200);
+        private FlatBufferBuilder _builder = new(1024);
 
         public FlatbufferSession(
             TcpClient client,

@@ -354,7 +354,7 @@ namespace MatchManagement
                             BallBouncinessOption.Default
                         ),
                         BoostOption = ParseEnum(mutatorTable, "boost_amount", BoostOption.Normal_Boost),
-                        RumbleOption = ParseEnum(mutatorTable, "rumble", RumbleOption.Default),
+                        RumbleOption = ParseEnum(mutatorTable, "rumble", RumbleOption.No_Rumble),
                         BoostStrengthOption = ParseEnum(mutatorTable, "boost_strength", BoostStrengthOption.One),
                         GravityOption = ParseEnum(mutatorTable, "gravity", GravityOption.Default),
                         DemolishOption = ParseEnum(mutatorTable, "demolish", DemolishOption.Default),
