@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Channels;
+using Google.FlatBuffers;
 using rlbot.flat;
+using RLBotCS.Conversion;
 using RLBotCS.GameControl;
 using RLBotSecret.State;
 using RLBotSecret.Types;
@@ -136,6 +138,8 @@ namespace RLBotCS.Server
         private MatchStarter _matchStarter;
         private ChannelWriter<BridgeMessage> _bridge;
 
+        private FlatBufferBuilder _builder = new FlatBufferBuilder(1024);
+
         public FlatbufferServer(
             int rlbotPort,
             Channel<ServerMessage> incomingMessages,
@@ -179,12 +183,36 @@ namespace RLBotCS.Server
 
             if (_fieldInfo == null)
             {
-                _fieldInfo = new FieldInfoT() { Goals = gameState.Goals, BoostPads = new List<BoostPadT>() };
+                _fieldInfo = new FieldInfoT() { Goals = new List<GoalInfoT>(), BoostPads = new List<BoostPadT>() };
             }
             else
             {
-                _fieldInfo.Goals = gameState.Goals;
+                _fieldInfo.Goals.Clear();
                 _fieldInfo.BoostPads.Clear();
+            }
+
+            foreach (var goal in gameState.Goals)
+            {
+                _fieldInfo.Goals.Add(
+                    new GoalInfoT
+                    {
+                        TeamNum = goal.Team,
+                        Location = new Vector3T()
+                        {
+                            X = goal.Location.x,
+                            Y = goal.Location.y,
+                            Z = goal.Location.z
+                        },
+                        Direction = new Vector3T()
+                        {
+                            X = goal.Direction.x,
+                            Y = goal.Direction.y,
+                            Z = goal.Direction.z
+                        },
+                        Width = goal.Width,
+                        Height = goal.Height,
+                    }
+                );
             }
 
             foreach (var boostPad in gameState.BoostPads)
@@ -218,7 +246,7 @@ namespace RLBotCS.Server
 
             foreach (var session in _sessions.Values)
             {
-                SessionMessage message = SessionMessage.DistributeGameState(gameState.ToFlatbuffer());
+                SessionMessage message = SessionMessage.DistributeGameState(gameState.ToFlatbuffer(_builder));
                 session.Item1.TryWrite(message);
             }
         }
