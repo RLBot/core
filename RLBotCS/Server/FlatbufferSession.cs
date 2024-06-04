@@ -108,6 +108,7 @@ namespace RLBotCS.Server
 
                     FieldInfoT fieldInfo = await fieldInfoChannel.Reader.ReadAsync();
 
+                    _builder.Clear();
                     _builder.Finish(FieldInfo.Pack(_builder, fieldInfo).Value);
                     TypedPayload fieldInfoMessage = TypedPayload.FromFlatBufferBuilder(
                         DataType.FieldInfo,
