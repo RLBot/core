@@ -3,6 +3,7 @@ using System.Threading.Channels;
 using Google.FlatBuffers;
 using MatchManagement;
 using rlbot.flat;
+using RLBotCS.Conversion;
 using RLBotSecret.Types;
 
 namespace RLBotCS.Server
@@ -16,9 +17,9 @@ namespace RLBotCS.Server
     internal class SessionMessage
     {
         private SessionMessageType _type;
-        private TypedPayload _gameState;
+        private RLBotSecret.State.GameState _gameState;
 
-        public static SessionMessage DistributeGameState(TypedPayload gameState)
+        public static SessionMessage DistributeGameState(RLBotSecret.State.GameState gameState)
         {
             return new SessionMessage { _type = SessionMessageType.DistributeGameState, _gameState = gameState };
         }
@@ -33,7 +34,7 @@ namespace RLBotCS.Server
             return _type;
         }
 
-        public TypedPayload GetGameState()
+        public RLBotSecret.State.GameState GetGameState()
         {
             return _gameState;
         }
@@ -95,17 +96,27 @@ namespace RLBotCS.Server
                     _wantsComms = readyMsg.WantsComms;
                     _closeAfterMatch = readyMsg.CloseAfterMatch;
 
-                    Channel<TypedPayload> matchSettingsChannel = Channel.CreateUnbounded<TypedPayload>();
+                    Channel<MatchSettingsT> matchSettingsChannel = Channel.CreateUnbounded<MatchSettingsT>();
                     Channel<FieldInfoT> fieldInfoChannel = Channel.CreateUnbounded<FieldInfoT>();
 
                     _rlbotServer.TryWrite(
                         ServerMessage.IntroDataRequest(matchSettingsChannel.Writer, fieldInfoChannel.Writer)
                     );
 
-                    TypedPayload matchSettings = await matchSettingsChannel.Reader.ReadAsync();
-                    await SendPayloadToClientAsync(matchSettings);
+                    // get then send match settings
+                    // this is usually return before fieldinfo so we wait on it first
+                    MatchSettingsT matchSettings = await matchSettingsChannel.Reader.ReadAsync();
+
+                    _builder.Clear();
+                    _builder.Finish(MatchSettings.Pack(_builder, matchSettings).Value);
+                    TypedPayload matchSettingsMessage = TypedPayload.FromFlatBufferBuilder(
+                        DataType.MatchSettings,
+                        _builder
+                    );
+                    await SendPayloadToClientAsync(matchSettingsMessage);
                     Console.WriteLine("Sent match settings to client.");
 
+                    // get then send field info
                     FieldInfoT fieldInfo = await fieldInfoChannel.Reader.ReadAsync();
 
                     _builder.Clear();
@@ -128,22 +139,15 @@ namespace RLBotCS.Server
 
                 case DataType.StartCommand:
                     Console.WriteLine("Core got start command from client.");
-                    var startCommand = StartCommand.GetRootAsStartCommand(byteBuffer).UnPack();
-                    var tomlMatchSettings = ConfigParser.GetMatchSettings(startCommand.ConfigPath);
+                    StartCommandT startCommand = StartCommand.GetRootAsStartCommand(byteBuffer).UnPack();
+                    MatchSettingsT tomlMatchSettings = ConfigParser.GetMatchSettings(startCommand.ConfigPath);
 
-                    _builder.Clear();
-                    _builder.Finish(MatchSettings.Pack(_builder, tomlMatchSettings).Value);
-                    TypedPayload matchSettingsMessage = TypedPayload.FromFlatBufferBuilder(
-                        DataType.MatchSettings,
-                        _builder
-                    );
-
-                    _rlbotServer.TryWrite(ServerMessage.StartMatch(matchSettingsMessage, tomlMatchSettings));
+                    _rlbotServer.TryWrite(ServerMessage.StartMatch(tomlMatchSettings));
                     break;
 
                 case DataType.MatchSettings:
                     var matchSettingsT = MatchSettings.GetRootAsMatchSettings(byteBuffer).UnPack();
-                    _rlbotServer.TryWrite(ServerMessage.StartMatch(message, matchSettingsT));
+                    _rlbotServer.TryWrite(ServerMessage.StartMatch(matchSettingsT));
                     break;
 
                 case DataType.PlayerInput:
@@ -224,7 +228,8 @@ namespace RLBotCS.Server
                     case SessionMessageType.DistributeGameState:
                         if (_isReady)
                         {
-                            await SendPayloadToClientAsync(message.GetGameState());
+                            RLBotSecret.State.GameState gameState = message.GetGameState();
+                            await SendPayloadToClientAsync(gameState.ToFlatbuffer(_builder));
                         }
                         break;
                     case SessionMessageType.StopMatch:

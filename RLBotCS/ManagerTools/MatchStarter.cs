@@ -26,10 +26,22 @@ namespace RLBotCS.GameControl
             _gamePort = gamePort;
         }
 
+        public MatchSettingsT? GetMatchSettings()
+        {
+            return _deferredMatchSettings ?? _matchSettings;
+        }
+
+        public void NullMatchSettings()
+        {
+            _matchSettings = null;
+            _deferredMatchSettings = null;
+        }
+
         public void StartCommunication()
         {
             communicationStarted = true;
             MakeMatch(_deferredMatchSettings);
+            _deferredMatchSettings = null;
         }
 
         public void StartMatch(MatchSettingsT matchSettings)
@@ -70,12 +82,6 @@ namespace RLBotCS.GameControl
 
             foreach (var playerConfig in matchSettings.PlayerConfigurations)
             {
-                if (playerConfig.Variety.Type == PlayerClass.Psyonix)
-                {
-                    // TODO: For Psyonix bots, we must set a name and loadout for them.
-                    playerConfig.Name = "Psyonix";
-                }
-
                 // De-duplicating similar names, Overwrites original value
                 string playerName = playerConfig.Name;
                 if (playerNames.TryGetValue(playerName, out int value))

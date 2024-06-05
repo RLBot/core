@@ -25,10 +25,9 @@ namespace RLBotCS.Server
     {
         private ServerMessageType _type;
 
-        private ChannelWriter<TypedPayload> _matchSettingsWriter;
+        private ChannelWriter<MatchSettingsT> _matchSettingsWriter;
         private ChannelWriter<FieldInfoT> _fieldInfoWriter;
         private GameState _gameState;
-        private TypedPayload _matchSettingsPayload;
         private MatchSettingsT _matchSettings;
         private int _clientId;
         private bool _shutdownServer;
@@ -39,7 +38,7 @@ namespace RLBotCS.Server
         }
 
         public static ServerMessage IntroDataRequest(
-            ChannelWriter<TypedPayload> matchSettingsWriter,
+            ChannelWriter<MatchSettingsT> matchSettingsWriter,
             ChannelWriter<FieldInfoT> fieldInfoWriter
         )
         {
@@ -56,13 +55,12 @@ namespace RLBotCS.Server
             return new ServerMessage { _type = ServerMessageType.DistributeGameState, _gameState = gameState };
         }
 
-        public static ServerMessage StartMatch(TypedPayload matchSettingsPayload, MatchSettingsT matchSettings)
+        public static ServerMessage StartMatch(MatchSettingsT matchSettings)
         {
             return new ServerMessage
             {
                 _type = ServerMessageType.StartMatch,
                 _matchSettings = matchSettings,
-                _matchSettingsPayload = matchSettingsPayload
             };
         }
 
@@ -86,7 +84,7 @@ namespace RLBotCS.Server
             return _type;
         }
 
-        public ChannelWriter<TypedPayload> GetMatchSettingsWriter()
+        public ChannelWriter<MatchSettingsT> GetMatchSettingsWriter()
         {
             return _matchSettingsWriter;
         }
@@ -104,11 +102,6 @@ namespace RLBotCS.Server
         public MatchSettingsT GetMatchSettings()
         {
             return _matchSettings;
-        }
-
-        public TypedPayload GetMatchSettingsPayload()
-        {
-            return _matchSettingsPayload;
         }
 
         public int GetClientId()
@@ -129,10 +122,9 @@ namespace RLBotCS.Server
         private ChannelWriter<ServerMessage> _incomingMessagesWriter;
         private Dictionary<int, (ChannelWriter<SessionMessage>, Thread)> _sessions = new();
 
-        private TypedPayload? _matchSettingsPayload = null;
         private FieldInfoT? _fieldInfo = null;
         private bool _shouldUpdateFieldInfo = false;
-        private List<ChannelWriter<TypedPayload>> _matchSettingsWriters = new();
+        private List<ChannelWriter<MatchSettingsT>> _matchSettingsWriters = new();
         private List<ChannelWriter<FieldInfoT>> _fieldInfoWriters = new();
 
         private MatchStarter _matchStarter;
@@ -246,7 +238,7 @@ namespace RLBotCS.Server
 
             foreach (var session in _sessions.Values)
             {
-                SessionMessage message = SessionMessage.DistributeGameState(gameState.ToFlatbuffer(_builder));
+                SessionMessage message = SessionMessage.DistributeGameState(gameState);
                 session.Item1.TryWrite(message);
             }
         }
@@ -294,12 +286,12 @@ namespace RLBotCS.Server
                         _matchStarter.StartCommunication();
                         break;
                     case ServerMessageType.IntroDataRequest:
-                        ChannelWriter<TypedPayload> matchSettingsWriter = message.GetMatchSettingsWriter();
+                        ChannelWriter<MatchSettingsT> matchSettingsWriter = message.GetMatchSettingsWriter();
                         ChannelWriter<FieldInfoT> fieldInfoWriter = message.GetFieldInfoWriter();
 
-                        if (_matchSettingsPayload != null)
+                        if (_matchStarter.GetMatchSettings() is MatchSettingsT _matchSettings)
                         {
-                            matchSettingsWriter.TryWrite(_matchSettingsPayload);
+                            matchSettingsWriter.TryWrite(_matchSettings);
                             matchSettingsWriter.TryComplete();
                         }
                         else
@@ -319,13 +311,13 @@ namespace RLBotCS.Server
 
                         break;
                     case ServerMessageType.StartMatch:
-                        _matchSettingsPayload = message.GetMatchSettingsPayload();
-                        _matchStarter.StartMatch(message.GetMatchSettings());
+                        MatchSettingsT matchSettings = message.GetMatchSettings();
+                        _matchStarter.StartMatch(matchSettings);
 
                         // distribute the match settings to all waiting sessions
                         foreach (var writer in _matchSettingsWriters)
                         {
-                            writer.TryWrite(_matchSettingsPayload);
+                            writer.TryWrite(matchSettings);
                             writer.TryComplete();
                         }
                         _matchSettingsWriters.Clear();
@@ -347,7 +339,7 @@ namespace RLBotCS.Server
                         Console.WriteLine("Session closed.");
                         break;
                     case ServerMessageType.StopMatch:
-                        _matchSettingsPayload = null;
+                        _matchStarter.NullMatchSettings();
                         _fieldInfo = null;
                         _shouldUpdateFieldInfo = false;
 
