@@ -254,7 +254,10 @@ namespace MatchManagement
              */
             string? matchConfigParent = Path.GetDirectoryName(matchConfigPath);
 
-            string? playerTomlPath = CombinePaths(matchConfigParent, ParseString(rlbotPlayerTable, "config", null));
+            string? playerTomlPath = CombinePaths(
+                matchConfigParent,
+                ParseString(rlbotPlayerTable, "config", null)
+            );
             TomlTable playerToml = GetTable(CombinePaths(matchConfigParent, playerTomlPath));
             string? tomlParent = Path.GetDirectoryName(playerTomlPath);
 

@@ -1,12 +1,9 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Channels;
-using Google.FlatBuffers;
 using rlbot.flat;
-using RLBotCS.Conversion;
 using RLBotCS.GameControl;
 using RLBotSecret.State;
-using RLBotSecret.Types;
 
 namespace RLBotCS.Server
 {
@@ -57,11 +54,7 @@ namespace RLBotCS.Server
 
         public static ServerMessage StartMatch(MatchSettingsT matchSettings)
         {
-            return new ServerMessage
-            {
-                _type = ServerMessageType.StartMatch,
-                _matchSettings = matchSettings,
-            };
+            return new ServerMessage { _type = ServerMessageType.StartMatch, _matchSettings = matchSettings, };
         }
 
         public static ServerMessage MapSpawned()
@@ -129,8 +122,6 @@ namespace RLBotCS.Server
 
         private MatchStarter _matchStarter;
         private ChannelWriter<BridgeMessage> _bridge;
-
-        private FlatBufferBuilder _builder = new FlatBufferBuilder(1024);
 
         public FlatbufferServer(
             int rlbotPort,
