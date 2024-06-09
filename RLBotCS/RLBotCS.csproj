@@ -8,22 +8,32 @@
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
     <AssemblyName>RLBotServer</AssemblyName>
     <PublishAot>true</PublishAot>
+    <OptimizationPreference>Speed</OptimizationPreference>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
-    <ItemGroup>
-	    <PackageReference Include="Tomlyn" Version="0.17.0" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Tomlyn" Version="0.17.0" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Google.FlatBuffers" Version="24.3.25" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="FlatBuffer\" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="RLBotSecret">
       <HintPath>RLBotSecret.dll</HintPath>
     </Reference>
   </ItemGroup>
+
   <ItemGroup>
-    <Folder Include="FlatBuffer\" />
+    <DirectPInvoke Include="rl_ball_sym" />
+
+    <NativeLibrary Include=".\lib\rl_ball_sym.lib" Condition="$(RuntimeIdentifier.StartsWith('win'))" />
+    <NativeLibrary Include="./lib/librl_ball_sym.a" Condition="!$(RuntimeIdentifier.StartsWith('win'))" />
   </ItemGroup>
 
 </Project>
