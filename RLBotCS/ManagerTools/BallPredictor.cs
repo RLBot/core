@@ -24,6 +24,7 @@ namespace RLBotCS.MatchManagement
     public enum PredictionMode
     {
         STANDARD,
+        HEATSEEKER,
         DROPSHOT,
         HOOPS,
         STANDARD_THROWBACK,
@@ -33,6 +34,8 @@ namespace RLBotCS.MatchManagement
     {
         [LibraryImport("rl_ball_sym", EntryPoint = "load_standard")]
         private static partial void LoadStandard();
+        [LibraryImport("rl_ball_sym", EntryPoint = "load_heatseeker")]
+        private static partial void LoadStandardHeatseeker();
 
         [LibraryImport("rl_ball_sym", EntryPoint = "load_dropshot")]
         private static partial void LoadDropshot();
@@ -42,6 +45,9 @@ namespace RLBotCS.MatchManagement
 
         [LibraryImport("rl_ball_sym", EntryPoint = "load_standard_throwback")]
         private static partial void LoadStandardThrowback();
+
+        [LibraryImport("rl_ball_sym", EntryPoint = "set_heatseeker_target")]
+        private static partial void SetHeatseekerTarget(byte blueGoal);
 
         [LibraryImport("rl_ball_sym", EntryPoint = "step")]
         private static partial BallSlice Step(BallSlice ball);
@@ -87,6 +93,9 @@ namespace RLBotCS.MatchManagement
                 case PredictionMode.STANDARD:
                     LoadStandard();
                     break;
+                case PredictionMode.HEATSEEKER:
+                    LoadStandardHeatseeker();
+                    break;
                 case PredictionMode.DROPSHOT:
                     LoadDropshot();
                     break;
@@ -111,6 +120,9 @@ namespace RLBotCS.MatchManagement
                 case GameMode.Hoops:
                     mode = PredictionMode.HOOPS;
                     break;
+                case GameMode.Heatseeker:
+                    mode = PredictionMode.HEATSEEKER;
+                    break;
             }
 
             if (matchSettings.GameMapUpk.Contains("Throwback"))
@@ -132,6 +144,12 @@ namespace RLBotCS.MatchManagement
             };
 
             BallPredictionT ballPrediction = new BallPredictionT() { Slices = new List<PredictionSliceT>() };
+
+            if (_mode == PredictionMode.HEATSEEKER)
+            {
+                // Target goal is the opposite of the last touch
+                SetHeatseekerTarget(current_ball.LatestTouch.Team == 0 ? (byte)1 : (byte)0);
+            }
 
             for (int i = 0; i < 8 * 120; i++)
             {
