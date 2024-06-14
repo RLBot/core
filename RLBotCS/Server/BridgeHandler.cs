@@ -2,6 +2,7 @@ using System.Threading.Channels;
 using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotCS.Server.FlatbuffersMessage;
+using RLBotCS.MatchManagement;
 using RLBotSecret.Controller;
 using RLBotSecret.Conversion;
 using RLBotSecret.Models.Message;
@@ -33,6 +34,7 @@ namespace RLBotCS.Server
 
         private readonly MatchCommandSender _matchCommandSender = new(messenger);
         private readonly PlayerInputSender _playerInputSender = new(messenger);
+        private readonly Rendering _renderingMgmt = new(messenger);
 
         private bool _gotFirstMessage = false;
         private bool _matchHasStarted = false;
@@ -68,6 +70,21 @@ namespace RLBotCS.Server
             _matchCommandSender.Send();
         }
 
+        public void AddRenderGroup(int clientId, int renderId, List<RenderMessageT> renderItems)
+        {
+            _renderingMgmt.AddRenderGroup(clientId, renderId, renderItems);
+        }
+
+        public void RemoveRenderGroup(int clientId, int renderId)
+        {
+            _renderingMgmt.RemoveRenderGroup(clientId, renderId);
+        }
+
+        public void ClearClientRenders(int clientId)
+        {
+            _renderingMgmt.ClearClientRenders(clientId);
+        }
+
         public void AddPendingSpawn(SpawnTracker spawnTracker)
         {
             lock (_gameStateLock)
@@ -98,6 +115,7 @@ namespace RLBotCS.Server
                 var matchStarted = MessageHandler.ReceivedMatchInfo(messageClump);
                 if (matchStarted)
                 {
+                    _renderingMgmt.ClearAllRenders();
                     _matchHasStarted = true;
                     writer.TryWrite(new MapSpawned());
                 }
@@ -134,7 +152,17 @@ namespace RLBotCS.Server
         public void Cleanup()
         {
             writer.TryComplete();
-            messenger.Dispose();
+
+            try
+            {
+                _renderingMgmt.ClearAllRenders();
+                // TODO: try and wait for a packet to be sent back to ensure renders are cleared
+                Thread.Sleep(1000);
+            }
+            finally
+            {
+                messenger.Dispose();
+            }
         }
     }
 }

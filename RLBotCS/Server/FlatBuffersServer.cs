@@ -39,7 +39,9 @@ internal class FlatBuffersServer
                 clientId,
                 sessionChannel.Reader,
                 _context.IncomingMessagesWriter,
-                _context.Bridge
+                _context.Bridge,
+                _context.RenderingIsEnabled,
+                _context.StateSettingIsEnabled
             );
 
             try
@@ -50,8 +52,10 @@ internal class FlatBuffersServer
             {
                 Console.WriteLine("Session suddenly terminated the connection?");
             }
-
-            session.Cleanup();
+            finally
+            {
+                session.Cleanup();
+            }
         });
         sessionThread.Start();
 

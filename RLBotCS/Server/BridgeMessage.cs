@@ -98,6 +98,21 @@ internal record SpawnMap(MatchSettingsT MatchSettings) : IBridgeMessage
     public void HandleMessage(BridgeHandler handler) => handler.SpawnMap(MatchSettings);
 }
 
+internal record AddRenders(int clientId, int renderId, List<RenderMessageT> renderItems) : IBridgeMessage
+{
+    public void HandleMessage(BridgeHandler handler) => handler.AddRenderGroup(clientId, renderId, renderItems);
+}
+
+internal record RemoveRenders(int clientId, int renderId) : IBridgeMessage
+{
+    public void HandleMessage(BridgeHandler handler) => handler.RemoveRenderGroup(clientId, renderId);
+}
+
+internal record RemoveClientRenders(int clientId) : IBridgeMessage
+{
+    public void HandleMessage(BridgeHandler handler) => handler.ClearClientRenders(clientId);
+}
+
 internal record Stop : IBridgeMessage
 {
     public void HandleMessage(BridgeHandler handler) { }

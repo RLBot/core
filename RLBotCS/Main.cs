@@ -25,8 +25,15 @@ Thread rlbotServer = new Thread(() =>
         matchStarter,
         bridgeWriter
     );
-    flatBuffersServer.BlockingRun();
-    flatBuffersServer.Cleanup();
+
+    try
+    {
+        flatBuffersServer.BlockingRun();
+    }
+    finally
+    {
+        flatBuffersServer.Cleanup();
+    }
 });
 rlbotServer.Start();
 
@@ -34,8 +41,15 @@ Thread bridgeHandler = new Thread(() =>
 {
     TcpMessenger tcpMessenger = new TcpMessenger(gamePort);
     BridgeHandler bridgeHandler = new BridgeHandler(serverWriter, bridgeChannel.Reader, tcpMessenger);
-    bridgeHandler.BlockingRun();
-    bridgeHandler.Cleanup();
+
+    try
+    {
+        bridgeHandler.BlockingRun();
+    }
+    finally
+    {
+        bridgeHandler.Cleanup();
+    }
 });
 bridgeHandler.Start();
 

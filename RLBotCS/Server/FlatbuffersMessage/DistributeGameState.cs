@@ -1,5 +1,6 @@
 ﻿using rlbot.flat;
 using RLBotSecret.Models.Message;
+using RLBotSecret.Packet;
 using RLBotSecret.State;
 using GoalInfo = RLBotSecret.Packet.GoalInfo;
 
@@ -61,6 +62,17 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
         context.FieldInfoWriters.Clear();
     }
 
+    private void DistributeBallPrediction(ServerContext context, GameState gameState)
+    {
+        BallPredictionT prediction = context.BallPredictor.Generate(gameState.SecondsElapsed, gameState.Ball);
+
+        foreach (var (writer, _) in context.Sessions.Values)
+        {
+            SessionMessage message = new SessionMessage.DistributeBallPrediction(prediction);
+            writer.TryWrite(message);
+        }
+    }
+
     private static void DistributeState(ServerContext context, GameState gameState)
     {
         context.MatchStarter.matchEnded = gameState.MatchEnded;
@@ -75,6 +87,7 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
     public ServerAction Execute(ServerContext context)
     {
         UpdateFieldInfo(context, GameState);
+        DistributeBallPrediction(context, GameState);
         DistributeState(context, GameState);
 
         return ServerAction.Continue;

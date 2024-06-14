@@ -11,7 +11,10 @@ namespace RLBotCS.Server;
 
 internal record SessionMessage
 {
+    public record DistributeBallPrediction(BallPredictionT BallPrediction) : SessionMessage;
     public record DistributeGameState(RLBotSecret.State.GameState GameState) : SessionMessage;
+    public record RendersAllowed(bool Allowed) : SessionMessage;
+    public record StateSettingAllowed(bool Allowed) : SessionMessage;
 
     public record StopMatch : SessionMessage;
 }
@@ -32,6 +35,8 @@ internal class FlatBuffersSession
     private bool _wantsGameMessages = false;
     private bool _wantsComms = false;
     private bool _closeAfterMatch = false;
+    private bool _stateSettingIsEnabled;
+    private bool _renderingIsEnabled;
 
     private FlatBufferBuilder _builder = new(1024);
 
@@ -40,7 +45,9 @@ internal class FlatBuffersSession
         int clientId,
         ChannelReader<SessionMessage> incomingMessages,
         ChannelWriter<IServerMessage> rlbotServer,
-        ChannelWriter<IBridgeMessage> bridge
+        ChannelWriter<IBridgeMessage> bridge,
+        bool renderingIsEnabled,
+        bool stateSettingIsEnabled
     )
     {
         _client = client;
@@ -48,6 +55,8 @@ internal class FlatBuffersSession
         _incomingMessages = incomingMessages;
         _rlbotServer = rlbotServer;
         _bridge = bridge;
+        _renderingIsEnabled = renderingIsEnabled;
+        _stateSettingIsEnabled = stateSettingIsEnabled;
 
         NetworkStream stream = _client.GetStream();
         _socketSpecReader = new SocketSpecStreamReader(stream);
@@ -132,6 +141,53 @@ internal class FlatBuffersSession
                 break;
 
             case DataType.MatchComms:
+                if (!_wantsComms)
+                {
+                    break;
+                }
+
+                var matchComms = MatchComm.GetRootAsMatchComm(byteBuffer).UnPack();
+                // todo: send to server to send to other clients
+
+                break;
+
+            case DataType.RenderGroup:
+                if (!_renderingIsEnabled)
+                {
+                    break;
+                }
+
+                var renderingGroup = RenderGroup.GetRootAsRenderGroup(byteBuffer).UnPack();
+                _bridge.TryWrite(
+                    new AddRenders(_clientId, renderingGroup.Id, renderingGroup.RenderMessages)
+                );
+
+                break;
+
+            case DataType.RemoveRenderGroup:
+                if (!_renderingIsEnabled)
+                {
+                    break;
+                }
+
+                var removeRenderGroup = RemoveRenderGroup.GetRootAsRemoveRenderGroup(byteBuffer).UnPack();
+                _bridge.TryWrite(new RemoveRenders(_clientId, removeRenderGroup.Id));
+                break;
+
+            case DataType.DesiredGameState:
+                if (!_stateSettingIsEnabled)
+                {
+                    break;
+                }
+
+                var desiredGameState = DesiredGameState.GetRootAsDesiredGameState(byteBuffer).UnPack();
+                // _gameController.MatchStarter.SetDesiredGameState(desiredGameState);
+                // todo
+
+                break;
+
+            default:
+                Console.WriteLine("Core got unexpected message type {0} from client.", message.Type);
                 break;
         }
 
@@ -149,6 +205,14 @@ internal class FlatBuffersSession
         await foreach (SessionMessage message in _incomingMessages.ReadAllAsync())
             switch (message)
             {
+                case SessionMessage.DistributeBallPrediction m when _isReady && _wantsBallPredictions:
+                    _builder.Clear();
+                    _builder.Finish(BallPrediction.Pack(_builder, m.BallPrediction).Value);
+
+                    await SendPayloadToClientAsync(
+                        TypedPayload.FromFlatBufferBuilder(DataType.BallPrediction, _builder)
+                    );
+                    break;
                 case SessionMessage.DistributeGameState m when _isReady:
                     await SendPayloadToClientAsync(m.GameState.ToFlatbuffer(_builder));
                     break;
@@ -186,12 +250,12 @@ internal class FlatBuffersSession
             TypedPayload msg = new() { Type = DataType.None, Payload = new ArraySegment<byte>([1]), };
             SendPayloadToClientAsync(msg).Wait();
         }
-        catch (Exception)
+        finally
         {
-            // client disconnected first
+            // if an exception was thrown, the client disconnected first
+            // remove this session from the server
+            _rlbotServer.TryWrite(new SessionClosed(_clientId));
+            _client.Close();
         }
-
-        _rlbotServer.TryWrite(new SessionClosed(_clientId));
-        _client.Close();
     }
 }
