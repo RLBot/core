@@ -49,7 +49,7 @@ namespace RLBotCS.Server
 
         private ChannelReader<SessionMessage> _incomingMessages;
         private ChannelWriter<ServerMessage> _rlbotServer;
-        private ChannelWriter<BridgeMessage> _bridge;
+        private ChannelWriter<IBridgeMessage> _bridge;
 
         private bool _isReady = false;
         private bool _wantsBallPredictions = false;
@@ -64,7 +64,7 @@ namespace RLBotCS.Server
             int clientId,
             ChannelReader<SessionMessage> incomingMessages,
             ChannelWriter<ServerMessage> rlbotServer,
-            ChannelWriter<BridgeMessage> bridge
+            ChannelWriter<IBridgeMessage> bridge
         )
         {
             _client = client;
@@ -152,7 +152,7 @@ namespace RLBotCS.Server
 
                 case DataType.PlayerInput:
                     var playerInputMsg = PlayerInput.GetRootAsPlayerInput(byteBuffer);
-                    _bridge.TryWrite(BridgeMessage.PlayerInput(playerInputMsg));
+                    _bridge.TryWrite(new Input(playerInputMsg));
                     break;
 
                 case DataType.MatchComms:

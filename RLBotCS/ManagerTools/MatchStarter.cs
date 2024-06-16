@@ -3,12 +3,13 @@ using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotCS.Server;
 using RLBotSecret.Models.Message;
+using ConsoleCommand = RLBotCS.Server.ConsoleCommand;
 
 namespace RLBotCS.GameControl
 {
     internal class MatchStarter
     {
-        private ChannelWriter<BridgeMessage> _bridge;
+        private ChannelWriter<IBridgeMessage> _bridge;
         private bool communicationStarted = false;
         private int _gamePort;
 
@@ -20,7 +21,7 @@ namespace RLBotCS.GameControl
 
         public bool matchEnded = false;
 
-        public MatchStarter(ChannelWriter<BridgeMessage> bridge, int gamePort)
+        public MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
         {
             _bridge = bridge;
             _gamePort = gamePort;
@@ -111,7 +112,7 @@ namespace RLBotCS.GameControl
         {
             if (matchSettings.AutoSaveReplay)
             {
-                _bridge.TryWrite(BridgeMessage.ConsoleCommand(FlatToCommand.MakeAutoSaveReplayCommand()));
+                _bridge.TryWrite(new ConsoleCommand(FlatToCommand.MakeAutoSaveReplayCommand()));
             }
 
             var shouldSpawnNewMap = true;
@@ -132,7 +133,7 @@ namespace RLBotCS.GameControl
                 _needsSpawnBots = true;
                 _hasEverLoadedMap = true;
 
-                _bridge.TryWrite(BridgeMessage.SpawnMap(matchSettings));
+                _bridge.TryWrite(new SpawnMap(matchSettings));
             }
             else
             {
@@ -283,7 +284,7 @@ namespace RLBotCS.GameControl
                         );
 
                         _bridge.TryWrite(
-                            BridgeMessage.SpawnBot(playerConfig, BotSkill.Custom, (uint)(i - indexOffset), true)
+                            new SpawnBot(playerConfig, BotSkill.Custom, (uint)(i - indexOffset), true)
                         );
 
                         break;
@@ -304,7 +305,7 @@ namespace RLBotCS.GameControl
                         }
 
                         _bridge.TryWrite(
-                            BridgeMessage.SpawnBot(playerConfig, skillEnum, (uint)(i - indexOffset), false)
+                            new SpawnBot(playerConfig, skillEnum, (uint)(i - indexOffset), false)
                         );
 
                         break;
@@ -323,7 +324,7 @@ namespace RLBotCS.GameControl
                         {
                             hasHuman = true;
                             // indexOffset can only ever be 0 here
-                            _bridge.TryWrite(BridgeMessage.SpawnHuman(playerConfig, (uint)i));
+                            _bridge.TryWrite(new SpawnHuman(playerConfig, (uint)i));
                         }
 
                         break;
@@ -334,7 +335,7 @@ namespace RLBotCS.GameControl
             {
                 // If no human was requested for the match,
                 // then make the human spectate so we can start the match
-                _bridge.TryWrite(BridgeMessage.ConsoleCommand("spectate"));
+                _bridge.TryWrite(new ConsoleCommand("spectate"));
             }
         }
     }
