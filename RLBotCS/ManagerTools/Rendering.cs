@@ -138,6 +138,7 @@ namespace RLBotCS.MatchManagement
         public void ClearAllRenders()
         {
             // tell the game to remove all the renders
+            // todo: we might not be able to remove all the renders in one tick
             foreach (Dictionary<int, List<ushort>> clientRenders in _clientRenderTracker.Values)
             {
                 foreach (int renderId in clientRenders.Keys)

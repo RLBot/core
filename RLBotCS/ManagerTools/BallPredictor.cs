@@ -34,6 +34,7 @@ namespace RLBotCS.MatchManagement
     {
         [LibraryImport("rl_ball_sym", EntryPoint = "load_standard")]
         private static partial void LoadStandard();
+
         [LibraryImport("rl_ball_sym", EntryPoint = "load_heatseeker")]
         private static partial void LoadStandardHeatseeker();
 
@@ -143,7 +144,13 @@ namespace RLBotCS.MatchManagement
                 angular_velocity = ToVec3(current_ball.Physics.angularVelocity)
             };
 
-            BallPredictionT ballPrediction = new BallPredictionT() { Slices = new List<PredictionSliceT>() };
+            int numSeconds = 8;
+            int numSlices = numSeconds * 120;
+
+            BallPredictionT ballPrediction = new BallPredictionT()
+            {
+                Slices = new List<PredictionSliceT>(numSlices)
+            };
 
             if (_mode == PredictionMode.HEATSEEKER)
             {
@@ -151,7 +158,7 @@ namespace RLBotCS.MatchManagement
                 SetHeatseekerTarget(current_ball.LatestTouch.Team == 0 ? (byte)1 : (byte)0);
             }
 
-            for (int i = 0; i < 8 * 120; i++)
+            for (int i = 0; i < numSlices; i++)
             {
                 ball = Step(ball);
 
