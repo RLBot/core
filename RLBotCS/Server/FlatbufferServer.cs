@@ -121,13 +121,13 @@ namespace RLBotCS.Server
         private List<ChannelWriter<FieldInfoT>> _fieldInfoWriters = new();
 
         private MatchStarter _matchStarter;
-        private ChannelWriter<BridgeMessage> _bridge;
+        private ChannelWriter<IBridgeMessage> _bridge;
 
         public FlatbufferServer(
             int rlbotPort,
             Channel<ServerMessage> incomingMessages,
             MatchStarter matchStarter,
-            ChannelWriter<BridgeMessage> bridge
+            ChannelWriter<IBridgeMessage> bridge
         )
         {
             _incomingMessages = incomingMessages.Reader;
