@@ -17,7 +17,19 @@ namespace RLBotCS.Server
         TcpMessenger messenger
     )
     {
-        public GameState GameState = new();
+        // TODO: Use System.Threading.Lock when upgrading to C# 13
+        private readonly object _gameStateLock = new();
+        private GameState _gameState = new();
+
+        public PlayerMapping PlayerMapping
+        {
+            get
+            {
+                lock (_gameStateLock)
+                    return _gameState.PlayerMapping;
+            }
+        }
+
         private readonly MatchCommandSender _matchCommandSender = new(messenger);
         private readonly PlayerInputSender _playerInputSender = new(messenger);
 
@@ -55,6 +67,12 @@ namespace RLBotCS.Server
             _matchCommandSender.Send();
         }
 
+        public void AddPendingSpawn(SpawnTracker spawnTracker)
+        {
+            lock (_gameStateLock)
+                _gameState.PlayerMapping.AddPendingSpawn(spawnTracker);
+        }
+
         private async Task HandleIncomingMessages()
         {
             await foreach (IBridgeMessage message in reader.ReadAllAsync())
@@ -73,7 +91,8 @@ namespace RLBotCS.Server
                     writer.TryWrite(ServerMessage.StartCommunication());
                 }
 
-                GameState = MessageHandler.CreateUpdatedState(messageClump, GameState);
+                lock (_gameStateLock)
+                    _gameState = MessageHandler.CreateUpdatedState(messageClump, _gameState);
 
                 var matchStarted = MessageHandler.ReceivedMatchInfo(messageClump);
                 if (matchStarted)
@@ -82,21 +101,24 @@ namespace RLBotCS.Server
                     writer.TryWrite(ServerMessage.MapSpawned());
                 }
 
-                if (
-                    _delayMatchCommandSend
-                    && _queuedMatchCommands
-                    && _matchHasStarted
-                    && GameState.GameStateType == GameStateType.Paused
-                )
+                lock (_gameStateLock)
                 {
-                    // if we send the commands before the map has spawned, nothing will happen
-                    _delayMatchCommandSend = false;
-                    _queuedMatchCommands = false;
+                    if (
+                        _delayMatchCommandSend
+                        && _queuedMatchCommands
+                        && _matchHasStarted
+                        && _gameState.GameStateType == GameStateType.Paused
+                    )
+                    {
+                        // if we send the commands before the map has spawned, nothing will happen
+                        _delayMatchCommandSend = false;
+                        _queuedMatchCommands = false;
 
-                    _matchCommandSender.Send();
+                        _matchCommandSender.Send();
+                    }
                 }
 
-                writer.TryWrite(ServerMessage.DistributeGameState(GameState));
+                writer.TryWrite(ServerMessage.DistributeGameState(_gameState));
             }
         }
 
