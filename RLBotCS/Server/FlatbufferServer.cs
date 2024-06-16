@@ -3,109 +3,21 @@ using System.Net.Sockets;
 using System.Threading.Channels;
 using rlbot.flat;
 using RLBotCS.GameControl;
+using RLBotSecret.Models.Message;
 using RLBotSecret.State;
+using GoalInfo = RLBotSecret.Packet.GoalInfo;
 
 namespace RLBotCS.Server
 {
-    internal enum ServerMessageType
+    internal record ServerMessage
     {
-        StartCommunication,
-        IntroDataRequest,
-        DistributeGameState,
-        StartMatch,
-        MapSpawned,
-        SessionClosed,
-        StopMatch,
-    }
-
-    internal class ServerMessage
-    {
-        private ServerMessageType _type;
-
-        private ChannelWriter<MatchSettingsT> _matchSettingsWriter;
-        private ChannelWriter<FieldInfoT> _fieldInfoWriter;
-        private GameState _gameState;
-        private MatchSettingsT _matchSettings;
-        private int _clientId;
-        private bool _shutdownServer;
-
-        public static ServerMessage StartCommunication()
-        {
-            return new ServerMessage { _type = ServerMessageType.StartCommunication };
-        }
-
-        public static ServerMessage IntroDataRequest(
-            ChannelWriter<MatchSettingsT> matchSettingsWriter,
-            ChannelWriter<FieldInfoT> fieldInfoWriter
-        )
-        {
-            return new ServerMessage
-            {
-                _type = ServerMessageType.IntroDataRequest,
-                _matchSettingsWriter = matchSettingsWriter,
-                _fieldInfoWriter = fieldInfoWriter
-            };
-        }
-
-        public static ServerMessage DistributeGameState(GameState gameState)
-        {
-            return new ServerMessage { _type = ServerMessageType.DistributeGameState, _gameState = gameState };
-        }
-
-        public static ServerMessage StartMatch(MatchSettingsT matchSettings)
-        {
-            return new ServerMessage { _type = ServerMessageType.StartMatch, _matchSettings = matchSettings, };
-        }
-
-        public static ServerMessage MapSpawned()
-        {
-            return new ServerMessage { _type = ServerMessageType.MapSpawned };
-        }
-
-        public static ServerMessage SessionClosed(int clientId)
-        {
-            return new ServerMessage { _type = ServerMessageType.SessionClosed, _clientId = clientId };
-        }
-
-        public static ServerMessage StopMatch(bool shutdownServer)
-        {
-            return new ServerMessage { _type = ServerMessageType.StopMatch, _shutdownServer = shutdownServer };
-        }
-
-        public ServerMessageType Type()
-        {
-            return _type;
-        }
-
-        public ChannelWriter<MatchSettingsT> GetMatchSettingsWriter()
-        {
-            return _matchSettingsWriter;
-        }
-
-        public ChannelWriter<FieldInfoT> GetFieldInfoWriter()
-        {
-            return _fieldInfoWriter;
-        }
-
-        public GameState GetGameState()
-        {
-            return _gameState;
-        }
-
-        public MatchSettingsT GetMatchSettings()
-        {
-            return _matchSettings;
-        }
-
-        public int GetClientId()
-        {
-            return _clientId;
-        }
-
-        public bool GetShutdownServer()
-        {
-            return _shutdownServer;
-        }
+        public record StartCommunication : ServerMessage;
+        public record IntroDataRequest(ChannelWriter<MatchSettingsT> MatchSettingsWriter, ChannelWriter<FieldInfoT> FieldInfoWriter) : ServerMessage;
+        public record DistributeGameState(GameState GameState) : ServerMessage;
+        public record StartMatch(MatchSettingsT MatchSettings) : ServerMessage;
+        public record MapSpawned : ServerMessage;
+        public record SessionClosed(int ClientId) : ServerMessage;
+        public record StopMatch(bool ShutdownServer) : ServerMessage;
     }
 
     internal class FlatbufferServer
@@ -113,12 +25,12 @@ namespace RLBotCS.Server
         private TcpListener _server;
         private ChannelReader<ServerMessage> _incomingMessages;
         private ChannelWriter<ServerMessage> _incomingMessagesWriter;
-        private Dictionary<int, (ChannelWriter<SessionMessage>, Thread)> _sessions = new();
+        private Dictionary<int, (ChannelWriter<SessionMessage> writer, Thread thread)> _sessions = [];
 
         private FieldInfoT? _fieldInfo = null;
         private bool _shouldUpdateFieldInfo = false;
-        private List<ChannelWriter<MatchSettingsT>> _matchSettingsWriters = new();
-        private List<ChannelWriter<FieldInfoT>> _fieldInfoWriters = new();
+        private List<ChannelWriter<MatchSettingsT>> _matchSettingsWriters = [];
+        private List<ChannelWriter<FieldInfoT>> _fieldInfoWriters = [];
 
         private MatchStarter _matchStarter;
         private ChannelWriter<IBridgeMessage> _bridge;
@@ -135,23 +47,19 @@ namespace RLBotCS.Server
             _matchStarter = matchStarter;
             _bridge = bridge;
 
-            IPAddress rlbotClients = new IPAddress(new byte[] { 0, 0, 0, 0 });
+            IPAddress rlbotClients = new(new byte[] { 0, 0, 0, 0 });
             _server = new TcpListener(rlbotClients, rlbotPort);
         }
 
         private void StopSessions()
         {
             // send stop message to all sessions
-            foreach (var session in _sessions.Values)
-            {
-                session.Item1.TryComplete();
-            }
+            foreach (var (writer, _) in _sessions.Values)
+                writer.TryComplete();
 
             // ensure all sessions are stopped
-            foreach (var session in _sessions.Values)
-            {
-                session.Item2.Join();
-            }
+            foreach (var (_, thread) in _sessions.Values)
+                thread.Join();
 
             // remove all sessions
             _sessions.Clear();
@@ -160,37 +68,26 @@ namespace RLBotCS.Server
         private void UpdateFieldInfo(GameState gameState)
         {
             if (!_shouldUpdateFieldInfo)
-            {
                 return;
-            }
 
             if (_fieldInfo == null)
-            {
-                _fieldInfo = new FieldInfoT() { Goals = new List<GoalInfoT>(), BoostPads = new List<BoostPadT>() };
-            }
+                _fieldInfo = new FieldInfoT { Goals = [], BoostPads = [] };
             else
             {
                 _fieldInfo.Goals.Clear();
                 _fieldInfo.BoostPads.Clear();
             }
 
-            foreach (var goal in gameState.Goals)
+            foreach (GoalInfo goal in gameState.Goals)
             {
                 _fieldInfo.Goals.Add(
                     new GoalInfoT
                     {
                         TeamNum = goal.Team,
-                        Location = new Vector3T()
+                        Location = new Vector3T { X = goal.Location.x, Y = goal.Location.y, Z = goal.Location.z },
+                        Direction = new Vector3T
                         {
-                            X = goal.Location.x,
-                            Y = goal.Location.y,
-                            Z = goal.Location.z
-                        },
-                        Direction = new Vector3T()
-                        {
-                            X = goal.Direction.x,
-                            Y = goal.Direction.y,
-                            Z = goal.Direction.z
+                            X = goal.Direction.x, Y = goal.Direction.y, Z = goal.Direction.z
                         },
                         Width = goal.Width,
                         Height = goal.Height,
@@ -198,12 +95,12 @@ namespace RLBotCS.Server
                 );
             }
 
-            foreach (var boostPad in gameState.BoostPads)
+            foreach (BoostPadSpawn boostPad in gameState.BoostPads)
             {
                 _fieldInfo.BoostPads.Add(
                     new BoostPadT
                     {
-                        Location = new Vector3T()
+                        Location = new Vector3T
                         {
                             X = boostPad.SpawnPosition.x,
                             Y = boostPad.SpawnPosition.y,
@@ -220,6 +117,7 @@ namespace RLBotCS.Server
                 writer.TryWrite(_fieldInfo);
                 writer.TryComplete();
             }
+
             _fieldInfoWriters.Clear();
         }
 
@@ -227,10 +125,10 @@ namespace RLBotCS.Server
         {
             _matchStarter.matchEnded = gameState.MatchEnded;
 
-            foreach (var session in _sessions.Values)
+            foreach (var (writer, _) in _sessions.Values)
             {
                 SessionMessage message = SessionMessage.DistributeGameState(gameState);
-                session.Item1.TryWrite(message);
+                writer.TryWrite(message);
             }
         }
 
@@ -241,9 +139,9 @@ namespace RLBotCS.Server
 
             int clientId = client.Client.Handle.ToInt32();
 
-            Thread sessionThread = new Thread(() =>
+            Thread sessionThread = new(() =>
             {
-                FlatbufferSession session = new FlatbufferSession(
+                FlatbufferSession session = new(
                     client,
                     clientId,
                     sessionChannel.Reader,
@@ -271,76 +169,29 @@ namespace RLBotCS.Server
         {
             await foreach (ServerMessage message in _incomingMessages.ReadAllAsync())
             {
-                switch (message.Type())
+                switch (message)
                 {
-                    case ServerMessageType.StartCommunication:
-                        _matchStarter.StartCommunication();
+                    case ServerMessage.StartCommunication:
+                        StartCommunication();
                         break;
-                    case ServerMessageType.IntroDataRequest:
-                        ChannelWriter<MatchSettingsT> matchSettingsWriter = message.GetMatchSettingsWriter();
-                        ChannelWriter<FieldInfoT> fieldInfoWriter = message.GetFieldInfoWriter();
-
-                        if (_matchStarter.GetMatchSettings() is MatchSettingsT _matchSettings)
-                        {
-                            matchSettingsWriter.TryWrite(_matchSettings);
-                            matchSettingsWriter.TryComplete();
-                        }
-                        else
-                        {
-                            _matchSettingsWriters.Add(matchSettingsWriter);
-                        }
-
-                        if (_fieldInfo != null)
-                        {
-                            fieldInfoWriter.TryWrite(_fieldInfo);
-                            fieldInfoWriter.TryComplete();
-                        }
-                        else
-                        {
-                            _fieldInfoWriters.Add(fieldInfoWriter);
-                        }
-
+                    case ServerMessage.IntroDataRequest m:
+                        IntroDataRequest(m);
                         break;
-                    case ServerMessageType.StartMatch:
-                        MatchSettingsT matchSettings = message.GetMatchSettings();
-                        _matchStarter.StartMatch(matchSettings);
-
-                        // distribute the match settings to all waiting sessions
-                        foreach (var writer in _matchSettingsWriters)
-                        {
-                            writer.TryWrite(matchSettings);
-                            writer.TryComplete();
-                        }
-                        _matchSettingsWriters.Clear();
+                    case ServerMessage.StartMatch m:
+                        StartMatch(m);
                         break;
-                    case ServerMessageType.DistributeGameState:
-                        GameState gameState = message.GetGameState();
-
-                        UpdateFieldInfo(gameState);
-                        DistributeGameState(gameState);
+                    case ServerMessage.DistributeGameState m:
+                        DistGameState(m);
                         break;
-                    case ServerMessageType.MapSpawned:
-                        _fieldInfo = null;
-                        _shouldUpdateFieldInfo = true;
-
-                        _matchStarter.MapSpawned();
+                    case ServerMessage.MapSpawned:
+                        MapSpawned();
                         break;
-                    case ServerMessageType.SessionClosed:
-                        _sessions.Remove(message.GetClientId());
-                        Console.WriteLine("Session closed.");
+                    case ServerMessage.SessionClosed m:
+                        SessionClosed(m);
                         break;
-                    case ServerMessageType.StopMatch:
-                        _matchStarter.NullMatchSettings();
-                        _fieldInfo = null;
-                        _shouldUpdateFieldInfo = false;
-
-                        if (message.GetShutdownServer())
-                        {
-                            _incomingMessagesWriter.TryComplete();
+                    case ServerMessage.StopMatch m:
+                        if (StopMatch(m))
                             return;
-                        }
-
-                        StopSessions();
                         break;
                 }
             }
@@ -369,6 +220,81 @@ namespace RLBotCS.Server
         {
             StopSessions();
             _server.Stop();
+        }
+
+        private void StartCommunication() => _matchStarter.StartCommunication();
+
+        private void IntroDataRequest(ServerMessage.IntroDataRequest message)
+        {
+            ChannelWriter<MatchSettingsT> matchSettingsWriter = message.MatchSettingsWriter;
+            ChannelWriter<FieldInfoT> fieldInfoWriter = message.FieldInfoWriter;
+
+            if (_matchStarter.GetMatchSettings() is { } settings)
+            {
+                matchSettingsWriter.TryWrite(settings);
+                matchSettingsWriter.TryComplete();
+            }
+            else
+                _matchSettingsWriters.Add(matchSettingsWriter);
+
+            if (_fieldInfo != null)
+            {
+                fieldInfoWriter.TryWrite(_fieldInfo);
+                fieldInfoWriter.TryComplete();
+            }
+            else
+                _fieldInfoWriters.Add(fieldInfoWriter);
+        }
+
+        private void StartMatch(ServerMessage.StartMatch message)
+        {
+            MatchSettingsT matchSettings = message.MatchSettings;
+            _matchStarter.StartMatch(matchSettings);
+
+            // distribute the match settings to all waiting sessions
+            foreach (var writer in _matchSettingsWriters)
+            {
+                writer.TryWrite(matchSettings);
+                writer.TryComplete();
+            }
+
+            _matchSettingsWriters.Clear();
+        }
+
+        private void DistGameState(ServerMessage.DistributeGameState message)
+        {
+            GameState gameState = message.GameState;
+            UpdateFieldInfo(gameState);
+            DistributeGameState(gameState);
+        }
+
+        private void MapSpawned()
+        {
+            _fieldInfo = null;
+            _shouldUpdateFieldInfo = true;
+            _matchStarter.MapSpawned();
+        }
+
+        private void SessionClosed(ServerMessage.SessionClosed message)
+        {
+            _sessions.Remove(message.ClientId);
+            Console.WriteLine("Session closed.");
+        }
+
+        private bool StopMatch(ServerMessage.StopMatch message)
+        {
+            _matchStarter.NullMatchSettings();
+            _fieldInfo = null;
+            _shouldUpdateFieldInfo = false;
+
+            if (message.ShutdownServer)
+            {
+                _incomingMessagesWriter.TryComplete();
+                return true;
+            }
+
+            StopSessions();
+            return false;
         }
     }
 }

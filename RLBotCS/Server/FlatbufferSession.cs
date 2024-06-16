@@ -100,7 +100,7 @@ namespace RLBotCS.Server
                     Channel<FieldInfoT> fieldInfoChannel = Channel.CreateUnbounded<FieldInfoT>();
 
                     _rlbotServer.TryWrite(
-                        ServerMessage.IntroDataRequest(matchSettingsChannel.Writer, fieldInfoChannel.Writer)
+                        new ServerMessage.IntroDataRequest(matchSettingsChannel.Writer, fieldInfoChannel.Writer)
                     );
 
                     // get then send match settings
@@ -134,7 +134,7 @@ namespace RLBotCS.Server
                 case DataType.StopCommand:
                     Console.WriteLine("Core got stop command from client.");
                     var stopCommand = StopCommand.GetRootAsStopCommand(byteBuffer).UnPack();
-                    _rlbotServer.TryWrite(ServerMessage.StopMatch(stopCommand.ShutdownServer));
+                    _rlbotServer.TryWrite(new ServerMessage.StopMatch(stopCommand.ShutdownServer));
                     break;
 
                 case DataType.StartCommand:
@@ -142,12 +142,12 @@ namespace RLBotCS.Server
                     StartCommandT startCommand = StartCommand.GetRootAsStartCommand(byteBuffer).UnPack();
                     MatchSettingsT tomlMatchSettings = ConfigParser.GetMatchSettings(startCommand.ConfigPath);
 
-                    _rlbotServer.TryWrite(ServerMessage.StartMatch(tomlMatchSettings));
+                    _rlbotServer.TryWrite(new ServerMessage.StartMatch(tomlMatchSettings));
                     break;
 
                 case DataType.MatchSettings:
                     var matchSettingsT = MatchSettings.GetRootAsMatchSettings(byteBuffer).UnPack();
-                    _rlbotServer.TryWrite(ServerMessage.StartMatch(matchSettingsT));
+                    _rlbotServer.TryWrite(new ServerMessage.StartMatch(matchSettingsT));
                     break;
 
                 case DataType.PlayerInput:
@@ -278,7 +278,7 @@ namespace RLBotCS.Server
                 // client disconnected first
             }
 
-            _rlbotServer.TryWrite(ServerMessage.SessionClosed(_clientId));
+            _rlbotServer.TryWrite(new ServerMessage.SessionClosed(_clientId));
             _client.Close();
         }
     }
