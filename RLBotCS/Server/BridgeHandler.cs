@@ -88,7 +88,7 @@ namespace RLBotCS.Server
                 if (!_gotFirstMessage)
                 {
                     _gotFirstMessage = true;
-                    writer.TryWrite(ServerMessage.StartCommunication());
+                    writer.TryWrite(new ServerMessage.StartCommunication());
                 }
 
                 lock (_gameStateLock)
@@ -98,7 +98,7 @@ namespace RLBotCS.Server
                 if (matchStarted)
                 {
                     _matchHasStarted = true;
-                    writer.TryWrite(ServerMessage.MapSpawned());
+                    writer.TryWrite(new ServerMessage.MapSpawned());
                 }
 
                 lock (_gameStateLock)
@@ -118,7 +118,7 @@ namespace RLBotCS.Server
                     }
                 }
 
-                writer.TryWrite(ServerMessage.DistributeGameState(_gameState));
+                writer.TryWrite(new ServerMessage.DistributeGameState(_gameState));
             }
         }
 
