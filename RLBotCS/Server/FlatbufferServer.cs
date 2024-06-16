@@ -1,333 +1,374 @@
-﻿using System.Collections.Immutable;
 using System.Net;
 using System.Net.Sockets;
-using Google.FlatBuffers;
+using System.Threading.Channels;
+using rlbot.flat;
 using RLBotCS.GameControl;
-using RLBotSecret.Controller;
 using RLBotSecret.State;
-using RLBotSecret.Models.Message;
-using RLBotSecret.TCP;
-using RLBotSecret.Types;
 
 namespace RLBotCS.Server
 {
-    /**
-     * Taken from https://codinginfinite.com/multi-threaded-tcp-server-core-example-csharp/
-     */
-    internal class FlatbufferServer
+    internal enum ServerMessageType
     {
-        TcpListener _server;
-        TcpMessenger _tcpGameInterface;
-        PlayerMapping _playerMapping;
-        MatchStarter _matchStarter;
-        int _sessionCount = 0;
-        Dictionary<int, FlatbufferSession> _sessions = new();
-        bool _startedCommunications = false;
-        private bool _requestedServerStop = false;
+        StartCommunication,
+        IntroDataRequest,
+        DistributeGameState,
+        StartMatch,
+        MapSpawned,
+        SessionClosed,
+        StopMatch,
+    }
 
-        public FlatbufferServer(
-            int port,
-            TcpMessenger tcpGameInterface,
-            PlayerMapping playerMapping,
-            MatchStarter matchStarter
+    internal class ServerMessage
+    {
+        private ServerMessageType _type;
+
+        private ChannelWriter<MatchSettingsT> _matchSettingsWriter;
+        private ChannelWriter<FieldInfoT> _fieldInfoWriter;
+        private GameState _gameState;
+        private MatchSettingsT _matchSettings;
+        private int _clientId;
+        private bool _shutdownServer;
+
+        public static ServerMessage StartCommunication()
+        {
+            return new ServerMessage { _type = ServerMessageType.StartCommunication };
+        }
+
+        public static ServerMessage IntroDataRequest(
+            ChannelWriter<MatchSettingsT> matchSettingsWriter,
+            ChannelWriter<FieldInfoT> fieldInfoWriter
         )
         {
-            this._tcpGameInterface = tcpGameInterface;
-            this._playerMapping = playerMapping;
-            this._matchStarter = matchStarter;
-
-            IPAddress localAddr = IPAddress.Parse("127.0.0.1");
-            _server = new TcpListener(localAddr, port);
-            _server.Start();
+            return new ServerMessage
+            {
+                _type = ServerMessageType.IntroDataRequest,
+                _matchSettingsWriter = matchSettingsWriter,
+                _fieldInfoWriter = fieldInfoWriter
+            };
         }
 
-        public void StartCommunications()
+        public static ServerMessage DistributeGameState(GameState gameState)
         {
-            _startedCommunications = true;
+            return new ServerMessage { _type = ServerMessageType.DistributeGameState, _gameState = gameState };
+        }
 
+        public static ServerMessage StartMatch(MatchSettingsT matchSettings)
+        {
+            return new ServerMessage { _type = ServerMessageType.StartMatch, _matchSettings = matchSettings, };
+        }
+
+        public static ServerMessage MapSpawned()
+        {
+            return new ServerMessage { _type = ServerMessageType.MapSpawned };
+        }
+
+        public static ServerMessage SessionClosed(int clientId)
+        {
+            return new ServerMessage { _type = ServerMessageType.SessionClosed, _clientId = clientId };
+        }
+
+        public static ServerMessage StopMatch(bool shutdownServer)
+        {
+            return new ServerMessage { _type = ServerMessageType.StopMatch, _shutdownServer = shutdownServer };
+        }
+
+        public ServerMessageType Type()
+        {
+            return _type;
+        }
+
+        public ChannelWriter<MatchSettingsT> GetMatchSettingsWriter()
+        {
+            return _matchSettingsWriter;
+        }
+
+        public ChannelWriter<FieldInfoT> GetFieldInfoWriter()
+        {
+            return _fieldInfoWriter;
+        }
+
+        public GameState GetGameState()
+        {
+            return _gameState;
+        }
+
+        public MatchSettingsT GetMatchSettings()
+        {
+            return _matchSettings;
+        }
+
+        public int GetClientId()
+        {
+            return _clientId;
+        }
+
+        public bool GetShutdownServer()
+        {
+            return _shutdownServer;
+        }
+    }
+
+    internal class FlatbufferServer
+    {
+        private TcpListener _server;
+        private ChannelReader<ServerMessage> _incomingMessages;
+        private ChannelWriter<ServerMessage> _incomingMessagesWriter;
+        private Dictionary<int, (ChannelWriter<SessionMessage>, Thread)> _sessions = new();
+
+        private FieldInfoT? _fieldInfo = null;
+        private bool _shouldUpdateFieldInfo = false;
+        private List<ChannelWriter<MatchSettingsT>> _matchSettingsWriters = new();
+        private List<ChannelWriter<FieldInfoT>> _fieldInfoWriters = new();
+
+        private MatchStarter _matchStarter;
+        private ChannelWriter<BridgeMessage> _bridge;
+
+        public FlatbufferServer(
+            int rlbotPort,
+            Channel<ServerMessage> incomingMessages,
+            MatchStarter matchStarter,
+            ChannelWriter<BridgeMessage> bridge
+        )
+        {
+            _incomingMessages = incomingMessages.Reader;
+            _incomingMessagesWriter = incomingMessages.Writer;
+            _matchStarter = matchStarter;
+            _bridge = bridge;
+
+            IPAddress rlbotClients = new IPAddress(new byte[] { 0, 0, 0, 0 });
+            _server = new TcpListener(rlbotClients, rlbotPort);
+        }
+
+        private void StopSessions()
+        {
+            // send stop message to all sessions
             foreach (var session in _sessions.Values)
             {
-                session.SetStartCommunications(true);
+                session.Item1.TryComplete();
             }
-        }
 
-        public void StartListener()
-        {
-            try
+            // ensure all sessions are stopped
+            foreach (var session in _sessions.Values)
             {
-                while (!_requestedServerStop)
-                {
-                    Console.WriteLine("Core Flatbuffer Server waiting for client connections...");
-                    TcpClient client = _server.AcceptTcpClient();
-                    var ipEndpoint = client.Client.RemoteEndPoint as IPEndPoint;
-                    Console.WriteLine("Core is now serving a client that connected from port " + ipEndpoint?.Port);
-
-                    Thread t = new Thread(() => HandleClient(client));
-                    t.Start();
-                }
-            }
-            catch (SocketException)
-            {
-                Console.WriteLine("Core's TCP server was terminated.");
-                _server.Stop();
-            }
-        }
-
-        private void TryRunOnEachSession(Action<FlatbufferSession> action)
-        {
-            ImmutableArray<int> keysCopy = _sessions.Keys.ToImmutableArray();
-            foreach (var i in keysCopy)
-            {
-                if (!_sessions.ContainsKey(i))
-                {
-                    continue;
-                }
-
-                var session = _sessions[i];
-
-                try
-                {
-                    action(session);
-                }
-                catch (IOException e)
-                {
-                    Console.WriteLine("Core is dropping connection to session due to: {0}", e);
-                    _sessions.Remove(i);
-                    session.Close(false);
-                }
-                catch (ObjectDisposedException e)
-                {
-                    Console.WriteLine("Core is dropping connection to session due to: {0}", e);
-                    _sessions.Remove(i);
-                }
-            }
-        }
-
-        internal bool CheckRequestStopServer()
-        {
-            return _requestedServerStop;
-        }
-
-        internal void BlockingStop()
-        {
-            while (_sessions.Count != 0)
-            {
-                Console.WriteLine("Core is waiting for all connections to close");
-                Thread.Sleep(1000);
+                session.Item2.Join();
             }
 
-            _server.Stop();
-            Thread.Sleep(100);
-            _tcpGameInterface.Dispose();
+            // remove all sessions
+            _sessions.Clear();
         }
 
-        internal void EndMatchIfNeeded()
+        private void UpdateFieldInfo(GameState gameState)
         {
-            if (!_sessions.Values.Any(session => session.HasRequestedMatchStop()))
+            if (!_shouldUpdateFieldInfo)
             {
                 return;
             }
 
-            Console.WriteLine("Core has received a request to end the match.");
-            _matchStarter.EndMatch();
-
-            if (_sessions.Values.Any(session => session.HasRequestedServerStop()))
+            if (_fieldInfo == null)
             {
-                _requestedServerStop = true;
-                Console.WriteLine("Core has received a request to stop the server.");
+                _fieldInfo = new FieldInfoT() { Goals = new List<GoalInfoT>(), BoostPads = new List<BoostPadT>() };
+            }
+            else
+            {
+                _fieldInfo.Goals.Clear();
+                _fieldInfo.BoostPads.Clear();
             }
 
-            Console.WriteLine("Core has ended the match.");
-
-            TryRunOnEachSession(session =>
+            foreach (var goal in gameState.Goals)
             {
-                if (_requestedServerStop || session.CloseAfterMatch)
-                {
-                    session.SetMatchEnded();
-                }
-            });
-        }
-
-        internal void EnsureClientsPrepared(GameState gameState)
-        {
-            TryRunOnEachSession(session =>
-            {
-                session.ToggleStateSetting(_matchStarter.IsStateSettingEnabled());
-                session.ToggleRendering(_matchStarter.IsRenderingEnabled());
-
-                if (!session.IsReady || !session.NeedsIntroData)
-                {
-                    return;
-                }
-
-                if (_matchStarter.GetMatchSettings() is TypedPayload matchSettings)
-                {
-                    session.SendIntroData(matchSettings, gameState);
-                }
-            });
-        }
-
-        internal void RemoveRenders()
-        {
-            TryRunOnEachSession(session =>
-            {
-                session.RemoveRenders();
-            });
-        }
-
-        internal void SendMessagePacketToClients(MessageBundle messageBundle, float gameSeconds, uint frameNum)
-        {
-            var messages = new rlbot.flat.MessagePacketT()
-            {
-                Messages = new List<rlbot.flat.GameMessageWrapperT>(),
-                GameSeconds = gameSeconds,
-                FrameNum = frameNum,
-            };
-            foreach (var message in messageBundle.Messages)
-            {
-                if (message is PlayerInputUpdate update)
-                {
-                    if (_playerMapping.PlayerIndexFromActorId(update.PlayerInput.ActorId) is uint playerIndex)
+                _fieldInfo.Goals.Add(
+                    new GoalInfoT
                     {
-                        var playerInput = new rlbot.flat.PlayerInputChangeT()
+                        TeamNum = goal.Team,
+                        Location = new Vector3T()
                         {
-                            PlayerIndex = playerIndex,
-                            ControllerState = new rlbot.flat.ControllerStateT()
-                            {
-                                Throttle = update.PlayerInput.CarInput.Throttle,
-                                Steer = update.PlayerInput.CarInput.Steer,
-                                Pitch = update.PlayerInput.CarInput.Pitch,
-                                Yaw = update.PlayerInput.CarInput.Yaw,
-                                Roll = update.PlayerInput.CarInput.Roll,
-                                Jump = update.PlayerInput.CarInput.Jump,
-                                Boost = update.PlayerInput.CarInput.Boost,
-                                Handbrake = update.PlayerInput.CarInput.Handbrake,
-                            },
-                            DodgeForward = update.PlayerInput.CarInput.DodgeForward,
-                            DodgeRight = update.PlayerInput.CarInput.DodgeStrafe,
-                        };
-
-                        messages.Messages.Add(
-                            new rlbot.flat.GameMessageWrapperT()
-                            {
-                                Message = rlbot.flat.GameMessageUnion.FromPlayerInputChange(playerInput),
-                            }
-                        );
-                    }
-                }
-                else if (message is SpectateViewChange change)
-                {
-                    if (_playerMapping.PlayerIndexFromActorId(change.SpectatedActorId) is uint playerIndex)
-                    {
-                        var spectate = new rlbot.flat.PlayerSpectateT() { PlayerIndex = playerIndex, };
-
-                        messages.Messages.Add(
-                            new rlbot.flat.GameMessageWrapperT()
-                            {
-                                Message = rlbot.flat.GameMessageUnion.FromPlayerSpectate(spectate),
-                            }
-                        );
-                    }
-                }
-                else if (message is PlayerAccolade accolade)
-                {
-                    if (_playerMapping.PlayerIndexFromActorId(accolade.ActorId) is uint playerIndex)
-                    {
-                        var playerAccolade = new rlbot.flat.PlayerStatEventT()
+                            X = goal.Location.x,
+                            Y = goal.Location.y,
+                            Z = goal.Location.z
+                        },
+                        Direction = new Vector3T()
                         {
-                            PlayerIndex = playerIndex,
-                            StatType = accolade.Accolade,
-                        };
-
-                        messages.Messages.Add(
-                            new rlbot.flat.GameMessageWrapperT()
-                            {
-                                Message = rlbot.flat.GameMessageUnion.FromPlayerStatEvent(playerAccolade),
-                            }
-                        );
+                            X = goal.Direction.x,
+                            Y = goal.Direction.y,
+                            Z = goal.Direction.z
+                        },
+                        Width = goal.Width,
+                        Height = goal.Height,
                     }
-                }
+                );
             }
 
-            var builder = new FlatBufferBuilder(1024);
-            builder.Finish(rlbot.flat.MessagePacket.Pack(builder, messages).Value);
-
-            var payload = TypedPayload.FromFlatBufferBuilder(DataType.MessagePacket, builder);
-            TryRunOnEachSession(session =>
+            foreach (var boostPad in gameState.BoostPads)
             {
-                if (!session.IsReady || !session.WantsGameMessages)
-                {
-                    return;
-                }
+                _fieldInfo.BoostPads.Add(
+                    new BoostPadT
+                    {
+                        Location = new Vector3T()
+                        {
+                            X = boostPad.SpawnPosition.x,
+                            Y = boostPad.SpawnPosition.y,
+                            Z = boostPad.SpawnPosition.z
+                        },
+                        IsFullBoost = boostPad.IsFullBoost,
+                    }
+                );
+            }
 
-                session.SendPayloadToClient(payload);
-            });
+            // distribute the field info to all waiting sessions
+            foreach (var writer in _fieldInfoWriters)
+            {
+                writer.TryWrite(_fieldInfo);
+                writer.TryComplete();
+            }
+            _fieldInfoWriters.Clear();
         }
 
-        internal void SendGameStateToClients(GameState gameTickPacket)
+        private void DistributeGameState(GameState gameState)
         {
-            TypedPayload payload = gameTickPacket.ToFlatbuffer();
-            TryRunOnEachSession(session =>
-            {
-                if (!session.IsReady)
-                {
-                    return;
-                }
+            _matchStarter.matchEnded = gameState.MatchEnded;
 
-                session.SendPayloadToClient(payload);
-            });
-        }
-
-        public void Stop()
-        {
             foreach (var session in _sessions.Values)
             {
-                session.Close(false);
+                SessionMessage message = SessionMessage.DistributeGameState(gameState);
+                session.Item1.TryWrite(message);
             }
-
-            _sessions.Clear();
-            _server.Stop();
-            Thread.Sleep(100);
-            _tcpGameInterface.Dispose();
         }
 
-        public void HandleClient(TcpClient client)
+        private void AddSession(TcpClient client)
         {
-            var stream = client.GetStream();
+            Channel<SessionMessage> sessionChannel = Channel.CreateUnbounded<SessionMessage>();
+            client.NoDelay = true;
 
-            var playerInputSender = new PlayerInputSender(_tcpGameInterface);
-            var renderingSender = new RenderingSender(_tcpGameInterface);
-            var gameController = new GameController(playerInputSender, renderingSender, _matchStarter);
+            int clientId = client.Client.Handle.ToInt32();
 
-            var session = new FlatbufferSession(stream, gameController, _playerMapping, _startedCommunications);
-            var id = Interlocked.Increment(ref _sessionCount);
-            _sessions.Add(id, session);
-
-            var wasDroppedCleanly = true;
-
-            try
+            Thread sessionThread = new Thread(() =>
             {
-                session.RunBlocking();
-            }
-            catch (EndOfStreamException)
-            {
-                Console.WriteLine("Client unexpectedly terminated it's connection to core, dropping session.");
-                wasDroppedCleanly = false;
-            }
-            catch (IOException e) when (e.InnerException is SocketException)
-            {
-                Console.WriteLine("Client unexpectedly terminated it's connection to core, dropping session.");
-                wasDroppedCleanly = false;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Core is dropping connection to session due to: {0}", e);
-                wasDroppedCleanly = false;
-            }
+                FlatbufferSession session = new FlatbufferSession(
+                    client,
+                    clientId,
+                    sessionChannel.Reader,
+                    _incomingMessagesWriter,
+                    _bridge
+                );
 
-            _sessions.Remove(id);
-            session.Close(wasDroppedCleanly);
-            client.Close();
+                try
+                {
+                    session.BlockingRun();
+                }
+                catch (IOException)
+                {
+                    Console.WriteLine("Session suddenly terminated the connection?");
+                }
+
+                session.Cleanup();
+            });
+            sessionThread.Start();
+
+            _sessions.Add(clientId, (sessionChannel.Writer, sessionThread));
+        }
+
+        private async Task HandleIncomingMessages()
+        {
+            await foreach (ServerMessage message in _incomingMessages.ReadAllAsync())
+            {
+                switch (message.Type())
+                {
+                    case ServerMessageType.StartCommunication:
+                        _matchStarter.StartCommunication();
+                        break;
+                    case ServerMessageType.IntroDataRequest:
+                        ChannelWriter<MatchSettingsT> matchSettingsWriter = message.GetMatchSettingsWriter();
+                        ChannelWriter<FieldInfoT> fieldInfoWriter = message.GetFieldInfoWriter();
+
+                        if (_matchStarter.GetMatchSettings() is MatchSettingsT _matchSettings)
+                        {
+                            matchSettingsWriter.TryWrite(_matchSettings);
+                            matchSettingsWriter.TryComplete();
+                        }
+                        else
+                        {
+                            _matchSettingsWriters.Add(matchSettingsWriter);
+                        }
+
+                        if (_fieldInfo != null)
+                        {
+                            fieldInfoWriter.TryWrite(_fieldInfo);
+                            fieldInfoWriter.TryComplete();
+                        }
+                        else
+                        {
+                            _fieldInfoWriters.Add(fieldInfoWriter);
+                        }
+
+                        break;
+                    case ServerMessageType.StartMatch:
+                        MatchSettingsT matchSettings = message.GetMatchSettings();
+                        _matchStarter.StartMatch(matchSettings);
+
+                        // distribute the match settings to all waiting sessions
+                        foreach (var writer in _matchSettingsWriters)
+                        {
+                            writer.TryWrite(matchSettings);
+                            writer.TryComplete();
+                        }
+                        _matchSettingsWriters.Clear();
+                        break;
+                    case ServerMessageType.DistributeGameState:
+                        GameState gameState = message.GetGameState();
+
+                        UpdateFieldInfo(gameState);
+                        DistributeGameState(gameState);
+                        break;
+                    case ServerMessageType.MapSpawned:
+                        _fieldInfo = null;
+                        _shouldUpdateFieldInfo = true;
+
+                        _matchStarter.MapSpawned();
+                        break;
+                    case ServerMessageType.SessionClosed:
+                        _sessions.Remove(message.GetClientId());
+                        Console.WriteLine("Session closed.");
+                        break;
+                    case ServerMessageType.StopMatch:
+                        _matchStarter.NullMatchSettings();
+                        _fieldInfo = null;
+                        _shouldUpdateFieldInfo = false;
+
+                        if (message.GetShutdownServer())
+                        {
+                            _incomingMessagesWriter.TryComplete();
+                            return;
+                        }
+
+                        StopSessions();
+                        break;
+                }
+            }
+        }
+
+        private async Task HandleServer()
+        {
+            _server.Start();
+
+            while (true)
+            {
+                TcpClient client = await _server.AcceptTcpClientAsync();
+                AddSession(client);
+            }
+        }
+
+        public void BlockingRun()
+        {
+            Task incomingMessagesTask = Task.Run(HandleIncomingMessages);
+            Task serverTask = Task.Run(HandleServer);
+
+            Task.WhenAny(incomingMessagesTask, serverTask).Wait();
+        }
+
+        public void Cleanup()
+        {
+            StopSessions();
+            _server.Stop();
         }
     }
 }

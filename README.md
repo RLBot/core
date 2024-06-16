@@ -9,18 +9,20 @@ This is a rewrite a C++ version that had lived at
 ## Developer Setup
 
 - Install .NET 8 SDK [https://dotnet.microsoft.com/en-us/download/dotnet/8.0]
-- Install an IDE (Visual Studio 2022 or Rider)
-- Run `git submodule update --init` to get the Flatbuffers submodule
-- Run `generate-flatbuffers.bat` to generate the Flatbuffers models
+- Install an IDE
+  - Visual Studio 2022 was used for initial development.
+  - Rider and VS Code are also known to work.
 
 ## Building
 
-In VS2022 or Rider, build the solution in Release mode. The compiled binaries are at
-RLBotCS\bin\Release\net8.0.
+In Visual Studio 2022, you can build the solution in Release mode, and find the
+compiled binaries at `RLBotCS\bin\Release\net8.0`.
+
+- Note: You can also build with the command `dotnet publish`
 
 ## Deployment
 
-This project generates a RLBot.exe file and some DLLs. New deployment method is still TODO.
+New deployment method is still TBD.
 
 ## Maintenance
 
@@ -31,15 +33,20 @@ This project uses the CSharpier formatter. You can run it with `dotnet csharpier
 ### Flatbuffers
 
 The Core project uses flatbuffers, which involves generating C# code based on a specification
-file called rlbot.fbs. Find this in RLBotCS/FlatBuffer.
+file called `rlbot.fbs`. Find this in `RLBotCS/FlatBuffer` after it's been generated.
 
-The rlbot.fbs file should be kept in sync with
-[https://github.com/RLBot/flatbuffers-schema/blob/main/rlbot.fbs]
+The [flatbuffers-schema](https://github.com/RLBot/flatbuffers-schema) submodule should be kept update to date:
 
-If there are any changes to rlbot.fbs, you'll need to run RLBotCS/FlatBuffer/generate-flatbuffers.bat
-to regenerate rlbot.cs.
+- `cd RLBotCS/flatbuffers-schema`
+- `git checkout main`
+- `git fetch`
+- `git pull`
+
+To regenerate `rlbot.cs`, you'll need to run `generate-flatbuffers.bat` or `generate-flatbuffers.sh`.
 
 ### RLBotSecret
 
-The RLBotSecret.dll file in RLBotCS/lib is built from a closed-source repository. It is maintained
-by RLBot developers who have signed an agreement with Psyonix to keep it private.
+The `RLBotSecret.dll` file in `RLBotCS/lib` is built from a _closed-source_ repository due to legal reasons.
+It is maintained by RLBot developers who have signed an agreement with Psyonix to keep it private.
+
+In testing, the dll file works for building the project on not just Windows, but also Linux.

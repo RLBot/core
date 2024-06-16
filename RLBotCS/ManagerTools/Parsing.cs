@@ -6,8 +6,14 @@ namespace MatchManagement
 {
     public class ConfigParser
     {
-        public static TomlTable GetTable(string path)
+        public static TomlTable GetTable(string? path)
         {
+            if (path == null)
+            {
+                Console.WriteLine("Warning! Could not read Toml file, path is null");
+                return [];
+            }
+
             try
             {
                 //TODO - catch any exceptions thrown by ToModel
@@ -118,7 +124,7 @@ namespace MatchManagement
             }
         }
 
-        public static string ParseString(TomlTable table, string key, string fallback)
+        public static string? ParseString(TomlTable table, string key, string? fallback)
         {
             try
             {
@@ -131,6 +137,15 @@ namespace MatchManagement
                 );
                 return fallback;
             }
+        }
+
+        public static string? CombinePaths(string? parent, string? child)
+        {
+            if (parent == null || child == null)
+            {
+                return null;
+            }
+            return Path.Combine(parent, child);
         }
 
         public static bool ParseBool(TomlTable table, string key, bool fallback)
@@ -150,14 +165,14 @@ namespace MatchManagement
 
         private static ScriptConfigurationT GetScriptConfig(TomlTable scriptTable, string playerTomlPath)
         {
-            string scriptTomlPath = ParseString(scriptTable, "config", "");
-            TomlTable scriptToml = GetTable(Path.Combine(playerTomlPath, scriptTomlPath));
+            string? scriptTomlPath = ParseString(scriptTable, "config", null);
+            TomlTable scriptToml = GetTable(CombinePaths(playerTomlPath, scriptTomlPath));
             string tomlParent = Path.GetDirectoryName(scriptTomlPath) ?? "";
 
             ScriptConfigurationT scriptConfig =
                 new()
                 {
-                    Location = Path.Combine(tomlParent, ParseString(scriptToml, "location", "")),
+                    Location = CombinePaths(tomlParent, ParseString(scriptToml, "location", "")),
                     RunCommand = ParseString(scriptToml, "run_command", "")
                 };
             return scriptConfig;
@@ -195,7 +210,7 @@ namespace MatchManagement
                 {
                     Variety = classUnion,
                     Team = ParseUint(rlbotPlayerTable, "team", 0),
-                    Name = "",
+                    Name = "Human",
                     Location = "",
                     RunCommand = ""
                 };
@@ -214,7 +229,7 @@ namespace MatchManagement
                 {
                     Variety = classUnion,
                     Team = ParseUint(rlbotPlayerTable, "team", 0),
-                    Name = "",
+                    Name = "Unnamed Psyonix Bot",
                     Location = "",
                     RunCommand = ""
                 };
@@ -237,14 +252,18 @@ namespace MatchManagement
              *  "teamLoadout" is either the "blue_loadout" or "orange_loadout" in bot_looks.toml, contains player items
              *  "teamPaint" is the "paint" table within the loadout tables, contains paint colors of player items
              */
-            string matchConfigParent = Path.GetDirectoryName(matchConfigPath) ?? "";
+            string? matchConfigParent = Path.GetDirectoryName(matchConfigPath);
 
-            string playerTomlPath = Path.Combine(matchConfigParent, ParseString(rlbotPlayerTable, "config", ""));
-            TomlTable playerToml = GetTable(Path.Combine(matchConfigParent, playerTomlPath));
-            string tomlParent = Path.GetDirectoryName(playerTomlPath) ?? "";
+            string? playerTomlPath = CombinePaths(
+                matchConfigParent,
+                ParseString(rlbotPlayerTable, "config", null)
+            );
+            TomlTable playerToml = GetTable(CombinePaths(matchConfigParent, playerTomlPath));
+            string? tomlParent = Path.GetDirectoryName(playerTomlPath);
 
             TomlTable playerSettings = ParseTable(playerToml, "settings");
-            string loadoutTomlPath = Path.Combine(tomlParent, ParseString(playerSettings, "looks_config", ""));
+            string? loadoutTomlPath = CombinePaths(tomlParent, ParseString(playerSettings, "looks_config", null));
+
             TomlTable loadoutToml = GetTable(loadoutTomlPath);
 
             TomlTable teamLoadout;
@@ -265,8 +284,8 @@ namespace MatchManagement
                 {
                     Variety = classUnion,
                     Team = ParseUint(rlbotPlayerTable, "team", 0),
-                    Name = ParseString(playerSettings, "name", ""),
-                    Location = Path.Combine(tomlParent, ParseString(playerSettings, "location", "")),
+                    Name = ParseString(playerSettings, "name", "Unnamed RLBot"),
+                    Location = CombinePaths(tomlParent, ParseString(playerSettings, "location", "")),
                     RunCommand = ParseString(playerSettings, "run_command", ""),
                     Loadout = new PlayerLoadoutT()
                     {
@@ -318,8 +337,6 @@ namespace MatchManagement
             TomlTableArray players = ParseTableArray(rlbotToml, "cars");
             TomlTableArray scripts = ParseTableArray(rlbotToml, "scripts");
 
-            List<PlayerConfigurationT> playerConfigs = [];
-            List<ScriptConfigurationT> scriptConfigs = [];
             MatchSettingsT matchSettings =
                 new()
                 {
@@ -354,7 +371,7 @@ namespace MatchManagement
                             BallBouncinessOption.Default
                         ),
                         BoostOption = ParseEnum(mutatorTable, "boost_amount", BoostOption.Normal_Boost),
-                        RumbleOption = ParseEnum(mutatorTable, "rumble", RumbleOption.Default),
+                        RumbleOption = ParseEnum(mutatorTable, "rumble", RumbleOption.No_Rumble),
                         BoostStrengthOption = ParseEnum(mutatorTable, "boost_strength", BoostStrengthOption.One),
                         GravityOption = ParseEnum(mutatorTable, "gravity", GravityOption.Default),
                         DemolishOption = ParseEnum(mutatorTable, "demolish", DemolishOption.Default),
@@ -366,6 +383,7 @@ namespace MatchManagement
                     }
                 };
 
+            List<PlayerConfigurationT> playerConfigs = [];
             // Gets the PlayerConfigT object for the number of players requested
             int numBots = ParseInt(matchTable, "num_cars", 0);
             for (int i = 0; i < Math.Min(numBots, players.Count); i++)
@@ -374,6 +392,7 @@ namespace MatchManagement
             }
             matchSettings.PlayerConfigurations = playerConfigs;
 
+            List<ScriptConfigurationT> scriptConfigs = [];
             int numScripts = ParseInt(matchTable, "num_scripts", 0);
             for (int i = 0; i < Math.Min(numScripts, scripts.Count); i++)
             {

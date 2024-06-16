@@ -1,7 +1,7 @@
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RLBotSecret.State;
 using RLBotSecret.Models.Message;
+using RLBotSecret.State;
 
 namespace RLBotCSTests
 {
@@ -55,7 +55,7 @@ namespace RLBotCSTests
                 }
             );
 
-            Assert.AreEqual(0, _playerMapping.PlayerIndexFromActorId(111));
+            Assert.AreEqual(0u, _playerMapping.PlayerIndexFromActorId(111));
             Assert.AreEqual(desiredIndex, _playerMapping.PlayerIndexFromActorId(actorId));
             Console.Write("Good");
         }

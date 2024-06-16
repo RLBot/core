@@ -1,36 +1,46 @@
-﻿using RLBotSecret.Types;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Net.Sockets;
+using RLBotSecret.Types;
 
 namespace RLBotCS.Server
 {
     /**
      * https://wiki.rlbot.org/framework/sockets-specification/
      */
-    static class SocketSpecStreamReader
+    class SocketSpecStreamReader
     {
-        internal static IEnumerable<TypedPayload> Read(NetworkStream stream)
+        private BufferedStream _bufferedStream;
+        private byte[] _ushortReader = new byte[2];
+        private byte[] _payloadReader = new byte[ushort.MaxValue];
+
+        public SocketSpecStreamReader(NetworkStream stream)
         {
-            var buffer = new BufferedStream(stream, ushort.MaxValue);
+            _bufferedStream = new BufferedStream(stream, 4 + ushort.MaxValue);
+        }
 
-            var ushortReader = new byte[2];
-            var payloadReader = new byte[ushort.MaxValue];
-
-            // block until we get a message, then yield it
-            // stop blocking when the stream is closed
+        internal async IAsyncEnumerable<TypedPayload> ReadAllAsync()
+        {
             while (true)
             {
-                var ushortReaderSpan = new Span<byte>(ushortReader);
+                DataType dataType;
+                ushort payloadSize;
 
-                buffer.ReadExactly(ushortReaderSpan);
-                var dataType = ReadDataType(ushortReaderSpan);
+                try
+                {
+                    await _bufferedStream.ReadExactlyAsync(_ushortReader);
+                    dataType = ReadDataType(_ushortReader);
 
-                buffer.ReadExactly(ushortReaderSpan);
-                var payloadSize = ReadPayloadSize(ushortReaderSpan);
+                    await _bufferedStream.ReadExactlyAsync(_ushortReader);
+                    payloadSize = ReadPayloadSize(_ushortReader);
 
-                var payloadReaderSpan = new Span<byte>(payloadReader, 0, payloadSize);
-                buffer.ReadExactly(payloadReaderSpan);
+                    await _bufferedStream.ReadExactlyAsync(_payloadReader, 0, payloadSize);
+                }
+                catch (Exception)
+                {
+                    break;
+                }
 
-                yield return new() { Type = dataType, Payload = new(payloadReader, 0, payloadSize) };
+                yield return new() { Type = dataType, Payload = new(_payloadReader, 0, payloadSize) };
             }
         }
 

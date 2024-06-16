@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Net;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 
@@ -7,6 +9,54 @@ namespace RLBotCS.MatchManagement
     internal class Launcher
     {
         public static string SteamGameId = "252950";
+        public static int RLBotSocketsPort = 23234;
+
+        private static int DefaultGamePort = 50000;
+        private static int IdealGamePort = 23233;
+
+        public static int FindUsableGamePort()
+        {
+            Process[] candidates = Process.GetProcessesByName("RocketLeague");
+
+            // search cmd line args for port
+            foreach (var candidate in candidates)
+            {
+                string[] args = candidate.StartInfo.Arguments.Split(' ');
+
+                foreach (var arg in args)
+                {
+                    if (arg.Contains("RLBot_ControllerURL"))
+                    {
+                        string[] parts = arg.Split(':');
+                        return int.Parse(parts[parts.Length - 1]);
+                    }
+                }
+            }
+
+            for (int portToTest = IdealGamePort; portToTest < 65535; portToTest++)
+            {
+                if (portToTest == RLBotSocketsPort)
+                {
+                    // skip the port we're using for sockets
+                    continue;
+                }
+
+                // try booting up a server on the port
+                try
+                {
+                    TcpListener listener = new TcpListener(IPAddress.Any, portToTest);
+                    listener.Start();
+                    listener.Stop();
+                    return portToTest;
+                }
+                catch (SocketException)
+                {
+                    continue;
+                }
+            }
+
+            return DefaultGamePort;
+        }
 
         public static string[] GetIdealArgs(int gamePort)
         {
@@ -119,16 +169,16 @@ namespace RLBotCS.MatchManagement
         public static bool IsRocketLeagueRunning()
         {
             Process[] candidates = Process.GetProcesses();
+
             foreach (var candidate in candidates)
             {
                 if (candidate.ProcessName.Contains("RocketLeague"))
                 {
-                    Console.WriteLine("Rocket League is already running.");
                     return true;
                 }
             }
 
-            return candidates.Length > 0;
+            return false;
         }
 
         private static string GetSteamPath()

@@ -11,6 +11,7 @@ namespace RLBotCS.Server
         Stream _stream;
         byte[] _dataTypeBuffer = new byte[2];
         byte[] _messageLengthBuffer = new byte[2];
+        byte[] _messageBuffer = new byte[4 + ushort.MaxValue];
 
         public SocketSpecStreamWriter(Stream stream)
         {
@@ -33,7 +34,7 @@ namespace RLBotCS.Server
             buffer[1] = (byte)((value) & 0xFF);
         }
 
-        internal void Write(TypedPayload message)
+        internal async Task WriteAsync(TypedPayload message)
         {
             if (message.Payload.Count > ushort.MaxValue)
             {
@@ -48,16 +49,15 @@ namespace RLBotCS.Server
             PrepareDataType(message.Type);
             PrepareMessageLength((ushort)message.Payload.Count);
 
-            var messageBuffer = new byte[message.Payload.Count + 4];
-            Array.Copy(_dataTypeBuffer, 0, messageBuffer, 0, 2);
-            Array.Copy(_messageLengthBuffer, 0, messageBuffer, 2, 2);
-            Array.Copy(message.Payload.Array, message.Payload.Offset, messageBuffer, 4, message.Payload.Count);
-            _stream.Write(messageBuffer, 0, messageBuffer.Length);
+            Array.Copy(_dataTypeBuffer, 0, _messageBuffer, 0, 2);
+            Array.Copy(_messageLengthBuffer, 0, _messageBuffer, 2, 2);
+            Array.Copy(message.Payload.Array, message.Payload.Offset, _messageBuffer, 4, message.Payload.Count);
+            await _stream.WriteAsync(_messageBuffer, 0, 4 + message.Payload.Count);
         }
 
-        internal void Send()
+        internal async Task SendAsync()
         {
-            _stream.Flush();
+            await _stream.FlushAsync();
         }
     }
 }
