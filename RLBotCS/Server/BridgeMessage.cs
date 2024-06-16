@@ -13,7 +13,7 @@ internal record Input(PlayerInput PlayerInput) : IBridgeMessage
     public void HandleMessage(BridgeHandler handler)
     {
         CarInput carInput = FlatToModel.ToCarInput(PlayerInput.ControllerState.Value);
-        ushort? actorId = handler.GameState.PlayerMapping.ActorIdFromPlayerIndex(PlayerInput.PlayerIndex);
+        ushort? actorId = handler.PlayerMapping.ActorIdFromPlayerIndex(PlayerInput.PlayerIndex);
 
         if (actorId.HasValue)
         {
@@ -36,7 +36,7 @@ internal record SpawnHuman(PlayerConfigurationT PlayerConfig, uint DesiredIndex)
     public void HandleMessage(BridgeHandler handler)
     {
         handler.QueueConsoleCommand("ChangeTeam " + PlayerConfig.Team);
-        handler.GameState.PlayerMapping.AddPendingSpawn(
+        handler.AddPendingSpawn(
             new SpawnTracker
             {
                 CommandId = 0,
@@ -57,7 +57,7 @@ internal record SpawnBot(
     public void HandleMessage(BridgeHandler handler)
     {
         PlayerConfigurationT config = PlayerConfig;
-        PlayerMetadata? alreadySpawnedPlayer = handler.GameState
+        PlayerMetadata? alreadySpawnedPlayer = handler
             .PlayerMapping
             .GetKnownPlayers()
             .FirstOrDefault(kp => config.SpawnId == kp.SpawnId);
@@ -76,7 +76,7 @@ internal record SpawnBot(
             loadout
         );
 
-        handler.GameState.PlayerMapping.AddPendingSpawn(
+        handler.AddPendingSpawn(
             new SpawnTracker
             {
                 CommandId = commandId,
