@@ -22,17 +22,4 @@ internal class ServerContext(
 
     public MatchStarter MatchStarter { get; } = matchStarter;
     public ChannelWriter<IBridgeMessage> Bridge { get; } = bridge;
-
-    public void StopSessions()
-    {
-        // Send stop message to all sessions
-        foreach (var (writer, _) in Sessions.Values)
-            writer.TryComplete();
-
-        // Ensure all sessions are stopped
-        foreach (var (_, thread) in Sessions.Values)
-            thread.Join();
-
-        Sessions.Clear();
-    }
 }
