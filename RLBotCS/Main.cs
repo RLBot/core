@@ -12,8 +12,8 @@ Channel<IBridgeMessage> bridgeChannel = Channel.CreateUnbounded<IBridgeMessage>(
 ChannelWriter<IBridgeMessage> bridgeWriter = bridgeChannel.Writer;
 
 // Setup the tcp server for rlbots
-Channel<ServerMessage> serverChannel = Channel.CreateUnbounded<ServerMessage>();
-ChannelWriter<ServerMessage> serverWriter = serverChannel.Writer;
+Channel<IServerMessage> serverChannel = Channel.CreateUnbounded<IServerMessage>();
+ChannelWriter<IServerMessage> serverWriter = serverChannel.Writer;
 
 Thread rlbotServer = new Thread(() =>
 {
