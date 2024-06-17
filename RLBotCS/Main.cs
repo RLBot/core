@@ -2,6 +2,7 @@
 using RLBotCS.GameControl;
 using RLBotCS.MatchManagement;
 using RLBotCS.Server;
+using RLBotCS.Server.FlatbuffersMessage;
 using RLBotSecret.TCP;
 
 int gamePort = Launcher.FindUsableGamePort();
