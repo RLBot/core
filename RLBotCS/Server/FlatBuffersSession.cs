@@ -41,7 +41,7 @@ namespace RLBotCS.Server
         }
     }
 
-    internal class FlatbufferSession
+    internal class FlatBuffersSession
     {
         private TcpClient _client;
         private int _clientId;
@@ -60,7 +60,7 @@ namespace RLBotCS.Server
 
         private FlatBufferBuilder _builder = new(1024);
 
-        public FlatbufferSession(
+        public FlatBuffersSession(
             TcpClient client,
             int clientId,
             ChannelReader<SessionMessage> incomingMessages,
