@@ -1,15 +1,15 @@
 using System.Threading.Channels;
 using rlbot.flat;
 using RLBotCS.Conversion;
-using RLBotCS.Server.FlatbuffersMessage;
 using RLBotCS.MatchManagement;
+using RLBotCS.Server.FlatbuffersMessage;
 using RLBotSecret.Controller;
 using RLBotSecret.Conversion;
+using RLBotSecret.Models.Command;
 using RLBotSecret.Models.Message;
 using RLBotSecret.State;
 using RLBotSecret.TCP;
 using GameStateType = RLBotSecret.Models.Message.GameStateType;
-using RLBotSecret.Models.Command;
 
 namespace RLBotCS.Server
 {

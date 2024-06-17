@@ -1,15 +1,16 @@
-﻿using rlbot.flat;
+﻿using System.Net.Sockets;
+using System.Threading.Channels;
+using rlbot.flat;
 using RLBotCS.GameControl;
 using RLBotCS.MatchManagement;
-using System.Net.Sockets;
-using System.Threading.Channels;
 
 namespace RLBotCS.Server.FlatbuffersMessage;
 
 internal class ServerContext(
     Channel<IServerMessage> incomingMessages,
     MatchStarter matchStarter,
-    ChannelWriter<IBridgeMessage> bridge)
+    ChannelWriter<IBridgeMessage> bridge
+)
 {
     public TcpListener? Server { get; set; }
     public ChannelReader<IServerMessage> IncomingMessages { get; } = incomingMessages.Reader;

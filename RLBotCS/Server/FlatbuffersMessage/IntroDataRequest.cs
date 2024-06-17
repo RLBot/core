@@ -1,11 +1,12 @@
-﻿using rlbot.flat;
-using System.Threading.Channels;
+﻿using System.Threading.Channels;
+using rlbot.flat;
 
 namespace RLBotCS.Server.FlatbuffersMessage;
 
 internal record IntroDataRequest(
     ChannelWriter<MatchSettingsT> MatchSettingsWriter,
-    ChannelWriter<FieldInfoT> FieldInfoWriter) : IServerMessage
+    ChannelWriter<FieldInfoT> FieldInfoWriter
+) : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {

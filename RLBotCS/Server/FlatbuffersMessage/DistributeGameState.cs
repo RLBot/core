@@ -27,9 +27,18 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
                 new GoalInfoT
                 {
                     TeamNum = goal.Team,
-                    Location =
-                        new Vector3T { X = goal.Location.x, Y = goal.Location.y, Z = goal.Location.z },
-                    Direction = new Vector3T { X = goal.Direction.x, Y = goal.Direction.y, Z = goal.Direction.z },
+                    Location = new Vector3T
+                    {
+                        X = goal.Location.x,
+                        Y = goal.Location.y,
+                        Z = goal.Location.z
+                    },
+                    Direction = new Vector3T
+                    {
+                        X = goal.Direction.x,
+                        Y = goal.Direction.y,
+                        Z = goal.Direction.z
+                    },
                     Width = goal.Width,
                     Height = goal.Height,
                 }

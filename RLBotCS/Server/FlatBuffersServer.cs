@@ -4,7 +4,6 @@ using System.Threading.Channels;
 using RLBotCS.GameControl;
 using RLBotCS.Server.FlatbuffersMessage;
 
-
 namespace RLBotCS.Server;
 
 internal class FlatBuffersServer
@@ -32,31 +31,33 @@ internal class FlatBuffersServer
 
         int clientId = client.Client.Handle.ToInt32();
 
-        Thread sessionThread = new(() =>
-        {
-            FlatBuffersSession session = new(
-                client,
-                clientId,
-                sessionChannel.Reader,
-                _context.IncomingMessagesWriter,
-                _context.Bridge,
-                _context.RenderingIsEnabled,
-                _context.StateSettingIsEnabled
-            );
+        Thread sessionThread =
+            new(() =>
+            {
+                FlatBuffersSession session =
+                    new(
+                        client,
+                        clientId,
+                        sessionChannel.Reader,
+                        _context.IncomingMessagesWriter,
+                        _context.Bridge,
+                        _context.RenderingIsEnabled,
+                        _context.StateSettingIsEnabled
+                    );
 
-            try
-            {
-                session.BlockingRun();
-            }
-            catch (IOException)
-            {
-                Console.WriteLine("Session suddenly terminated the connection?");
-            }
-            finally
-            {
-                session.Cleanup();
-            }
-        });
+                try
+                {
+                    session.BlockingRun();
+                }
+                catch (IOException)
+                {
+                    Console.WriteLine("Session suddenly terminated the connection?");
+                }
+                finally
+                {
+                    session.Cleanup();
+                }
+            });
         sessionThread.Start();
 
         _context.Sessions.Add(clientId, (sessionChannel.Writer, sessionThread));

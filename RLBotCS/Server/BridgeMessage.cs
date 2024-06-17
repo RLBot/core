@@ -17,17 +17,12 @@ internal record Input(PlayerInput PlayerInput) : IBridgeMessage
 
         if (actorId.HasValue)
         {
-            RLBotSecret.Models.Control.PlayerInput playerInput = new()
-            {
-                ActorId = actorId.Value, CarInput = carInput
-            };
+            RLBotSecret.Models.Control.PlayerInput playerInput =
+                new() { ActorId = actorId.Value, CarInput = carInput };
             handler.SendPlayerInput(playerInput);
         }
         else
-            Console.WriteLine(
-                "Core got input from unknown player index {0}",
-                PlayerInput.PlayerIndex
-            );
+            Console.WriteLine("Core got input from unknown player index {0}", PlayerInput.PlayerIndex);
     }
 }
 
@@ -48,18 +43,14 @@ internal record SpawnHuman(PlayerConfigurationT PlayerConfig, uint DesiredIndex)
     }
 }
 
-internal record SpawnBot(
-    PlayerConfigurationT PlayerConfig,
-    BotSkill Skill,
-    uint DesiredIndex,
-    bool IsCustomBot) : IBridgeMessage
+internal record SpawnBot(PlayerConfigurationT PlayerConfig, BotSkill Skill, uint DesiredIndex, bool IsCustomBot)
+    : IBridgeMessage
 {
     public void HandleMessage(BridgeHandler handler)
     {
         PlayerConfigurationT config = PlayerConfig;
         PlayerMetadata? alreadySpawnedPlayer = handler
-            .PlayerMapping
-            .GetKnownPlayers()
+            .PlayerMapping.GetKnownPlayers()
             .FirstOrDefault(kp => config.SpawnId == kp.SpawnId);
         if (alreadySpawnedPlayer != null)
             // We've already spawned this player, don't duplicate them.
@@ -69,12 +60,7 @@ internal record SpawnBot(
         config.Loadout.LoadoutPaint ??= new LoadoutPaintT();
         Loadout loadout = FlatToModel.ToLoadout(config.Loadout, config.Team);
 
-        ushort commandId = handler.QueueSpawnCommand(
-            config.Name,
-            (int)config.Team,
-            Skill,
-            loadout
-        );
+        ushort commandId = handler.QueueSpawnCommand(config.Name, (int)config.Team, Skill, loadout);
 
         handler.AddPendingSpawn(
             new SpawnTracker

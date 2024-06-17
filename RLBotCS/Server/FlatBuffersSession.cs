@@ -12,8 +12,11 @@ namespace RLBotCS.Server;
 internal record SessionMessage
 {
     public record DistributeBallPrediction(BallPredictionT BallPrediction) : SessionMessage;
+
     public record DistributeGameState(RLBotSecret.State.GameState GameState) : SessionMessage;
+
     public record RendersAllowed(bool Allowed) : SessionMessage;
+
     public record StateSettingAllowed(bool Allowed) : SessionMessage;
 
     public record StopMatch : SessionMessage;
@@ -84,9 +87,7 @@ internal class FlatBuffersSession
                 Channel<MatchSettingsT> matchSettingsChannel = Channel.CreateUnbounded<MatchSettingsT>();
                 Channel<FieldInfoT> fieldInfoChannel = Channel.CreateUnbounded<FieldInfoT>();
 
-                _rlbotServer.TryWrite(
-                    new IntroDataRequest(matchSettingsChannel.Writer, fieldInfoChannel.Writer)
-                );
+                _rlbotServer.TryWrite(new IntroDataRequest(matchSettingsChannel.Writer, fieldInfoChannel.Writer));
 
                 // get then send match settings
                 // this is usually return before fieldinfo so we wait on it first
@@ -106,10 +107,7 @@ internal class FlatBuffersSession
 
                 _builder.Clear();
                 _builder.Finish(FieldInfo.Pack(_builder, fieldInfo).Value);
-                TypedPayload fieldInfoMessage = TypedPayload.FromFlatBufferBuilder(
-                    DataType.FieldInfo,
-                    _builder
-                );
+                TypedPayload fieldInfoMessage = TypedPayload.FromFlatBufferBuilder(DataType.FieldInfo, _builder);
                 await SendPayloadToClientAsync(fieldInfoMessage);
                 Console.WriteLine("Sent field info to client.");
 
@@ -158,9 +156,7 @@ internal class FlatBuffersSession
                 }
 
                 var renderingGroup = RenderGroup.GetRootAsRenderGroup(byteBuffer).UnPack();
-                _bridge.TryWrite(
-                    new AddRenders(_clientId, renderingGroup.Id, renderingGroup.RenderMessages)
-                );
+                _bridge.TryWrite(new AddRenders(_clientId, renderingGroup.Id, renderingGroup.RenderMessages));
 
                 break;
 
@@ -227,7 +223,8 @@ internal class FlatBuffersSession
         await foreach (TypedPayload message in _socketSpecReader.ReadAllAsync())
         {
             bool keepRunning = await ParseClientMessage(message);
-            if (keepRunning) continue;
+            if (keepRunning)
+                continue;
 
             Console.WriteLine("Core got close message from client.");
             return;

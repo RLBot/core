@@ -304,9 +304,7 @@ namespace RLBotCS.GameControl
                             skillEnum = BotSkill.Medium;
                         }
 
-                        _bridge.TryWrite(
-                            new SpawnBot(playerConfig, skillEnum, (uint)(i - indexOffset), false)
-                        );
+                        _bridge.TryWrite(new SpawnBot(playerConfig, skillEnum, (uint)(i - indexOffset), false));
 
                         break;
                     case PlayerClass.Human:
