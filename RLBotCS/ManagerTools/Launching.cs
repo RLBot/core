@@ -3,6 +3,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
+using System.Management;
+using System;
 
 namespace RLBotCS.ManagerTools
 {
@@ -21,14 +23,22 @@ namespace RLBotCS.ManagerTools
             // search cmd line args for port
             foreach (var candidate in candidates)
             {
-                string[] args = candidate.StartInfo.Arguments.Split(' ');
-
-                foreach (var arg in args)
+                //string[] args = candidate.StartInfo.Arguments.Split(' ');
+                using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("SELECT CommandLine FROM Win32_Process WHERE ProcessId = " + candidate.Id))
+                using (ManagementObjectCollection objects = searcher.Get())
                 {
-                    if (arg.Contains("RLBot_ControllerURL"))
+                    Console.WriteLine("Welcome R0bbie");
+                    var args = objects.Cast<ManagementBaseObject>().SingleOrDefault()?["CommandLine"]?.ToString().Split(" ");
+                    
+                    foreach (var arg in args)
                     {
-                        string[] parts = arg.Split(':');
-                        return int.Parse(parts[parts.Length - 1]);
+                        Console.WriteLine(arg);
+                        if (arg.Contains("RLBot_ControllerURL"))
+                        {
+                            string[] parts = arg.Split(':');
+                            var port = parts[parts.Length - 1].TrimEnd('"');
+                            return int.Parse(port);
+                        }
                     }
                 }
             }
@@ -57,6 +67,7 @@ namespace RLBotCS.ManagerTools
 
             return DefaultGamePort;
         }
+
 
         public static string[] GetIdealArgs(int gamePort)
         {
