@@ -67,7 +67,7 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
 
         foreach (var (writer, _) in context.Sessions.Values)
         {
-            SessionMessage message = SessionMessage.DistributeGameState(gameState);
+            SessionMessage message = new SessionMessage.DistributeGameState(gameState);
             writer.TryWrite(message);
         }
     }

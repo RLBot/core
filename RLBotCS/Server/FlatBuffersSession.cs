@@ -9,36 +9,10 @@ using RLBotSecret.Types;
 
 namespace RLBotCS.Server
 {
-    internal enum SessionMessageType
+    internal record SessionMessage
     {
-        DistributeGameState,
-        StopMatch,
-    }
-
-    internal class SessionMessage
-    {
-        private SessionMessageType _type;
-        private RLBotSecret.State.GameState _gameState;
-
-        public static SessionMessage DistributeGameState(RLBotSecret.State.GameState gameState)
-        {
-            return new SessionMessage { _type = SessionMessageType.DistributeGameState, _gameState = gameState };
-        }
-
-        public static SessionMessage StopMatch()
-        {
-            return new SessionMessage { _type = SessionMessageType.StopMatch };
-        }
-
-        public SessionMessageType Type()
-        {
-            return _type;
-        }
-
-        public RLBotSecret.State.GameState GetGameState()
-        {
-            return _gameState;
-        }
+        public record DistributeGameState(RLBotSecret.State.GameState GameState) : SessionMessage;
+        public record StopMatch : SessionMessage;
     }
 
     internal class FlatBuffersSession
@@ -81,7 +55,7 @@ namespace RLBotCS.Server
 
         private async Task<bool> ParseClientMessage(TypedPayload message)
         {
-            var byteBuffer = new ByteBuffer(message.Payload.Array, message.Payload.Offset);
+            ByteBuffer byteBuffer = new(message.Payload.Array, message.Payload.Offset);
 
             switch (message.Type)
             {
@@ -158,57 +132,6 @@ namespace RLBotCS.Server
 
                 case DataType.MatchComms:
                     break;
-
-                // case DataType.RenderGroup:
-                //     if (!_renderingIsEnabled)
-                //     {
-                //         break;
-                //     }
-
-                //     var renderingGroup = RenderGroup.GetRootAsRenderGroup(byteBuffer).UnPack();
-
-                //     // If a group already exists with the same id,
-                //     // remove the old render items
-                //     RemoveRenderGroup(renderingGroup.Id);
-
-                //     List<ushort> renderIds = new();
-
-                //     // Create render requests
-                //     foreach (var renderMessage in renderingGroup.RenderMessages)
-                //     {
-                //         if (RenderItem(renderMessage.Variety) is ushort renderId)
-                //         {
-                //             renderIds.Add(renderId);
-                //         }
-                //     }
-
-                //     // Add the new render items to the tracker
-                //     _sessionRenderIds[renderingGroup.Id] = renderIds;
-
-                //     // Send the render requests
-                //     _gameController.RenderingSender.Send();
-
-                //     break;
-
-                // case DataType.RemoveRenderGroup:
-                //     var removeRenderGroup = rlbot
-                //         .flat.RemoveRenderGroup.GetRootAsRemoveRenderGroup(byteBuffer)
-                //         .UnPack();
-                //     RemoveRenderGroup(removeRenderGroup.Id);
-                //     break;
-
-                // case DataType.DesiredGameState:
-                //     if (!_stateSettingIsEnabled)
-                //     {
-                //         break;
-                //     }
-
-                //     var desiredGameState = DesiredGameState.GetRootAsDesiredGameState(byteBuffer).UnPack();
-                //     _gameController.MatchStarter.SetDesiredGameState(desiredGameState);
-                //     break;
-                default:
-                    // Console.WriteLine("Core got unexpected message type {0} from client.", message.Type);
-                    break;
             }
 
             return true;
@@ -223,26 +146,15 @@ namespace RLBotCS.Server
         private async Task HandleIncomingMessages()
         {
             await foreach (SessionMessage message in _incomingMessages.ReadAllAsync())
-            {
-                switch (message.Type())
+                switch (message)
                 {
-                    case SessionMessageType.DistributeGameState:
-                        if (_isReady)
-                        {
-                            RLBotSecret.State.GameState gameState = message.GetGameState();
-                            await SendPayloadToClientAsync(gameState.ToFlatbuffer(_builder));
-                        }
+                    case SessionMessage.DistributeGameState m when _isReady:
+                        await SendPayloadToClientAsync(m.GameState.ToFlatbuffer(_builder));
                         break;
-                    case SessionMessageType.StopMatch:
-                        if (_isReady && _closeAfterMatch)
-                        {
-                            Console.WriteLine("Core got stop match message from server.");
-                            return;
-                        }
-
-                        break;
+                    case SessionMessage.StopMatch when _isReady && _closeAfterMatch:
+                        Console.WriteLine("Core got stop match message from server.");
+                        return;
                 }
-            }
         }
 
         private async Task HandleClientMessages()
@@ -250,11 +162,10 @@ namespace RLBotCS.Server
             await foreach (TypedPayload message in _socketSpecReader.ReadAllAsync())
             {
                 bool keepRunning = await ParseClientMessage(message);
-                if (!keepRunning)
-                {
-                    Console.WriteLine("Core got close message from client.");
-                    return;
-                }
+                if (keepRunning) continue;
+
+                Console.WriteLine("Core got close message from client.");
+                return;
             }
         }
 
