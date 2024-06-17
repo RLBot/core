@@ -12,7 +12,7 @@ using RLBotSecret.Models.Command;
 namespace RLBotCS.Server
 {
     internal class BridgeHandler(
-        ChannelWriter<ServerMessage> writer,
+        ChannelWriter<IServerMessage> writer,
         ChannelReader<IBridgeMessage> reader,
         TcpMessenger messenger
     )
@@ -88,7 +88,7 @@ namespace RLBotCS.Server
                 if (!_gotFirstMessage)
                 {
                     _gotFirstMessage = true;
-                    writer.TryWrite(new ServerMessage.StartCommunication());
+                    writer.TryWrite(new StartCommunication());
                 }
 
                 lock (_gameStateLock)
@@ -98,7 +98,7 @@ namespace RLBotCS.Server
                 if (matchStarted)
                 {
                     _matchHasStarted = true;
-                    writer.TryWrite(new ServerMessage.MapSpawned());
+                    writer.TryWrite(new MapSpawned());
                 }
 
                 lock (_gameStateLock)
@@ -118,7 +118,7 @@ namespace RLBotCS.Server
                     }
                 }
 
-                writer.TryWrite(new ServerMessage.DistributeGameState(_gameState));
+                writer.TryWrite(new DistributeGameState(_gameState));
             }
         }
 
