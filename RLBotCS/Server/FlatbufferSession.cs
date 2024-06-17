@@ -4,6 +4,7 @@ using Google.FlatBuffers;
 using MatchManagement;
 using rlbot.flat;
 using RLBotCS.Conversion;
+using RLBotCS.Server.FlatbuffersMessage;
 using RLBotSecret.Types;
 
 namespace RLBotCS.Server
