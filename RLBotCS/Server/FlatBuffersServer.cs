@@ -92,7 +92,15 @@ internal class FlatBuffersServer
 
     public void Cleanup()
     {
-        _context.StopSessions();
+        // Send stop message to all sessions
+        foreach (var (writer, _) in _context.Sessions.Values)
+            writer.TryComplete();
+
+        // Ensure all sessions are stopped
+        foreach (var (_, thread) in _context.Sessions.Values)
+            thread.Join();
+
+        _context.Sessions.Clear();
 
         if (_context.Server == null)
             throw new InvalidOperationException("Server not initialized");
