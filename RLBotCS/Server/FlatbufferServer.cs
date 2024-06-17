@@ -20,20 +20,41 @@ namespace RLBotCS.Server
         public record StopMatch(bool ShutdownServer) : ServerMessage;
     }
 
+    internal class ServerContext(
+        Channel<ServerMessage> incomingMessages,
+        MatchStarter matchStarter,
+        ChannelWriter<IBridgeMessage> bridge)
+    {
+        public TcpListener Server { get; set; }
+        public ChannelReader<ServerMessage> IncomingMessages { get; } = incomingMessages.Reader;
+        public ChannelWriter<ServerMessage> IncomingMessagesWriter { get; } = incomingMessages.Writer;
+        public Dictionary<int, (ChannelWriter<SessionMessage> writer, Thread thread)> Sessions { get; } = [];
+
+        public FieldInfoT? FieldInfo { get; set; }
+        public bool ShouldUpdateFieldInfo { get; set; }
+        public List<ChannelWriter<MatchSettingsT>> MatchSettingsWriters { get; } = [];
+        public List<ChannelWriter<FieldInfoT>> FieldInfoWriters { get; } = [];
+
+        public MatchStarter MatchStarter { get; } = matchStarter;
+        public ChannelWriter<IBridgeMessage> Bridge { get; } = bridge;
+
+        public void StopSessions()
+        {
+            // Send stop message to all sessions
+            foreach (var (writer, _) in Sessions.Values)
+                writer.TryComplete();
+
+            // Ensure all sessions are stopped
+            foreach (var (_, thread) in Sessions.Values)
+                thread.Join();
+
+            Sessions.Clear();
+        }
+    }
+
     internal class FlatbufferServer
     {
-        private TcpListener _server;
-        private ChannelReader<ServerMessage> _incomingMessages;
-        private ChannelWriter<ServerMessage> _incomingMessagesWriter;
-        private Dictionary<int, (ChannelWriter<SessionMessage> writer, Thread thread)> _sessions = [];
-
-        private FieldInfoT? _fieldInfo = null;
-        private bool _shouldUpdateFieldInfo = false;
-        private List<ChannelWriter<MatchSettingsT>> _matchSettingsWriters = [];
-        private List<ChannelWriter<FieldInfoT>> _fieldInfoWriters = [];
-
-        private MatchStarter _matchStarter;
-        private ChannelWriter<IBridgeMessage> _bridge;
+        private readonly ServerContext _context;
 
         public FlatbufferServer(
             int rlbotPort,
@@ -42,45 +63,29 @@ namespace RLBotCS.Server
             ChannelWriter<IBridgeMessage> bridge
         )
         {
-            _incomingMessages = incomingMessages.Reader;
-            _incomingMessagesWriter = incomingMessages.Writer;
-            _matchStarter = matchStarter;
-            _bridge = bridge;
-
             IPAddress rlbotClients = new(new byte[] { 0, 0, 0, 0 });
-            _server = new TcpListener(rlbotClients, rlbotPort);
-        }
-
-        private void StopSessions()
-        {
-            // send stop message to all sessions
-            foreach (var (writer, _) in _sessions.Values)
-                writer.TryComplete();
-
-            // ensure all sessions are stopped
-            foreach (var (_, thread) in _sessions.Values)
-                thread.Join();
-
-            // remove all sessions
-            _sessions.Clear();
+            _context = new ServerContext(incomingMessages, matchStarter, bridge)
+            {
+                Server = new TcpListener(rlbotClients, rlbotPort)
+            };
         }
 
         private void UpdateFieldInfo(GameState gameState)
         {
-            if (!_shouldUpdateFieldInfo)
+            if (!_context.ShouldUpdateFieldInfo)
                 return;
 
-            if (_fieldInfo == null)
-                _fieldInfo = new FieldInfoT { Goals = [], BoostPads = [] };
+            if (_context.FieldInfo == null)
+                _context.FieldInfo = new FieldInfoT { Goals = [], BoostPads = [] };
             else
             {
-                _fieldInfo.Goals.Clear();
-                _fieldInfo.BoostPads.Clear();
+                _context.FieldInfo.Goals.Clear();
+                _context.FieldInfo.BoostPads.Clear();
             }
 
             foreach (GoalInfo goal in gameState.Goals)
             {
-                _fieldInfo.Goals.Add(
+                _context.FieldInfo.Goals.Add(
                     new GoalInfoT
                     {
                         TeamNum = goal.Team,
@@ -97,7 +102,7 @@ namespace RLBotCS.Server
 
             foreach (BoostPadSpawn boostPad in gameState.BoostPads)
             {
-                _fieldInfo.BoostPads.Add(
+                _context.FieldInfo.BoostPads.Add(
                     new BoostPadT
                     {
                         Location = new Vector3T
@@ -112,20 +117,20 @@ namespace RLBotCS.Server
             }
 
             // distribute the field info to all waiting sessions
-            foreach (var writer in _fieldInfoWriters)
+            foreach (var writer in _context.FieldInfoWriters)
             {
-                writer.TryWrite(_fieldInfo);
+                writer.TryWrite(_context.FieldInfo);
                 writer.TryComplete();
             }
 
-            _fieldInfoWriters.Clear();
+            _context.FieldInfoWriters.Clear();
         }
 
         private void DistributeGameState(GameState gameState)
         {
-            _matchStarter.matchEnded = gameState.MatchEnded;
+            _context.MatchStarter.matchEnded = gameState.MatchEnded;
 
-            foreach (var (writer, _) in _sessions.Values)
+            foreach (var (writer, _) in _context.Sessions.Values)
             {
                 SessionMessage message = SessionMessage.DistributeGameState(gameState);
                 writer.TryWrite(message);
@@ -145,8 +150,8 @@ namespace RLBotCS.Server
                     client,
                     clientId,
                     sessionChannel.Reader,
-                    _incomingMessagesWriter,
-                    _bridge
+                    _context.IncomingMessagesWriter,
+                    _context.Bridge
                 );
 
                 try
@@ -162,12 +167,12 @@ namespace RLBotCS.Server
             });
             sessionThread.Start();
 
-            _sessions.Add(clientId, (sessionChannel.Writer, sessionThread));
+            _context.Sessions.Add(clientId, (sessionChannel.Writer, sessionThread));
         }
 
         private async Task HandleIncomingMessages()
         {
-            await foreach (ServerMessage message in _incomingMessages.ReadAllAsync())
+            await foreach (ServerMessage message in _context.IncomingMessages.ReadAllAsync())
             {
                 switch (message)
                 {
@@ -199,11 +204,11 @@ namespace RLBotCS.Server
 
         private async Task HandleServer()
         {
-            _server.Start();
+            _context.Server.Start();
 
             while (true)
             {
-                TcpClient client = await _server.AcceptTcpClientAsync();
+                TcpClient client = await _context.Server.AcceptTcpClientAsync();
                 AddSession(client);
             }
         }
@@ -218,47 +223,47 @@ namespace RLBotCS.Server
 
         public void Cleanup()
         {
-            StopSessions();
-            _server.Stop();
+            _context.StopSessions();
+            _context.Server.Stop();
         }
 
-        private void StartCommunication() => _matchStarter.StartCommunication();
+        private void StartCommunication() => _context.MatchStarter.StartCommunication();
 
         private void IntroDataRequest(ServerMessage.IntroDataRequest message)
         {
             ChannelWriter<MatchSettingsT> matchSettingsWriter = message.MatchSettingsWriter;
             ChannelWriter<FieldInfoT> fieldInfoWriter = message.FieldInfoWriter;
 
-            if (_matchStarter.GetMatchSettings() is { } settings)
+            if (_context.MatchStarter.GetMatchSettings() is { } settings)
             {
                 matchSettingsWriter.TryWrite(settings);
                 matchSettingsWriter.TryComplete();
             }
             else
-                _matchSettingsWriters.Add(matchSettingsWriter);
+                _context.MatchSettingsWriters.Add(matchSettingsWriter);
 
-            if (_fieldInfo != null)
+            if (_context.FieldInfo != null)
             {
-                fieldInfoWriter.TryWrite(_fieldInfo);
+                fieldInfoWriter.TryWrite(_context.FieldInfo);
                 fieldInfoWriter.TryComplete();
             }
             else
-                _fieldInfoWriters.Add(fieldInfoWriter);
+                _context.FieldInfoWriters.Add(fieldInfoWriter);
         }
 
         private void StartMatch(ServerMessage.StartMatch message)
         {
             MatchSettingsT matchSettings = message.MatchSettings;
-            _matchStarter.StartMatch(matchSettings);
+            _context.MatchStarter.StartMatch(matchSettings);
 
             // distribute the match settings to all waiting sessions
-            foreach (var writer in _matchSettingsWriters)
+            foreach (var writer in _context.MatchSettingsWriters)
             {
                 writer.TryWrite(matchSettings);
                 writer.TryComplete();
             }
 
-            _matchSettingsWriters.Clear();
+            _context.MatchSettingsWriters.Clear();
         }
 
         private void DistGameState(ServerMessage.DistributeGameState message)
@@ -270,30 +275,30 @@ namespace RLBotCS.Server
 
         private void MapSpawned()
         {
-            _fieldInfo = null;
-            _shouldUpdateFieldInfo = true;
-            _matchStarter.MapSpawned();
+            _context.FieldInfo = null;
+            _context.ShouldUpdateFieldInfo = true;
+            _context.MatchStarter.MapSpawned();
         }
 
         private void SessionClosed(ServerMessage.SessionClosed message)
         {
-            _sessions.Remove(message.ClientId);
+            _context.Sessions.Remove(message.ClientId);
             Console.WriteLine("Session closed.");
         }
 
         private bool StopMatch(ServerMessage.StopMatch message)
         {
-            _matchStarter.NullMatchSettings();
-            _fieldInfo = null;
-            _shouldUpdateFieldInfo = false;
+            _context.MatchStarter.NullMatchSettings();
+            _context.FieldInfo = null;
+            _context.ShouldUpdateFieldInfo = false;
 
             if (message.ShutdownServer)
             {
-                _incomingMessagesWriter.TryComplete();
+                _context.IncomingMessagesWriter.TryComplete();
                 return true;
             }
 
-            StopSessions();
+            _context.StopSessions();
             return false;
         }
     }
