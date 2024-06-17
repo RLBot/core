@@ -19,14 +19,14 @@ ChannelWriter<IServerMessage> serverWriter = serverChannel.Writer;
 Thread rlbotServer = new Thread(() =>
 {
     MatchStarter matchStarter = new MatchStarter(bridgeWriter, gamePort);
-    FlatbufferServer flatbufferServer = new FlatbufferServer(
+    FlatBuffersServer flatBuffersServer = new(
         Launcher.RLBotSocketsPort,
         serverChannel,
         matchStarter,
         bridgeWriter
     );
-    flatbufferServer.BlockingRun();
-    flatbufferServer.Cleanup();
+    flatBuffersServer.BlockingRun();
+    flatBuffersServer.Cleanup();
 });
 rlbotServer.Start();
 
