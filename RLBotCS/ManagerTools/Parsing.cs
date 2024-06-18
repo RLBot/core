@@ -2,7 +2,7 @@
 using Tomlyn;
 using Tomlyn.Model;
 
-namespace MatchManagement
+namespace RLBotCS.ManagerTools
 {
     public class ConfigParser
     {

@@ -1,4 +1,5 @@
-﻿using RLBotSecret.Models.Command;
+﻿using System.Drawing;
+using RLBotSecret.Models.Command;
 using RLBotSecret.Models.Control;
 using RLBotSecret.Models.Phys;
 
@@ -39,6 +40,21 @@ namespace RLBotSecret.Conversion
                 y = vec.Y,
                 z = vec.Z
             };
+        }
+
+        internal static Vector3 ToVectorFromT(rlbot.flat.Vector3T vec)
+        {
+            return new Vector3()
+            {
+                x = vec.X,
+                y = vec.Y,
+                z = vec.Z
+            };
+        }
+
+        internal static Color ToColor(rlbot.flat.ColorT c)
+        {
+            return Color.FromArgb(c.A, c.R, c.G, c.B);
         }
 
         internal static Rotator ToRotator(rlbot.flat.Rotator r)

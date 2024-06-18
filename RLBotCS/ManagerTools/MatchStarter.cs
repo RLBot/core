@@ -5,7 +5,7 @@ using RLBotCS.Server;
 using RLBotSecret.Models.Message;
 using ConsoleCommand = RLBotCS.Server.ConsoleCommand;
 
-namespace RLBotCS.GameControl
+namespace RLBotCS.ManagerTools
 {
     internal class MatchStarter
     {
@@ -47,10 +47,10 @@ namespace RLBotCS.GameControl
 
         public void StartMatch(MatchSettingsT matchSettings)
         {
-            if (!MatchManagement.Launcher.IsRocketLeagueRunning())
+            if (!ManagerTools.Launching.IsRocketLeagueRunning())
             {
                 communicationStarted = false;
-                MatchManagement.Launcher.LaunchRocketLeague(matchSettings.Launcher, _gamePort);
+                ManagerTools.Launching.LaunchRocketLeague(matchSettings.Launcher, _gamePort);
             }
 
             if (!communicationStarted)
@@ -101,8 +101,8 @@ namespace RLBotCS.GameControl
 
             if (matchSettings.AutoStartBots)
             {
-                MatchManagement.Launcher.LaunchBots(matchSettings.PlayerConfigurations);
-                MatchManagement.Launcher.LaunchScripts(matchSettings.ScriptConfigurations);
+                ManagerTools.Launching.LaunchBots(matchSettings.PlayerConfigurations);
+                ManagerTools.Launching.LaunchScripts(matchSettings.ScriptConfigurations);
             }
 
             LoadMatch(matchSettings);
@@ -304,9 +304,7 @@ namespace RLBotCS.GameControl
                             skillEnum = BotSkill.Medium;
                         }
 
-                        _bridge.TryWrite(
-                            new SpawnBot(playerConfig, skillEnum, (uint)(i - indexOffset), false)
-                        );
+                        _bridge.TryWrite(new SpawnBot(playerConfig, skillEnum, (uint)(i - indexOffset), false));
 
                         break;
                     case PlayerClass.Human:
