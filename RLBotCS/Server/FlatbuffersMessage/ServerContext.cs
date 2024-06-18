@@ -1,8 +1,7 @@
 ﻿using System.Net.Sockets;
 using System.Threading.Channels;
 using rlbot.flat;
-using RLBotCS.GameControl;
-using RLBotCS.MatchManagement;
+using RLBotCS.ManagerTools;
 
 namespace RLBotCS.Server.FlatbuffersMessage;
 
@@ -25,7 +24,7 @@ internal class ServerContext(
     public MatchStarter MatchStarter { get; } = matchStarter;
     public ChannelWriter<IBridgeMessage> Bridge { get; } = bridge;
 
-    public BallPredictor BallPredictor = new BallPredictor(PredictionMode.STANDARD);
+    public PredictionMode? PredictionMode { get; set; }
     public bool StateSettingIsEnabled = false;
     public bool RenderingIsEnabled = false;
 }

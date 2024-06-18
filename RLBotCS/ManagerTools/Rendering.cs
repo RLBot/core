@@ -3,13 +3,12 @@ using RLBotSecret.Controller;
 using RLBotSecret.Conversion;
 using RLBotSecret.TCP;
 
-namespace RLBotCS.MatchManagement
+namespace RLBotCS.ManagerTools
 {
     public class Rendering
     {
         private readonly RenderingSender _renderingSender;
-        private Dictionary<int, Dictionary<int, List<ushort>>> _clientRenderTracker =
-            new Dictionary<int, Dictionary<int, List<ushort>>>();
+        private Dictionary<int, Dictionary<int, List<ushort>>> _clientRenderTracker = [];
 
         public Rendering(TcpMessenger tcpMessenger)
         {
@@ -18,51 +17,61 @@ namespace RLBotCS.MatchManagement
 
         private ushort? RenderItem(RenderTypeUnion renderItem)
         {
-            switch (renderItem.Type)
+            return renderItem.Value switch
             {
-                case RenderType.Line3D:
-                    var line3D = renderItem.AsLine3D();
-
-                    return _renderingSender.AddLine3D(
-                        FlatToModel.ToVectorFromT(line3D.Start),
-                        FlatToModel.ToVectorFromT(line3D.End),
-                        FlatToModel.ToColor(line3D.Color)
-                    );
-                case RenderType.PolyLine3D:
-                    var polyLine3D = renderItem.AsPolyLine3D();
-
-                    return _renderingSender.AddLine3DSeries(
-                        polyLine3D.Points.Select(FlatToModel.ToVectorFromT).ToList(),
-                        FlatToModel.ToColor(polyLine3D.Color)
-                    );
-                case RenderType.String2D:
-                    var string2D = renderItem.AsString2D();
-
-                    return _renderingSender.AddText2D(
-                        string2D.Text,
-                        string2D.X,
-                        string2D.Y,
-                        FlatToModel.ToColor(string2D.Foreground),
-                        FlatToModel.ToColor(string2D.Background),
-                        (byte)string2D.HAlign,
-                        (byte)string2D.VAlign,
-                        string2D.Scale
-                    );
-                case RenderType.String3D:
-                    var string3D = renderItem.AsString3D();
-
-                    return _renderingSender.AddText3D(
-                        string3D.Text,
-                        FlatToModel.ToVectorFromT(string3D.Position),
-                        FlatToModel.ToColor(string3D.Foreground),
-                        FlatToModel.ToColor(string3D.Background),
-                        (byte)string3D.HAlign,
-                        (byte)string3D.VAlign,
-                        string3D.Scale
-                    );
-                default:
-                    return null;
-            }
+                Line3DT { Start: var start, End: var end, Color: var color }
+                    => _renderingSender.AddLine3D(
+                        FlatToModel.ToVectorFromT(start),
+                        FlatToModel.ToVectorFromT(end),
+                        FlatToModel.ToColor(color)
+                    ),
+                PolyLine3DT { Points: var points, Color: var color }
+                    => _renderingSender.AddLine3DSeries(
+                        points.Select(FlatToModel.ToVectorFromT).ToList(),
+                        FlatToModel.ToColor(color)
+                    ),
+                String2DT
+                {
+                    Text: var text,
+                    X: var x,
+                    Y: var y,
+                    Foreground: var foreground,
+                    Background: var background,
+                    HAlign: var hAlign,
+                    VAlign: var vAlign,
+                    Scale: var scale
+                }
+                    => _renderingSender.AddText2D(
+                        text,
+                        x,
+                        y,
+                        FlatToModel.ToColor(foreground),
+                        FlatToModel.ToColor(background),
+                        (byte)hAlign,
+                        (byte)vAlign,
+                        scale
+                    ),
+                String3DT
+                {
+                    Text: var text,
+                    Position: var position,
+                    Foreground: var foreground,
+                    Background: var background,
+                    HAlign: var hAlign,
+                    VAlign: var vAlign,
+                    Scale: var scale
+                }
+                    => _renderingSender.AddText3D(
+                        text,
+                        FlatToModel.ToVectorFromT(position),
+                        FlatToModel.ToColor(foreground),
+                        FlatToModel.ToColor(background),
+                        (byte)hAlign,
+                        (byte)vAlign,
+                        scale
+                    ),
+                _ => null
+            };
         }
 
         public void AddRenderGroup(int clientId, int renderId, List<RenderMessageT> renderItems)

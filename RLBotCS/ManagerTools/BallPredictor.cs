@@ -2,32 +2,32 @@ using System.Runtime.InteropServices;
 using rlbot.flat;
 using RLBotSecret.Packet;
 
-namespace RLBotCS.MatchManagement
+namespace RLBotCS.ManagerTools
 {
     [StructLayout(LayoutKind.Sequential)]
     struct Vec3
     {
-        public float x;
-        public float y;
-        public float z;
+        public float X;
+        public float Y;
+        public float Z;
     }
 
     [StructLayout(LayoutKind.Sequential)]
     struct BallSlice
     {
-        public float time;
-        public Vec3 location;
-        public Vec3 linear_velocity;
-        public Vec3 angular_velocity;
+        public float Time;
+        public Vec3 Location;
+        public Vec3 LinearVelocity;
+        public Vec3 AngulrVelocity;
     }
 
     public enum PredictionMode
     {
-        STANDARD,
-        HEATSEEKER,
-        DROPSHOT,
-        HOOPS,
-        STANDARD_THROWBACK,
+        Standard,
+        Heatseeker,
+        Dropshot,
+        Hoops,
+        StandardThrowback,
     }
 
     public partial class BallPredictor
@@ -57,9 +57,9 @@ namespace RLBotCS.MatchManagement
         {
             return new Vec3
             {
-                x = vec.x,
-                y = vec.y,
-                z = vec.z
+                X = vec.x,
+                Y = vec.y,
+                Z = vec.z
             };
         }
 
@@ -67,81 +67,63 @@ namespace RLBotCS.MatchManagement
         {
             return new Vector3T()
             {
-                X = vec.x,
-                Y = vec.y,
-                Z = vec.z
+                X = vec.X,
+                Y = vec.Y,
+                Z = vec.Z
             };
         }
 
-        private PredictionMode? _mode = null;
-
-        public BallPredictor(PredictionMode mode)
+        public static void SetMode(PredictionMode mode)
         {
-            SetMode(mode);
-        }
-
-        private void SetMode(PredictionMode mode)
-        {
-            if (_mode == mode)
+            switch (mode)
             {
-                return;
-            }
-
-            _mode = mode;
-
-            switch (_mode)
-            {
-                case PredictionMode.STANDARD:
+                case PredictionMode.Standard:
                     LoadStandard();
                     break;
-                case PredictionMode.HEATSEEKER:
+                case PredictionMode.Heatseeker:
                     LoadStandardHeatseeker();
                     break;
-                case PredictionMode.DROPSHOT:
+                case PredictionMode.Dropshot:
                     LoadDropshot();
                     break;
-                case PredictionMode.HOOPS:
+                case PredictionMode.Hoops:
                     LoadHoops();
                     break;
-                case PredictionMode.STANDARD_THROWBACK:
+                case PredictionMode.StandardThrowback:
                     LoadStandardThrowback();
                     break;
             }
         }
 
-        public void Sync(MatchSettingsT matchSettings)
+        public static PredictionMode Sync(MatchSettingsT matchSettings)
         {
-            PredictionMode mode = PredictionMode.STANDARD;
-
-            switch (matchSettings.GameMode)
-            {
-                case GameMode.Dropshot:
-                    mode = PredictionMode.DROPSHOT;
-                    break;
-                case GameMode.Hoops:
-                    mode = PredictionMode.HOOPS;
-                    break;
-                case GameMode.Heatseeker:
-                    mode = PredictionMode.HEATSEEKER;
-                    break;
-            }
-
             if (matchSettings.GameMapUpk.Contains("Throwback"))
             {
-                mode = PredictionMode.STANDARD_THROWBACK;
+                return PredictionMode.StandardThrowback;
             }
 
-            SetMode(mode);
+            return matchSettings.GameMode switch
+            {
+                GameMode.Dropshot => PredictionMode.Dropshot,
+                GameMode.Hoops => PredictionMode.Hoops,
+                GameMode.Heatseeker => PredictionMode.Heatseeker,
+                _ => PredictionMode.Standard,
+            };
         }
 
-        public BallPredictionT Generate(float time, Ball current_ball)
+        public static BallPredictionT Generate(PredictionMode? mode, float time, Ball current_ball)
         {
+            if (mode == null)
+            {
+                return new BallPredictionT();
+            }
+
             BallSlice ball = new BallSlice
             {
-                time = time,
-                location = ToVec3(current_ball.Physics.location),
-                linear_velocity = ToVec3(current_ball.Physics.velocity),
-                angular_velocity = ToVec3(current_ball.Physics.angularVelocity)
+                Time = time,
+                Location = ToVec3(current_ball.Physics.location),
+                LinearVelocity = ToVec3(current_ball.Physics.velocity),
+                AngulrVelocity = ToVec3(current_ball.Physics.angularVelocity)
             };
 
             int numSeconds = 8;
@@ -152,7 +134,7 @@ namespace RLBotCS.MatchManagement
                 Slices = new List<PredictionSliceT>(numSlices)
             };
 
-            if (_mode == PredictionMode.HEATSEEKER)
+            if (mode == PredictionMode.Heatseeker)
             {
                 // Target goal is the opposite of the last touch
                 SetHeatseekerTarget(current_ball.LatestTouch.Team == 0 ? (byte)1 : (byte)0);
@@ -164,12 +146,12 @@ namespace RLBotCS.MatchManagement
 
                 PredictionSliceT slice = new PredictionSliceT()
                 {
-                    GameSeconds = ball.time,
+                    GameSeconds = ball.Time,
                     Physics = new PhysicsT()
                     {
-                        Location = ToVector3T(ball.location),
-                        Velocity = ToVector3T(ball.linear_velocity),
-                        AngularVelocity = ToVector3T(ball.angular_velocity)
+                        Location = ToVector3T(ball.Location),
+                        Velocity = ToVector3T(ball.LinearVelocity),
+                        AngularVelocity = ToVector3T(ball.AngulrVelocity)
                     }
                 };
 

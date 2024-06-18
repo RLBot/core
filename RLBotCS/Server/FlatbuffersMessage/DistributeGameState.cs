@@ -1,6 +1,6 @@
 ﻿using rlbot.flat;
+using RLBotCS.ManagerTools;
 using RLBotSecret.Models.Message;
-using RLBotSecret.Packet;
 using RLBotSecret.State;
 using GoalInfo = RLBotSecret.Packet.GoalInfo;
 
@@ -73,7 +73,11 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
 
     private void DistributeBallPrediction(ServerContext context, GameState gameState)
     {
-        BallPredictionT prediction = context.BallPredictor.Generate(gameState.SecondsElapsed, gameState.Ball);
+        BallPredictionT prediction = BallPredictor.Generate(
+            context.PredictionMode,
+            gameState.SecondsElapsed,
+            gameState.Ball
+        );
 
         foreach (var (writer, _) in context.Sessions.Values)
         {

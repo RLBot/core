@@ -1,4 +1,5 @@
 ﻿using rlbot.flat;
+using RLBotCS.ManagerTools;
 
 namespace RLBotCS.Server.FlatbuffersMessage;
 
@@ -10,7 +11,13 @@ internal record StartMatch(MatchSettingsT MatchSettings) : IServerMessage
         context.StateSettingIsEnabled = MatchSettings.EnableStateSetting;
 
         context.MatchStarter.StartMatch(MatchSettings);
-        context.BallPredictor.Sync(MatchSettings);
+
+        var newMode = BallPredictor.Sync(MatchSettings);
+        if (newMode != context.PredictionMode)
+        {
+            BallPredictor.SetMode(newMode);
+            context.PredictionMode = newMode;
+        }
 
         // update all sessions with the new rendering and state setting settings
         foreach (var (writer, _) in context.Sessions.Values)

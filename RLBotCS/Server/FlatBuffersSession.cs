@@ -1,9 +1,9 @@
 using System.Net.Sockets;
 using System.Threading.Channels;
 using Google.FlatBuffers;
-using MatchManagement;
 using rlbot.flat;
 using RLBotCS.Conversion;
+using RLBotCS.ManagerTools;
 using RLBotCS.Server.FlatbuffersMessage;
 using RLBotSecret.Types;
 
@@ -33,11 +33,11 @@ internal class FlatBuffersSession
     private ChannelWriter<IServerMessage> _rlbotServer;
     private ChannelWriter<IBridgeMessage> _bridge;
 
-    private bool _isReady = false;
-    private bool _wantsBallPredictions = false;
-    private bool _wantsGameMessages = false;
-    private bool _wantsComms = false;
-    private bool _closeAfterMatch = false;
+    private bool _isReady;
+    private bool _wantsBallPredictions;
+    private bool _wantsGameMessages;
+    private bool _wantsComms;
+    private bool _closeAfterMatch;
     private bool _stateSettingIsEnabled;
     private bool _renderingIsEnabled;
 
@@ -211,6 +211,12 @@ internal class FlatBuffersSession
                     break;
                 case SessionMessage.DistributeGameState m when _isReady:
                     await SendPayloadToClientAsync(m.GameState.ToFlatbuffer(_builder));
+                    break;
+                case SessionMessage.RendersAllowed m:
+                    _renderingIsEnabled = m.Allowed;
+                    break;
+                case SessionMessage.StateSettingAllowed m:
+                    _stateSettingIsEnabled = m.Allowed;
                     break;
                 case SessionMessage.StopMatch when _isReady && _closeAfterMatch:
                     Console.WriteLine("Core got stop match message from server.");

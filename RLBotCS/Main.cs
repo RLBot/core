@@ -1,11 +1,10 @@
 ﻿using System.Threading.Channels;
-using RLBotCS.GameControl;
-using RLBotCS.MatchManagement;
+using RLBotCS.ManagerTools;
 using RLBotCS.Server;
 using RLBotCS.Server.FlatbuffersMessage;
 using RLBotSecret.TCP;
 
-int gamePort = Launcher.FindUsableGamePort();
+int gamePort = Launching.FindUsableGamePort();
 Console.WriteLine("RLBot is waiting for Rocket League to connect on port " + gamePort);
 
 // Setup the handler to use bridge to talk with the game
@@ -20,7 +19,7 @@ Thread rlbotServer = new Thread(() =>
 {
     MatchStarter matchStarter = new MatchStarter(bridgeWriter, gamePort);
     FlatBuffersServer flatBuffersServer =
-        new(Launcher.RLBotSocketsPort, serverChannel, matchStarter, bridgeWriter);
+        new(Launching.RLBotSocketsPort, serverChannel, matchStarter, bridgeWriter);
 
     try
     {

@@ -1,7 +1,7 @@
 using System.Threading.Channels;
 using rlbot.flat;
 using RLBotCS.Conversion;
-using RLBotCS.MatchManagement;
+using RLBotCS.ManagerTools;
 using RLBotCS.Server.FlatbuffersMessage;
 using RLBotSecret.Controller;
 using RLBotSecret.Conversion;
@@ -156,8 +156,6 @@ namespace RLBotCS.Server
             try
             {
                 _renderingMgmt.ClearAllRenders();
-                // TODO: try and wait for a packet to be sent back to ensure renders are cleared
-                Thread.Sleep(1000);
             }
             finally
             {

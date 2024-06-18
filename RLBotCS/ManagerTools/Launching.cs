@@ -4,9 +4,9 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 
-namespace RLBotCS.MatchManagement
+namespace RLBotCS.ManagerTools
 {
-    internal class Launcher
+    internal class Launching
     {
         public static string SteamGameId = "252950";
         public static int RLBotSocketsPort = 23234;
