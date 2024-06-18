@@ -1,4 +1,5 @@
 ﻿using rlbot.flat;
+using System.Runtime.InteropServices;
 using Tomlyn;
 using Tomlyn.Model;
 
@@ -163,6 +164,29 @@ namespace RLBotCS.ManagerTools
             }
         }
 
+        public static string GetRunCommand(TomlTable runnableSettings)
+        {
+            string? RunCommandWindows = ParseString(runnableSettings, "run_command", null);
+            string? RunCommandLinux = ParseString(runnableSettings, "run_command_linux", null);
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return RunCommandWindows ?? "";
+            }
+            else if (RunCommandLinux != null)
+            {
+                return RunCommandLinux;
+            }
+            else
+            {
+                // TODO:
+                // We're currently on Linux but there's no Linux-specific run command
+                // Try running the Windows command under Wine instead
+                Console.WriteLine("Warning! No Linux-specific run command found for script!");
+                return RunCommandWindows ?? "";
+            }
+        }
+
         private static ScriptConfigurationT GetScriptConfig(TomlTable scriptTable, string playerTomlPath)
         {
             string? scriptTomlPath = ParseString(scriptTable, "config", null);
@@ -173,7 +197,7 @@ namespace RLBotCS.ManagerTools
                 new()
                 {
                     Location = CombinePaths(tomlParent, ParseString(scriptToml, "location", "")),
-                    RunCommand = ParseString(scriptToml, "run_command", "")
+                    RunCommand = GetRunCommand(scriptToml)
                 };
             return scriptConfig;
         }
@@ -286,7 +310,7 @@ namespace RLBotCS.ManagerTools
                     Team = ParseUint(rlbotPlayerTable, "team", 0),
                     Name = ParseString(playerSettings, "name", "Unnamed RLBot"),
                     Location = CombinePaths(tomlParent, ParseString(playerSettings, "location", "")),
-                    RunCommand = ParseString(playerSettings, "run_command", ""),
+                    RunCommand = GetRunCommand(playerSettings),
                     Loadout = new PlayerLoadoutT()
                     {
                         TeamColorId = ParseUint(teamLoadout, "team_color_id", 0),
