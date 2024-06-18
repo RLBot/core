@@ -18,7 +18,7 @@ namespace RLBotCS.ManagerTools
         public float Time;
         public Vec3 Location;
         public Vec3 LinearVelocity;
-        public Vec3 AngulrVelocity;
+        public Vec3 AngularVelocity;
     }
 
     public enum PredictionMode
@@ -123,7 +123,7 @@ namespace RLBotCS.ManagerTools
                 Time = time,
                 Location = ToVec3(current_ball.Physics.location),
                 LinearVelocity = ToVec3(current_ball.Physics.velocity),
-                AngulrVelocity = ToVec3(current_ball.Physics.angularVelocity)
+                AngularVelocity = ToVec3(current_ball.Physics.angularVelocity)
             };
 
             int numSeconds = 8;
@@ -151,7 +151,7 @@ namespace RLBotCS.ManagerTools
                     {
                         Location = ToVector3T(ball.Location),
                         Velocity = ToVector3T(ball.LinearVelocity),
-                        AngularVelocity = ToVector3T(ball.AngulrVelocity)
+                        AngularVelocity = ToVector3T(ball.AngularVelocity)
                     }
                 };
 
