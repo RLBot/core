@@ -5,3 +5,5 @@ echo Generating flatbuffers header file...
 # the file produced is called rlbot_generated.cs, rename it to rlbot.cs after removing the old one
 rm -f ./RLBotCS/FlatBuffer/rlbot.cs
 mv ./RLBotCS/FlatBuffer/rlbot_generated.cs ./RLBotCS/FlatBuffer/rlbot.cs
+
+echo Done.

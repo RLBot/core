@@ -3,8 +3,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
-using System.Management;
-using System;
 
 namespace RLBotCS.ManagerTools
 {
@@ -23,22 +21,15 @@ namespace RLBotCS.ManagerTools
             // search cmd line args for port
             foreach (var candidate in candidates)
             {
-                //string[] args = candidate.StartInfo.Arguments.Split(' ');
-                using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("SELECT CommandLine FROM Win32_Process WHERE ProcessId = " + candidate.Id))
-                using (ManagementObjectCollection objects = searcher.Get())
+                string[] args = GetProcessArgs(candidate);
+
+                foreach (var arg in args)
                 {
-                    Console.WriteLine("Welcome R0bbie");
-                    var args = objects.Cast<ManagementBaseObject>().SingleOrDefault()?["CommandLine"]?.ToString().Split(" ");
-                    
-                    foreach (var arg in args)
+                    if (arg.Contains("RLBot_ControllerURL"))
                     {
-                        Console.WriteLine(arg);
-                        if (arg.Contains("RLBot_ControllerURL"))
-                        {
-                            string[] parts = arg.Split(':');
-                            var port = parts[parts.Length - 1].TrimEnd('"');
-                            return int.Parse(port);
-                        }
+                        string[] parts = arg.Split(':');
+                        var port = parts[parts.Length - 1].TrimEnd('"');
+                        return int.Parse(port);
                     }
                 }
             }
@@ -68,6 +59,29 @@ namespace RLBotCS.ManagerTools
             return DefaultGamePort;
         }
 
+        public static string[] GetProcessArgs(Process process)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                using (
+                    var searcher = new System.Management.ManagementObjectSearcher(
+                        "SELECT CommandLine FROM Win32_Process WHERE ProcessId = " + process.Id
+                    )
+                )
+                using (var objects = searcher.Get())
+                {
+                    return objects
+                        .Cast<System.Management.ManagementBaseObject>()
+                        .SingleOrDefault()
+                        ?["CommandLine"]?.ToString()
+                        .Split(" ");
+                }
+            }
+            else
+            {
+                return process.StartInfo.Arguments.Split(' ');
+            }
+        }
 
         public static string[] GetIdealArgs(int gamePort)
         {
