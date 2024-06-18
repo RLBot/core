@@ -65,7 +65,7 @@ namespace RLBotCS.ManagerTools
             {
                 using (
                     var searcher = new System.Management.ManagementObjectSearcher(
-                        "SELECT CommandLine FROM Win32_Process WHERE ProcessId = " + process.Id
+                        $"SELECT CommandLine FROM Win32_Process WHERE ProcessId = {process.Id}"
                     )
                 )
                 using (var objects = searcher.Get())
@@ -104,13 +104,20 @@ namespace RLBotCS.ManagerTools
                     botProcess.StartInfo.WorkingDirectory = player.Location;
                 }
 
-                string[] command = player.RunCommand.Split(' ');
-                botProcess.StartInfo.FileName = command[0];
-                botProcess.StartInfo.Arguments = string.Join(" ", command[1..]);
+                try
+                {
+                    string[] commandParts = player.RunCommand.Split(' ', 2);
+                    botProcess.StartInfo.FileName = Path.Join(player.Location, commandParts[0]);
+                    botProcess.StartInfo.Arguments = commandParts[1];
 
-                botProcess.StartInfo.EnvironmentVariables["BOT_SPAWN_ID"] = player.SpawnId.ToString();
+                    botProcess.StartInfo.EnvironmentVariables["BOT_SPAWN_ID"] = player.SpawnId.ToString();
 
-                botProcess.Start();
+                    botProcess.Start();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Failed to launch bot {player.Name}: {e.Message}");
+                }
             }
         }
 
@@ -130,10 +137,18 @@ namespace RLBotCS.ManagerTools
                     scriptProcess.StartInfo.WorkingDirectory = script.Location;
                 }
 
-                string[] command = script.RunCommand.Split(' ');
-                scriptProcess.StartInfo.FileName = command[0];
-                scriptProcess.StartInfo.Arguments = string.Join(" ", command[1..]);
-                scriptProcess.Start();
+                try
+                {
+                    string[] commandParts = script.RunCommand.Split(' ', 2);
+                    scriptProcess.StartInfo.FileName = Path.Join(script.Location, commandParts[0]);
+                    scriptProcess.StartInfo.Arguments = commandParts[1];
+
+                    scriptProcess.Start();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Failed to launch script: {e.Message}");
+                }
             }
         }
 
