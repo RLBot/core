@@ -5,11 +5,11 @@ using RLBotSecret.Packet;
 namespace RLBotCS.ManagerTools
 {
     [StructLayout(LayoutKind.Sequential)]
-    struct Vec3
+    struct Vec3(float x, float y, float z)
     {
-        public float X;
-        public float Y;
-        public float Z;
+        public float X = x;
+        public float Y = y;
+        public float Z = z;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -30,7 +30,7 @@ namespace RLBotCS.ManagerTools
         StandardThrowback,
     }
 
-    public partial class BallPredictor
+    public static partial class BallPredictor
     {
         [LibraryImport("rl_ball_sym", EntryPoint = "load_standard")]
         private static partial void LoadStandard();
@@ -53,25 +53,9 @@ namespace RLBotCS.ManagerTools
         [LibraryImport("rl_ball_sym", EntryPoint = "step")]
         private static partial BallSlice Step(BallSlice ball);
 
-        private static Vec3 ToVec3(RLBotSecret.Models.Phys.Vector3 vec)
-        {
-            return new Vec3
-            {
-                X = vec.x,
-                Y = vec.y,
-                Z = vec.z
-            };
-        }
+        private static Vec3 ToVec3(RLBotSecret.Models.Phys.Vector3 vec) => new(vec.x, vec.y, vec.z);
 
-        private static Vector3T ToVector3T(Vec3 vec)
-        {
-            return new Vector3T()
-            {
-                X = vec.X,
-                Y = vec.Y,
-                Z = vec.Z
-            };
-        }
+        private static Vector3T ToVector3T(Vec3 vec) => new(vec.X, vec.Y, vec.Z);
 
         public static void SetMode(PredictionMode mode)
         {
@@ -95,12 +79,10 @@ namespace RLBotCS.ManagerTools
             }
         }
 
-        public static PredictionMode Sync(MatchSettingsT matchSettings)
+        public static PredictionMode GetMode(MatchSettingsT matchSettings)
         {
             if (matchSettings.GameMapUpk.Contains("Throwback"))
-            {
                 return PredictionMode.StandardThrowback;
-            }
 
             return matchSettings.GameMode switch
             {
@@ -111,43 +93,33 @@ namespace RLBotCS.ManagerTools
             };
         }
 
-        public static BallPredictionT Generate(PredictionMode? mode, float time, Ball current_ball)
+        public static BallPredictionT Generate(PredictionMode mode, float time, Ball currentBall)
         {
-            if (mode == null)
-            {
-                return new BallPredictionT();
-            }
-
-            BallSlice ball = new BallSlice
+            BallSlice ball = new()
             {
                 Time = time,
-                Location = ToVec3(current_ball.Physics.location),
-                LinearVelocity = ToVec3(current_ball.Physics.velocity),
-                AngularVelocity = ToVec3(current_ball.Physics.angularVelocity)
+                Location = ToVec3(currentBall.Physics.location),
+                LinearVelocity = ToVec3(currentBall.Physics.velocity),
+                AngularVelocity = ToVec3(currentBall.Physics.angularVelocity)
             };
 
-            int numSeconds = 8;
-            int numSlices = numSeconds * 120;
+            const int numSeconds = 8;
+            const int numSlices = numSeconds * 120;
 
-            BallPredictionT ballPrediction = new BallPredictionT()
-            {
-                Slices = new List<PredictionSliceT>(numSlices)
-            };
+            BallPredictionT ballPrediction = new(slices: new List<PredictionSliceT>(numSlices));
 
             if (mode == PredictionMode.Heatseeker)
-            {
                 // Target goal is the opposite of the last touch
-                SetHeatseekerTarget(current_ball.LatestTouch.Team == 0 ? (byte)1 : (byte)0);
-            }
+                SetHeatseekerTarget(currentBall.LatestTouch.Team == 0 ? (byte)1 : (byte)0);
 
             for (int i = 0; i < numSlices; i++)
             {
                 ball = Step(ball);
 
-                PredictionSliceT slice = new PredictionSliceT()
+                PredictionSliceT slice = new()
                 {
                     GameSeconds = ball.Time,
-                    Physics = new PhysicsT()
+                    Physics = new PhysicsT
                     {
                         Location = ToVector3T(ball.Location),
                         Velocity = ToVector3T(ball.LinearVelocity),

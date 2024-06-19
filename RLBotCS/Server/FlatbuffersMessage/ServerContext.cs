@@ -24,7 +24,7 @@ internal class ServerContext(
     public MatchStarter MatchStarter { get; } = matchStarter;
     public ChannelWriter<IBridgeMessage> Bridge { get; } = bridge;
 
-    public PredictionMode? PredictionMode { get; set; }
+    public PredictionMode PredictionMode { get; set; }
     public bool StateSettingIsEnabled = false;
     public bool RenderingIsEnabled = false;
 }

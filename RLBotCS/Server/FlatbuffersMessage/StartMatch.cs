@@ -12,7 +12,7 @@ internal record StartMatch(MatchSettingsT MatchSettings) : IServerMessage
 
         context.MatchStarter.StartMatch(MatchSettings);
 
-        var newMode = BallPredictor.Sync(MatchSettings);
+        var newMode = BallPredictor.GetMode(MatchSettings);
         if (newMode != context.PredictionMode)
         {
             BallPredictor.SetMode(newMode);
