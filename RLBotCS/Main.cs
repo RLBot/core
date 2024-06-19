@@ -61,25 +61,19 @@ void WaitForShutdown()
     Console.WriteLine("Bridge handler has shut down successfully.");
 }
 
-// Catch sudden termination to clean up the server
-AppDomain.CurrentDomain.ProcessExit += (_, _) =>
+void Terminate()
 {
     Console.WriteLine("Core is shutting down...");
     serverWriter.TryComplete();
-
     WaitForShutdown();
     Console.WriteLine("Core has shut down successfully.");
-};
+}
+
+// Catch sudden termination to clean up the server
+AppDomain.CurrentDomain.ProcessExit += (_, _) => Terminate();
 
 // Catch Ctrl+C to clean up the server
-Console.CancelKeyPress += (_, _) =>
-{
-    Console.WriteLine("Core is shutting down...");
-    serverWriter.TryComplete();
-
-    WaitForShutdown();
-    Console.WriteLine("Core has shut down successfully.");
-};
+Console.CancelKeyPress += (_, _) => Terminate();
 
 // Wait for a normal shutdown
 WaitForShutdown();
