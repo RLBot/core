@@ -1,7 +1,6 @@
 using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotSecret.Controller;
-using RLBotSecret.Conversion;
 using RLBotSecret.TCP;
 
 namespace RLBotCS.ManagerTools;

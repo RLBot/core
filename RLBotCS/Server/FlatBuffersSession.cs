@@ -24,14 +24,14 @@ internal record SessionMessage
 
 internal class FlatBuffersSession
 {
-    private TcpClient _client;
-    private int _clientId;
-    private SocketSpecStreamReader _socketSpecReader;
-    private SocketSpecStreamWriter _socketSpecWriter;
+    private readonly TcpClient _client;
+    private readonly int _clientId;
+    private readonly SocketSpecStreamReader _socketSpecReader;
+    private readonly SocketSpecStreamWriter _socketSpecWriter;
 
-    private ChannelReader<SessionMessage> _incomingMessages;
-    private ChannelWriter<IServerMessage> _rlbotServer;
-    private ChannelWriter<IBridgeMessage> _bridge;
+    private readonly ChannelReader<SessionMessage> _incomingMessages;
+    private readonly ChannelWriter<IServerMessage> _rlbotServer;
+    private readonly ChannelWriter<IBridgeMessage> _bridge;
 
     private bool _isReady;
     private bool _wantsBallPredictions;
@@ -41,7 +41,7 @@ internal class FlatBuffersSession
     private bool _stateSettingIsEnabled;
     private bool _renderingIsEnabled;
 
-    private FlatBufferBuilder _builder = new(1024);
+    private readonly FlatBufferBuilder _builder = new(1024);
 
     public FlatBuffersSession(
         TcpClient client,
@@ -140,9 +140,7 @@ internal class FlatBuffersSession
 
             case DataType.MatchComms:
                 if (!_wantsComms)
-                {
                     break;
-                }
 
                 var matchComms = MatchComm.GetRootAsMatchComm(byteBuffer).UnPack();
                 // todo: send to server to send to other clients
@@ -151,9 +149,7 @@ internal class FlatBuffersSession
 
             case DataType.RenderGroup:
                 if (!_renderingIsEnabled)
-                {
                     break;
-                }
 
                 var renderingGroup = RenderGroup.GetRootAsRenderGroup(byteBuffer).UnPack();
                 _bridge.TryWrite(new AddRenders(_clientId, renderingGroup.Id, renderingGroup.RenderMessages));
@@ -162,9 +158,7 @@ internal class FlatBuffersSession
 
             case DataType.RemoveRenderGroup:
                 if (!_renderingIsEnabled)
-                {
                     break;
-                }
 
                 var removeRenderGroup = RemoveRenderGroup.GetRootAsRemoveRenderGroup(byteBuffer).UnPack();
                 _bridge.TryWrite(new RemoveRenders(_clientId, removeRenderGroup.Id));
@@ -172,9 +166,7 @@ internal class FlatBuffersSession
 
             case DataType.DesiredGameState:
                 if (!_stateSettingIsEnabled)
-                {
                     break;
-                }
 
                 var desiredGameState = DesiredGameState.GetRootAsDesiredGameState(byteBuffer).UnPack();
                 // _gameController.MatchStarter.SetDesiredGameState(desiredGameState);
@@ -182,6 +174,14 @@ internal class FlatBuffersSession
 
                 break;
 
+            case DataType.GameTickPacket:
+                break;
+            case DataType.FieldInfo:
+                break;
+            case DataType.BallPrediction:
+                break;
+            case DataType.MessagePacket:
+                break;
             default:
                 Console.WriteLine("Core got unexpected message type {0} from client.", message.Type);
                 break;

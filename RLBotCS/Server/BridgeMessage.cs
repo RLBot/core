@@ -12,6 +12,12 @@ internal record Input(PlayerInput PlayerInput) : IBridgeMessage
 {
     public void HandleMessage(BridgeHandler handler)
     {
+        if (PlayerInput.ControllerState == null)
+        {
+            Console.WriteLine("Received input with null ControllerState from index {0}", PlayerInput.PlayerIndex);
+            return;
+        }
+
         CarInput carInput = FlatToModel.ToCarInput(PlayerInput.ControllerState.Value);
         ushort? actorId = handler.PlayerMapping.ActorIdFromPlayerIndex(PlayerInput.PlayerIndex);
 
@@ -84,19 +90,19 @@ internal record SpawnMap(MatchSettingsT MatchSettings) : IBridgeMessage
     public void HandleMessage(BridgeHandler handler) => handler.SpawnMap(MatchSettings);
 }
 
-internal record AddRenders(int clientId, int renderId, List<RenderMessageT> renderItems) : IBridgeMessage
+internal record AddRenders(int ClientId, int RenderId, List<RenderMessageT> RenderItems) : IBridgeMessage
 {
-    public void HandleMessage(BridgeHandler handler) => handler.AddRenderGroup(clientId, renderId, renderItems);
+    public void HandleMessage(BridgeHandler handler) => handler.AddRenderGroup(ClientId, RenderId, RenderItems);
 }
 
-internal record RemoveRenders(int clientId, int renderId) : IBridgeMessage
+internal record RemoveRenders(int ClientId, int RenderId) : IBridgeMessage
 {
-    public void HandleMessage(BridgeHandler handler) => handler.RemoveRenderGroup(clientId, renderId);
+    public void HandleMessage(BridgeHandler handler) => handler.RemoveRenderGroup(ClientId, RenderId);
 }
 
-internal record RemoveClientRenders(int clientId) : IBridgeMessage
+internal record RemoveClientRenders(int ClientId) : IBridgeMessage
 {
-    public void HandleMessage(BridgeHandler handler) => handler.ClearClientRenders(clientId);
+    public void HandleMessage(BridgeHandler handler) => handler.ClearClientRenders(ClientId);
 }
 
 internal record Stop : IBridgeMessage
