@@ -71,7 +71,7 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
         context.FieldInfoWriters.Clear();
     }
 
-    private void DistributeBallPrediction(ServerContext context, GameState gameState)
+    private static void DistributeBallPrediction(ServerContext context, GameState gameState)
     {
         BallPredictionT prediction = BallPredictor.Generate(
             context.PredictionMode,

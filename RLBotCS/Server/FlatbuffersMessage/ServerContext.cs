@@ -6,12 +6,12 @@ using RLBotCS.ManagerTools;
 namespace RLBotCS.Server.FlatbuffersMessage;
 
 internal class ServerContext(
-    Channel<IServerMessage> incomingMessages,
+    Channel<IServerMessage, IServerMessage> incomingMessages,
     MatchStarter matchStarter,
     ChannelWriter<IBridgeMessage> bridge
 )
 {
-    public TcpListener? Server { get; set; }
+    public TcpListener? Server { get; init; }
     public ChannelReader<IServerMessage> IncomingMessages { get; } = incomingMessages.Reader;
     public ChannelWriter<IServerMessage> IncomingMessagesWriter { get; } = incomingMessages.Writer;
     public Dictionary<int, (ChannelWriter<SessionMessage> writer, Thread thread)> Sessions { get; } = [];

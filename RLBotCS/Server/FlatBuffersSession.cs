@@ -210,7 +210,7 @@ internal class FlatBuffersSession
                     );
                     break;
                 case SessionMessage.DistributeGameState m when _isReady:
-                    await SendPayloadToClientAsync(m.GameState.ToFlatbuffer(_builder));
+                    await SendPayloadToClientAsync(m.GameState.ToFlatBuffers(_builder));
                     break;
                 case SessionMessage.RendersAllowed m:
                     _renderingIsEnabled = m.Allowed;
