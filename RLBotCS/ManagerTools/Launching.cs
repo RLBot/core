@@ -21,14 +21,15 @@ namespace RLBotCS.ManagerTools
             // search cmd line args for port
             foreach (var candidate in candidates)
             {
-                string[] args = candidate.StartInfo.Arguments.Split(' ');
+                string[] args = GetProcessArgs(candidate);
 
                 foreach (var arg in args)
                 {
                     if (arg.Contains("RLBot_ControllerURL"))
                     {
                         string[] parts = arg.Split(':');
-                        return int.Parse(parts[parts.Length - 1]);
+                        var port = parts[parts.Length - 1].TrimEnd('"');
+                        return int.Parse(port);
                     }
                 }
             }
@@ -58,6 +59,30 @@ namespace RLBotCS.ManagerTools
             return DefaultGamePort;
         }
 
+        public static string[] GetProcessArgs(Process process)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                using (
+                    var searcher = new System.Management.ManagementObjectSearcher(
+                        $"SELECT CommandLine FROM Win32_Process WHERE ProcessId = {process.Id}"
+                    )
+                )
+                using (var objects = searcher.Get())
+                {
+                    return objects
+                        .Cast<System.Management.ManagementBaseObject>()
+                        .SingleOrDefault()
+                        ?["CommandLine"]?.ToString()
+                        .Split(" ");
+                }
+            }
+            else
+            {
+                return process.StartInfo.Arguments.Split(' ');
+            }
+        }
+
         public static string[] GetIdealArgs(int gamePort)
         {
             return ["-rlbot", $"RLBot_ControllerURL=127.0.0.1:{gamePort}", "RLBot_PacketSendRate=240", "-nomovie"];
@@ -79,13 +104,20 @@ namespace RLBotCS.ManagerTools
                     botProcess.StartInfo.WorkingDirectory = player.Location;
                 }
 
-                string[] command = player.RunCommand.Split(' ');
-                botProcess.StartInfo.FileName = command[0];
-                botProcess.StartInfo.Arguments = string.Join(" ", command[1..]);
+                try
+                {
+                    string[] commandParts = player.RunCommand.Split(' ', 2);
+                    botProcess.StartInfo.FileName = Path.Join(player.Location, commandParts[0]);
+                    botProcess.StartInfo.Arguments = commandParts[1];
 
-                botProcess.StartInfo.EnvironmentVariables["BOT_SPAWN_ID"] = player.SpawnId.ToString();
+                    botProcess.StartInfo.EnvironmentVariables["BOT_SPAWN_ID"] = player.SpawnId.ToString();
 
-                botProcess.Start();
+                    botProcess.Start();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Failed to launch bot {player.Name}: {e.Message}");
+                }
             }
         }
 
@@ -105,10 +137,18 @@ namespace RLBotCS.ManagerTools
                     scriptProcess.StartInfo.WorkingDirectory = script.Location;
                 }
 
-                string[] command = script.RunCommand.Split(' ');
-                scriptProcess.StartInfo.FileName = command[0];
-                scriptProcess.StartInfo.Arguments = string.Join(" ", command[1..]);
-                scriptProcess.Start();
+                try
+                {
+                    string[] commandParts = script.RunCommand.Split(' ', 2);
+                    scriptProcess.StartInfo.FileName = Path.Join(script.Location, commandParts[0]);
+                    scriptProcess.StartInfo.Arguments = commandParts[1];
+
+                    scriptProcess.Start();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Failed to launch script: {e.Message}");
+                }
             }
         }
 
