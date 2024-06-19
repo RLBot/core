@@ -1,9 +1,9 @@
 ﻿using System.Drawing;
-using RLBotSecret.Models.Command;
-using RLBotSecret.Models.Control;
-using RLBotSecret.Models.Phys;
+using Bridge.Models.Command;
+using Bridge.Models.Control;
+using Bridge.Models.Phys;
 
-namespace RLBotSecret.Conversion
+namespace Bridge.Conversion
 {
     internal class FlatToModel
     {

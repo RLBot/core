@@ -1,13 +1,13 @@
 using Google.FlatBuffers;
 using rlbot.flat;
-using RLBotSecret.State;
-using RLBotSecret.Types;
-using BoxShape = RLBotSecret.Models.Message.BoxShape;
-using CollisionShape = RLBotSecret.Models.Message.CollisionShape;
+using Bridge.State;
+using Bridge.Types;
+using BoxShape = Bridge.Models.Message.BoxShape;
+using CollisionShape = Bridge.Models.Message.CollisionShape;
 using CollisionShapeUnion = rlbot.flat.CollisionShapeUnion;
-using CylinderShape = RLBotSecret.Models.Message.CylinderShape;
-using GameStateType = RLBotSecret.Models.Message.GameStateType;
-using SphereShape = RLBotSecret.Models.Message.SphereShape;
+using CylinderShape = Bridge.Models.Message.CylinderShape;
+using GameStateType = Bridge.Models.Message.GameStateType;
+using SphereShape = Bridge.Models.Message.SphereShape;
 
 namespace RLBotCS.Conversion
 {
@@ -119,7 +119,7 @@ namespace RLBotCS.Conversion
                     SecondsElapsed = gameState.SecondsElapsed,
                     GameTimeRemaining = gameState.GameTimeRemaining,
                     IsOvertime = gameState.IsOvertime,
-                    IsUnlimitedTime = gameState.MatchLength == RLBotSecret.Packet.MatchLength.Unlimited,
+                    IsUnlimitedTime = gameState.MatchLength == Bridge.Packet.MatchLength.Unlimited,
                     GameStateType = gameStateType,
                     WorldGravityZ = gameState.WorldGravityZ,
                     GameSpeed = gameState.GameSpeed,
@@ -152,11 +152,11 @@ namespace RLBotCS.Conversion
 
                 var airState = gameState.GameCars[i].AirState switch
                 {
-                    RLBotSecret.Packet.AirState.OnGround => AirState.OnGround,
-                    RLBotSecret.Packet.AirState.Jumping => AirState.Jumping,
-                    RLBotSecret.Packet.AirState.DoubleJumping => AirState.DoubleJumping,
-                    RLBotSecret.Packet.AirState.Dodging => AirState.Dodging,
-                    RLBotSecret.Packet.AirState.InAir => AirState.InAir,
+                    Bridge.Packet.AirState.OnGround => AirState.OnGround,
+                    Bridge.Packet.AirState.Jumping => AirState.Jumping,
+                    Bridge.Packet.AirState.DoubleJumping => AirState.DoubleJumping,
+                    Bridge.Packet.AirState.Dodging => AirState.Dodging,
+                    Bridge.Packet.AirState.InAir => AirState.InAir,
                     _ => AirState.OnGround,
                 };
 

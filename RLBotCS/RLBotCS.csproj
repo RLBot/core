@@ -26,8 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="RLBotSecret">
-      <HintPath>RLBotSecret.dll</HintPath>
+    <Reference Include="Bridge">
+      <HintPath>Bridge.dll</HintPath>
     </Reference>
   </ItemGroup>
 
