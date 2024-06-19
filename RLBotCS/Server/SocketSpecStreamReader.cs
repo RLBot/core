@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Net.Sockets;
-using RLBotSecret.Types;
+using Bridge.Types;
 
 namespace RLBotCS.Server
 {

@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace RLBotSecret.Conversion
+namespace Bridge.Conversion
 {
     internal class ColorSwatches
     {

@@ -44,9 +44,9 @@ The [flatbuffers-schema](https://github.com/RLBot/flatbuffers-schema) submodule 
 
 To regenerate `rlbot.cs`, you'll need to run `generate-flatbuffers.bat` or `generate-flatbuffers.sh`.
 
-### RLBotSecret
+### Bridge
 
-The `RLBotSecret.dll` file in `RLBotCS/lib` is built from a _closed-source_ repository due to legal reasons.
+The `Bridge.dll` file in `RLBotCS/lib` is built from a _closed-source_ repository due to legal reasons.
 It is maintained by RLBot developers who have signed an agreement with Psyonix to keep it private.
 
 In testing, the dll file works for building the project on not just Windows, but also Linux.
