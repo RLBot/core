@@ -1,28 +1,21 @@
-using System.Net;
-using System.Net.Sockets;
-using System.Threading.Channels;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.FlatbuffersMessage;
+using System.Net.Sockets;
+using System.Threading.Channels;
 
 namespace RLBotCS.Server;
 
-internal class FlatBuffersServer
+internal class FlatBuffersServer(
+    int rlbotPort,
+    Channel<IServerMessage, IServerMessage> incomingMessages,
+    MatchStarter matchStarter,
+    ChannelWriter<IBridgeMessage> bridge
+)
 {
-    private readonly ServerContext _context;
-
-    public FlatBuffersServer(
-        int rlbotPort,
-        Channel<IServerMessage, IServerMessage> incomingMessages,
-        MatchStarter matchStarter,
-        ChannelWriter<IBridgeMessage> bridge
-    )
+    private readonly ServerContext _context = new(incomingMessages, matchStarter, bridge)
     {
-        IPAddress rlbotClients = new(new byte[] { 0, 0, 0, 0 });
-        _context = new ServerContext(incomingMessages, matchStarter, bridge)
-        {
-            Server = new TcpListener(rlbotClients, rlbotPort)
-        };
-    }
+        Server = new TcpListener(new(new byte[] { 0, 0, 0, 0 }), rlbotPort)
+    };
 
     private void AddSession(TcpClient client)
     {
