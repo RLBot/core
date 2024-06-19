@@ -7,17 +7,17 @@ using RLBotSecret.TCP;
 int gamePort = LaunchManager.FindUsableGamePort();
 Console.WriteLine("RLBot is waiting for Rocket League to connect on port " + gamePort);
 
-// Setup the handler to use bridge to talk with the game
-Channel<IBridgeMessage> bridgeChannel = Channel.CreateUnbounded<IBridgeMessage>();
-ChannelWriter<IBridgeMessage> bridgeWriter = bridgeChannel.Writer;
+// Set up the handler to use bridge to talk with the game
+var bridgeChannel = Channel.CreateUnbounded<IBridgeMessage>();
+var bridgeWriter = bridgeChannel.Writer;
 
-// Setup the tcp server for rlbots
-Channel<IServerMessage> serverChannel = Channel.CreateUnbounded<IServerMessage>();
-ChannelWriter<IServerMessage> serverWriter = serverChannel.Writer;
+// Set up the TCP server for RLBots
+var serverChannel = Channel.CreateUnbounded<IServerMessage>();
+var serverWriter = serverChannel.Writer;
 
-Thread rlbotServer = new Thread(() =>
+Thread rlbotServer = new(() =>
 {
-    MatchStarter matchStarter = new MatchStarter(bridgeWriter, gamePort);
+    MatchStarter matchStarter = new(bridgeWriter, gamePort);
     FlatBuffersServer flatBuffersServer =
         new(LaunchManager.RlbotSocketsPort, serverChannel, matchStarter, bridgeWriter);
 
@@ -32,10 +32,10 @@ Thread rlbotServer = new Thread(() =>
 });
 rlbotServer.Start();
 
-Thread bridgeHandler = new Thread(() =>
+Thread bridgeHandler = new(() =>
 {
-    TcpMessenger tcpMessenger = new TcpMessenger(gamePort);
-    BridgeHandler bridgeHandler = new BridgeHandler(serverWriter, bridgeChannel.Reader, tcpMessenger);
+    TcpMessenger tcpMessenger = new(gamePort);
+    BridgeHandler bridgeHandler = new(serverWriter, bridgeChannel.Reader, tcpMessenger);
 
     try
     {
@@ -48,7 +48,7 @@ Thread bridgeHandler = new Thread(() =>
 });
 bridgeHandler.Start();
 
-// block until everything properly shuts down
+// Block until everything properly shuts down
 void WaitForShutdown()
 {
     rlbotServer.Join();
@@ -61,7 +61,7 @@ void WaitForShutdown()
     Console.WriteLine("Bridge handler has shut down successfully.");
 }
 
-// catch sudden termination to clean up the server
+// Catch sudden termination to clean up the server
 AppDomain.CurrentDomain.ProcessExit += (_, _) =>
 {
     Console.WriteLine("Core is shutting down...");
@@ -71,7 +71,7 @@ AppDomain.CurrentDomain.ProcessExit += (_, _) =>
     Console.WriteLine("Core has shut down successfully.");
 };
 
-// catch ctrl+c to clean up the server
+// Catch Ctrl+C to clean up the server
 Console.CancelKeyPress += (_, _) =>
 {
     Console.WriteLine("Core is shutting down...");
@@ -81,5 +81,5 @@ Console.CancelKeyPress += (_, _) =>
     Console.WriteLine("Core has shut down successfully.");
 };
 
-// wait for a normal shutdown
+// Wait for a normal shutdown
 WaitForShutdown();
