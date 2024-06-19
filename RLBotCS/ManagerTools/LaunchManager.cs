@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Management;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -20,12 +21,13 @@ internal static class LaunchManager
         // Search cmd line args for port
         foreach (var candidate in candidates)
         {
-            string[] args = candidate.StartInfo.Arguments.Split(' ');
+            string[] args = GetProcessArgs(candidate);
             foreach (var arg in args)
                 if (arg.Contains("RLBot_ControllerURL"))
                 {
                     string[] parts = arg.Split(':');
-                    return int.Parse(parts[^1]);
+                    var port = parts[^1].TrimEnd('"');
+                    return int.Parse(port);
                 }
         }
 
@@ -49,6 +51,22 @@ internal static class LaunchManager
         return DefaultGamePort;
     }
 
+    private static string[] GetProcessArgs(Process process)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            return process.StartInfo.Arguments.Split(' ');
+
+        using var searcher = new ManagementObjectSearcher(
+            $"SELECT CommandLine FROM Win32_Process WHERE ProcessId = {process.Id}"
+        );
+        using var objects = searcher.Get();
+        return objects
+            .Cast<ManagementBaseObject>()
+            .SingleOrDefault()
+            ?["CommandLine"]?.ToString()
+            .Split(" ");
+    }
+
     private static string[] GetIdealArgs(int gamePort) =>
         ["-rlbot", $"RLBot_ControllerURL=127.0.0.1:{gamePort}", "RLBot_PacketSendRate=240", "-nomovie"];
 
@@ -64,13 +82,20 @@ internal static class LaunchManager
             if (player.Location != "")
                 botProcess.StartInfo.WorkingDirectory = player.Location;
 
-            string[] command = player.RunCommand.Split(' ');
-            botProcess.StartInfo.FileName = command[0];
-            botProcess.StartInfo.Arguments = string.Join(" ", command[1..]);
+            try
+            {
+                string[] commandParts = player.RunCommand.Split(' ', 2);
+                botProcess.StartInfo.FileName = Path.Join(player.Location, commandParts[0]);
+                botProcess.StartInfo.Arguments = commandParts[1];
 
-            botProcess.StartInfo.EnvironmentVariables["BOT_SPAWN_ID"] = player.SpawnId.ToString();
+                botProcess.StartInfo.EnvironmentVariables["BOT_SPAWN_ID"] = player.SpawnId.ToString();
 
-            botProcess.Start();
+                botProcess.Start();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Failed to launch bot {player.Name}: {e.Message}");
+            }
         }
     }
 
@@ -86,10 +111,18 @@ internal static class LaunchManager
             if (script.Location != "")
                 scriptProcess.StartInfo.WorkingDirectory = script.Location;
 
-            string[] command = script.RunCommand.Split(' ');
-            scriptProcess.StartInfo.FileName = command[0];
-            scriptProcess.StartInfo.Arguments = string.Join(" ", command[1..]);
-            scriptProcess.Start();
+            try
+            {
+                string[] commandParts = script.RunCommand.Split(' ', 2);
+                scriptProcess.StartInfo.FileName = Path.Join(script.Location, commandParts[0]);
+                scriptProcess.StartInfo.Arguments = commandParts[1];
+
+                scriptProcess.Start();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Failed to launch script: {e.Message}");
+            }
         }
     }
 
@@ -135,6 +168,8 @@ internal static class LaunchManager
                 case rlbot.flat.Launcher.Custom:
                     throw new NotSupportedException("Unexpected launcher. Use Steam.");
             }
+        else
+            throw new PlatformNotSupportedException("RLBot is not supported on non-Windows/Linux platforms");
     }
 
     public static bool IsRocketLeagueRunning() => Process.GetProcesses()
