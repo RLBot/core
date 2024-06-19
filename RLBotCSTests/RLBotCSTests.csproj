@@ -19,9 +19,28 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="RLBotSecret">
-      <HintPath>..\RLBotCS\lib\RLBotSecret.dll</HintPath>
+    <Reference Include="Bridge">
+      <HintPath>..\RLBotCS\lib\Bridge.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <DirectPInvoke Include="rl_ball_sym" />
+
+    <!-- Statically linked for publishing -->
+    <NativeLibrary Include="..\RLBotCS\lib\rl_ball_sym\rl_ball_sym.lib" Condition="$(RuntimeIdentifier.StartsWith('win'))" />
+    <NativeLibrary Include="../RLBotCS/lib/rl_ball_sym/librl_ball_sym.a" Condition="!$(RuntimeIdentifier.StartsWith('win'))" />
+
+    <!-- Dynamically linked for development -->
+    <ContentWithTargetPath Include="..\RLBotCS\lib\rl_ball_sym\rl_ball_sym.dll" Condition="$(RuntimeIdentifier.StartsWith('win'))">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>rl_ball_sym.dll</TargetPath>
+    </ContentWithTargetPath>
+
+    <ContentWithTargetPath Include="../RLBotCS/lib/rl_ball_sym/librl_ball_sym.so" Condition="!$(RuntimeIdentifier.StartsWith('win'))">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>rl_ball_sym.so</TargetPath>
+    </ContentWithTargetPath>
   </ItemGroup>
 
 </Project>

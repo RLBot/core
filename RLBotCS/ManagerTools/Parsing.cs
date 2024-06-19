@@ -1,4 +1,5 @@
-﻿using rlbot.flat;
+﻿using System.Runtime.InteropServices;
+using rlbot.flat;
 using Tomlyn;
 using Tomlyn.Model;
 
@@ -157,6 +158,24 @@ public static class ConfigParser
         }
     }
 
+    private static string GetRunCommand(TomlTable runnableSettings)
+    {
+        string? runCommandWindows = ParseString(runnableSettings, "run_command", null);
+        string? runCommandLinux = ParseString(runnableSettings, "run_command_linux", null);
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            return runCommandWindows ?? "";
+
+        if (runCommandLinux != null)
+            return runCommandLinux;
+        
+        // TODO:
+        // We're currently on Linux but there's no Linux-specific run command
+        // Try running the Windows command under Wine instead
+        Console.WriteLine("Warning! No Linux-specific run command found for script!");
+        return runCommandWindows ?? "";
+    }
+
     private static ScriptConfigurationT GetScriptConfig(TomlTable scriptTable, string playerTomlPath)
     {
         string? scriptTomlPath = ParseString(scriptTable, "config", null);
@@ -165,7 +184,7 @@ public static class ConfigParser
 
         ScriptConfigurationT scriptConfig = new(
             location: CombinePaths(tomlParent, ParseString(scriptToml, "location", "")),
-            runCommand: ParseString(scriptToml, "run_command", "")
+            runCommand: GetRunCommand(scriptToml)
         );
         return scriptConfig;
     }
@@ -242,7 +261,7 @@ public static class ConfigParser
             Team = ParseUint(rlbotPlayerTable, "team", 0),
             Name = ParseString(playerSettings, "name", "Unnamed RLBot"),
             Location = CombinePaths(tomlParent, ParseString(playerSettings, "location", "")),
-            RunCommand = ParseString(playerSettings, "run_command", ""),
+            RunCommand = GetRunCommand(playerSettings),
             Loadout = new PlayerLoadoutT()
             {
                 TeamColorId = ParseUint(teamLoadout, "team_color_id", 0),

@@ -1,7 +1,7 @@
 using rlbot.flat;
 using RLBotCS.Conversion;
-using RLBotSecret.Controller;
-using RLBotSecret.TCP;
+using Bridge.Controller;
+using Bridge.TCP;
 
 namespace RLBotCS.ManagerTools;
 

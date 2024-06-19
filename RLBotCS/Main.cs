@@ -2,7 +2,7 @@
 using RLBotCS.ManagerTools;
 using RLBotCS.Server;
 using RLBotCS.Server.FlatbuffersMessage;
-using RLBotSecret.TCP;
+using Bridge.TCP;
 
 int gamePort = LaunchManager.FindUsableGamePort();
 Console.WriteLine("RLBot is waiting for Rocket League to connect on port " + gamePort);

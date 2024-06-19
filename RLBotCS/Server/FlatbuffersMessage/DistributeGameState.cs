@@ -1,8 +1,8 @@
 ﻿using rlbot.flat;
 using RLBotCS.ManagerTools;
-using RLBotSecret.Models.Message;
-using RLBotSecret.State;
-using GoalInfo = RLBotSecret.Packet.GoalInfo;
+using Bridge.Models.Message;
+using Bridge.State;
+using GoalInfo = Bridge.Packet.GoalInfo;
 
 namespace RLBotCS.Server.FlatbuffersMessage;
 

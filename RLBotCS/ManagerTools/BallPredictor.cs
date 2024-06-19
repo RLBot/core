@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 using rlbot.flat;
-using RLBotSecret.Packet;
+using Bridge.Packet;
 
 namespace RLBotCS.ManagerTools;
 
@@ -53,7 +53,7 @@ public static partial class BallPredictor
     [LibraryImport("rl_ball_sym", EntryPoint = "step")]
     private static partial BallSlice Step(BallSlice ball);
 
-    private static Vec3 ToVec3(RLBotSecret.Models.Phys.Vector3 vec) => new(vec.x, vec.y, vec.z);
+    private static Vec3 ToVec3(Bridge.Models.Phys.Vector3 vec) => new(vec.x, vec.y, vec.z);
 
     private static Vector3T ToVector3T(Vec3 vec) => new(vec.X, vec.Y, vec.Z);
 

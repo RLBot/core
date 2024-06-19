@@ -2,15 +2,14 @@ using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.FlatbuffersMessage;
-using RLBotSecret.Controller;
-using RLBotSecret.Conversion;
-using RLBotSecret.Models.Command;
-using RLBotSecret.Models.Message;
-using RLBotSecret.State;
-using RLBotSecret.TCP;
+using Bridge.Controller;
+using Bridge.Conversion;
+using Bridge.Models.Command;
+using Bridge.Models.Message;
+using Bridge.State;
+using Bridge.TCP;
 using System.Threading.Channels;
-using GameStateType = RLBotSecret.Models.Message.GameStateType;
-using PlayerInput = RLBotSecret.Models.Control.PlayerInput;
+using GameStateType = Bridge.Models.Message.GameStateType;
 
 namespace RLBotCS.Server;
 
@@ -56,7 +55,7 @@ internal class BridgeHandler(
         return _matchCommandSender.AddBotSpawnCommand(name, team, skill, loadout);
     }
 
-    public void SendPlayerInput(PlayerInput playerInput) => _playerInputSender.SendPlayerInput(playerInput);
+    public void SendPlayerInput(Bridge.Models.Control.PlayerInput playerInput) => _playerInputSender.SendPlayerInput(playerInput);
 
     public void SpawnMap(MatchSettingsT matchSettings)
     {

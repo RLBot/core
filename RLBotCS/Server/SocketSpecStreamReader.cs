@@ -1,5 +1,5 @@
-﻿using System.Net.Sockets;
-using RLBotSecret.Types;
+using System.Net.Sockets;
+using Bridge.Types;
 
 namespace RLBotCS.Server;
 

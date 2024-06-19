@@ -1,7 +1,7 @@
-﻿using RLBotSecret.Models.Command;
-using RLBotSecret.Models.Control;
-using RLBotSecret.Models.Phys;
 using System.Drawing;
+using Bridge.Models.Command;
+using Bridge.Models.Control;
+using Bridge.Models.Phys;
 
 namespace RLBotCS.Conversion;
 

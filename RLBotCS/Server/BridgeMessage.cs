@@ -1,9 +1,9 @@
 ﻿using rlbot.flat;
 using RLBotCS.Conversion;
-using RLBotSecret.Models.Command;
-using RLBotSecret.Models.Control;
-using RLBotSecret.Models.Message;
-using RLBotSecret.State;
+using Bridge.Models.Command;
+using Bridge.Models.Control;
+using Bridge.Models.Message;
+using Bridge.State;
 using PlayerInput = rlbot.flat.PlayerInput;
 
 namespace RLBotCS.Server;
@@ -23,7 +23,7 @@ internal record Input(PlayerInput PlayerInput) : IBridgeMessage
 
         if (actorId.HasValue)
         {
-            RLBotSecret.Models.Control.PlayerInput playerInput =
+            Bridge.Models.Control.PlayerInput playerInput =
                 new() { ActorId = actorId.Value, CarInput = carInput };
             handler.SendPlayerInput(playerInput);
         }

@@ -5,7 +5,7 @@ using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.FlatbuffersMessage;
-using RLBotSecret.Types;
+using Bridge.Types;
 
 namespace RLBotCS.Server;
 
@@ -13,7 +13,7 @@ internal record SessionMessage
 {
     public record DistributeBallPrediction(BallPredictionT BallPrediction) : SessionMessage;
 
-    public record DistributeGameState(RLBotSecret.State.GameState GameState) : SessionMessage;
+    public record DistributeGameState(Bridge.State.GameState GameState) : SessionMessage;
 
     public record RendersAllowed(bool Allowed) : SessionMessage;
 

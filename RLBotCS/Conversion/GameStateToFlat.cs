@@ -1,21 +1,21 @@
 using Google.FlatBuffers;
 using rlbot.flat;
-using RLBotSecret.State;
-using RLBotSecret.Types;
-using BoxShape = RLBotSecret.Models.Message.BoxShape;
-using CollisionShape = RLBotSecret.Models.Message.CollisionShape;
+using Bridge.State;
+using Bridge.Types;
+using BoxShape = Bridge.Models.Message.BoxShape;
+using CollisionShape = Bridge.Models.Message.CollisionShape;
 using CollisionShapeUnion = rlbot.flat.CollisionShapeUnion;
-using CylinderShape = RLBotSecret.Models.Message.CylinderShape;
-using GameStateType = RLBotSecret.Models.Message.GameStateType;
-using SphereShape = RLBotSecret.Models.Message.SphereShape;
+using CylinderShape = Bridge.Models.Message.CylinderShape;
+using GameStateType = Bridge.Models.Message.GameStateType;
+using SphereShape = Bridge.Models.Message.SphereShape;
 
 namespace RLBotCS.Conversion;
 
 internal static class GameStateToFlat
 {
-    private static Vector3T ToVector3T(this RLBotSecret.Models.Phys.Vector3 vec) => new(vec.x, vec.y, vec.z);
+    private static Vector3T ToVector3T(this Bridge.Models.Phys.Vector3 vec) => new(vec.x, vec.y, vec.z);
 
-    private static RotatorT ToRotatorT(this RLBotSecret.Models.Phys.Rotator vec) =>
+    private static RotatorT ToRotatorT(this Bridge.Models.Phys.Rotator vec) =>
         new(vec.pitch, vec.yaw, vec.roll);
 
     public static TypedPayload ToFlatBuffers(this GameState gameState, FlatBufferBuilder builder)
@@ -73,17 +73,18 @@ internal static class GameStateToFlat
             _ => rlbot.flat.GameStateType.Inactive,
         };
 
-        GameInfoT gameInfo = new()
-        {
-            SecondsElapsed = gameState.SecondsElapsed,
-            GameTimeRemaining = gameState.GameTimeRemaining,
-            IsOvertime = gameState.IsOvertime,
-            IsUnlimitedTime = gameState.MatchLength == RLBotSecret.Packet.MatchLength.Unlimited,
-            GameStateType = gameStateType,
-            WorldGravityZ = gameState.WorldGravityZ,
-            GameSpeed = gameState.GameSpeed,
-            FrameNum = gameState.FrameNum,
-        };
+            GameInfoT gameInfo =
+                new()
+                {
+                    SecondsElapsed = gameState.SecondsElapsed,
+                    GameTimeRemaining = gameState.GameTimeRemaining,
+                    IsOvertime = gameState.IsOvertime,
+                    IsUnlimitedTime = gameState.MatchLength == Bridge.Packet.MatchLength.Unlimited,
+                    GameStateType = gameStateType,
+                    WorldGravityZ = gameState.WorldGravityZ,
+                    GameSpeed = gameState.GameSpeed,
+                    FrameNum = gameState.FrameNum,
+                };
 
         List<TeamInfoT> teams =
         [
@@ -106,11 +107,11 @@ internal static class GameStateToFlat
 
             var airState = gameState.GameCars[i].AirState switch
             {
-                RLBotSecret.Packet.AirState.OnGround => AirState.OnGround,
-                RLBotSecret.Packet.AirState.Jumping => AirState.Jumping,
-                RLBotSecret.Packet.AirState.DoubleJumping => AirState.DoubleJumping,
-                RLBotSecret.Packet.AirState.Dodging => AirState.Dodging,
-                RLBotSecret.Packet.AirState.InAir => AirState.InAir,
+                Bridge.Packet.AirState.OnGround => AirState.OnGround,
+                Bridge.Packet.AirState.Jumping => AirState.Jumping,
+                Bridge.Packet.AirState.DoubleJumping => AirState.DoubleJumping,
+                Bridge.Packet.AirState.Dodging => AirState.Dodging,
+                Bridge.Packet.AirState.InAir => AirState.InAir,
                 _ => AirState.OnGround,
             };
 

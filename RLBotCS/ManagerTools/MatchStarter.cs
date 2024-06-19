@@ -2,7 +2,7 @@
 using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotCS.Server;
-using RLBotSecret.Models.Message;
+using Bridge.Models.Message;
 using ConsoleCommand = RLBotCS.Server.ConsoleCommand;
 
 namespace RLBotCS.ManagerTools;

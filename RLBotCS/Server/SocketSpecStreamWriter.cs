@@ -1,4 +1,4 @@
-﻿using RLBotSecret.Types;
+﻿using Bridge.Types;
 
 namespace RLBotCS.Server;
 
