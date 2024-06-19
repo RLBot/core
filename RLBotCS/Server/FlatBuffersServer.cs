@@ -12,7 +12,7 @@ internal class FlatBuffersServer
 
     public FlatBuffersServer(
         int rlbotPort,
-        Channel<IServerMessage> incomingMessages,
+        Channel<IServerMessage, IServerMessage> incomingMessages,
         MatchStarter matchStarter,
         ChannelWriter<IBridgeMessage> bridge
     )

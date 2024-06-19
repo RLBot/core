@@ -27,18 +27,8 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
                 new GoalInfoT
                 {
                     TeamNum = goal.Team,
-                    Location = new Vector3T
-                    {
-                        X = goal.Location.x,
-                        Y = goal.Location.y,
-                        Z = goal.Location.z
-                    },
-                    Direction = new Vector3T
-                    {
-                        X = goal.Direction.x,
-                        Y = goal.Direction.y,
-                        Z = goal.Direction.z
-                    },
+                    Location = new Vector3T { X = goal.Location.x, Y = goal.Location.y, Z = goal.Location.z },
+                    Direction = new Vector3T { X = goal.Direction.x, Y = goal.Direction.y, Z = goal.Direction.z },
                     Width = goal.Width,
                     Height = goal.Height,
                 }
@@ -61,7 +51,7 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
             );
         }
 
-        // distribute the field info to all waiting sessions
+        // Distribute the field info to all waiting sessions
         foreach (var writer in context.FieldInfoWriters)
         {
             writer.TryWrite(context.FieldInfo);
@@ -71,7 +61,7 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
         context.FieldInfoWriters.Clear();
     }
 
-    private void DistributeBallPrediction(ServerContext context, GameState gameState)
+    private static void DistributeBallPrediction(ServerContext context, GameState gameState)
     {
         BallPredictionT prediction = BallPredictor.Generate(
             context.PredictionMode,
@@ -88,7 +78,7 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
 
     private static void DistributeState(ServerContext context, GameState gameState)
     {
-        context.MatchStarter.matchEnded = gameState.MatchEnded;
+        context.MatchStarter.MatchEnded = gameState.MatchEnded;
 
         foreach (var (writer, _) in context.Sessions.Values)
         {
