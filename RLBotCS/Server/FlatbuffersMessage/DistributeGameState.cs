@@ -88,7 +88,7 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
 
     private static void DistributeState(ServerContext context, GameState gameState)
     {
-        context.MatchStarter.matchEnded = gameState.MatchEnded;
+        context.MatchStarter.MatchEnded = gameState.MatchEnded;
 
         foreach (var (writer, _) in context.Sessions.Values)
         {

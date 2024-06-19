@@ -4,7 +4,7 @@ internal record StopMatch(bool ShutdownServer) : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {
-        context.MatchStarter.NullMatchSettings();
+        context.MatchStarter.SetNullMatchSettings();
         context.FieldInfo = null;
         context.ShouldUpdateFieldInfo = false;
 
