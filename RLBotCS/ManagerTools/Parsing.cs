@@ -168,7 +168,7 @@ public static class ConfigParser
 
         if (runCommandLinux != null)
             return runCommandLinux;
-        
+
         // TODO:
         // We're currently on Linux but there's no Linux-specific run command
         // Try running the Windows command under Wine instead
@@ -182,10 +182,11 @@ public static class ConfigParser
         TomlTable scriptToml = GetTable(CombinePaths(playerTomlPath, scriptTomlPath));
         string tomlParent = Path.GetDirectoryName(scriptTomlPath) ?? "";
 
-        ScriptConfigurationT scriptConfig = new(
-            location: CombinePaths(tomlParent, ParseString(scriptToml, "location", "")),
-            runCommand: GetRunCommand(scriptToml)
-        );
+        ScriptConfigurationT scriptConfig = new()
+        {
+            Location = CombinePaths(tomlParent, ParseString(scriptToml, "location", "")),
+            RunCommand = GetRunCommand(scriptToml)
+        };
         return scriptConfig;
     }
 
@@ -195,7 +196,7 @@ public static class ConfigParser
             PlayerClass.RLBot => GetBotConfig(table, PlayerClassUnion.FromRLBot(new RLBotT()), matchConfigPath),
             PlayerClass.Human => GetHumanConfig(table, PlayerClassUnion.FromHuman(new HumanT())),
             PlayerClass.Psyonix => GetPsyonixConfig(table, PlayerClassUnion.FromPsyonix(
-                new PsyonixT(botSkill: ParseFloat(table, "skill", 1.0f)))),
+                new PsyonixT { BotSkill = ParseFloat(table, "skill", 1.0f) })),
             PlayerClass.PartyMember => throw new NotImplementedException("PartyMember not implemented"),
             _ => throw new NotImplementedException("Unimplemented PlayerClass type")
         };
