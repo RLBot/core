@@ -1,0 +1,42 @@
+name: Build
+
+on: [ workflow_dispatch, push ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Generate Flatbuffers
+      run: generate-flatbuffers.bat
+
+    - name: Build 
+      run: dotnet publish
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: RLBotServer-windows
+        path: ./**/publish/RLBotServer.exe
+
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Generate Flatbuffers
+      run: ./generate-flatbuffers.sh
+
+    - name: Build 
+      run: dotnet publish
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: RLBotServer-ubuntu
+        path: ./**/publish/RLBotServer
