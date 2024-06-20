@@ -9,6 +9,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
 
     - name: Generate Flatbuffers
       run: .\generate-flatbuffers.bat
@@ -28,6 +30,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
 
     - name: Generate Flatbuffers
       run: ./generate-flatbuffers.sh
