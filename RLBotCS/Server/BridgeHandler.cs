@@ -1,19 +1,10 @@
-using rlbot.flat;
-using RLBotCS.Conversion;
-using RLBotCS.ManagerTools;
-using RLBotCS.Server.FlatbuffersMessage;
-using Bridge.Controller;
 using Bridge.Conversion;
-using Bridge.Models.Command;
-using Bridge.Models.Message;
-using Bridge.State;
 using Bridge.TCP;
+using RLBotCS.Server.FlatbuffersMessage;
 using System.Threading.Channels;
 using GameStateType = Bridge.Models.Message.GameStateType;
 
 namespace RLBotCS.Server;
-
-// TODO: Refactor to use context class so that we don't have so many indirect helper methods
 
 internal class BridgeHandler(
     ChannelWriter<IServerMessage> writer,
@@ -21,138 +12,76 @@ internal class BridgeHandler(
     TcpMessenger messenger
 )
 {
-    // TODO: Use System.Threading.Lock when upgrading to C# 13
-    private readonly object _gameStateLock = new();
-    private GameState _gameState = new();
-
-    public PlayerMapping PlayerMapping
-    {
-        get
-        {
-            lock (_gameStateLock)
-                return _gameState.PlayerMapping;
-        }
-    }
-
-    private readonly MatchCommandSender _matchCommandSender = new(messenger);
-    private readonly PlayerInputSender _playerInputSender = new(messenger);
-    private readonly Rendering _renderingMgmt = new(messenger);
-
-    private bool _gotFirstMessage;
-    private bool _matchHasStarted;
-    private bool _queuedMatchCommands;
-    private bool _delayMatchCommandSend;
-
-    public void QueueConsoleCommand(string command)
-    {
-        _queuedMatchCommands = true;
-        _matchCommandSender.AddConsoleCommand(command);
-    }
-
-    public ushort QueueSpawnCommand(string name, int team, BotSkill skill, Loadout loadout)
-    {
-        _queuedMatchCommands = true;
-        return _matchCommandSender.AddBotSpawnCommand(name, team, skill, loadout);
-    }
-
-    public void SendPlayerInput(Bridge.Models.Control.PlayerInput playerInput) => _playerInputSender.SendPlayerInput(playerInput);
-
-    public void SpawnMap(MatchSettingsT matchSettings)
-    {
-        _matchHasStarted = false;
-        _delayMatchCommandSend = true;
-
-        string loadMapCommand = FlatToCommand.MakeOpenCommand(matchSettings);
-        Console.WriteLine("Core is about to start match with command: " + loadMapCommand);
-
-        _matchCommandSender.AddConsoleCommand(loadMapCommand);
-        _matchCommandSender.Send();
-    }
-
-    public void AddRenderGroup(int clientId, int renderId, List<RenderMessageT> renderItems) =>
-        _renderingMgmt.AddRenderGroup(clientId, renderId, renderItems);
-
-    public void RemoveRenderGroup(int clientId, int renderId) =>
-        _renderingMgmt.RemoveRenderGroup(clientId, renderId);
-
-    public void ClearClientRenders(int clientId) =>
-        _renderingMgmt.ClearClientRenders(clientId);
-
-    public void AddPendingSpawn(SpawnTracker spawnTracker)
-    {
-        lock (_gameStateLock)
-            _gameState.PlayerMapping.AddPendingSpawn(spawnTracker);
-    }
+    private readonly BridgeContext _context = new(writer, reader, messenger);
 
     private async Task HandleIncomingMessages()
     {
-        await foreach (IBridgeMessage message in reader.ReadAllAsync())
-            message.HandleMessage(this);
+        await foreach (IBridgeMessage message in _context.Reader.ReadAllAsync())
+            lock (_context)
+                message.HandleMessage(_context);
     }
 
     private async Task HandleServer()
     {
-        await messenger.WaitForConnectionAsync();
+        await _context.Messenger.WaitForConnectionAsync();
 
-        await foreach (var messageClump in messenger.ReadAllAsync())
+        await foreach (var messageClump in _context.Messenger.ReadAllAsync())
         {
-            if (!_gotFirstMessage)
+            lock (_context)
             {
-                _gotFirstMessage = true;
-                writer.TryWrite(new StartCommunication());
-            }
+                if (!_context.GotFirstMessage)
+                {
+                    _context.GotFirstMessage = true;
+                    _context.Writer.TryWrite(new StartCommunication());
+                }
 
-            lock (_gameStateLock)
-                _gameState = MessageHandler.CreateUpdatedState(messageClump, _gameState);
+                _context.GameState = MessageHandler.CreateUpdatedState(messageClump, _context.GameState);
 
-            var matchStarted = MessageHandler.ReceivedMatchInfo(messageClump);
-            if (matchStarted)
-            {
-                _renderingMgmt.ClearAllRenders();
-                _matchHasStarted = true;
-                writer.TryWrite(new MapSpawned());
-            }
+                var matchStarted = MessageHandler.ReceivedMatchInfo(messageClump);
+                if (matchStarted)
+                {
+                    _context.RenderingMgmt.ClearAllRenders();
+                    _context.MatchHasStarted = true;
+                    _context.Writer.TryWrite(new MapSpawned());
+                }
 
-            lock (_gameStateLock)
-            {
-                if (
-                    _delayMatchCommandSend
-                    && _queuedMatchCommands
-                    && _matchHasStarted
-                    && _gameState.GameStateType == GameStateType.Paused
-                )
+                if (_context is
+                    {
+                        DelayMatchCommandSend: true, QueuedMatchCommands: true, MatchHasStarted: true,
+                        GameState.GameStateType: GameStateType.Paused
+                    })
                 {
                     // If we send the commands before the map has spawned, nothing will happen
-                    _delayMatchCommandSend = false;
-                    _queuedMatchCommands = false;
+                    _context.DelayMatchCommandSend = false;
+                    _context.QueuedMatchCommands = false;
 
-                    _matchCommandSender.Send();
+                    _context.MatchCommandSender.Send();
                 }
-            }
 
-            writer.TryWrite(new DistributeGameState(_gameState));
+                _context.Writer.TryWrite(new DistributeGameState(_context.GameState));
+            }
         }
     }
 
-    public void BlockingRun()
-    {
-        Task messagesTask = Task.Run(HandleIncomingMessages);
-        Task serverTask = Task.Run(HandleServer);
-
-        Task.WhenAny(messagesTask, serverTask).Wait();
-    }
+    public void BlockingRun() => Task.WhenAny(
+        Task.Run(HandleIncomingMessages),
+        Task.Run(HandleServer)
+    ).Wait();
 
     public void Cleanup()
     {
-        writer.TryComplete();
+        lock (_context)
+        {
+            _context.Writer.TryComplete();
 
-        try
-        {
-            _renderingMgmt.ClearAllRenders();
-        }
-        finally
-        {
-            messenger.Dispose();
+            try
+            {
+                _context.RenderingMgmt.ClearAllRenders();
+            }
+            finally
+            {
+                _context.Messenger.Dispose();
+            }
         }
     }
 }
