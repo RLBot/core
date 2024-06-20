@@ -55,7 +55,7 @@ public static partial class BallPredictor
 
     private static Vec3 ToVec3(Bridge.Models.Phys.Vector3 vec) => new(vec.x, vec.y, vec.z);
 
-    private static Vector3T ToVector3T(Vec3 vec) => new(vec.X, vec.Y, vec.Z);
+    private static Vector3T ToVector3T(Vec3 vec) => new() { X = vec.X, Y = vec.Y, Z = vec.Z };
 
     public static void SetMode(PredictionMode mode)
     {
@@ -106,7 +106,7 @@ public static partial class BallPredictor
         const int numSeconds = 8;
         const int numSlices = numSeconds * 120;
 
-        BallPredictionT ballPrediction = new(slices: new List<PredictionSliceT>(numSlices));
+        BallPredictionT ballPrediction = new() { Slices = new List<PredictionSliceT>(numSlices) };
 
         if (mode == PredictionMode.Heatseeker)
             // Target goal is the opposite of the last touch
