@@ -56,7 +56,7 @@
 
   <Target Name="GenerateFlatBuffersLinux" BeforeTargets="PreBuildEvent"
           Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">
-    <!-- TODO -->
+    <Exec Command="../generate-flatbuffers.sh" />
   </Target>
 
 </Project>

@@ -1,3 +1,5 @@
+cd "$(dirname "$0")"
+
 echo Generating flatbuffers header file...
 
 ./RLBotCS/flatbuffers-schema/flatc --gen-all --csharp --gen-object-api --gen-onefile -o ./RLBotCS/FlatBuffer ./RLBotCS/flatbuffers-schema/rlbot.fbs
