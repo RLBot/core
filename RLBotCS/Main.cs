@@ -3,6 +3,7 @@ using Bridge.TCP;
 using Microsoft.Extensions.Logging;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server;
+using RLBotCS.Server.BridgeMessage;
 using RLBotCS.Server.FlatbuffersMessage;
 
 if (args.Length > 0 && args[0] == "--version")

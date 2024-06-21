@@ -1,5 +1,6 @@
 ﻿using rlbot.flat;
 using RLBotCS.ManagerTools;
+using RLBotCS.Server.BridgeMessage;
 
 namespace RLBotCS.Server.FlatbuffersMessage;
 

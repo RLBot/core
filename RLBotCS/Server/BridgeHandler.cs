@@ -4,6 +4,7 @@ using Bridge.TCP;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.Conversion;
+using RLBotCS.Server.BridgeMessage;
 using RLBotCS.Server.FlatbuffersMessage;
 using MatchPhase = Bridge.Models.Message.MatchPhase;
 

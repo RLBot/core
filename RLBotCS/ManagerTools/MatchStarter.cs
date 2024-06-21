@@ -3,8 +3,8 @@ using Bridge.Models.Message;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.Conversion;
-using RLBotCS.Server;
-using ConsoleCommand = RLBotCS.Server.ConsoleCommand;
+using RLBotCS.Server.BridgeMessage;
+using ConsoleCommand = RLBotCS.Server.BridgeMessage.ConsoleCommand;
 
 namespace RLBotCS.ManagerTools;
 

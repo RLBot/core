@@ -4,6 +4,7 @@ using Google.FlatBuffers;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.ManagerTools;
+using RLBotCS.Server.BridgeMessage;
 using RLBotCS.Server.FlatbuffersMessage;
 using RLBotCS.Types;
 

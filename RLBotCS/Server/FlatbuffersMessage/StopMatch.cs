@@ -1,4 +1,6 @@
-﻿namespace RLBotCS.Server.FlatbuffersMessage;
+﻿using RLBotCS.Server.BridgeMessage;
+
+namespace RLBotCS.Server.FlatbuffersMessage;
 
 internal record StopMatch(bool ShutdownServer) : IServerMessage
 {

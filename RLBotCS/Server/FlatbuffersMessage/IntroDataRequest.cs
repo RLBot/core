@@ -1,4 +1,5 @@
 ﻿using System.Threading.Channels;
+using RLBotCS.Server.BridgeMessage;
 
 namespace RLBotCS.Server.FlatbuffersMessage;
 
