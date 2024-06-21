@@ -50,4 +50,13 @@
     </ContentWithTargetPath>
   </ItemGroup>
 
+  <Target Name="GenerateFlatBuffersWindows" BeforeTargets="PreBuildEvent" Condition=" '$(OS)' == 'Windows_NT' ">
+    <Exec Command="call ../generate-flatbuffers.bat" />
+  </Target>
+
+  <Target Name="GenerateFlatBuffersLinux" BeforeTargets="PreBuildEvent"
+          Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">
+    <!-- TODO -->
+  </Target>
+
 </Project>

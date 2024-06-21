@@ -1,5 +1,7 @@
 @echo off
 
+cd /D "%~dp0"
+
 echo Generating flatbuffers header file...
 
 .\RLBotCS\flatbuffers-schema\flatc.exe --csharp --gen-all --gen-object-api --gen-onefile -o .\RLBotCS\FlatBuffer .\RLBotCS\flatbuffers-schema\rlbot.fbs
