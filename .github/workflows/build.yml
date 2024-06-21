@@ -12,9 +12,6 @@ jobs:
       with:
         submodules: 'recursive'
 
-    - name: Generate Flatbuffers
-      run: .\generate-flatbuffers.bat
-
     - name: Build 
       run: dotnet publish
 
@@ -32,9 +29,6 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: 'recursive'
-
-    - name: Generate Flatbuffers
-      run: ./generate-flatbuffers.sh
 
     - name: Build 
       run: dotnet publish
