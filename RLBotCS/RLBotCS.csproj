@@ -60,7 +60,7 @@
   </Target>
 
   <ItemGroup>
-    <Compile Include="FlatBuffer\rlbot.cs" />
+    <Compile Include="..\FlatBuffer\rlbot.cs" />
   </ItemGroup>
 
 </Project>
