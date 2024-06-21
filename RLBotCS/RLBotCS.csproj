@@ -59,4 +59,8 @@
     <Exec Command="../generate-flatbuffers.sh" />
   </Target>
 
+  <ItemGroup>
+    <Compile Include="FlatBuffer\rlbot.cs" />
+  </ItemGroup>
+
 </Project>
