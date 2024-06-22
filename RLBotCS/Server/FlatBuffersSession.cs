@@ -1,11 +1,11 @@
 using System.Net.Sockets;
 using System.Threading.Channels;
+using Bridge.Types;
 using Google.FlatBuffers;
 using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.FlatbuffersMessage;
-using Bridge.Types;
 
 namespace RLBotCS.Server;
 

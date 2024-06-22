@@ -1,7 +1,7 @@
-using RLBotCS.ManagerTools;
-using RLBotCS.Server.FlatbuffersMessage;
 using System.Net.Sockets;
 using System.Threading.Channels;
+using RLBotCS.ManagerTools;
+using RLBotCS.Server.FlatbuffersMessage;
 
 namespace RLBotCS.Server;
 
@@ -12,10 +12,11 @@ internal class FlatBuffersServer(
     ChannelWriter<IBridgeMessage> bridge
 )
 {
-    private readonly ServerContext _context = new(incomingMessages, matchStarter, bridge)
-    {
-        Server = new TcpListener(new(new byte[] { 0, 0, 0, 0 }), rlbotPort)
-    };
+    private readonly ServerContext _context =
+        new(incomingMessages, matchStarter, bridge)
+        {
+            Server = new TcpListener(new(new byte[] { 0, 0, 0, 0 }), rlbotPort)
+        };
 
     private void AddSession(TcpClient client)
     {
@@ -61,9 +62,16 @@ internal class FlatBuffersServer(
         await foreach (IServerMessage message in _context.IncomingMessages.ReadAllAsync())
             lock (_context)
             {
-                var result = message.Execute(_context);
-                if (result == ServerAction.Stop)
-                    return;
+                try
+                {
+                    var result = message.Execute(_context);
+                    if (result == ServerAction.Stop)
+                        return;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error while handling incoming message: {e}");
+                }
             }
     }
 

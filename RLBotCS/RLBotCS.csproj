@@ -35,16 +35,16 @@
     <DirectPInvoke Include="rl_ball_sym" />
 
     <!-- Statically linked for publishing -->
-    <NativeLibrary Include=".\lib\rl_ball_sym\rl_ball_sym.lib" Condition="$(RuntimeIdentifier.StartsWith('win'))" />
-    <NativeLibrary Include="./lib/rl_ball_sym/librl_ball_sym.a" Condition="!$(RuntimeIdentifier.StartsWith('win'))" />
+    <NativeLibrary Include=".\lib\rl_ball_sym\rl_ball_sym.lib" Condition="'$(OS)' == 'Windows_NT'" />
+    <NativeLibrary Include="./lib/rl_ball_sym/librl_ball_sym.a" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'" />
 
     <!-- Dynamically linked for development -->
-    <ContentWithTargetPath Include=".\lib\rl_ball_sym\rl_ball_sym.dll" Condition="$(RuntimeIdentifier.StartsWith('win'))">
+    <ContentWithTargetPath Include=".\lib\rl_ball_sym\rl_ball_sym.dll" Condition="'$(OS)' == 'Windows_NT'">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>rl_ball_sym.dll</TargetPath>
     </ContentWithTargetPath>
 
-    <ContentWithTargetPath Include="./lib/rl_ball_sym/librl_ball_sym.so" Condition="!$(RuntimeIdentifier.StartsWith('win'))">
+    <ContentWithTargetPath Include="./lib/rl_ball_sym/librl_ball_sym.so" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>rl_ball_sym.so</TargetPath>
     </ContentWithTargetPath>

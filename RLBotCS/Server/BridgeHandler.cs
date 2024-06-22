@@ -1,7 +1,7 @@
+using System.Threading.Channels;
 using Bridge.Conversion;
 using Bridge.TCP;
 using RLBotCS.Server.FlatbuffersMessage;
-using System.Threading.Channels;
 using GameStateType = Bridge.Models.Message.GameStateType;
 
 namespace RLBotCS.Server;
@@ -45,11 +45,15 @@ internal class BridgeHandler(
                     _context.Writer.TryWrite(new MapSpawned());
                 }
 
-                if (_context is
+                if (
+                    _context is
                     {
-                        DelayMatchCommandSend: true, QueuedMatchCommands: true, MatchHasStarted: true,
+                        DelayMatchCommandSend: true,
+                        QueuedMatchCommands: true,
+                        MatchHasStarted: true,
                         GameState.GameStateType: GameStateType.Paused
-                    })
+                    }
+                )
                 {
                     // If we send the commands before the map has spawned, nothing will happen
                     _context.DelayMatchCommandSend = false;
@@ -63,10 +67,7 @@ internal class BridgeHandler(
         }
     }
 
-    public void BlockingRun() => Task.WhenAny(
-        Task.Run(HandleIncomingMessages),
-        Task.Run(HandleServer)
-    ).Wait();
+    public void BlockingRun() => Task.WhenAny(Task.Run(HandleIncomingMessages), Task.Run(HandleServer)).Wait();
 
     public void Cleanup()
     {

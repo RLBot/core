@@ -56,7 +56,8 @@ public static class ConfigParser
     }
 
     // Get the enum value of a given enum and the string name of the desired key
-    private static T ParseEnum<T>(TomlTable table, string key, T fallback) where T : struct, Enum
+    private static T ParseEnum<T>(TomlTable table, string key, T fallback)
+        where T : struct, Enum
     {
         try
         {
@@ -68,9 +69,7 @@ public static class ConfigParser
         }
         catch (KeyNotFoundException)
         {
-            Console.WriteLine(
-                $"Warning! Could not find the '{key}' field in toml. Using default setting instead"
-            );
+            Console.WriteLine($"Warning! Could not find the '{key}' field in toml. Using default setting instead");
             return fallback;
         }
     }
@@ -182,11 +181,12 @@ public static class ConfigParser
         TomlTable scriptToml = GetTable(CombinePaths(playerTomlPath, scriptTomlPath));
         string tomlParent = Path.GetDirectoryName(scriptTomlPath) ?? "";
 
-        ScriptConfigurationT scriptConfig = new()
-        {
-            Location = CombinePaths(tomlParent, ParseString(scriptToml, "location", "")),
-            RunCommand = GetRunCommand(scriptToml)
-        };
+        ScriptConfigurationT scriptConfig =
+            new()
+            {
+                Location = CombinePaths(tomlParent, ParseString(scriptToml, "location", "")),
+                RunCommand = GetRunCommand(scriptToml)
+            };
         return scriptConfig;
     }
 
@@ -195,8 +195,11 @@ public static class ConfigParser
         {
             PlayerClass.RLBot => GetBotConfig(table, PlayerClassUnion.FromRLBot(new RLBotT()), matchConfigPath),
             PlayerClass.Human => GetHumanConfig(table, PlayerClassUnion.FromHuman(new HumanT())),
-            PlayerClass.Psyonix => GetPsyonixConfig(table, PlayerClassUnion.FromPsyonix(
-                new PsyonixT { BotSkill = ParseFloat(table, "skill", 1.0f) })),
+            PlayerClass.Psyonix
+                => GetPsyonixConfig(
+                    table,
+                    PlayerClassUnion.FromPsyonix(new PsyonixT { BotSkill = ParseFloat(table, "skill", 1.0f) })
+                ),
             PlayerClass.PartyMember => throw new NotImplementedException("PartyMember not implemented"),
             _ => throw new NotImplementedException("Unimplemented PlayerClass type")
         };
@@ -239,10 +242,7 @@ public static class ConfigParser
          */
         string? matchConfigParent = Path.GetDirectoryName(matchConfigPath);
 
-        string? playerTomlPath = CombinePaths(
-            matchConfigParent,
-            ParseString(rlbotPlayerTable, "config", null)
-        );
+        string? playerTomlPath = CombinePaths(matchConfigParent, ParseString(rlbotPlayerTable, "config", null));
         TomlTable playerToml = GetTable(CombinePaths(matchConfigParent, playerTomlPath));
         string? tomlParent = Path.GetDirectoryName(playerTomlPath);
 
@@ -349,21 +349,13 @@ public static class ConfigParser
                 BallTypeOption = ParseEnum(mutatorTable, "ball_type", BallTypeOption.Default),
                 BallWeightOption = ParseEnum(mutatorTable, "ball_weight", BallWeightOption.Default),
                 BallSizeOption = ParseEnum(mutatorTable, "ball_size", BallSizeOption.Default),
-                BallBouncinessOption = ParseEnum(
-                    mutatorTable,
-                    "ball_bounciness",
-                    BallBouncinessOption.Default
-                ),
+                BallBouncinessOption = ParseEnum(mutatorTable, "ball_bounciness", BallBouncinessOption.Default),
                 BoostOption = ParseEnum(mutatorTable, "boost_amount", BoostOption.Normal_Boost),
                 RumbleOption = ParseEnum(mutatorTable, "rumble", RumbleOption.No_Rumble),
                 BoostStrengthOption = ParseEnum(mutatorTable, "boost_strength", BoostStrengthOption.One),
                 GravityOption = ParseEnum(mutatorTable, "gravity", GravityOption.Default),
                 DemolishOption = ParseEnum(mutatorTable, "demolish", DemolishOption.Default),
-                RespawnTimeOption = ParseEnum(
-                    mutatorTable,
-                    "respawn_time",
-                    RespawnTimeOption.Three_Seconds
-                ),
+                RespawnTimeOption = ParseEnum(mutatorTable, "respawn_time", RespawnTimeOption.Three_Seconds),
             },
             PlayerConfigurations = playerConfigs,
             ScriptConfigurations = scriptConfigs

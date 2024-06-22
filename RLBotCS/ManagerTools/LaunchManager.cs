@@ -60,11 +60,7 @@ internal static class LaunchManager
             $"SELECT CommandLine FROM Win32_Process WHERE ProcessId = {process.Id}"
         );
         using var objects = searcher.Get();
-        return objects
-            .Cast<ManagementBaseObject>()
-            .SingleOrDefault()
-            ?["CommandLine"]?.ToString()
-            .Split(" ");
+        return objects.Cast<ManagementBaseObject>().SingleOrDefault()?["CommandLine"]?.ToString().Split(" ");
     }
 
     private static string[] GetIdealArgs(int gamePort) =>
@@ -172,8 +168,8 @@ internal static class LaunchManager
             throw new PlatformNotSupportedException("RLBot is not supported on non-Windows/Linux platforms");
     }
 
-    public static bool IsRocketLeagueRunning() => Process.GetProcesses()
-        .Any(candidate => candidate.ProcessName.Contains("RocketLeague"));
+    public static bool IsRocketLeagueRunning() =>
+        Process.GetProcesses().Any(candidate => candidate.ProcessName.Contains("RocketLeague"));
 
     private static string GetWindowsSteamPath()
     {
@@ -184,8 +180,6 @@ internal static class LaunchManager
         if (key?.GetValue("SteamExe")?.ToString() is { } value)
             return value;
 
-        throw new FileNotFoundException(
-            "Could not find registry entry for SteamExe. Is Steam installed?"
-        );
+        throw new FileNotFoundException("Could not find registry entry for SteamExe. Is Steam installed?");
     }
 }

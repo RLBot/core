@@ -113,24 +113,26 @@ internal static class FlatToModel
     internal static Vector3 DesiredToVector(rlbot.flat.Vector3PartialT? partVec, Vector3 defaultVec) =>
         partVec switch
         {
-            not null => new Vector3
-            {
-                x = partVec.X?.Val ?? defaultVec.x,
-                y = partVec.Y?.Val ?? defaultVec.y,
-                z = partVec.Z?.Val ?? defaultVec.z
-            },
+            not null
+                => new Vector3
+                {
+                    x = partVec.X?.Val ?? defaultVec.x,
+                    y = partVec.Y?.Val ?? defaultVec.y,
+                    z = partVec.Z?.Val ?? defaultVec.z
+                },
             _ => defaultVec
         };
 
     internal static Rotator DesiredToRotator(rlbot.flat.RotatorPartialT? partRot, Rotator defaultRot) =>
         partRot switch
         {
-            not null => new Rotator
-            {
-                pitch = partRot.Pitch?.Val ?? defaultRot.pitch,
-                yaw = partRot.Yaw?.Val ?? defaultRot.yaw,
-                roll = partRot.Roll?.Val ?? defaultRot.roll
-            },
+            not null
+                => new Rotator
+                {
+                    pitch = partRot.Pitch?.Val ?? defaultRot.pitch,
+                    yaw = partRot.Yaw?.Val ?? defaultRot.yaw,
+                    roll = partRot.Roll?.Val ?? defaultRot.roll
+                },
             _ => defaultRot
         };
 

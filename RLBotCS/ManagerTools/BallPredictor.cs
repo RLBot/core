@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
-using rlbot.flat;
 using Bridge.Packet;
+using rlbot.flat;
 
 namespace RLBotCS.ManagerTools;
 
@@ -55,7 +55,13 @@ public static partial class BallPredictor
 
     private static Vec3 ToVec3(Bridge.Models.Phys.Vector3 vec) => new(vec.x, vec.y, vec.z);
 
-    private static Vector3T ToVector3T(Vec3 vec) => new() { X = vec.X, Y = vec.Y, Z = vec.Z };
+    private static Vector3T ToVector3T(Vec3 vec) =>
+        new()
+        {
+            X = vec.X,
+            Y = vec.Y,
+            Z = vec.Z
+        };
 
     public static void SetMode(PredictionMode mode)
     {
@@ -95,13 +101,14 @@ public static partial class BallPredictor
 
     public static BallPredictionT Generate(PredictionMode mode, float time, Ball currentBall)
     {
-        BallSlice ball = new()
-        {
-            Time = time,
-            Location = ToVec3(currentBall.Physics.location),
-            LinearVelocity = ToVec3(currentBall.Physics.velocity),
-            AngularVelocity = ToVec3(currentBall.Physics.angularVelocity)
-        };
+        BallSlice ball =
+            new()
+            {
+                Time = time,
+                Location = ToVec3(currentBall.Physics.location),
+                LinearVelocity = ToVec3(currentBall.Physics.velocity),
+                AngularVelocity = ToVec3(currentBall.Physics.angularVelocity)
+            };
 
         const int numSeconds = 8;
         const int numSlices = numSeconds * 120;
@@ -116,16 +123,17 @@ public static partial class BallPredictor
         {
             ball = Step(ball);
 
-            PredictionSliceT slice = new()
-            {
-                GameSeconds = ball.Time,
-                Physics = new PhysicsT
+            PredictionSliceT slice =
+                new()
                 {
-                    Location = ToVector3T(ball.Location),
-                    Velocity = ToVector3T(ball.LinearVelocity),
-                    AngularVelocity = ToVector3T(ball.AngularVelocity)
-                }
-            };
+                    GameSeconds = ball.Time,
+                    Physics = new PhysicsT
+                    {
+                        Location = ToVector3T(ball.Location),
+                        Velocity = ToVector3T(ball.LinearVelocity),
+                        AngularVelocity = ToVector3T(ball.AngularVelocity)
+                    }
+                };
 
             ballPrediction.Slices.Add(slice);
         }

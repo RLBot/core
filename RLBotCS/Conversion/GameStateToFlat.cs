@@ -1,7 +1,7 @@
-using Google.FlatBuffers;
-using rlbot.flat;
 using Bridge.State;
 using Bridge.Types;
+using Google.FlatBuffers;
+using rlbot.flat;
 using BoxShape = Bridge.Models.Message.BoxShape;
 using CollisionShape = Bridge.Models.Message.CollisionShape;
 using CollisionShapeUnion = rlbot.flat.CollisionShapeUnion;
@@ -14,56 +14,77 @@ namespace RLBotCS.Conversion;
 internal static class GameStateToFlat
 {
     private static Vector3T ToVector3T(this Bridge.Models.Phys.Vector3 vec) =>
-        new() { X = vec.x, Y = vec.y, Z = vec.z };
+        new()
+        {
+            X = vec.x,
+            Y = vec.y,
+            Z = vec.z
+        };
 
     private static RotatorT ToRotatorT(this Bridge.Models.Phys.Rotator vec) =>
-        new() { Pitch = vec.pitch, Yaw = vec.yaw, Roll = vec.roll };
+        new()
+        {
+            Pitch = vec.pitch,
+            Yaw = vec.yaw,
+            Roll = vec.roll
+        };
 
     public static TypedPayload ToFlatBuffers(this GameState gameState, FlatBufferBuilder builder)
     {
         // Create the ball info
-        PhysicsT ballPhysics = new()
-        {
-            Location = gameState.Ball.Physics.location.ToVector3T(),
-            Rotation = gameState.Ball.Physics.rotation.ToRotatorT(),
-            Velocity = gameState.Ball.Physics.velocity.ToVector3T(),
-            AngularVelocity = gameState.Ball.Physics.angularVelocity.ToVector3T()
-        };
+        PhysicsT ballPhysics =
+            new()
+            {
+                Location = gameState.Ball.Physics.location.ToVector3T(),
+                Rotation = gameState.Ball.Physics.rotation.ToRotatorT(),
+                Velocity = gameState.Ball.Physics.velocity.ToVector3T(),
+                AngularVelocity = gameState.Ball.Physics.angularVelocity.ToVector3T()
+            };
 
-        TouchT lastTouch = new()
-        {
-            PlayerName = gameState.Ball.LatestTouch.PlayerName,
-            PlayerIndex = gameState.Ball.LatestTouch.PlayerIndex,
-            Team = gameState.Ball.LatestTouch.Team,
-            GameSeconds = gameState.Ball.LatestTouch.TimeSeconds,
-            Location = gameState.Ball.LatestTouch.HitLocation.ToVector3T(),
-            Normal = gameState.Ball.LatestTouch.HitNormal.ToVector3T()
-        };
+        TouchT lastTouch =
+            new()
+            {
+                PlayerName = gameState.Ball.LatestTouch.PlayerName,
+                PlayerIndex = gameState.Ball.LatestTouch.PlayerIndex,
+                Team = gameState.Ball.LatestTouch.Team,
+                GameSeconds = gameState.Ball.LatestTouch.TimeSeconds,
+                Location = gameState.Ball.LatestTouch.HitLocation.ToVector3T(),
+                Normal = gameState.Ball.LatestTouch.HitNormal.ToVector3T()
+            };
 
         CollisionShapeUnion collisionShape = gameState.Ball.Shape.Type switch
         {
-            CollisionShape.BoxShape => CollisionShapeUnion.FromBoxShape(
-                new()
-                {
-                    Length = gameState.Ball.Shape.As<BoxShape>().Length,
-                    Width = gameState.Ball.Shape.As<BoxShape>().Width,
-                    Height = gameState.Ball.Shape.As<BoxShape>().Height
-                }
-            ),
-            CollisionShape.SphereShape => CollisionShapeUnion.FromSphereShape(
-                new() { Diameter = gameState.Ball.Shape.As<SphereShape>().Diameter }
-            ),
-            CollisionShape.CylinderShape => CollisionShapeUnion.FromCylinderShape(
-                new()
-                {
-                    Diameter = gameState.Ball.Shape.As<CylinderShape>().Diameter,
-                    Height = gameState.Ball.Shape.As<CylinderShape>().Height
-                }
-            ),
+            CollisionShape.BoxShape
+                => CollisionShapeUnion.FromBoxShape(
+                    new()
+                    {
+                        Length = gameState.Ball.Shape.As<BoxShape>().Length,
+                        Width = gameState.Ball.Shape.As<BoxShape>().Width,
+                        Height = gameState.Ball.Shape.As<BoxShape>().Height
+                    }
+                ),
+            CollisionShape.SphereShape
+                => CollisionShapeUnion.FromSphereShape(
+                    new() { Diameter = gameState.Ball.Shape.As<SphereShape>().Diameter }
+                ),
+            CollisionShape.CylinderShape
+                => CollisionShapeUnion.FromCylinderShape(
+                    new()
+                    {
+                        Diameter = gameState.Ball.Shape.As<CylinderShape>().Diameter,
+                        Height = gameState.Ball.Shape.As<CylinderShape>().Height
+                    }
+                ),
             _ => CollisionShapeUnion.FromSphereShape(new SphereShapeT { Diameter = 91.25f * 2 })
         };
 
-        BallInfoT ballInfo = new() { Physics = ballPhysics, LatestTouch = lastTouch, Shape = collisionShape };
+        BallInfoT ballInfo =
+            new()
+            {
+                Physics = ballPhysics,
+                LatestTouch = lastTouch,
+                Shape = collisionShape
+            };
 
         rlbot.flat.GameStateType gameStateType = gameState.GameStateType switch
         {
@@ -97,9 +118,9 @@ internal static class GameStateToFlat
             new() { TeamIndex = 1, Score = gameState.TeamScores.orange }
         ];
 
-        List<BoostPadStateT> boostStates = gameState.GameBoosts.Select(
-            boost => new BoostPadStateT { IsActive = boost.IsActive, Timer = boost.Timer }
-        ).ToList();
+        List<BoostPadStateT> boostStates = gameState
+            .GameBoosts.Select(boost => new BoostPadStateT { IsActive = boost.IsActive, Timer = boost.Timer })
+            .ToList();
 
         List<PlayerInfoT> players = [];
         for (uint i = 0; i < (uint)gameState.GameCars.Count; i++)
@@ -123,14 +144,13 @@ internal static class GameStateToFlat
             players.Add(
                 new()
                 {
-                    Physics =
-                        new()
-                        {
-                            Location = gameState.GameCars[i].Physics.location.ToVector3T(),
-                            Rotation = gameState.GameCars[i].Physics.rotation.ToRotatorT(),
-                            Velocity = gameState.GameCars[i].Physics.velocity.ToVector3T(),
-                            AngularVelocity = gameState.GameCars[i].Physics.angularVelocity.ToVector3T()
-                        },
+                    Physics = new()
+                    {
+                        Location = gameState.GameCars[i].Physics.location.ToVector3T(),
+                        Rotation = gameState.GameCars[i].Physics.rotation.ToRotatorT(),
+                        Velocity = gameState.GameCars[i].Physics.velocity.ToVector3T(),
+                        AngularVelocity = gameState.GameCars[i].Physics.angularVelocity.ToVector3T()
+                    },
                     AirState = airState,
                     DodgeTimeout = gameState.GameCars[i].DodgeTimeout,
                     DemolishedTimeout = gameState.GameCars[i].DemolishedTimeout,

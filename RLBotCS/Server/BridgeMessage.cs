@@ -1,9 +1,9 @@
-﻿using rlbot.flat;
-using RLBotCS.Conversion;
-using Bridge.Models.Command;
+﻿using Bridge.Models.Command;
 using Bridge.Models.Control;
 using Bridge.Models.Message;
 using Bridge.State;
+using rlbot.flat;
+using RLBotCS.Conversion;
 using PlayerInput = rlbot.flat.PlayerInput;
 
 namespace RLBotCS.Server;
@@ -28,8 +28,7 @@ internal record Input(PlayerInput PlayerInput) : IBridgeMessage
 
         if (actorId.HasValue)
         {
-            Bridge.Models.Control.PlayerInput playerInput =
-                new() { ActorId = actorId.Value, CarInput = carInput };
+            Bridge.Models.Control.PlayerInput playerInput = new() { ActorId = actorId.Value, CarInput = carInput };
             context.PlayerInputSender.SendPlayerInput(playerInput);
         }
         else
@@ -42,13 +41,15 @@ internal record SpawnHuman(PlayerConfigurationT PlayerConfig, uint DesiredIndex)
     public void HandleMessage(BridgeContext context)
     {
         context.QueueConsoleCommand("ChangeTeam " + PlayerConfig.Team);
-        context.GameState.PlayerMapping.AddPendingSpawn(new SpawnTracker
-        {
-            CommandId = 0,
-            SpawnId = PlayerConfig.SpawnId,
-            DesiredPlayerIndex = DesiredIndex,
-            IsCustomBot = false
-        });
+        context.GameState.PlayerMapping.AddPendingSpawn(
+            new SpawnTracker
+            {
+                CommandId = 0,
+                SpawnId = PlayerConfig.SpawnId,
+                DesiredPlayerIndex = DesiredIndex,
+                IsCustomBot = false
+            }
+        );
     }
 }
 
@@ -59,9 +60,7 @@ internal record SpawnBot(PlayerConfigurationT PlayerConfig, BotSkill Skill, uint
     {
         PlayerConfigurationT config = PlayerConfig;
         PlayerMetadata? alreadySpawnedPlayer = context
-            .GameState
-            .PlayerMapping
-            .GetKnownPlayers()
+            .GameState.PlayerMapping.GetKnownPlayers()
             .FirstOrDefault(kp => config.SpawnId == kp.SpawnId);
         if (alreadySpawnedPlayer != null)
             // We've already spawned this player, don't duplicate them.
@@ -73,15 +72,21 @@ internal record SpawnBot(PlayerConfigurationT PlayerConfig, BotSkill Skill, uint
 
         context.QueuedMatchCommands = true;
         ushort commandId = context.MatchCommandSender.AddBotSpawnCommand(
-            config.Name, (int)config.Team, Skill, loadout);
+            config.Name,
+            (int)config.Team,
+            Skill,
+            loadout
+        );
 
-        context.GameState.PlayerMapping.AddPendingSpawn(new SpawnTracker
-        {
-            CommandId = commandId,
-            SpawnId = config.SpawnId,
-            DesiredPlayerIndex = DesiredIndex,
-            IsCustomBot = IsCustomBot
-        });
+        context.GameState.PlayerMapping.AddPendingSpawn(
+            new SpawnTracker
+            {
+                CommandId = commandId,
+                SpawnId = config.SpawnId,
+                DesiredPlayerIndex = DesiredIndex,
+                IsCustomBot = IsCustomBot
+            }
+        );
     }
 }
 
@@ -119,8 +124,7 @@ internal record RemoveRenders(int ClientId, int RenderId) : IBridgeMessage
 
 internal record RemoveClientRenders(int ClientId) : IBridgeMessage
 {
-    public void HandleMessage(BridgeContext context) =>
-        context.RenderingMgmt.ClearClientRenders(ClientId);
+    public void HandleMessage(BridgeContext context) => context.RenderingMgmt.ClearClientRenders(ClientId);
 }
 
 internal record Stop : IBridgeMessage

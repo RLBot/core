@@ -1,7 +1,7 @@
-using rlbot.flat;
-using RLBotCS.Conversion;
 using Bridge.Controller;
 using Bridge.TCP;
+using rlbot.flat;
+using RLBotCS.Conversion;
 
 namespace RLBotCS.ManagerTools;
 
@@ -25,16 +25,16 @@ public class Rendering(TcpMessenger tcpMessenger)
                     FlatToModel.ToColor(color)
                 ),
             String2DT
-                {
-                    Text: var text,
-                    X: var x,
-                    Y: var y,
-                    Foreground: var foreground,
-                    Background: var background,
-                    HAlign: var hAlign,
-                    VAlign: var vAlign,
-                    Scale: var scale
-                }
+            {
+                Text: var text,
+                X: var x,
+                Y: var y,
+                Foreground: var foreground,
+                Background: var background,
+                HAlign: var hAlign,
+                VAlign: var vAlign,
+                Scale: var scale
+            }
                 => _renderingSender.AddText2D(
                     text,
                     x,
@@ -46,15 +46,15 @@ public class Rendering(TcpMessenger tcpMessenger)
                     scale
                 ),
             String3DT
-                {
-                    Text: var text,
-                    Position: var position,
-                    Foreground: var foreground,
-                    Background: var background,
-                    HAlign: var hAlign,
-                    VAlign: var vAlign,
-                    Scale: var scale
-                }
+            {
+                Text: var text,
+                Position: var position,
+                Foreground: var foreground,
+                Background: var background,
+                HAlign: var hAlign,
+                VAlign: var vAlign,
+                Scale: var scale
+            }
                 => _renderingSender.AddText3D(
                     text,
                     FlatToModel.ToVectorFromT(position),

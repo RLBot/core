@@ -1,8 +1,8 @@
 ﻿using System.Threading.Channels;
+using Bridge.TCP;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server;
 using RLBotCS.Server.FlatbuffersMessage;
-using Bridge.TCP;
 
 int gamePort = LaunchManager.FindUsableGamePort();
 Console.WriteLine("RLBot is waiting for Rocket League to connect on port " + gamePort);
@@ -15,37 +15,39 @@ var bridgeWriter = bridgeChannel.Writer;
 var serverChannel = Channel.CreateUnbounded<IServerMessage>();
 var serverWriter = serverChannel.Writer;
 
-Thread rlbotServer = new(() =>
-{
-    MatchStarter matchStarter = new(bridgeWriter, gamePort);
-    FlatBuffersServer flatBuffersServer =
-        new(LaunchManager.RlbotSocketsPort, serverChannel, matchStarter, bridgeWriter);
+Thread rlbotServer =
+    new(() =>
+    {
+        MatchStarter matchStarter = new(bridgeWriter, gamePort);
+        FlatBuffersServer flatBuffersServer =
+            new(LaunchManager.RlbotSocketsPort, serverChannel, matchStarter, bridgeWriter);
 
-    try
-    {
-        flatBuffersServer.BlockingRun();
-    }
-    finally
-    {
-        flatBuffersServer.Cleanup();
-    }
-});
+        try
+        {
+            flatBuffersServer.BlockingRun();
+        }
+        finally
+        {
+            flatBuffersServer.Cleanup();
+        }
+    });
 rlbotServer.Start();
 
-Thread bridgeHandler = new(() =>
-{
-    TcpMessenger tcpMessenger = new(gamePort);
-    BridgeHandler bridgeHandler = new(serverWriter, bridgeChannel.Reader, tcpMessenger);
+Thread bridgeHandler =
+    new(() =>
+    {
+        TcpMessenger tcpMessenger = new(gamePort);
+        BridgeHandler bridgeHandler = new(serverWriter, bridgeChannel.Reader, tcpMessenger);
 
-    try
-    {
-        bridgeHandler.BlockingRun();
-    }
-    finally
-    {
-        bridgeHandler.Cleanup();
-    }
-});
+        try
+        {
+            bridgeHandler.BlockingRun();
+        }
+        finally
+        {
+            bridgeHandler.Cleanup();
+        }
+    });
 bridgeHandler.Start();
 
 // Block until everything properly shuts down

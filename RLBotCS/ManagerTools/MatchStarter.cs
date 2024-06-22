@@ -1,8 +1,8 @@
 ﻿using System.Threading.Channels;
+using Bridge.Models.Message;
 using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotCS.Server;
-using Bridge.Models.Message;
 using ConsoleCommand = RLBotCS.Server.ConsoleCommand;
 
 namespace RLBotCS.ManagerTools;
@@ -137,8 +137,7 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
             var lastPlayerConfig = lastMatchSettings.PlayerConfigurations[i];
             var playerConfig = matchSettings.PlayerConfigurations[i];
 
-            if (lastPlayerConfig.SpawnId != playerConfig.SpawnId
-                || lastPlayerConfig.Team != playerConfig.Team)
+            if (lastPlayerConfig.SpawnId != playerConfig.SpawnId || lastPlayerConfig.Team != playerConfig.Team)
                 return true;
         }
 
@@ -146,22 +145,22 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
         var mutators = matchSettings.MutatorSettings;
 
         return lastMatchSettings.GameMode != matchSettings.GameMode
-               || lastMatchSettings.GameMapUpk != matchSettings.GameMapUpk
-               || lastMatchSettings.InstantStart != matchSettings.InstantStart
-               || lastMutators.MatchLength != mutators.MatchLength
-               || lastMutators.MaxScore != mutators.MaxScore
-               || lastMutators.OvertimeOption != mutators.OvertimeOption
-               || lastMutators.SeriesLengthOption != mutators.SeriesLengthOption
-               || lastMutators.BallMaxSpeedOption != mutators.BallMaxSpeedOption
-               || lastMutators.BallTypeOption != mutators.BallTypeOption
-               || lastMutators.BallWeightOption != mutators.BallWeightOption
-               || lastMutators.BallSizeOption != mutators.BallSizeOption
-               || lastMutators.BallBouncinessOption != mutators.BallBouncinessOption
-               || lastMutators.BoostOption != mutators.BoostOption
-               || lastMutators.RumbleOption != mutators.RumbleOption
-               || lastMutators.BoostStrengthOption != mutators.BoostStrengthOption
-               || lastMutators.DemolishOption != mutators.DemolishOption
-               || lastMutators.RespawnTimeOption != mutators.RespawnTimeOption;
+            || lastMatchSettings.GameMapUpk != matchSettings.GameMapUpk
+            || lastMatchSettings.InstantStart != matchSettings.InstantStart
+            || lastMutators.MatchLength != mutators.MatchLength
+            || lastMutators.MaxScore != mutators.MaxScore
+            || lastMutators.OvertimeOption != mutators.OvertimeOption
+            || lastMutators.SeriesLengthOption != mutators.SeriesLengthOption
+            || lastMutators.BallMaxSpeedOption != mutators.BallMaxSpeedOption
+            || lastMutators.BallTypeOption != mutators.BallTypeOption
+            || lastMutators.BallWeightOption != mutators.BallWeightOption
+            || lastMutators.BallSizeOption != mutators.BallSizeOption
+            || lastMutators.BallBouncinessOption != mutators.BallBouncinessOption
+            || lastMutators.BoostOption != mutators.BoostOption
+            || lastMutators.RumbleOption != mutators.RumbleOption
+            || lastMutators.BoostStrengthOption != mutators.BoostStrengthOption
+            || lastMutators.DemolishOption != mutators.DemolishOption
+            || lastMutators.RespawnTimeOption != mutators.RespawnTimeOption;
     }
 
     private void SpawnCars(MatchSettingsT matchSettings)
@@ -177,15 +176,10 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
             {
                 case PlayerClass.RLBot:
                     Console.WriteLine(
-                        "Core is spawning player "
-                        + playerConfig.Name
-                        + " with spawn id "
-                        + playerConfig.SpawnId
+                        "Core is spawning player " + playerConfig.Name + " with spawn id " + playerConfig.SpawnId
                     );
 
-                    bridge.TryWrite(
-                        new SpawnBot(playerConfig, BotSkill.Custom, (uint)(i - indexOffset), true)
-                    );
+                    bridge.TryWrite(new SpawnBot(playerConfig, BotSkill.Custom, (uint)(i - indexOffset), true));
 
                     break;
                 case PlayerClass.Psyonix:

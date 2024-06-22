@@ -1,7 +1,7 @@
 using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Bridge.Models.Message;
 using Bridge.State;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace RLBotCSTests
 {
