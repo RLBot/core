@@ -73,6 +73,8 @@ internal class FlatBuffersServer(
             throw new InvalidOperationException("Server not initialized");
         _context.Server.Start();
 
+        BallPredictor.SetMode(PredictionMode.Standard);
+
         while (true)
         {
             TcpClient client = await _context.Server.AcceptTcpClientAsync();
