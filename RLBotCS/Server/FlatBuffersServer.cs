@@ -47,6 +47,10 @@ internal class FlatBuffersServer(
                 {
                     Console.WriteLine("Session suddenly terminated the connection?");
                 }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error in session: {e}");
+                }
                 finally
                 {
                     session.Cleanup();

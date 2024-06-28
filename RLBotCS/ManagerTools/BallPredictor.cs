@@ -53,7 +53,7 @@ public static partial class BallPredictor
     [LibraryImport("rl_ball_sym", EntryPoint = "step")]
     private static partial BallSlice Step(BallSlice ball);
 
-    private static Vec3 ToVec3(Bridge.Models.Phys.Vector3 vec) => new(vec.x, vec.y, vec.z);
+    private static Vec3 ToVec3(Bridge.Models.Phys.Vector3 vec) => new(vec.X, vec.Y, vec.Z);
 
     private static Vector3T ToVector3T(Vec3 vec) =>
         new()
@@ -105,9 +105,9 @@ public static partial class BallPredictor
             new()
             {
                 Time = time,
-                Location = ToVec3(currentBall.Physics.location),
-                LinearVelocity = ToVec3(currentBall.Physics.velocity),
-                AngularVelocity = ToVec3(currentBall.Physics.angularVelocity)
+                Location = ToVec3(currentBall.Physics.Location),
+                LinearVelocity = ToVec3(currentBall.Physics.Velocity),
+                AngularVelocity = ToVec3(currentBall.Physics.AngularVelocity)
             };
 
         const int numSeconds = 8;

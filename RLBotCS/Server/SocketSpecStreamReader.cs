@@ -1,5 +1,5 @@
 using System.Net.Sockets;
-using Bridge.Types;
+using RLBotCS.Types;
 
 namespace RLBotCS.Server;
 

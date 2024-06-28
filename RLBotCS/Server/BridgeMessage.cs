@@ -112,8 +112,11 @@ internal record SpawnMap(MatchSettingsT MatchSettings) : IBridgeMessage
 
 internal record AddRenders(int ClientId, int RenderId, List<RenderMessageT> RenderItems) : IBridgeMessage
 {
-    public void HandleMessage(BridgeContext context) =>
-        context.RenderingMgmt.AddRenderGroup(ClientId, RenderId, RenderItems);
+    public void HandleMessage(BridgeContext context)
+    {
+        lock (context)
+            context.RenderingMgmt.AddRenderGroup(ClientId, RenderId, RenderItems, context.GameState);
+    }
 }
 
 internal record RemoveRenders(int ClientId, int RenderId) : IBridgeMessage

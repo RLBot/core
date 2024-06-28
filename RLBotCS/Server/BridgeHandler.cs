@@ -79,6 +79,7 @@ internal class BridgeHandler(
             {
                 _context.RenderingMgmt.ClearAllRenders();
             }
+            catch (Exception) { }
             finally
             {
                 _context.Messenger.Dispose();

@@ -2,7 +2,6 @@ using Bridge.Models.Phys;
 using Bridge.Packet;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RLBotCS.ManagerTools;
-using System;
 
 namespace RLBotCSTests
 {
@@ -16,27 +15,12 @@ namespace RLBotCSTests
 
             var currentBall = new Ball()
             {
-                Physics = new Physics()
-                {
-                    location = new Vector3
-                    {
-                        x = 0,
-                        y = 0,
-                        z = 100
-                    },
-                    velocity = new Vector3
-                    {
-                        x = 600,
-                        y = 600,
-                        z = 100
-                    },
-                    angularVelocity = new Vector3
-                    {
-                        x = 1,
-                        y = 2,
-                        z = 0.5F,
-                    }
-                }
+                Physics = new Physics(
+                    new Vector3(0, 0, 100),
+                    new Vector3(600, 600, 100),
+                    new Vector3(1, 2, 0.5F),
+                    new Rotator(0, 0, 0)
+                )
             };
 
             var ballPred = BallPredictor.Generate(PredictionMode.Standard, 1, currentBall);

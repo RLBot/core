@@ -29,15 +29,15 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
                     TeamNum = goal.Team,
                     Location = new Vector3T
                     {
-                        X = goal.Location.x,
-                        Y = goal.Location.y,
-                        Z = goal.Location.z
+                        X = goal.Location.X,
+                        Y = goal.Location.Y,
+                        Z = goal.Location.Z
                     },
                     Direction = new Vector3T
                     {
-                        X = goal.Direction.x,
-                        Y = goal.Direction.y,
-                        Z = goal.Direction.z
+                        X = goal.Direction.X,
+                        Y = goal.Direction.Y,
+                        Z = goal.Direction.Z
                     },
                     Width = goal.Width,
                     Height = goal.Height,
@@ -52,9 +52,9 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
                 {
                     Location = new Vector3T
                     {
-                        X = boostPad.SpawnPosition.x,
-                        Y = boostPad.SpawnPosition.y,
-                        Z = boostPad.SpawnPosition.z
+                        X = boostPad.SpawnPosition.X,
+                        Y = boostPad.SpawnPosition.Y,
+                        Z = boostPad.SpawnPosition.Z
                     },
                     IsFullBoost = boostPad.IsFullBoost,
                 }

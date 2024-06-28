@@ -1,11 +1,11 @@
 using System.Net.Sockets;
 using System.Threading.Channels;
-using Bridge.Types;
 using Google.FlatBuffers;
 using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.FlatbuffersMessage;
+using RLBotCS.Types;
 
 namespace RLBotCS.Server;
 
@@ -151,7 +151,9 @@ internal class FlatBuffersSession
                 if (!_renderingIsEnabled)
                     break;
 
+                Console.WriteLine("Core got render group from client.");
                 var renderingGroup = RenderGroup.GetRootAsRenderGroup(byteBuffer).UnPack();
+                Console.WriteLine("Render group id: {0}", renderingGroup.Id);
                 _bridge.TryWrite(new AddRenders(_clientId, renderingGroup.Id, renderingGroup.RenderMessages));
 
                 break;
@@ -253,6 +255,7 @@ internal class FlatBuffersSession
             TypedPayload msg = new() { Type = DataType.None, Payload = new ArraySegment<byte>([1]), };
             SendPayloadToClientAsync(msg).Wait();
         }
+        catch (Exception) { }
         finally
         {
             // if an exception was thrown, the client disconnected first
