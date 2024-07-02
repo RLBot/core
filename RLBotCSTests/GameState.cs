@@ -12,7 +12,7 @@ namespace RLBotCSTests
         public void Test()
         {
             var packet = new GameState();
-            
+
             FlatBufferBuilder build = new(1024);
             packet.ToFlatBuffers(build);
         }

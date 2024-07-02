@@ -339,10 +339,11 @@ public static class ConfigParser
                 ExistingMatchBehavior.Restart_If_Different
             ),
             AutoSaveReplay = ParseBool(matchTable, "auto_save_replay", false),
+            Freeplay = ParseBool(matchTable, "freeplay", false),
             MutatorSettings = new MutatorSettingsT()
             {
                 MatchLength = ParseEnum(mutatorTable, "match_length", MatchLength.Five_Minutes),
-                MaxScore = ParseEnum(mutatorTable, "max_score", MaxScore.Unlimited),
+                MaxScore = ParseEnum(mutatorTable, "max_score", MaxScore.Default),
                 OvertimeOption = ParseEnum(mutatorTable, "overtime", OvertimeOption.Unlimited),
                 GameSpeedOption = ParseEnum(mutatorTable, "game_speed", GameSpeedOption.Default),
                 BallMaxSpeedOption = ParseEnum(mutatorTable, "ball_max_speed", BallMaxSpeedOption.Default),
