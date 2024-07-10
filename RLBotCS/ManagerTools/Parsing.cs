@@ -344,6 +344,7 @@ public static class ConfigParser
             {
                 MatchLength = ParseEnum(mutatorTable, "match_length", MatchLength.Five_Minutes),
                 MaxScore = ParseEnum(mutatorTable, "max_score", MaxScore.Default),
+                MultiBall = ParseEnum(mutatorTable, "multi_ball", MultiBall.One),
                 OvertimeOption = ParseEnum(mutatorTable, "overtime", OvertimeOption.Unlimited),
                 GameSpeedOption = ParseEnum(mutatorTable, "game_speed", GameSpeedOption.Default),
                 BallMaxSpeedOption = ParseEnum(mutatorTable, "ball_max_speed", BallMaxSpeedOption.Default),

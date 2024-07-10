@@ -11,6 +11,10 @@ namespace RLBotCS.Server;
 
 internal record SessionMessage
 {
+    public record MatchSettings(MatchSettingsT Settings) : SessionMessage;
+
+    public record FieldInfo(FieldInfoT Info) : SessionMessage;
+
     public record DistributeBallPrediction(BallPredictionT BallPrediction) : SessionMessage;
 
     public record DistributeGameState(Bridge.State.GameState GameState) : SessionMessage;
@@ -29,24 +33,23 @@ internal class FlatBuffersSession
     private readonly SocketSpecStreamReader _socketSpecReader;
     private readonly SocketSpecStreamWriter _socketSpecWriter;
 
-    private readonly ChannelReader<SessionMessage> _incomingMessages;
+    private readonly Channel<SessionMessage> _incomingMessages;
     private readonly ChannelWriter<IServerMessage> _rlbotServer;
     private readonly ChannelWriter<IBridgeMessage> _bridge;
 
     private bool _isReady;
     private bool _wantsBallPredictions;
-    private bool _wantsGameMessages;
     private bool _wantsComms;
     private bool _closeAfterMatch;
     private bool _stateSettingIsEnabled;
     private bool _renderingIsEnabled;
 
-    private readonly FlatBufferBuilder _builder = new(1024);
+    private readonly FlatBufferBuilder _messageBuilder = new(1 << 10);
 
     public FlatBuffersSession(
         TcpClient client,
         int clientId,
-        ChannelReader<SessionMessage> incomingMessages,
+        Channel<SessionMessage> incomingMessages,
         ChannelWriter<IServerMessage> rlbotServer,
         ChannelWriter<IBridgeMessage> bridge,
         bool renderingIsEnabled,
@@ -80,36 +83,10 @@ internal class FlatBuffersSession
                 var readyMsg = ReadyMessage.GetRootAsReadyMessage(byteBuffer);
 
                 _wantsBallPredictions = readyMsg.WantsBallPredictions;
-                _wantsGameMessages = readyMsg.WantsGameMessages;
                 _wantsComms = readyMsg.WantsComms;
                 _closeAfterMatch = readyMsg.CloseAfterMatch;
 
-                Channel<MatchSettingsT> matchSettingsChannel = Channel.CreateUnbounded<MatchSettingsT>();
-                Channel<FieldInfoT> fieldInfoChannel = Channel.CreateUnbounded<FieldInfoT>();
-
-                _rlbotServer.TryWrite(new IntroDataRequest(matchSettingsChannel.Writer, fieldInfoChannel.Writer));
-
-                // get then send match settings
-                // this is usually return before fieldinfo so we wait on it first
-                MatchSettingsT matchSettings = await matchSettingsChannel.Reader.ReadAsync();
-
-                _builder.Clear();
-                _builder.Finish(MatchSettings.Pack(_builder, matchSettings).Value);
-                TypedPayload matchSettingsMessage = TypedPayload.FromFlatBufferBuilder(
-                    DataType.MatchSettings,
-                    _builder
-                );
-                await SendPayloadToClientAsync(matchSettingsMessage);
-                Console.WriteLine("Sent match settings to client.");
-
-                // get then send field info
-                FieldInfoT fieldInfo = await fieldInfoChannel.Reader.ReadAsync();
-
-                _builder.Clear();
-                _builder.Finish(FieldInfo.Pack(_builder, fieldInfo).Value);
-                TypedPayload fieldInfoMessage = TypedPayload.FromFlatBufferBuilder(DataType.FieldInfo, _builder);
-                await SendPayloadToClientAsync(fieldInfoMessage);
-                Console.WriteLine("Sent field info to client.");
+                await _rlbotServer.WriteAsync(new IntroDataRequest(_incomingMessages.Writer));
 
                 _isReady = true;
                 break;
@@ -117,7 +94,7 @@ internal class FlatBuffersSession
             case DataType.StopCommand:
                 Console.WriteLine("Core got stop command from client.");
                 var stopCommand = StopCommand.GetRootAsStopCommand(byteBuffer).UnPack();
-                _rlbotServer.TryWrite(new StopMatch(stopCommand.ShutdownServer));
+                await _rlbotServer.WriteAsync(new StopMatch(stopCommand.ShutdownServer));
                 break;
 
             case DataType.StartCommand:
@@ -125,17 +102,17 @@ internal class FlatBuffersSession
                 StartCommandT startCommand = StartCommand.GetRootAsStartCommand(byteBuffer).UnPack();
                 MatchSettingsT tomlMatchSettings = ConfigParser.GetMatchSettings(startCommand.ConfigPath);
 
-                _rlbotServer.TryWrite(new StartMatch(tomlMatchSettings));
+                await _rlbotServer.WriteAsync(new StartMatch(tomlMatchSettings));
                 break;
 
             case DataType.MatchSettings:
                 var matchSettingsT = MatchSettings.GetRootAsMatchSettings(byteBuffer).UnPack();
-                _rlbotServer.TryWrite(new StartMatch(matchSettingsT));
+                await _rlbotServer.WriteAsync(new StartMatch(matchSettingsT));
                 break;
 
             case DataType.PlayerInput:
                 var playerInputMsg = PlayerInput.GetRootAsPlayerInput(byteBuffer);
-                _bridge.TryWrite(new Input(playerInputMsg));
+                await _bridge.WriteAsync(new Input(playerInputMsg));
                 break;
 
             case DataType.MatchComms:
@@ -151,10 +128,10 @@ internal class FlatBuffersSession
                 if (!_renderingIsEnabled)
                     break;
 
-                Console.WriteLine("Core got render group from client.");
                 var renderingGroup = RenderGroup.GetRootAsRenderGroup(byteBuffer).UnPack();
-                Console.WriteLine("Render group id: {0}", renderingGroup.Id);
-                _bridge.TryWrite(new AddRenders(_clientId, renderingGroup.Id, renderingGroup.RenderMessages));
+                await _bridge.WriteAsync(
+                    new AddRenders(_clientId, renderingGroup.Id, renderingGroup.RenderMessages)
+                );
 
                 break;
 
@@ -163,7 +140,7 @@ internal class FlatBuffersSession
                     break;
 
                 var removeRenderGroup = RemoveRenderGroup.GetRootAsRemoveRenderGroup(byteBuffer).UnPack();
-                _bridge.TryWrite(new RemoveRenders(_clientId, removeRenderGroup.Id));
+                await _bridge.WriteAsync(new RemoveRenders(_clientId, removeRenderGroup.Id));
                 break;
 
             case DataType.DesiredGameState:
@@ -182,8 +159,6 @@ internal class FlatBuffersSession
                 break;
             case DataType.BallPrediction:
                 break;
-            case DataType.MessagePacket:
-                break;
             default:
                 Console.WriteLine("Core got unexpected message type {0} from client.", message.Type);
                 break;
@@ -200,19 +175,35 @@ internal class FlatBuffersSession
 
     private async Task HandleIncomingMessages()
     {
-        await foreach (SessionMessage message in _incomingMessages.ReadAllAsync())
+        await foreach (SessionMessage message in _incomingMessages.Reader.ReadAllAsync())
             switch (message)
             {
-                case SessionMessage.DistributeBallPrediction m when _isReady && _wantsBallPredictions:
-                    _builder.Clear();
-                    _builder.Finish(BallPrediction.Pack(_builder, m.BallPrediction).Value);
+                case SessionMessage.FieldInfo m:
+                    _messageBuilder.Clear();
+                    _messageBuilder.Finish(FieldInfo.Pack(_messageBuilder, m.Info).Value);
 
                     await SendPayloadToClientAsync(
-                        TypedPayload.FromFlatBufferBuilder(DataType.BallPrediction, _builder)
+                        TypedPayload.FromFlatBufferBuilder(DataType.FieldInfo, _messageBuilder)
+                    );
+                    break;
+                case SessionMessage.MatchSettings m:
+                    _messageBuilder.Clear();
+                    _messageBuilder.Finish(MatchSettings.Pack(_messageBuilder, m.Settings).Value);
+
+                    await SendPayloadToClientAsync(
+                        TypedPayload.FromFlatBufferBuilder(DataType.MatchSettings, _messageBuilder)
+                    );
+                    break;
+                case SessionMessage.DistributeBallPrediction m when _isReady && _wantsBallPredictions:
+                    _messageBuilder.Clear();
+                    _messageBuilder.Finish(BallPrediction.Pack(_messageBuilder, m.BallPrediction).Value);
+
+                    await SendPayloadToClientAsync(
+                        TypedPayload.FromFlatBufferBuilder(DataType.BallPrediction, _messageBuilder)
                     );
                     break;
                 case SessionMessage.DistributeGameState m when _isReady:
-                    await SendPayloadToClientAsync(m.GameState.ToFlatBuffers(_builder));
+                    await SendPayloadToClientAsync(m.GameState.ToFlatBuffers(_messageBuilder));
                     break;
                 case SessionMessage.RendersAllowed m:
                     _renderingIsEnabled = m.Allowed;

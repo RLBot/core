@@ -1,5 +1,4 @@
-﻿using Bridge.Models.Message;
-using Bridge.State;
+﻿using Bridge.State;
 using rlbot.flat;
 using RLBotCS.ManagerTools;
 using GoalInfo = Bridge.Packet.GoalInfo;
@@ -10,16 +9,19 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
 {
     private static void UpdateFieldInfo(ServerContext context, GameState gameState)
     {
-        if (!context.ShouldUpdateFieldInfo)
+        if (
+            !context.ShouldUpdateFieldInfo
+            || context.FieldInfo != null
+            || gameState.BoostPads.Count == 0
+            || gameState.Goals.Count == 0
+        )
             return;
 
-        if (context.FieldInfo == null)
-            context.FieldInfo = new FieldInfoT { Goals = [], BoostPads = [] };
-        else
+        context.FieldInfo = new FieldInfoT
         {
-            context.FieldInfo.Goals.Clear();
-            context.FieldInfo.BoostPads.Clear();
-        }
+            BoostPads = new List<BoostPadT>(gameState.BoostPads.Count),
+            Goals = new List<GoalInfoT>(gameState.Goals.Count)
+        };
 
         foreach (GoalInfo goal in gameState.Goals)
         {
@@ -45,7 +47,7 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
             );
         }
 
-        foreach (BoostPadSpawn boostPad in gameState.BoostPads)
+        foreach (var boostPad in gameState.BoostPads.Values)
         {
             context.FieldInfo.BoostPads.Add(
                 new BoostPadT
@@ -64,8 +66,7 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
         // Distribute the field info to all waiting sessions
         foreach (var writer in context.FieldInfoWriters)
         {
-            writer.TryWrite(context.FieldInfo);
-            writer.TryComplete();
+            writer.TryWrite(new SessionMessage.FieldInfo(context.FieldInfo));
         }
 
         context.FieldInfoWriters.Clear();
@@ -73,10 +74,14 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
 
     private static void DistributeBallPrediction(ServerContext context, GameState gameState)
     {
+        var firstBall = gameState.Balls.Values.FirstOrDefault();
+        if (firstBall is null)
+            return;
+
         BallPredictionT prediction = BallPredictor.Generate(
             context.PredictionMode,
             gameState.SecondsElapsed,
-            gameState.Ball
+            firstBall
         );
 
         foreach (var (writer, _) in context.Sessions.Values)

@@ -39,6 +39,16 @@ internal static class FlatToCommand
             _ => throw new ArgumentOutOfRangeException(nameof(maxScore), maxScore, null)
         };
 
+    private static string MapMultiBall(MultiBall multiBall) =>
+        multiBall switch
+        {
+            MultiBall.One => "",
+            MultiBall.Two => "TwoBalls",
+            MultiBall.Four => "FourBalls",
+            MultiBall.Six => "SixBalls",
+            _ => throw new ArgumentOutOfRangeException(nameof(multiBall), multiBall, null)
+        };
+
     private static string MapOvertime(OvertimeOption option) =>
         option switch
         {
@@ -186,7 +196,7 @@ internal static class FlatToCommand
         {
             RespawnTimeOption.Three_Seconds => "",
             RespawnTimeOption.Two_Seconds => "TwoSecondsRespawn",
-            RespawnTimeOption.One_Seconds => "OneSecondsRespawn",
+            RespawnTimeOption.One_Second => "OneSecondsRespawn",
             RespawnTimeOption.Disable_Goal_Reset => "DisableGoalDelay",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
         };
@@ -233,6 +243,7 @@ internal static class FlatToCommand
         // Parse mutator settings
         command += GetOption(MapMatchLength(mutatorSettings.MatchLength));
         command += GetOption(MapMaxScore(mutatorSettings.MaxScore));
+        command += GetOption(MapMultiBall(mutatorSettings.MultiBall));
         command += GetOption(MapOvertime(mutatorSettings.OvertimeOption));
         command += GetOption(MapSeriesLength(mutatorSettings.SeriesLengthOption));
         command += GetOption(MapGameSpeed(mutatorSettings.GameSpeedOption));

@@ -119,7 +119,7 @@ public static partial class BallPredictor
                 AngularVelocity = ToVec3(currentBall.Physics.AngularVelocity)
             };
 
-        const ushort numSeconds = 8;
+        const ushort numSeconds = 6;
         const ushort numSlices = numSeconds * 120;
 
         BallPredictionT ballPrediction = new() { Slices = new List<PredictionSliceT>(numSlices) };

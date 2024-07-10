@@ -32,7 +32,7 @@ internal class FlatBuffersServer(
                     new(
                         client,
                         clientId,
-                        sessionChannel.Reader,
+                        sessionChannel,
                         _context.IncomingMessagesWriter,
                         _context.Bridge,
                         _context.RenderingIsEnabled,

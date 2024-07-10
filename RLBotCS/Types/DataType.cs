@@ -30,9 +30,6 @@ public enum DataType : ushort
     // Clients must send this after connecting to the socket.
     ReadyMessage,
 
-    // List of messages, having one of several possible sub-types.
-    MessagePacket,
-
     // used to end a match and shut down bots (optionally the server as well)
     StopCommand
 }

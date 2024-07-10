@@ -18,8 +18,8 @@ internal class ServerContext(
 
     public FieldInfoT? FieldInfo { get; set; }
     public bool ShouldUpdateFieldInfo { get; set; }
-    public List<ChannelWriter<MatchSettingsT>> MatchSettingsWriters { get; } = [];
-    public List<ChannelWriter<FieldInfoT>> FieldInfoWriters { get; } = [];
+    public List<ChannelWriter<SessionMessage>> MatchSettingsWriters { get; } = [];
+    public List<ChannelWriter<SessionMessage>> FieldInfoWriters { get; } = [];
 
     public MatchStarter MatchStarter { get; } = matchStarter;
     public ChannelWriter<IBridgeMessage> Bridge { get; } = bridge;

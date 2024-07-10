@@ -54,10 +54,15 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
 
     public void MapSpawned()
     {
-        if (_needsSpawnBots && _matchSettings != null)
+        if (_matchSettings != null)
         {
-            SpawnCars(_matchSettings);
-            _needsSpawnBots = false;
+            bridge.TryWrite(new SetMutators(_matchSettings.MutatorSettings));
+
+            if (_needsSpawnBots)
+            {
+                SpawnCars(_matchSettings);
+                _needsSpawnBots = false;
+            }
         }
     }
 
@@ -144,11 +149,13 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
         var lastMutators = lastMatchSettings.MutatorSettings;
         var mutators = matchSettings.MutatorSettings;
 
-        return lastMatchSettings.GameMode != matchSettings.GameMode
+        return lastMatchSettings.Freeplay != matchSettings.Freeplay
+            || lastMatchSettings.GameMode != matchSettings.GameMode
             || lastMatchSettings.GameMapUpk != matchSettings.GameMapUpk
             || lastMatchSettings.InstantStart != matchSettings.InstantStart
             || lastMutators.MatchLength != mutators.MatchLength
             || lastMutators.MaxScore != mutators.MaxScore
+            || lastMutators.MultiBall != mutators.MultiBall
             || lastMutators.OvertimeOption != mutators.OvertimeOption
             || lastMutators.SeriesLengthOption != mutators.SeriesLengthOption
             || lastMutators.BallMaxSpeedOption != mutators.BallMaxSpeedOption
