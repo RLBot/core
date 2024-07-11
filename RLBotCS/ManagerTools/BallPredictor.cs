@@ -134,14 +134,12 @@ public static partial class BallPredictor
             else if (currentTime - currentBall.LatestTouch.TimeSeconds < 0.1)
             {
                 // Target goal is the opposite of the last touch
-                SetHeatseekerTarget(currentBall.LatestTouch.Team == 1 ? (byte)1 : (byte)0);
+                SetHeatseekerTarget(currentBall.LatestTouch.Team == 1 ? (byte)0 : (byte)1);
             }
             else if (GetHeatseekerTargetY() == 0 || MathF.Abs(ball.Location.Y) >= 4820)
             {
                 // We're very likely to hit a wall that will redirect the ball towards the other goal
-                SetHeatseekerTarget(
-                    MathF.Abs(MathF.Sign(ball.LinearVelocity.Y) + 1) < float.Epsilon ? (byte)1 : (byte)0
-                );
+                SetHeatseekerTarget(ball.LinearVelocity.Y < 0 ? (byte)1 : (byte)0);
             }
         }
 
