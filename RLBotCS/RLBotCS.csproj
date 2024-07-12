@@ -14,8 +14,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Management" Version="8.0.0" />
     <PackageReference Include="Tomlyn" Version="0.17.0" />
+    <PackageReference Include="WmiLight" Version="6.1.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -54,8 +54,7 @@
     <Exec Command="call ../generate-flatbuffers.bat" />
   </Target>
 
-  <Target Name="GenerateFlatBuffersLinux" BeforeTargets="PreBuildEvent"
-          Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">
+  <Target Name="GenerateFlatBuffersLinux" BeforeTargets="PreBuildEvent" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">
     <Exec Command="../generate-flatbuffers.sh" />
   </Target>
 
