@@ -11,6 +11,7 @@
     <OptimizationPreference>Speed</OptimizationPreference>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <PublishWmiLightStaticallyLinked>true</PublishWmiLightStaticallyLinked>
   </PropertyGroup>
 
   <ItemGroup>
