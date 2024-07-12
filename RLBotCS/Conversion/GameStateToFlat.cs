@@ -1,5 +1,4 @@
 using Bridge.Models.Message;
-using Bridge.Packet;
 using Bridge.State;
 using Google.FlatBuffers;
 using rlbot.flat;
