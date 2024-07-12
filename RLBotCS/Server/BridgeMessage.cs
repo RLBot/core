@@ -47,6 +47,7 @@ internal record SpawnHuman(PlayerConfigurationT PlayerConfig, uint DesiredIndex)
                 CommandId = 0,
                 SpawnId = PlayerConfig.SpawnId,
                 DesiredPlayerIndex = DesiredIndex,
+                IsBot = false,
                 IsCustomBot = false
             }
         );
@@ -84,7 +85,8 @@ internal record SpawnBot(PlayerConfigurationT PlayerConfig, BotSkill Skill, uint
                 CommandId = commandId,
                 SpawnId = config.SpawnId,
                 DesiredPlayerIndex = DesiredIndex,
-                IsCustomBot = IsCustomBot
+                IsCustomBot = IsCustomBot,
+                IsBot = true
             }
         );
     }

@@ -29,21 +29,24 @@ namespace RLBotCSTests
                 SpawnId = spawnId,
                 CommandId = commandId,
                 DesiredPlayerIndex = desiredIndex,
-                IsCustomBot = true
+                IsBot = true
             };
 
             _playerMapping.AddPendingSpawn(spawnTracker);
 
             var carSpawn = new CarSpawn() { ActorId = actorId, CommandId = commandId, };
-            _playerMapping.ApplyCarSpawn(carSpawn);
+            var metadata = _playerMapping.ApplyCarSpawn(carSpawn);
 
             Assert.AreEqual(desiredIndex, _playerMapping.PlayerIndexFromActorId(actorId));
+            Assert.IsTrue(metadata.IsBot);
+            Assert.IsTrue(!metadata.IsCustomBot);
 
-            _playerMapping.ApplyCarSpawn(new CarSpawn() { ActorId = 111, CommandId = 222, });
+            var metadata2 = _playerMapping.ApplyCarSpawn(new CarSpawn() { ActorId = 111, CommandId = 222, });
 
             Assert.AreEqual(0u, _playerMapping.PlayerIndexFromActorId(111));
             Assert.AreEqual(desiredIndex, _playerMapping.PlayerIndexFromActorId(actorId));
-            Console.Write("Good");
+            Assert.IsTrue(!metadata2.IsBot);
+            Assert.IsTrue(!metadata2.IsCustomBot);
         }
     }
 }

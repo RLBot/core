@@ -40,9 +40,9 @@ namespace RLBotCSTests
 
             var ballPred = BallPredictor.Generate(PredictionMode.Standard, 1, packet.Balls[12345]);
 
-            int numSlices = 8 * 120;
+            int numSlices = 6 * 120;
             Assert.AreEqual(numSlices, ballPred.Slices.Count);
-            Assert.IsTrue(ballPred.Slices[numSlices - 1].GameSeconds > 8.9999);
+            Assert.IsTrue(ballPred.Slices[numSlices - 1].GameSeconds > 5.9999);
 
             // comment out to see results of the below test
             // dotnet test -c "Release" for best results

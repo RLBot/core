@@ -159,7 +159,7 @@ internal static class GameStateToFlat
                     DodgeTimeout = car.DodgeTimeout,
                     DemolishedTimeout = car.DemolishedTimeout,
                     IsSupersonic = car.IsSuperSonic,
-                    IsBot = car.IsBot,
+                    IsBot = car.IsCustomBot,
                     Name = car.Name,
                     Team = car.Team,
                     Boost = (uint)Math.Floor(car.Boost),
