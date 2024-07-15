@@ -30,11 +30,23 @@ internal static class FlatToCommand
     private static string MapMaxScore(MaxScore maxScore) =>
         maxScore switch
         {
-            MaxScore.Unlimited => "",
+            MaxScore.Default => "",
             MaxScore.One_Goal => "Max1",
             MaxScore.Three_Goals => "Max3",
             MaxScore.Five_Goals => "Max5",
+            MaxScore.Seven_Goals => "Max7",
+            MaxScore.Unlimited => "UnlimitedScore",
             _ => throw new ArgumentOutOfRangeException(nameof(maxScore), maxScore, null)
+        };
+
+    private static string MapMultiBall(MultiBall multiBall) =>
+        multiBall switch
+        {
+            MultiBall.One => "",
+            MultiBall.Two => "TwoBalls",
+            MultiBall.Four => "FourBalls",
+            MultiBall.Six => "SixBalls",
+            _ => throw new ArgumentOutOfRangeException(nameof(multiBall), multiBall, null)
         };
 
     private static string MapOvertime(OvertimeOption option) =>
@@ -82,6 +94,9 @@ internal static class FlatToCommand
             BallTypeOption.Cube => "Ball_CubeBall",
             BallTypeOption.Puck => "Ball_Puck",
             BallTypeOption.Basketball => "Ball_BasketBall",
+            BallTypeOption.Beachball => "Ball_BeachBall",
+            BallTypeOption.Anniversary => "Ball_Anniversary",
+            BallTypeOption.Haunted => "Ball_Haunted",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
         };
 
@@ -92,6 +107,8 @@ internal static class FlatToCommand
             BallWeightOption.Light => "LightBall",
             BallWeightOption.Heavy => "HeavyBall",
             BallWeightOption.Super_Light => "SuperLightBall",
+            BallWeightOption.Curve_Ball => "MagnusBall",
+            BallWeightOption.Beach_Ball_Curve => "MagnusBeachBall",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
         };
 
@@ -137,6 +154,8 @@ internal static class FlatToCommand
             RumbleOption.Spring_Loaded => "ItemsModeSprings",
             RumbleOption.Spikes_Only => "ItemsModeSpikes",
             RumbleOption.Spike_Rush => "ItemsModeRugby",
+            RumbleOption.Haunted_Ball_Beam => "ItemsModeHauntedBallBeam",
+            RumbleOption.Tactical => "ItemsModeSelection",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
         };
 
@@ -157,6 +176,7 @@ internal static class FlatToCommand
             GravityOption.Low => "LowGravity",
             GravityOption.High => "HighGravity",
             GravityOption.Super_High => "SuperGravity",
+            GravityOption.Reverse => "ReverseGravity",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
         };
 
@@ -176,7 +196,7 @@ internal static class FlatToCommand
         {
             RespawnTimeOption.Three_Seconds => "",
             RespawnTimeOption.Two_Seconds => "TwoSecondsRespawn",
-            RespawnTimeOption.One_Seconds => "OneSecondsRespawn",
+            RespawnTimeOption.One_Second => "OneSecondsRespawn",
             RespawnTimeOption.Disable_Goal_Reset => "DisableGoalDelay",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
         };
@@ -212,14 +232,18 @@ internal static class FlatToCommand
         if (!matchSettings.InstantStart)
             command += "?Playtest";
 
-        // Parse mutator settings
         command += "?GameTags=PlayerCount8";
+
+        if (matchSettings.Freeplay)
+            command += ",Freeplay";
 
         if (matchSettings.MutatorSettings is not { } mutatorSettings)
             return command;
 
+        // Parse mutator settings
         command += GetOption(MapMatchLength(mutatorSettings.MatchLength));
         command += GetOption(MapMaxScore(mutatorSettings.MaxScore));
+        command += GetOption(MapMultiBall(mutatorSettings.MultiBall));
         command += GetOption(MapOvertime(mutatorSettings.OvertimeOption));
         command += GetOption(MapSeriesLength(mutatorSettings.SeriesLengthOption));
         command += GetOption(MapGameSpeed(mutatorSettings.GameSpeedOption));
@@ -229,7 +253,7 @@ internal static class FlatToCommand
         command += GetOption(MapBallSize(mutatorSettings.BallSizeOption));
         command += GetOption(MapBallBounciness(mutatorSettings.BallBouncinessOption));
         command += GetOption(MapBoost(mutatorSettings.BoostOption));
-        command += GetOption(MapRumble(mutatorSettings.RumbleOption)); //TODO - probably doesn't work
+        command += GetOption(MapRumble(mutatorSettings.RumbleOption));
         command += GetOption(MapBoostStrength(mutatorSettings.BoostStrengthOption));
         command += GetOption(MapGravity(mutatorSettings.GravityOption));
         command += GetOption(MapDemolish(mutatorSettings.DemolishOption));
@@ -238,30 +262,9 @@ internal static class FlatToCommand
         return command;
     }
 
-    private static string MakeGameSpeedCommand(float gameSpeed) => "Set WorldInfo TimeDilation " + gameSpeed;
+    public static string MakeGameSpeedCommand(float gameSpeed) => "Set WorldInfo TimeDilation " + gameSpeed;
 
-    public static string MakeGameSpeedCommandFromOption(GameSpeedOption gameSpeed) =>
-        MakeGameSpeedCommand(
-            gameSpeed switch
-            {
-                GameSpeedOption.Slo_Mo => 0.5f,
-                GameSpeedOption.Time_Warp => 1.5f,
-                _ => 1.0f,
-            }
-        );
-
-    private static string MakeGravityCommand(float gravity) => "Set WorldInfo WorldGravityZ " + gravity;
-
-    public static string MakeGravityCommandFromOption(GravityOption gravityOption) =>
-        MakeGravityCommand(
-            gravityOption switch
-            {
-                GravityOption.Low => -325,
-                GravityOption.High => -1137.5f,
-                GravityOption.Super_High => -3250,
-                _ => -650,
-            }
-        );
+    public static string MakeGravityCommand(float gravity) => "Set WorldInfo WorldGravityZ " + gravity;
 
     public static string MakeAutoSaveReplayCommand() => "QueSaveReplay";
 }

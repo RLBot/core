@@ -1,49 +1,75 @@
+using System.Diagnostics;
 using Bridge.Models.Phys;
-using Bridge.Packet;
+using Bridge.State;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RLBotCS.ManagerTools;
-using System;
 
 namespace RLBotCSTests
 {
     [TestClass]
     public class BallPrediction
     {
+        private TestContext testContextInstance;
+
+        /// <summary>
+        /// Gets or sets the test context which provides
+        /// information about and functionality for the current test run.
+        /// </summary>
+        public TestContext TestContext
+        {
+            get { return testContextInstance; }
+            set { testContextInstance = value; }
+        }
+
         [TestMethod]
         public void TestBallPred()
         {
             BallPredictor.SetMode(PredictionMode.Standard);
 
-            var currentBall = new Ball()
-            {
-                Physics = new Physics()
-                {
-                    location = new Vector3
-                    {
-                        x = 0,
-                        y = 0,
-                        z = 100
-                    },
-                    velocity = new Vector3
-                    {
-                        x = 600,
-                        y = 600,
-                        z = 100
-                    },
-                    angularVelocity = new Vector3
-                    {
-                        x = 1,
-                        y = 2,
-                        z = 0.5F,
-                    }
-                }
-            };
+            var packet = new GameState();
+            packet.Balls[12345] = new();
 
-            var ballPred = BallPredictor.Generate(PredictionMode.Standard, 1, currentBall);
+            BallPredictor.Generate(PredictionMode.Standard, 1, packet.Balls[12345]);
 
-            int numSlices = 8 * 120;
+            packet.Balls[12345].Physics = new Physics(
+                new Vector3(0, 0, 1.1f * 91.25f),
+                new Vector3(600, 1550, 0),
+                new Vector3(0, 0, 0),
+                new Rotator(0, 0, 0)
+            );
+
+            var ballPred = BallPredictor.Generate(PredictionMode.Standard, 1, packet.Balls[12345]);
+
+            int numSlices = 6 * 120;
             Assert.AreEqual(numSlices, ballPred.Slices.Count);
-            Assert.IsTrue(ballPred.Slices[numSlices - 1].GameSeconds > 8.9999);
+            Assert.IsTrue(ballPred.Slices[numSlices - 1].GameSeconds > 5.9999);
+
+            // comment out to see results of the below test
+            // dotnet test -c "Release" for best results
+            return;
+
+            Stopwatch stopWatch = new Stopwatch();
+
+            int numIterations = 20_000;
+            for (int i = 0; i < numIterations; i++)
+            {
+                packet.Balls[12345].Physics = new Physics(
+                    new Vector3(0, 0, 1.1f * 91.25f),
+                    new Vector3(600, 1550, 0),
+                    new Vector3(0, 0, 0),
+                    new Rotator(0, 0, 0)
+                );
+
+                stopWatch.Start();
+                BallPredictor.Generate(PredictionMode.Standard, 1, packet.Balls[12345]);
+                stopWatch.Stop();
+            }
+
+            float averageTime = (float)stopWatch.ElapsedMilliseconds / numIterations;
+            TestContext.WriteLine("Average time to generate ball prediction: " + averageTime + "ms");
+
+            // makes the above result print out
+            Assert.IsTrue(false);
         }
     }
 }

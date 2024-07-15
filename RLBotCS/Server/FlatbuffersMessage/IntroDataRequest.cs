@@ -1,30 +1,22 @@
 ﻿using System.Threading.Channels;
-using rlbot.flat;
 
 namespace RLBotCS.Server.FlatbuffersMessage;
 
-internal record IntroDataRequest(
-    ChannelWriter<MatchSettingsT> MatchSettingsWriter,
-    ChannelWriter<FieldInfoT> FieldInfoWriter
-) : IServerMessage
+internal record IntroDataRequest(ChannelWriter<SessionMessage> sessionWriter) : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {
         if (context.MatchStarter.GetMatchSettings() is { } settings)
-        {
-            MatchSettingsWriter.TryWrite(settings);
-            MatchSettingsWriter.TryComplete();
-        }
+            sessionWriter.TryWrite(new SessionMessage.MatchSettings(settings));
         else
-            context.MatchSettingsWriters.Add(MatchSettingsWriter);
+            context.MatchSettingsWriters.Add(sessionWriter);
 
         if (context.FieldInfo != null)
         {
-            FieldInfoWriter.TryWrite(context.FieldInfo);
-            FieldInfoWriter.TryComplete();
+            sessionWriter.TryWrite(new SessionMessage.FieldInfo(context.FieldInfo));
         }
         else
-            context.FieldInfoWriters.Add(FieldInfoWriter);
+            context.FieldInfoWriters.Add(sessionWriter);
 
         return ServerAction.Continue;
     }

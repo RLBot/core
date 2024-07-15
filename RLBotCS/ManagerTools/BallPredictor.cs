@@ -47,13 +47,22 @@ public static partial class BallPredictor
     [LibraryImport("rl_ball_sym", EntryPoint = "load_standard_throwback")]
     private static partial void LoadStandardThrowback();
 
+    [LibraryImport("rl_ball_sym", EntryPoint = "get_heatseeker_target_y")]
+    private static partial float GetHeatseekerTargetY();
+
+    [LibraryImport("rl_ball_sym", EntryPoint = "reset_heatseeker_target")]
+    private static partial void ResetHeatseekerTarget();
+
     [LibraryImport("rl_ball_sym", EntryPoint = "set_heatseeker_target")]
     private static partial void SetHeatseekerTarget(byte blueGoal);
 
     [LibraryImport("rl_ball_sym", EntryPoint = "step")]
-    private static partial BallSlice Step(BallSlice ball);
+    private static unsafe partial BallSlice* Step(BallSlice ball, ushort ticks);
 
-    private static Vec3 ToVec3(Bridge.Models.Phys.Vector3 vec) => new(vec.x, vec.y, vec.z);
+    [LibraryImport("rl_ball_sym", EntryPoint = "free_ball_slices")]
+    private static unsafe partial void FreeBallSlices(BallSlice* slices, ushort ticks);
+
+    private static Vec3 ToVec3(Bridge.Models.Phys.Vector3 vec) => new(vec.X, vec.Y, vec.Z);
 
     private static Vector3T ToVector3T(Vec3 vec) =>
         new()
@@ -99,43 +108,67 @@ public static partial class BallPredictor
         };
     }
 
-    public static BallPredictionT Generate(PredictionMode mode, float time, Ball currentBall)
+    public static BallPredictionT Generate(PredictionMode mode, float currentTime, Ball currentBall)
     {
         BallSlice ball =
             new()
             {
-                Time = time,
-                Location = ToVec3(currentBall.Physics.location),
-                LinearVelocity = ToVec3(currentBall.Physics.velocity),
-                AngularVelocity = ToVec3(currentBall.Physics.angularVelocity)
+                Time = currentTime,
+                Location = ToVec3(currentBall.Physics.Location),
+                LinearVelocity = ToVec3(currentBall.Physics.Velocity),
+                AngularVelocity = ToVec3(currentBall.Physics.AngularVelocity)
             };
 
-        const int numSeconds = 8;
-        const int numSlices = numSeconds * 120;
+        const ushort numSeconds = 6;
+        const ushort numSlices = numSeconds * 120;
 
         BallPredictionT ballPrediction = new() { Slices = new List<PredictionSliceT>(numSlices) };
 
         if (mode == PredictionMode.Heatseeker)
-            // Target goal is the opposite of the last touch
-            SetHeatseekerTarget(currentBall.LatestTouch.Team == 0 ? (byte)1 : (byte)0);
-
-        for (int i = 0; i < numSlices; i++)
         {
-            ball = Step(ball);
+            if (currentBall.LatestTouch.TimeSeconds < float.Epsilon)
+            {
+                // A goal happened, we're in kickoff
+                ResetHeatseekerTarget();
+            }
+            else if (currentTime - currentBall.LatestTouch.TimeSeconds < 0.1)
+            {
+                // Target goal is the opposite of the last touch
+                SetHeatseekerTarget(currentBall.LatestTouch.Team == 1 ? (byte)0 : (byte)1);
+            }
+            else if (GetHeatseekerTargetY() == 0 || MathF.Abs(ball.Location.Y) >= 4820)
+            {
+                // We're very likely to hit a wall that will redirect the ball towards the other goal
+                SetHeatseekerTarget(ball.LinearVelocity.Y < 0 ? (byte)1 : (byte)0);
+            }
+        }
 
-            PredictionSliceT slice =
-                new()
-                {
-                    GameSeconds = ball.Time,
-                    Physics = new PhysicsT
+        unsafe
+        {
+            var ballSlices = Step(ball, numSlices);
+            if (ballSlices == null)
+                return ballPrediction;
+
+            for (int i = 0; i < numSlices; i++)
+            {
+                BallSlice rawSlice = ballSlices[i];
+
+                PredictionSliceT slice =
+                    new()
                     {
-                        Location = ToVector3T(ball.Location),
-                        Velocity = ToVector3T(ball.LinearVelocity),
-                        AngularVelocity = ToVector3T(ball.AngularVelocity)
-                    }
-                };
+                        GameSeconds = rawSlice.Time,
+                        Physics = new PhysicsT
+                        {
+                            Location = ToVector3T(rawSlice.Location),
+                            Velocity = ToVector3T(rawSlice.LinearVelocity),
+                            AngularVelocity = ToVector3T(rawSlice.AngularVelocity)
+                        }
+                    };
 
-            ballPrediction.Slices.Add(slice);
+                ballPrediction.Slices.Add(slice);
+            }
+
+            FreeBallSlices(ballSlices, numSlices);
         }
 
         return ballPrediction;

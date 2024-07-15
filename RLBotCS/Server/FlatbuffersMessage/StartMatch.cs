@@ -32,8 +32,7 @@ internal record StartMatch(MatchSettingsT MatchSettings) : IServerMessage
         // Distribute the match settings to all waiting sessions
         foreach (var writer in context.MatchSettingsWriters)
         {
-            writer.TryWrite(MatchSettings);
-            writer.TryComplete();
+            writer.TryWrite(new SessionMessage.MatchSettings(MatchSettings));
         }
 
         context.MatchSettingsWriters.Clear();

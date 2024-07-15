@@ -2,6 +2,8 @@ using System.Drawing;
 using Bridge.Models.Command;
 using Bridge.Models.Control;
 using Bridge.Models.Phys;
+using Bridge.Models.Render;
+using Bridge.State;
 
 namespace RLBotCS.Conversion;
 
@@ -32,35 +34,43 @@ internal static class FlatToModel
         };
     }
 
-    internal static Vector3 ToVector(rlbot.flat.Vector3 vec) =>
-        new()
+    internal static Vector3 ToVector(rlbot.flat.Vector3 vec) => new(vec.X, vec.Y, vec.Z);
+
+    internal static Vector3 ToVectorFromT(rlbot.flat.Vector3T vec) => new(vec.X, vec.Y, vec.Z);
+
+    internal static RelativeAnchor ExtractRelativeAnchor(
+        rlbot.flat.RelativeAnchorUnion? relative,
+        GameState gameState
+    ) =>
+        relative?.Value switch
         {
-            x = vec.X,
-            y = vec.Y,
-            z = vec.Z
+            rlbot.flat.CarAnchorT { Index: var index, Local: var local }
+                => (
+                    new RelativeAnchor()
+                    {
+                        ActorId = gameState.PlayerMapping.ActorIdFromPlayerIndex(index) ?? 0,
+                        Local = ToVectorFromT(local)
+                    }
+                ),
+            rlbot.flat.BallAnchorT { Index: var index, Local: var local }
+                => new RelativeAnchor()
+                {
+                    ActorId = gameState.GetBallActorIdFromIndex(index),
+                    Local = ToVectorFromT(local)
+                },
+            _ => new RelativeAnchor(),
         };
 
-    internal static Vector3 ToVectorFromT(rlbot.flat.Vector3T vec)
-    {
-        return new Vector3
+    internal static RenderAnchor ToRenderAnchor(rlbot.flat.RenderAnchorT offset, GameState gameState) =>
+        new RenderAnchor
         {
-            x = vec.X,
-            y = vec.Y,
-            z = vec.Z
+            World = ToVectorFromT(offset.World),
+            Relative = ExtractRelativeAnchor(offset.Relative, gameState)
         };
-    }
 
     internal static Color ToColor(rlbot.flat.ColorT c) => Color.FromArgb(c.A, c.R, c.G, c.B);
 
-    internal static Rotator ToRotator(rlbot.flat.Rotator r)
-    {
-        return new Rotator
-        {
-            pitch = r.Pitch,
-            yaw = r.Yaw,
-            roll = r.Roll
-        };
-    }
+    internal static Rotator ToRotator(rlbot.flat.Rotator r) => new Rotator(r.Pitch, r.Yaw, r.Roll);
 
     internal static Loadout ToLoadout(rlbot.flat.PlayerLoadoutT l, uint team)
     {
@@ -114,12 +124,11 @@ internal static class FlatToModel
         partVec switch
         {
             not null
-                => new Vector3
-                {
-                    x = partVec.X?.Val ?? defaultVec.x,
-                    y = partVec.Y?.Val ?? defaultVec.y,
-                    z = partVec.Z?.Val ?? defaultVec.z
-                },
+                => new Vector3(
+                    partVec.X?.Val ?? defaultVec.X,
+                    partVec.Y?.Val ?? defaultVec.Y,
+                    partVec.Z?.Val ?? defaultVec.Z
+                ),
             _ => defaultVec
         };
 
@@ -127,21 +136,19 @@ internal static class FlatToModel
         partRot switch
         {
             not null
-                => new Rotator
-                {
-                    pitch = partRot.Pitch?.Val ?? defaultRot.pitch,
-                    yaw = partRot.Yaw?.Val ?? defaultRot.yaw,
-                    roll = partRot.Roll?.Val ?? defaultRot.roll
-                },
+                => new Rotator(
+                    partRot.Pitch?.Val ?? defaultRot.Pitch,
+                    partRot.Yaw?.Val ?? defaultRot.Yaw,
+                    partRot.Roll?.Val ?? defaultRot.Roll
+                ),
             _ => defaultRot
         };
 
     internal static Physics DesiredToPhysics(rlbot.flat.DesiredPhysicsT p, Physics defaultP) =>
-        new()
-        {
-            location = DesiredToVector(p.Location, defaultP.location),
-            rotation = DesiredToRotator(p.Rotation, defaultP.rotation),
-            velocity = DesiredToVector(p.Velocity, defaultP.velocity),
-            angularVelocity = DesiredToVector(p.AngularVelocity, defaultP.angularVelocity),
-        };
+        new(
+            DesiredToVector(p.Location, defaultP.Location),
+            DesiredToVector(p.Velocity, defaultP.Velocity),
+            DesiredToVector(p.AngularVelocity, defaultP.AngularVelocity),
+            DesiredToRotator(p.Rotation, defaultP.Rotation)
+        );
 }

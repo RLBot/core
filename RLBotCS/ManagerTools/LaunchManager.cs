@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
-using System.Management;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
+using WmiLight;
 
 namespace RLBotCS.ManagerTools;
 
@@ -56,11 +56,11 @@ internal static class LaunchManager
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             return process.StartInfo.Arguments.Split(' ');
 
-        using var searcher = new ManagementObjectSearcher(
+        using WmiConnection con = new WmiConnection();
+        WmiQuery objects = con.CreateQuery(
             $"SELECT CommandLine FROM Win32_Process WHERE ProcessId = {process.Id}"
         );
-        using var objects = searcher.Get();
-        return objects.Cast<ManagementBaseObject>().SingleOrDefault()?["CommandLine"]?.ToString().Split(" ");
+        return objects.SingleOrDefault()?["CommandLine"]?.ToString()?.Split(" ") ?? [];
     }
 
     private static string[] GetIdealArgs(int gamePort) =>

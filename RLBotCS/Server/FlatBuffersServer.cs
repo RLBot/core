@@ -32,7 +32,7 @@ internal class FlatBuffersServer(
                     new(
                         client,
                         clientId,
-                        sessionChannel.Reader,
+                        sessionChannel,
                         _context.IncomingMessagesWriter,
                         _context.Bridge,
                         _context.RenderingIsEnabled,
@@ -46,6 +46,10 @@ internal class FlatBuffersServer(
                 catch (IOException)
                 {
                     Console.WriteLine("Session suddenly terminated the connection?");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error in session: {e}");
                 }
                 finally
                 {

@@ -1,4 +1,5 @@
 using Bridge.Controller;
+using Bridge.State;
 using Bridge.TCP;
 using rlbot.flat;
 using RLBotCS.Conversion;
@@ -10,13 +11,13 @@ public class Rendering(TcpMessenger tcpMessenger)
     private readonly RenderingSender _renderingSender = new(tcpMessenger);
     private readonly Dictionary<int, Dictionary<int, List<ushort>>> _clientRenderTracker = [];
 
-    private ushort? RenderItem(RenderTypeUnion renderItem) =>
+    private ushort? RenderItem(RenderTypeUnion renderItem, GameState gameState) =>
         renderItem.Value switch
         {
             Line3DT { Start: var start, End: var end, Color: var color }
                 => _renderingSender.AddLine3D(
-                    FlatToModel.ToVectorFromT(start),
-                    FlatToModel.ToVectorFromT(end),
+                    FlatToModel.ToRenderAnchor(start, gameState),
+                    FlatToModel.ToRenderAnchor(end, gameState),
                     FlatToModel.ToColor(color)
                 ),
             PolyLine3DT { Points: var points, Color: var color }
@@ -48,7 +49,7 @@ public class Rendering(TcpMessenger tcpMessenger)
             String3DT
             {
                 Text: var text,
-                Position: var position,
+                Anchor: var anchor,
                 Foreground: var foreground,
                 Background: var background,
                 HAlign: var hAlign,
@@ -57,7 +58,7 @@ public class Rendering(TcpMessenger tcpMessenger)
             }
                 => _renderingSender.AddText3D(
                     text,
-                    FlatToModel.ToVectorFromT(position),
+                    FlatToModel.ToRenderAnchor(anchor, gameState),
                     FlatToModel.ToColor(foreground),
                     FlatToModel.ToColor(background),
                     (byte)hAlign,
@@ -67,7 +68,7 @@ public class Rendering(TcpMessenger tcpMessenger)
             _ => null
         };
 
-    public void AddRenderGroup(int clientId, int renderId, List<RenderMessageT> renderItems)
+    public void AddRenderGroup(int clientId, int renderId, List<RenderMessageT> renderItems, GameState gameState)
     {
         var clientRenders = _clientRenderTracker.GetValueOrDefault(clientId, []);
         // Clear the previous render group
@@ -77,7 +78,7 @@ public class Rendering(TcpMessenger tcpMessenger)
 
         List<ushort> renderGroup = [];
         foreach (RenderMessageT renderItem in renderItems)
-            if (RenderItem(renderItem.Variety) is { } renderItemId)
+            if (RenderItem(renderItem.Variety, gameState) is { } renderItemId)
                 renderGroup.Add(renderItemId);
 
         _renderingSender.Send();

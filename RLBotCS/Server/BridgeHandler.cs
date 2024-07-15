@@ -36,6 +36,7 @@ internal class BridgeHandler(
                 }
 
                 _context.GameState = MessageHandler.CreateUpdatedState(messageClump, _context.GameState);
+                _context.Writer.TryWrite(new DistributeGameState(_context.GameState));
 
                 var matchStarted = MessageHandler.ReceivedMatchInfo(messageClump);
                 if (matchStarted)
@@ -61,8 +62,6 @@ internal class BridgeHandler(
 
                     _context.MatchCommandSender.Send();
                 }
-
-                _context.Writer.TryWrite(new DistributeGameState(_context.GameState));
             }
         }
     }
@@ -79,6 +78,7 @@ internal class BridgeHandler(
             {
                 _context.RenderingMgmt.ClearAllRenders();
             }
+            catch (Exception) { }
             finally
             {
                 _context.Messenger.Dispose();

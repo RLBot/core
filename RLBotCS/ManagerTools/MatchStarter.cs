@@ -54,10 +54,15 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
 
     public void MapSpawned()
     {
-        if (_needsSpawnBots && _matchSettings != null)
+        if (_matchSettings != null)
         {
-            SpawnCars(_matchSettings);
-            _needsSpawnBots = false;
+            bridge.TryWrite(new SetMutators(_matchSettings.MutatorSettings));
+
+            if (_needsSpawnBots)
+            {
+                SpawnCars(_matchSettings);
+                _needsSpawnBots = false;
+            }
         }
     }
 
@@ -144,11 +149,13 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
         var lastMutators = lastMatchSettings.MutatorSettings;
         var mutators = matchSettings.MutatorSettings;
 
-        return lastMatchSettings.GameMode != matchSettings.GameMode
+        return lastMatchSettings.Freeplay != matchSettings.Freeplay
+            || lastMatchSettings.GameMode != matchSettings.GameMode
             || lastMatchSettings.GameMapUpk != matchSettings.GameMapUpk
             || lastMatchSettings.InstantStart != matchSettings.InstantStart
             || lastMutators.MatchLength != mutators.MatchLength
             || lastMutators.MaxScore != mutators.MaxScore
+            || lastMutators.MultiBall != mutators.MultiBall
             || lastMutators.OvertimeOption != mutators.OvertimeOption
             || lastMutators.SeriesLengthOption != mutators.SeriesLengthOption
             || lastMutators.BallMaxSpeedOption != mutators.BallMaxSpeedOption
@@ -165,10 +172,11 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
 
     private void SpawnCars(MatchSettingsT matchSettings)
     {
-        bool hasHuman = false;
+        PlayerConfigurationT? humanConfig = null;
+        int numPlayers = matchSettings.PlayerConfigurations.Count;
         int indexOffset = 0;
 
-        for (int i = 0; i < matchSettings.PlayerConfigurations.Count; i++)
+        for (int i = 0; i < numPlayers; i++)
         {
             var playerConfig = matchSettings.PlayerConfigurations[i];
 
@@ -194,32 +202,36 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
 
                     break;
                 case PlayerClass.Human:
-                    if (hasHuman)
+                    // ensure there's no gap in the player indices
+                    indexOffset++;
+
+                    if (humanConfig is null)
                     {
-                        // We can't spawn this human player,
-                        // so we need to -1 for every index after this
-                        // to properly set the desired player indices
-                        indexOffset++;
-                        Console.WriteLine(
-                            "Warning: Multiple human players requested. RLBot only supports spawning max one human per match."
-                        );
+                        // We want the human to have the highest index, defer spawning
+                        humanConfig = playerConfig;
+                        continue;
                     }
-                    else
-                    {
-                        hasHuman = true;
-                        // indexOffset can only ever be 0 here
-                        bridge.TryWrite(new SpawnHuman(playerConfig, (uint)i));
-                    }
+
+                    // We can't spawn this human player,
+                    // so we need to -1 for every index after this
+                    // to properly set the desired player indices
+                    Console.WriteLine(
+                        "Warning: Multiple human players requested. RLBot only supports spawning max one human per match."
+                    );
 
                     break;
             }
         }
 
-        if (!hasHuman)
+        if (humanConfig is null)
         {
             // If no human was requested for the match,
             // then make the human spectate so we can start the match
             bridge.TryWrite(new ConsoleCommand("spectate"));
+        }
+        else
+        {
+            bridge.TryWrite(new SpawnHuman(humanConfig, (uint)(numPlayers - indexOffset)));
         }
     }
 }
