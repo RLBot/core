@@ -1,6 +1,6 @@
 # About
 
-The Core Project builds a RLBotServer.exe binary that allows custom bots and scripts
+The RLBot Core Project builds a `RLBotServer.exe` binary that allows custom bots and scripts
 to interface with Rocket League.
 
 This is a rewrite a C++ version that had lived at
@@ -12,13 +12,15 @@ This is a rewrite a C++ version that had lived at
 - Install an IDE
   - Visual Studio 2022 was used for initial development.
   - Rider and VS Code are also known to work.
+- Ensure submodules got cloned
+  - `git submodule update --init`
 
 ## Building
 
 In Visual Studio 2022, you can build the solution in Release mode, and find the
 compiled binaries at `RLBotCS\bin\Release\net8.0`.
 
-- Note: You can also build with the command `dotnet publish`
+- Note: You can also build with the command `dotnet build -c "Release"`
 
 ## Deployment
 
@@ -42,11 +44,11 @@ The [flatbuffers-schema](https://github.com/RLBot/flatbuffers-schema) submodule 
 - `git fetch`
 - `git pull`
 
-To regenerate `rlbot.cs`, you'll need to run `generate-flatbuffers.bat` or `generate-flatbuffers.sh`.
+The needed Flatbuffers code is automatically generated upon compilation of the project.
 
 ### Bridge
 
 The `Bridge.dll` file in `RLBotCS/lib` is built from a _closed-source_ repository due to legal reasons.
 It is maintained by RLBot developers who have signed an agreement with Psyonix to keep it private.
 
-In testing, the dll file works for building the project on not just Windows, but also Linux.
+The dll file is platform-independent and works for building the project on both Windows and Linux.
