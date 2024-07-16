@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using rlbot.flat;
+using RLBotCS.Conversion;
 using Tomlyn;
 using Tomlyn.Model;
 
@@ -214,16 +215,29 @@ public static class ConfigParser
             RunCommand = ""
         };
 
-    private static PlayerConfigurationT GetPsyonixConfig(TomlTable table, PlayerClassUnion classUnion) =>
-        // TODO - support psyonix bot loadouts
-        new()
+    private static PlayerConfigurationT GetPsyonixConfig(TomlTable table, PlayerClassUnion classUnion)
+    {
+        var team = ParseUint(table, "team", 0);
+        var (fullName, preset) = PsyonixPresets.GetRandom((int)team);
+
+        var namePrefix = classUnion.AsPsyonix().BotSkill switch
+        {
+            < 0 => "Beginner ",
+            < 0.5f => "Rookie ",
+            < 1 => "Pro ",
+            _ => ""
+        };
+
+        return new()
         {
             Variety = classUnion,
-            Team = ParseUint(table, "team", 0),
-            Name = "Unnamed Psyonix Bot",
+            Team = team,
+            Name = namePrefix + fullName.Split('_')[1],
             Location = "",
-            RunCommand = ""
+            RunCommand = "",
+            Loadout = preset,
         };
+    }
 
     private static PlayerConfigurationT GetBotConfig(
         TomlTable rlbotPlayerTable,
