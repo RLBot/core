@@ -56,7 +56,6 @@ void WaitForShutdown()
     rlbotServer.Join();
     Console.WriteLine("RLBot server has shut down successfully.");
 
-    bridgeWriter.TryWrite(new Stop());
     bridgeWriter.TryComplete();
 
     bridgeHandler.Join();
