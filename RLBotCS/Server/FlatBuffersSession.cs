@@ -23,6 +23,8 @@ internal record SessionMessage
 
     public record StateSettingAllowed(bool Allowed) : SessionMessage;
 
+    public record MatchComm(MatchCommT matchComm) : SessionMessage;
+
     public record StopMatch : SessionMessage;
 }
 
@@ -120,7 +122,7 @@ internal class FlatBuffersSession
                     break;
 
                 var matchComms = MatchComm.GetRootAsMatchComm(byteBuffer).UnPack();
-                // todo: send to server to send to other clients
+                await _rlbotServer.WriteAsync(new SendMatchComm(_clientId, matchComms));
 
                 break;
 
@@ -209,6 +211,15 @@ internal class FlatBuffersSession
                     break;
                 case SessionMessage.StateSettingAllowed m:
                     _stateSettingIsEnabled = m.Allowed;
+                    break;
+                case SessionMessage.MatchComm m when _isReady && _wantsComms:
+                    _messageBuilder.Clear();
+                    _messageBuilder.Finish(MatchComm.Pack(_messageBuilder, m.matchComm).Value);
+
+                    await SendPayloadToClientAsync(
+                        TypedPayload.FromFlatBufferBuilder(DataType.MatchComms, _messageBuilder)
+                    );
+
                     break;
                 case SessionMessage.StopMatch when _isReady && _closeAfterMatch:
                     Console.WriteLine("Core got stop match message from server.");
