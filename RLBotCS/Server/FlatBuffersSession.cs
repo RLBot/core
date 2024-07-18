@@ -148,8 +148,7 @@ internal class FlatBuffersSession
                     break;
 
                 var desiredGameState = DesiredGameState.GetRootAsDesiredGameState(byteBuffer).UnPack();
-                // _gameController.MatchStarter.SetDesiredGameState(desiredGameState);
-                // todo
+                await _bridge.WriteAsync(new SetGameState(desiredGameState));
 
                 break;
 

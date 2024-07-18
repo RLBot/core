@@ -180,10 +180,62 @@ internal record SetMutators(MutatorSettingsT MutatorSettings) : IBridgeMessage
     }
 }
 
-internal record Stop : IBridgeMessage
+internal record SetGameState(DesiredGameStateT GameState) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
-        // TODO
+        foreach (var command in GameState.ConsoleCommands)
+            context.MatchCommandSender.AddConsoleCommand(command.Command);
+
+        if (GameState.GameInfoState is DesiredGameInfoStateT gameInfo)
+        {
+            if (gameInfo.WorldGravityZ is FloatT gravity)
+                context.MatchCommandSender.AddConsoleCommand(FlatToCommand.MakeGravityCommand(gravity.Val));
+
+            if (gameInfo.GameSpeed is FloatT speed)
+                context.MatchCommandSender.AddConsoleCommand(FlatToCommand.MakeGameSpeedCommand(speed.Val));
+
+            if (gameInfo.Paused is BoolT paused)
+                context.MatchCommandSender.AddSetPausedCommand(paused.Val);
+
+            if (gameInfo.EndMatch is BoolT endMatch && endMatch.Val)
+                context.MatchCommandSender.AddMatchEndCommand();
+        }
+
+        for (int i = 0; i < GameState.BallStates.Count; i++)
+        {
+            var ball = GameState.BallStates[i];
+
+            if (ball.Physics is DesiredPhysicsT physics)
+            {
+                var id = context.GameState.GetBallActorIdFromIndex((uint)i);
+                var currentPhysics = context.GameState.Balls[(ushort)i].Physics;
+                var fullState = FlatToModel.DesiredToPhysics(physics, currentPhysics);
+
+                context.MatchCommandSender.AddSetPhysicsCommand(id, fullState);
+            }
+        }
+
+        for (int i = 0; i < GameState.CarStates.Count; i++)
+        {
+            var car = GameState.CarStates[i];
+
+            if (car.Physics is DesiredPhysicsT physics)
+            {
+                var id = context.GameState.GetBallActorIdFromIndex((uint)i);
+                var currentPhysics = context.GameState.GameCars[(ushort)i].Physics;
+                var fullState = FlatToModel.DesiredToPhysics(physics, currentPhysics);
+
+                context.MatchCommandSender.AddSetPhysicsCommand(id, fullState);
+            }
+
+            if (car.BoostAmount is FloatT boostAmount)
+            {
+                var id = context.GameState.GetBallActorIdFromIndex((uint)i);
+                context.MatchCommandSender.AddSetBoostCommand(id, (int)boostAmount.Val);
+            }
+        }
+
+        context.MatchCommandSender.Send();
     }
 }

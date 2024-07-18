@@ -34,8 +34,6 @@ internal static class FlatToModel
         };
     }
 
-    internal static Vector3 ToVector(rlbot.flat.Vector3 vec) => new(vec.X, vec.Y, vec.Z);
-
     internal static Vector3 ToVectorFromT(rlbot.flat.Vector3T vec) => new(vec.X, vec.Y, vec.Z);
 
     internal static RelativeAnchor ExtractRelativeAnchor(
