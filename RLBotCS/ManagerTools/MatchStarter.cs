@@ -78,7 +78,7 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
         foreach (var playerConfig in matchSettings.PlayerConfigurations)
         {
             // De-duplicating similar names, Overwrites original value
-            string playerName = playerConfig.Name;
+            string playerName = playerConfig.Name ?? "";
             if (playerNames.TryGetValue(playerName, out int value))
             {
                 playerNames[playerName] = ++value;
@@ -91,7 +91,12 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
             }
 
             playerConfig.SpawnId = playerConfig.Name.GetHashCode();
+            playerConfig.Location = playerConfig.Location ?? "";
+            playerConfig.RunCommand = playerConfig.RunCommand ?? "";
         }
+
+        matchSettings.GamePath = matchSettings.GamePath ?? "";
+        matchSettings.GameMapUpk = matchSettings.GameMapUpk ?? "";
 
         if (matchSettings.AutoStartBots)
         {
