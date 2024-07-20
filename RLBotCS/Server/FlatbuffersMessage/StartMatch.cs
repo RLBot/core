@@ -7,6 +7,9 @@ internal record StartMatch(MatchSettingsT MatchSettings) : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {
+        foreach (var (writer, _) in context.Sessions.Values)
+            writer.TryWrite(new SessionMessage.StopMatch());
+
         context.RenderingIsEnabled = MatchSettings.EnableRendering;
         context.StateSettingIsEnabled = MatchSettings.EnableStateSetting;
 

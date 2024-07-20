@@ -267,7 +267,6 @@ internal class FlatBuffersSession
     {
         Task incomingMessagesTask = Task.Run(async () =>
         {
-            Console.WriteLine("Starting incoming messages task.");
             try
             {
                 await HandleIncomingMessages();
@@ -280,7 +279,6 @@ internal class FlatBuffersSession
 
         Task clientMessagesTask = Task.Run(async () =>
         {
-            Console.WriteLine("Starting client messages task.");
             try
             {
                 await HandleClientMessages();
