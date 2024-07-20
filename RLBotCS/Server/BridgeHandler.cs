@@ -63,13 +63,18 @@ internal class BridgeHandler(
 
                 if (_context.GameState.MatchEnded)
                 {
-                    _context.QuickChat.ClearChats();
-                    _context.RenderingMgmt.ClearAllRenders();
+                    if (!_context.LastMatchEnded)
+                    {
+                        _context.QuickChat.ClearChats();
+                        _context.RenderingMgmt.ClearAllRenders();
+                        _context.Writer.TryWrite(new StopMatch(false));
+                    }
                 }
                 else
                 {
                     _context.QuickChat.RenderChats(_context.RenderingMgmt, _context.GameState);
                 }
+                _context.LastMatchEnded = _context.GameState.MatchEnded;
 
                 if (
                     _context is
