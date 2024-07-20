@@ -265,8 +265,31 @@ internal class FlatBuffersSession
 
     public void BlockingRun()
     {
-        Task incomingMessagesTask = HandleIncomingMessages();
-        Task clientMessagesTask = HandleClientMessages();
+        Task incomingMessagesTask = new Task(async () =>
+        {
+            try
+            {
+                await HandleIncomingMessages();
+            }
+            catch (Exception e)
+            {
+                Logger.LogError($"Error while handling incoming messages: {e}");
+            }
+        });
+        incomingMessagesTask.Start();
+
+        Task clientMessagesTask = new Task(async () =>
+        {
+            try
+            {
+                await HandleClientMessages();
+            }
+            catch (Exception e)
+            {
+                Logger.LogError($"Error while handling client messages: {e}");
+            }
+        });
+        clientMessagesTask.Start();
 
         Task.WhenAny(incomingMessagesTask, clientMessagesTask).Wait();
     }
