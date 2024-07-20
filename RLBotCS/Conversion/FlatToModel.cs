@@ -9,7 +9,7 @@ namespace RLBotCS.Conversion;
 
 internal static class FlatToModel
 {
-    internal static CarInput ToCarInput(rlbot.flat.ControllerState state)
+    internal static CarInput ToCarInput(rlbot.flat.ControllerStateT state)
     {
         float dodgeForward = -state.Pitch;
 

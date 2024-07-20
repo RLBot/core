@@ -117,7 +117,7 @@ internal class FlatBuffersSession
                 break;
 
             case DataType.PlayerInput:
-                var playerInputMsg = PlayerInput.GetRootAsPlayerInput(byteBuffer);
+                var playerInputMsg = PlayerInput.GetRootAsPlayerInput(byteBuffer).UnPack();
                 await _bridge.WriteAsync(new Input(playerInputMsg));
                 break;
 
@@ -127,6 +127,7 @@ internal class FlatBuffersSession
 
                 var matchComms = MatchComm.GetRootAsMatchComm(byteBuffer).UnPack();
                 await _rlbotServer.WriteAsync(new SendMatchComm(_clientId, matchComms));
+                await _bridge.WriteAsync(new ShowQuickChat(matchComms));
 
                 break;
 

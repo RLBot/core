@@ -137,7 +137,5 @@ public class Rendering(TcpMessenger tcpMessenger)
         // Clear the tracker
         _clientRenderTracker.Clear();
         _renderingSender.Send();
-
-        Console.WriteLine("All renders cleared");
     }
 }
