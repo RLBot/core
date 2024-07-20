@@ -1,5 +1,6 @@
 ﻿using System.Net.Sockets;
 using System.Threading.Channels;
+using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.ManagerTools;
 
@@ -11,6 +12,8 @@ internal class ServerContext(
     ChannelWriter<IBridgeMessage> bridge
 )
 {
+    public readonly ILogger Logger = Logging.GetLogger("FlatBuffersServer");
+
     public TcpListener? Server { get; init; }
     public ChannelReader<IServerMessage> IncomingMessages { get; } = incomingMessages.Reader;
     public ChannelWriter<IServerMessage> IncomingMessagesWriter { get; } =

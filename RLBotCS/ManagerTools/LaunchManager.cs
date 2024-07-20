@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using WmiLight;
 
@@ -13,6 +14,8 @@ internal static class LaunchManager
     public const int RlbotSocketsPort = 23234;
     private const int DefaultGamePort = 50000;
     private const int IdealGamePort = 23233;
+
+    private static readonly ILogger Logger = Logging.GetLogger("LaunchManager");
 
     public static int FindUsableGamePort()
     {
@@ -96,7 +99,7 @@ internal static class LaunchManager
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Failed to launch bot {player.Name}: {e.Message}");
+                Logger.LogError($"Failed to launch bot {player.Name}: {e.Message}");
             }
         }
     }
@@ -123,7 +126,7 @@ internal static class LaunchManager
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Failed to launch script: {e.Message}");
+                Logger.LogError($"Failed to launch script: {e.Message}");
             }
         }
     }
@@ -141,7 +144,7 @@ internal static class LaunchManager
                         $"-applaunch {SteamGameId} "
                         + string.Join(" ", GetIdealArgs(gamePort));
 
-                    Console.WriteLine(
+                    Logger.LogInformation(
                         $"Starting Rocket League with args {steamPath} {rocketLeague.StartInfo.Arguments}"
                     );
                     rocketLeague.Start();
@@ -162,7 +165,7 @@ internal static class LaunchManager
                     rocketLeague.StartInfo.Arguments =
                         $"steam://rungameid/{SteamGameId}//{args}";
 
-                    Console.WriteLine(
+                    Logger.LogInformation(
                         $"Starting Rocket League via Steam CLI with {rocketLeague.StartInfo.Arguments}"
                     );
                     rocketLeague.Start();

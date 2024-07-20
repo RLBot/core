@@ -1,9 +1,13 @@
+using Microsoft.Extensions.Logging;
 using rlbot.flat;
+using RLBotCS.ManagerTools;
 
 namespace RLBotCS.Conversion;
 
 internal static class FlatToCommand
 {
+    private static readonly ILogger Logger = Logging.GetLogger("FlatToCommand");
+
     private static string MapGameMode(GameMode gameMode) =>
         gameMode switch
         {
@@ -222,7 +226,7 @@ internal static class FlatToCommand
         else
         {
             command += "Stadium_P";
-            Console.WriteLine("Core got unknown map, defaulting to DFH Stadium");
+            Logger.LogWarning("Core got unknown map, defaulting to DFH Stadium");
         }
 
         // Parse game mode

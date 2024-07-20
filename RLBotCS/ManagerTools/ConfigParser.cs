@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.Conversion;
 using Tomlyn;
@@ -8,11 +9,13 @@ namespace RLBotCS.ManagerTools;
 
 public static class ConfigParser
 {
+    private static readonly ILogger Logger = Logging.GetLogger("ConfigParser");
+
     private static TomlTable GetTable(string? path)
     {
         if (path == null)
         {
-            Console.WriteLine("Warning! Could not read Toml file, path is null");
+            Logger.LogError("Could not read Toml file, path is null");
             return [];
         }
 
@@ -23,14 +26,18 @@ public static class ConfigParser
         }
         catch (FileNotFoundException)
         {
-            Console.WriteLine($"Warning! Could not read Toml file at '{path}'");
+            Logger.LogError($"Could not find Toml file at '{path}'");
             return [];
         }
     }
 
     // GetTable retrieves a TomlTable from a file. ParseTable retrieves a table within another table
 
-    private static TomlTable ParseTable(TomlTable table, string key)
+    private static TomlTable ParseTable(
+        TomlTable table,
+        string key,
+        List<string> missingValues
+    )
     {
         try
         {
@@ -38,12 +45,16 @@ public static class ConfigParser
         }
         catch (KeyNotFoundException)
         {
-            Console.WriteLine($"Warning! Could not find the '{key}' table!");
+            missingValues.Add(key);
             return [];
         }
     }
 
-    private static TomlTableArray ParseTableArray(TomlTable table, string key)
+    private static TomlTableArray ParseTableArray(
+        TomlTable table,
+        string key,
+        List<string> missingValues
+    )
     {
         try
         {
@@ -51,7 +62,7 @@ public static class ConfigParser
         }
         catch (KeyNotFoundException)
         {
-            Console.WriteLine($"Warning! Could not find the '{key}' table!");
+            missingValues.Add(key);
             return [];
         }
     }
@@ -70,9 +81,7 @@ public static class ConfigParser
             if (Enum.TryParse((string)table[key], true, out T value))
                 return value;
 
-            Console.WriteLine(
-                $"Warning! '{key}' has invalid value, using default setting instead"
-            );
+            Logger.LogError($"'{key}' has invalid value, using default setting instead");
             return fallback;
         }
         catch (KeyNotFoundException)
@@ -118,7 +127,12 @@ public static class ConfigParser
         }
     }
 
-    private static float ParseFloat(TomlTable table, string key, float fallback)
+    private static float ParseFloat(
+        TomlTable table,
+        string key,
+        float fallback,
+        List<string> missingValues
+    )
     {
         try
         {
@@ -126,9 +140,7 @@ public static class ConfigParser
         }
         catch (KeyNotFoundException)
         {
-            Console.WriteLine(
-                $"Could not find the '{key}' field in toml. Using default setting '{fallback}' instead"
-            );
+            missingValues.Add(key);
             return fallback;
         }
     }
@@ -201,7 +213,7 @@ public static class ConfigParser
         // TODO:
         // We're currently on Linux but there's no Linux-specific run command
         // Try running the Windows command under Wine instead
-        Console.WriteLine("Warning! No Linux-specific run command found for script!");
+        Logger.LogError("No Linux-specific run command found for script!");
         return runCommandWindows ?? "";
     }
 
@@ -251,7 +263,10 @@ public static class ConfigParser
                 => GetPsyonixConfig(
                     table,
                     PlayerClassUnion.FromPsyonix(
-                        new PsyonixT { BotSkill = ParseFloat(table, "skill", 1.0f) }
+                        new PsyonixT
+                        {
+                            BotSkill = ParseFloat(table, "skill", 1.0f, missingValues)
+                        }
                     ),
                     missingValues
                 ),
@@ -327,7 +342,7 @@ public static class ConfigParser
         TomlTable playerToml = GetTable(CombinePaths(matchConfigParent, playerTomlPath));
         string? tomlParent = Path.GetDirectoryName(playerTomlPath);
 
-        TomlTable playerSettings = ParseTable(playerToml, "settings");
+        TomlTable playerSettings = ParseTable(playerToml, "settings", missingValues);
         string? loadoutTomlPath = CombinePaths(
             tomlParent,
             ParseString(playerSettings, "looks_config", null, missingValues)
@@ -339,9 +354,9 @@ public static class ConfigParser
             ParseInt(rlbotPlayerTable, "team", 0, missingValues) == 0
                 ? "blue_loadout"
                 : "orange_loadout";
-        TomlTable teamLoadout = ParseTable(loadoutToml, teamLoadoutString);
+        TomlTable teamLoadout = ParseTable(loadoutToml, teamLoadoutString, missingValues);
 
-        TomlTable teamPaint = ParseTable(teamLoadout, "paint");
+        TomlTable teamPaint = ParseTable(teamLoadout, "paint", missingValues);
 
         return new PlayerConfigurationT
         {
@@ -504,18 +519,20 @@ public static class ConfigParser
          * "playerToml" is the "bot" table in rlbot.toml. It contains the path to the bot.toml file
          */
         TomlTable rlbotToml = GetTable(path);
-        TomlTable rlbotTable = ParseTable(rlbotToml, "rlbot");
-        TomlTable matchTable = ParseTable(rlbotToml, "match");
-        TomlTable mutatorTable = ParseTable(rlbotToml, "mutators");
-        TomlTableArray players = ParseTableArray(rlbotToml, "cars");
-        TomlTableArray scripts = ParseTableArray(rlbotToml, "scripts");
 
         Dictionary<string, List<string>> missingValues = new();
+        missingValues[""] = [];
         missingValues["rlbot"] = [];
         missingValues["match"] = [];
         missingValues["mutators"] = [];
         missingValues["cars"] = [];
         missingValues["scripts"] = [];
+
+        TomlTable rlbotTable = ParseTable(rlbotToml, "rlbot", missingValues[""]);
+        TomlTable matchTable = ParseTable(rlbotToml, "match", missingValues[""]);
+        TomlTable mutatorTable = ParseTable(rlbotToml, "mutators", missingValues[""]);
+        TomlTableArray players = ParseTableArray(rlbotToml, "cars", missingValues[""]);
+        TomlTableArray scripts = ParseTableArray(rlbotToml, "scripts", missingValues[""]);
 
         List<PlayerConfigurationT> playerConfigs = [];
         // Gets the PlayerConfigT object for the number of players requested
@@ -603,7 +620,7 @@ public static class ConfigParser
                 ", ",
                 missingValues.SelectMany(kvp => kvp.Value.Select(v => $"{kvp.Key}.{v}"))
             );
-            Console.WriteLine($"Warning! Missing values in toml: {missingValuesString}");
+            Logger.LogWarning($"Missing values in toml: {missingValuesString}");
         }
 
         return matchSettings;

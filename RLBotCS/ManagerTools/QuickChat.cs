@@ -5,13 +5,13 @@ namespace RLBotCS.ManagerTools;
 
 public class QuickChat
 {
-    private static readonly int _clientId = 0;
-    private static readonly int _renderGroupId = 0;
+    private const int ClientId = 0;
+    private const int RenderGroupId = 0;
 
-    private static readonly int _maxDisplayMessages = 8;
-    private static readonly int _chatDisplaySeconds = 5;
+    private const int MaxDisplayMessages = 8;
+    private const int ChatDisplaySeconds = 5;
 
-    private static readonly ColorT _orangeColor =
+    private static readonly ColorT OrangeColor =
         new()
         {
             A = 255,
@@ -19,7 +19,7 @@ public class QuickChat
             G = 200,
             B = 80
         };
-    private static readonly ColorT _blueColor =
+    private static readonly ColorT BlueColor =
         new()
         {
             A = 255,
@@ -27,7 +27,7 @@ public class QuickChat
             G = 200,
             B = 255
         };
-    private static readonly ColorT _backgroundColor =
+    private static readonly ColorT BackgroundColor =
         new()
         {
             A = 150,
@@ -47,13 +47,13 @@ public class QuickChat
         _chats.AddLast((gameTime, matchComm));
         _hasUpdate = true;
 
-        if (_chats.Count > _maxDisplayMessages)
+        if (_chats.Count > MaxDisplayMessages)
             _chats.RemoveFirst();
     }
 
     private void RemoveOldChats(float gameTime)
     {
-        while (_chats.Count > 0 && _chats.First.Value.Item1 + _chatDisplaySeconds < gameTime)
+        while (_chats.Count > 0 && _chats.First.Value.Item1 + ChatDisplaySeconds < gameTime)
         {
             _hasUpdate = true;
             _chats.RemoveFirst();
@@ -74,7 +74,7 @@ public class QuickChat
 
         foreach (var chat in _chats)
         {
-            var textColor = chat.Item2.Team == 0 ? _blueColor : _orangeColor;
+            var textColor = chat.Item2.Team == 0 ? BlueColor : OrangeColor;
 
             String2DT message =
                 new()
@@ -84,7 +84,7 @@ public class QuickChat
                     X = xVal / 1080f,
                     Scale = 1,
                     Foreground = textColor,
-                    Background = _backgroundColor,
+                    Background = BackgroundColor,
                     HAlign = TextHAlign.Left,
                     VAlign = TextVAlign.Top,
                 };
@@ -97,9 +97,9 @@ public class QuickChat
         }
 
         if (renderMessages.Count > 0)
-            rendering.AddRenderGroup(_clientId, _renderGroupId, renderMessages, gameState);
+            rendering.AddRenderGroup(ClientId, RenderGroupId, renderMessages, gameState);
         else
-            rendering.RemoveRenderGroup(_clientId, _renderGroupId);
+            rendering.RemoveRenderGroup(ClientId, RenderGroupId);
     }
 
     public void ClearChats() => _chats.Clear();

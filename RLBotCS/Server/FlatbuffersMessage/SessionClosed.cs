@@ -6,7 +6,6 @@ internal record SessionClosed(int ClientId) : IServerMessage
     {
         context.Bridge.TryWrite(new RemoveClientRenders(ClientId));
         context.Sessions.Remove(ClientId);
-        Console.WriteLine("Session closed.");
 
         return ServerAction.Continue;
     }

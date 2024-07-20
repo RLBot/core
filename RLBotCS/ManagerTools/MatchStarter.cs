@@ -1,5 +1,6 @@
 ﻿using System.Threading.Channels;
 using Bridge.Models.Message;
+using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotCS.Server;
@@ -9,11 +10,12 @@ namespace RLBotCS.ManagerTools;
 
 internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
 {
-    private bool _communicationStarted;
+    private static readonly ILogger Logger = Logging.GetLogger("MatchStarter");
 
     private MatchSettingsT? _deferredMatchSettings;
     private MatchSettingsT? _matchSettings;
 
+    private bool _communicationStarted;
     private bool _hasEverLoadedMap;
     private bool _needsSpawnBots;
 
@@ -189,7 +191,7 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
             switch (playerConfig.Variety.Type)
             {
                 case PlayerClass.RLBot:
-                    Console.WriteLine(
+                    Logger.LogInformation(
                         "Core is spawning player "
                             + playerConfig.Name
                             + " with spawn id "
@@ -233,8 +235,8 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
                     // We can't spawn this human player,
                     // so we need to -1 for every index after this
                     // to properly set the desired player indices
-                    Console.WriteLine(
-                        "Warning: Multiple human players requested. RLBot only supports spawning max one human per match."
+                    Logger.LogError(
+                        "Multiple human players requested. RLBot only supports spawning max one human per match."
                     );
 
                     break;

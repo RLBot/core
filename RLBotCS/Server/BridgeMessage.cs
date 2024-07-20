@@ -2,6 +2,7 @@
 using Bridge.Models.Control;
 using Bridge.Models.Message;
 using Bridge.State;
+using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.Conversion;
 using PlayerInput = rlbot.flat.PlayerInput;
@@ -29,9 +30,8 @@ internal record Input(PlayerInputT PlayerInput) : IBridgeMessage
             context.PlayerInputSender.SendPlayerInput(playerInput);
         }
         else
-            Console.WriteLine(
-                "Core got input from unknown player index {0}",
-                PlayerInput.PlayerIndex
+            context.Logger.LogError(
+                $"Got input from unknown player index {PlayerInput.PlayerIndex}"
             );
     }
 }
@@ -110,7 +110,7 @@ internal record SpawnMap(MatchSettingsT MatchSettings) : IBridgeMessage
         context.DelayMatchCommandSend = true;
 
         string loadMapCommand = FlatToCommand.MakeOpenCommand(MatchSettings);
-        Console.WriteLine("Core is about to start match with command: " + loadMapCommand);
+        context.Logger.LogInformation($"Starting match with command: {loadMapCommand}");
 
         context.MatchCommandSender.AddConsoleCommand(loadMapCommand);
         context.MatchCommandSender.Send();

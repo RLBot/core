@@ -2,6 +2,7 @@
 using Bridge.Controller;
 using Bridge.State;
 using Bridge.TCP;
+using Microsoft.Extensions.Logging;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.FlatbuffersMessage;
 
@@ -13,6 +14,8 @@ internal class BridgeContext(
     TcpMessenger messenger
 )
 {
+    public readonly ILogger Logger = Logging.GetLogger("BridgeHandler");
+
     public GameState GameState = new();
 
     public ChannelWriter<IServerMessage> Writer { get; } = writer;
