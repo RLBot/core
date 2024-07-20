@@ -1,52 +1,50 @@
-using System;
 using Bridge.Models.Message;
 using Bridge.State;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace RLBotCSTests
+namespace RLBotCSTests;
+
+[TestClass]
+public class PlayerMappingTest
 {
-    [TestClass]
-    public class PlayerMappingTest
+    private PlayerMapping _playerMapping;
+
+    [TestInitialize]
+    public void Init()
     {
-        private PlayerMapping _playerMapping;
+        _playerMapping = new PlayerMapping();
+    }
 
-        [TestInitialize]
-        public void Init()
+    [TestMethod]
+    public void TestSpawnProcess()
+    {
+        int spawnId = 2398249;
+        uint desiredIndex = 2;
+        ushort actorId = 2398;
+        ushort commandId = 9855;
+
+        var spawnTracker = new SpawnTracker()
         {
-            _playerMapping = new PlayerMapping();
-        }
+            SpawnId = spawnId,
+            CommandId = commandId,
+            DesiredPlayerIndex = desiredIndex,
+            IsBot = true
+        };
 
-        [TestMethod]
-        public void TestSpawnProcess()
-        {
-            int spawnId = 2398249;
-            uint desiredIndex = 2;
-            ushort actorId = 2398;
-            ushort commandId = 9855;
+        _playerMapping.AddPendingSpawn(spawnTracker);
 
-            var spawnTracker = new SpawnTracker()
-            {
-                SpawnId = spawnId,
-                CommandId = commandId,
-                DesiredPlayerIndex = desiredIndex,
-                IsBot = true
-            };
+        var carSpawn = new CarSpawn() { ActorId = actorId, CommandId = commandId, };
+        var metadata = _playerMapping.ApplyCarSpawn(carSpawn);
 
-            _playerMapping.AddPendingSpawn(spawnTracker);
+        Assert.AreEqual(desiredIndex, _playerMapping.PlayerIndexFromActorId(actorId));
+        Assert.IsTrue(metadata.IsBot);
+        Assert.IsTrue(!metadata.IsCustomBot);
 
-            var carSpawn = new CarSpawn() { ActorId = actorId, CommandId = commandId, };
-            var metadata = _playerMapping.ApplyCarSpawn(carSpawn);
+        var metadata2 = _playerMapping.ApplyCarSpawn(new CarSpawn() { ActorId = 111, CommandId = 222, });
 
-            Assert.AreEqual(desiredIndex, _playerMapping.PlayerIndexFromActorId(actorId));
-            Assert.IsTrue(metadata.IsBot);
-            Assert.IsTrue(!metadata.IsCustomBot);
-
-            var metadata2 = _playerMapping.ApplyCarSpawn(new CarSpawn() { ActorId = 111, CommandId = 222, });
-
-            Assert.AreEqual(0u, _playerMapping.PlayerIndexFromActorId(111));
-            Assert.AreEqual(desiredIndex, _playerMapping.PlayerIndexFromActorId(actorId));
-            Assert.IsTrue(!metadata2.IsBot);
-            Assert.IsTrue(!metadata2.IsCustomBot);
-        }
+        Assert.AreEqual(0u, _playerMapping.PlayerIndexFromActorId(111));
+        Assert.AreEqual(desiredIndex, _playerMapping.PlayerIndexFromActorId(actorId));
+        Assert.IsTrue(!metadata2.IsBot);
+        Assert.IsTrue(!metadata2.IsCustomBot);
     }
 }

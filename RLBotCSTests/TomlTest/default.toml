@@ -7,7 +7,7 @@ auto_start_bots = true
 
 [match]
 # Number of bots/players which will be spawned.
-num_cars = 1
+num_cars = 0
 # Number of scripts which will be spawned.
 num_scripts = 0
 # What game mode the game should load.
@@ -22,24 +22,28 @@ start_without_countdown = false
 # What should we do if you click run while a match is already in progress?
 # "Restart If Different", "Restart", "Continue And Spawn"
 existing_match_behavior = "Restart"
-enable_rendering = true
+enable_rendering = false
 enable_state_setting = true
 auto_save_replay = false
+# Whether or not to use freeplay instead of an exhibition match
+freeplay = false
 
 [mutators]
 # "Five_Minutes", "Ten_Minutes", "Twenty_Minutes", "Unlimited"
 match_length = "Five_Minutes"
-# "Unlimited", "One_Goal", "Three_Goals", "Five_Goals",
-max_score = "Unlimited"
+# "Default", "One_Goal", "Three_Goals", "Five_Goals", "Seven Goals", "Unlimited"
+max_score = "Default"
+# "One", "Two", "Four", "Six"
+multi_ball = "One"
 # "Unlimited", "Five_Max_First_Score", "Five_Max_Random_Team"
 overtime = "Unlimited"
 # "Default", "Slo_Mo", "Time_Warp"
 game_speed = "Default"
 # "Default", "Slow", "Fast", "Super_Fast"
 ball_max_speed = "Default"
-# "Default", "Cube", "Puck", "Basketball"
+# "Default", "Cube", "Puck", "Basketball", "Beachball", "Anniversary", "Haunted"
 ball_type = "Default"
-# "Default", "Light", "Heavy", "Super_Light"
+# "Default", "Light", "Heavy", "Super_Light", "Curve_Ball", "Beach_Ball_Curve"
 ball_weight = "Default"
 # "Default", "Small", "Large", "Gigantic"
 ball_size = "Default"
@@ -47,17 +51,13 @@ ball_size = "Default"
 ball_bounciness = "Default"
 # "Normal_Boost", "Unlimited", "Slow_Recharge", "Rapid_Recharge", "No_Boost"
 boost_amount = "Normal_Boost"
-# "No_Rumble", "Default", "Slow", "Civilized", "Destruction_Derby", "Spring_Loaded", "Spikes_Only", "Spike_Rush"
+# "No_Rumble", "Default", "Slow", "Civilized", "Destruction_Derby", "Spring_Loaded", "Spikes_Only", "Spike_Rush", "Haunted_Ball_Beam", "Tactical"
 rumble = "No_Rumble"
 # "One", "OneAndAHalf", "Two", "Ten"
 boost_strength = "One"
-# "Default", "Low", "High", "Super_High"
+# "Default", "Low", "High", "Super_High", "Reverse"
 gravity = "Default"
 # "Default", "Disabled", "Friendly_Fire", "On_Contact", "On_Contact_FF"
 demolish = "Default"
 # "Three_Seconds", "Two_Seconds", "One_Seconds", "Disable_Goal_Reset"
 respawn_time = "Three_Seconds"
-
-[[cars]]
-type = "human"
-team = 0

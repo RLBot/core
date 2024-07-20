@@ -346,11 +346,11 @@ public static class ConfigParser
             SkipReplays = ParseBool(matchTable, "skip_replays", false),
             InstantStart = ParseBool(matchTable, "start_without_countdown", false),
             EnableRendering = ParseBool(matchTable, "enable_rendering", false),
-            EnableStateSetting = ParseBool(matchTable, "enable_state_setting", false),
+            EnableStateSetting = ParseBool(matchTable, "enable_state_setting", true),
             ExistingMatchBehavior = ParseEnum(
                 matchTable,
                 "existing_match_behavior",
-                ExistingMatchBehavior.Restart_If_Different
+                ExistingMatchBehavior.Restart
             ),
             AutoSaveReplay = ParseBool(matchTable, "auto_save_replay", false),
             Freeplay = ParseBool(matchTable, "freeplay", false),
