@@ -262,9 +262,11 @@ internal static class FlatToCommand
         return command;
     }
 
-    public static string MakeGameSpeedCommand(float gameSpeed) => "Set WorldInfo TimeDilation " + gameSpeed;
+    public static string MakeGameSpeedCommand(float gameSpeed) =>
+        "Set WorldInfo TimeDilation " + gameSpeed;
 
-    public static string MakeGravityCommand(float gravity) => "Set WorldInfo WorldGravityZ " + gravity;
+    public static string MakeGravityCommand(float gravity) =>
+        "Set WorldInfo WorldGravityZ " + gravity;
 
     public static string MakeAutoSaveReplayCommand() => "QueSaveReplay";
 }

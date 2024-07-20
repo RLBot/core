@@ -40,7 +40,9 @@ public class PlayerMappingTest
         Assert.IsTrue(metadata.IsBot);
         Assert.IsTrue(!metadata.IsCustomBot);
 
-        var metadata2 = _playerMapping.ApplyCarSpawn(new CarSpawn() { ActorId = 111, CommandId = 222, });
+        var metadata2 = _playerMapping.ApplyCarSpawn(
+            new CarSpawn() { ActorId = 111, CommandId = 222, }
+        );
 
         Assert.AreEqual(0u, _playerMapping.PlayerIndexFromActorId(111));
         Assert.AreEqual(desiredIndex, _playerMapping.PlayerIndexFromActorId(actorId));

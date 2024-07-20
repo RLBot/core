@@ -59,7 +59,10 @@ internal static class FlatToModel
             _ => new RelativeAnchor(),
         };
 
-    internal static RenderAnchor ToRenderAnchor(rlbot.flat.RenderAnchorT offset, GameState gameState) =>
+    internal static RenderAnchor ToRenderAnchor(
+        rlbot.flat.RenderAnchorT offset,
+        GameState gameState
+    ) =>
         new RenderAnchor
         {
             World = ToVectorFromT(offset.World),
@@ -68,7 +71,8 @@ internal static class FlatToModel
 
     internal static Color ToColor(rlbot.flat.ColorT c) => Color.FromArgb(c.A, c.R, c.G, c.B);
 
-    internal static Rotator ToRotator(rlbot.flat.Rotator r) => new Rotator(r.Pitch, r.Yaw, r.Roll);
+    internal static Rotator ToRotator(rlbot.flat.Rotator r) =>
+        new Rotator(r.Pitch, r.Yaw, r.Roll);
 
     internal static Loadout ToLoadout(rlbot.flat.PlayerLoadoutT l, uint team)
     {
@@ -118,7 +122,10 @@ internal static class FlatToModel
         };
     }
 
-    internal static Vector3 DesiredToVector(rlbot.flat.Vector3PartialT? partVec, Vector3 defaultVec) =>
+    internal static Vector3 DesiredToVector(
+        rlbot.flat.Vector3PartialT? partVec,
+        Vector3 defaultVec
+    ) =>
         partVec switch
         {
             not null
@@ -130,7 +137,10 @@ internal static class FlatToModel
             _ => defaultVec
         };
 
-    internal static Rotator DesiredToRotator(rlbot.flat.RotatorPartialT? partRot, Rotator defaultRot) =>
+    internal static Rotator DesiredToRotator(
+        rlbot.flat.RotatorPartialT? partRot,
+        Rotator defaultRot
+    ) =>
         partRot switch
         {
             not null

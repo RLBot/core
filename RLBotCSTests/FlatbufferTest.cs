@@ -14,7 +14,9 @@ public class FlatbufferTest
     {
         Random random = new();
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
+        return new string(
+            Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray()
+        );
     }
 
     public static List<PlayerConfigurationT> RandomPlayerConfigurations()
@@ -43,7 +45,11 @@ public class FlatbufferTest
         for (int i = 0; i < 128; i++)
         {
             scriptConfigurations.Add(
-                new ScriptConfigurationT() { Location = RandomString(64), RunCommand = RandomString(64), }
+                new ScriptConfigurationT()
+                {
+                    Location = RandomString(64),
+                    RunCommand = RandomString(64),
+                }
             );
         }
 

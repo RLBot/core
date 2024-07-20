@@ -7,7 +7,12 @@ internal static class ColorSwatches
     internal static Color GetPrimary(uint colorId, uint team)
     {
         var swatches = team == 0 ? BlueSwatches : OrangeSwatches;
-        return Color.FromArgb(255, swatches[colorId, 0], swatches[colorId, 1], swatches[colorId, 2]);
+        return Color.FromArgb(
+            255,
+            swatches[colorId, 0],
+            swatches[colorId, 1],
+            swatches[colorId, 2]
+        );
     }
 
     internal static Color GetSecondary(uint colorId) =>

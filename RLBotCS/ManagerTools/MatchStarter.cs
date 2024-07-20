@@ -134,7 +134,10 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
         if (lastMatchSettings == null)
             return true;
 
-        if (lastMatchSettings.PlayerConfigurations.Count != matchSettings.PlayerConfigurations.Count)
+        if (
+            lastMatchSettings.PlayerConfigurations.Count
+            != matchSettings.PlayerConfigurations.Count
+        )
             return true;
 
         for (var i = 0; i < matchSettings.PlayerConfigurations.Count; i++)
@@ -142,7 +145,10 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
             var lastPlayerConfig = lastMatchSettings.PlayerConfigurations[i];
             var playerConfig = matchSettings.PlayerConfigurations[i];
 
-            if (lastPlayerConfig.SpawnId != playerConfig.SpawnId || lastPlayerConfig.Team != playerConfig.Team)
+            if (
+                lastPlayerConfig.SpawnId != playerConfig.SpawnId
+                || lastPlayerConfig.Team != playerConfig.Team
+            )
                 return true;
         }
 
@@ -184,10 +190,20 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
             {
                 case PlayerClass.RLBot:
                     Console.WriteLine(
-                        "Core is spawning player " + playerConfig.Name + " with spawn id " + playerConfig.SpawnId
+                        "Core is spawning player "
+                            + playerConfig.Name
+                            + " with spawn id "
+                            + playerConfig.SpawnId
                     );
 
-                    bridge.TryWrite(new SpawnBot(playerConfig, BotSkill.Custom, (uint)(i - indexOffset), true));
+                    bridge.TryWrite(
+                        new SpawnBot(
+                            playerConfig,
+                            BotSkill.Custom,
+                            (uint)(i - indexOffset),
+                            true
+                        )
+                    );
 
                     break;
                 case PlayerClass.Psyonix:
@@ -198,7 +214,9 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
                         < 1 => BotSkill.Medium,
                         _ => BotSkill.Hard
                     };
-                    bridge.TryWrite(new SpawnBot(playerConfig, skillEnum, (uint)(i - indexOffset), false));
+                    bridge.TryWrite(
+                        new SpawnBot(playerConfig, skillEnum, (uint)(i - indexOffset), false)
+                    );
 
                     break;
                 case PlayerClass.Human:

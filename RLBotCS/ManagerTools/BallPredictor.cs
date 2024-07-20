@@ -108,7 +108,11 @@ public static partial class BallPredictor
         };
     }
 
-    public static BallPredictionT Generate(PredictionMode mode, float currentTime, Ball currentBall)
+    public static BallPredictionT Generate(
+        PredictionMode mode,
+        float currentTime,
+        Ball currentBall
+    )
     {
         BallSlice ball =
             new()
@@ -122,7 +126,8 @@ public static partial class BallPredictor
         const ushort numSeconds = 6;
         const ushort numSlices = numSeconds * 120;
 
-        BallPredictionT ballPrediction = new() { Slices = new List<PredictionSliceT>(numSlices) };
+        BallPredictionT ballPrediction =
+            new() { Slices = new List<PredictionSliceT>(numSlices) };
 
         if (mode == PredictionMode.Heatseeker)
         {

@@ -68,7 +68,12 @@ public class Rendering(TcpMessenger tcpMessenger)
             _ => null
         };
 
-    public void AddRenderGroup(int clientId, int renderId, List<RenderMessageT> renderItems, GameState gameState)
+    public void AddRenderGroup(
+        int clientId,
+        int renderId,
+        List<RenderMessageT> renderItems,
+        GameState gameState
+    )
     {
         var clientRenders = _clientRenderTracker.GetValueOrDefault(clientId, []);
         // Clear the previous render group

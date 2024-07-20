@@ -64,7 +64,12 @@ internal static class LaunchManager
     }
 
     private static string[] GetIdealArgs(int gamePort) =>
-        ["-rlbot", $"RLBot_ControllerURL=127.0.0.1:{gamePort}", "RLBot_PacketSendRate=240", "-nomovie"];
+        [
+            "-rlbot",
+            $"RLBot_ControllerURL=127.0.0.1:{gamePort}",
+            "RLBot_PacketSendRate=240",
+            "-nomovie"
+        ];
 
     public static void LaunchBots(List<rlbot.flat.PlayerConfigurationT> players)
     {
@@ -84,7 +89,8 @@ internal static class LaunchManager
                 botProcess.StartInfo.FileName = Path.Join(player.Location, commandParts[0]);
                 botProcess.StartInfo.Arguments = commandParts[1];
 
-                botProcess.StartInfo.EnvironmentVariables["BOT_SPAWN_ID"] = player.SpawnId.ToString();
+                botProcess.StartInfo.EnvironmentVariables["BOT_SPAWN_ID"] =
+                    player.SpawnId.ToString();
 
                 botProcess.Start();
             }
@@ -132,7 +138,8 @@ internal static class LaunchManager
                     Process rocketLeague = new();
                     rocketLeague.StartInfo.FileName = steamPath;
                     rocketLeague.StartInfo.Arguments =
-                        $"-applaunch {SteamGameId} " + string.Join(" ", GetIdealArgs(gamePort));
+                        $"-applaunch {SteamGameId} "
+                        + string.Join(" ", GetIdealArgs(gamePort));
 
                     Console.WriteLine(
                         $"Starting Rocket League with args {steamPath} {rocketLeague.StartInfo.Arguments}"
@@ -152,7 +159,8 @@ internal static class LaunchManager
                     Process rocketLeague = new();
                     rocketLeague.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                     rocketLeague.StartInfo.FileName = "steam";
-                    rocketLeague.StartInfo.Arguments = $"steam://rungameid/{SteamGameId}//{args}";
+                    rocketLeague.StartInfo.Arguments =
+                        $"steam://rungameid/{SteamGameId}//{args}";
 
                     Console.WriteLine(
                         $"Starting Rocket League via Steam CLI with {rocketLeague.StartInfo.Arguments}"
@@ -165,21 +173,29 @@ internal static class LaunchManager
                     throw new NotSupportedException("Unexpected launcher. Use Steam.");
             }
         else
-            throw new PlatformNotSupportedException("RLBot is not supported on non-Windows/Linux platforms");
+            throw new PlatformNotSupportedException(
+                "RLBot is not supported on non-Windows/Linux platforms"
+            );
     }
 
     public static bool IsRocketLeagueRunning() =>
-        Process.GetProcesses().Any(candidate => candidate.ProcessName.Contains("RocketLeague"));
+        Process
+            .GetProcesses()
+            .Any(candidate => candidate.ProcessName.Contains("RocketLeague"));
 
     private static string GetWindowsSteamPath()
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            throw new PlatformNotSupportedException("Getting Windows path on non-Windows platform");
+            throw new PlatformNotSupportedException(
+                "Getting Windows path on non-Windows platform"
+            );
 
         using RegistryKey? key = Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam");
         if (key?.GetValue("SteamExe")?.ToString() is { } value)
             return value;
 
-        throw new FileNotFoundException("Could not find registry entry for SteamExe. Is Steam installed?");
+        throw new FileNotFoundException(
+            "Could not find registry entry for SteamExe. Is Steam installed?"
+        );
     }
 }

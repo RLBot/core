@@ -101,8 +101,12 @@ internal class FlatBuffersSession
 
             case DataType.StartCommand:
                 Console.WriteLine("Core got start command from client.");
-                StartCommandT startCommand = StartCommand.GetRootAsStartCommand(byteBuffer).UnPack();
-                MatchSettingsT tomlMatchSettings = ConfigParser.GetMatchSettings(startCommand.ConfigPath);
+                StartCommandT startCommand = StartCommand
+                    .GetRootAsStartCommand(byteBuffer)
+                    .UnPack();
+                MatchSettingsT tomlMatchSettings = ConfigParser.GetMatchSettings(
+                    startCommand.ConfigPath
+                );
 
                 await _rlbotServer.WriteAsync(new StartMatch(tomlMatchSettings));
                 break;
@@ -141,7 +145,9 @@ internal class FlatBuffersSession
                 if (!_renderingIsEnabled)
                     break;
 
-                var removeRenderGroup = RemoveRenderGroup.GetRootAsRemoveRenderGroup(byteBuffer).UnPack();
+                var removeRenderGroup = RemoveRenderGroup
+                    .GetRootAsRemoveRenderGroup(byteBuffer)
+                    .UnPack();
                 await _bridge.WriteAsync(new RemoveRenders(_clientId, removeRenderGroup.Id));
                 break;
 
@@ -149,7 +155,9 @@ internal class FlatBuffersSession
                 if (!_stateSettingIsEnabled)
                     break;
 
-                var desiredGameState = DesiredGameState.GetRootAsDesiredGameState(byteBuffer).UnPack();
+                var desiredGameState = DesiredGameState
+                    .GetRootAsDesiredGameState(byteBuffer)
+                    .UnPack();
                 await _bridge.WriteAsync(new SetGameState(desiredGameState));
 
                 break;
@@ -161,7 +169,10 @@ internal class FlatBuffersSession
             case DataType.BallPrediction:
                 break;
             default:
-                Console.WriteLine("Core got unexpected message type {0} from client.", message.Type);
+                Console.WriteLine(
+                    "Core got unexpected message type {0} from client.",
+                    message.Type
+                );
                 break;
         }
 
@@ -189,18 +200,29 @@ internal class FlatBuffersSession
                     break;
                 case SessionMessage.MatchSettings m:
                     _messageBuilder.Clear();
-                    _messageBuilder.Finish(MatchSettings.Pack(_messageBuilder, m.Settings).Value);
+                    _messageBuilder.Finish(
+                        MatchSettings.Pack(_messageBuilder, m.Settings).Value
+                    );
 
                     await SendPayloadToClientAsync(
-                        TypedPayload.FromFlatBufferBuilder(DataType.MatchSettings, _messageBuilder)
+                        TypedPayload.FromFlatBufferBuilder(
+                            DataType.MatchSettings,
+                            _messageBuilder
+                        )
                     );
                     break;
-                case SessionMessage.DistributeBallPrediction m when _isReady && _wantsBallPredictions:
+                case SessionMessage.DistributeBallPrediction m
+                    when _isReady && _wantsBallPredictions:
                     _messageBuilder.Clear();
-                    _messageBuilder.Finish(BallPrediction.Pack(_messageBuilder, m.BallPrediction).Value);
+                    _messageBuilder.Finish(
+                        BallPrediction.Pack(_messageBuilder, m.BallPrediction).Value
+                    );
 
                     await SendPayloadToClientAsync(
-                        TypedPayload.FromFlatBufferBuilder(DataType.BallPrediction, _messageBuilder)
+                        TypedPayload.FromFlatBufferBuilder(
+                            DataType.BallPrediction,
+                            _messageBuilder
+                        )
                     );
                     break;
                 case SessionMessage.DistributeGameState m when _isReady:
@@ -217,7 +239,10 @@ internal class FlatBuffersSession
                     _messageBuilder.Finish(MatchComm.Pack(_messageBuilder, m.matchComm).Value);
 
                     await SendPayloadToClientAsync(
-                        TypedPayload.FromFlatBufferBuilder(DataType.MatchComms, _messageBuilder)
+                        TypedPayload.FromFlatBufferBuilder(
+                            DataType.MatchComms,
+                            _messageBuilder
+                        )
                     );
 
                     break;
@@ -253,7 +278,8 @@ internal class FlatBuffersSession
         // try to politely close the connection
         try
         {
-            TypedPayload msg = new() { Type = DataType.None, Payload = new ArraySegment<byte>([1]), };
+            TypedPayload msg =
+                new() { Type = DataType.None, Payload = new ArraySegment<byte>([1]), };
             SendPayloadToClientAsync(msg).Wait();
         }
         catch (Exception) { }

@@ -22,10 +22,14 @@ internal record StartMatch(MatchSettingsT MatchSettings) : IServerMessage
         // update all sessions with the new rendering and state setting settings
         foreach (var (writer, _) in context.Sessions.Values)
         {
-            SessionMessage render = new SessionMessage.RendersAllowed(MatchSettings.EnableRendering);
+            SessionMessage render = new SessionMessage.RendersAllowed(
+                MatchSettings.EnableRendering
+            );
             writer.TryWrite(render);
 
-            SessionMessage stateSetting = new SessionMessage.StateSettingAllowed(MatchSettings.EnableStateSetting);
+            SessionMessage stateSetting = new SessionMessage.StateSettingAllowed(
+                MatchSettings.EnableStateSetting
+            );
             writer.TryWrite(stateSetting);
         }
 
