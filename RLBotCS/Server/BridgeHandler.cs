@@ -1,6 +1,7 @@
 using System.Threading.Channels;
 using Bridge.Conversion;
 using Bridge.TCP;
+using Microsoft.Extensions.Logging;
 using RLBotCS.Server.FlatbuffersMessage;
 using GameStateType = Bridge.Models.Message.GameStateType;
 
@@ -25,7 +26,9 @@ internal class BridgeHandler(
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Error while handling message in BridgeHandler: {e}");
+                    _context.Logger.LogError(
+                        $"Error while handling message in BridgeHandler: {e}"
+                    );
                 }
             }
     }

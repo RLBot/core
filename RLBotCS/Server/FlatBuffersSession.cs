@@ -1,6 +1,7 @@
 using System.Net.Sockets;
 using System.Threading.Channels;
 using Google.FlatBuffers;
+using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotCS.ManagerTools;
@@ -30,6 +31,8 @@ internal record SessionMessage
 
 internal class FlatBuffersSession
 {
+    private static readonly ILogger Logger = Logging.GetLogger("FlatBuffersSession");
+
     private readonly TcpClient _client;
     private readonly int _clientId;
     private readonly SocketSpecStreamReader _socketSpecReader;
@@ -94,13 +97,11 @@ internal class FlatBuffersSession
                 break;
 
             case DataType.StopCommand:
-                Console.WriteLine("Core got stop command from client.");
                 var stopCommand = StopCommand.GetRootAsStopCommand(byteBuffer).UnPack();
                 await _rlbotServer.WriteAsync(new StopMatch(stopCommand.ShutdownServer));
                 break;
 
             case DataType.StartCommand:
-                Console.WriteLine("Core got start command from client.");
                 StartCommandT startCommand = StartCommand
                     .GetRootAsStartCommand(byteBuffer)
                     .UnPack();
@@ -170,9 +171,8 @@ internal class FlatBuffersSession
             case DataType.BallPrediction:
                 break;
             default:
-                Console.WriteLine(
-                    "Core got unexpected message type {0} from client.",
-                    message.Type
+                Logger.LogError(
+                    $"Core got unexpected message type {message.Type} from client."
                 );
                 break;
         }
@@ -248,7 +248,6 @@ internal class FlatBuffersSession
 
                     break;
                 case SessionMessage.StopMatch when _isReady && _closeAfterMatch:
-                    Console.WriteLine("Core got stop match message from server.");
                     return;
             }
     }
@@ -260,8 +259,6 @@ internal class FlatBuffersSession
             bool keepRunning = await ParseClientMessage(message);
             if (keepRunning)
                 continue;
-
-            Console.WriteLine("Core got close message from client.");
             return;
         }
     }

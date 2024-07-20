@@ -1,11 +1,14 @@
 ﻿using System.Threading.Channels;
 using Bridge.TCP;
+using Microsoft.Extensions.Logging;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server;
 using RLBotCS.Server.FlatbuffersMessage;
 
+var logger = Logging.GetLogger("Main");
+
 int gamePort = LaunchManager.FindUsableGamePort();
-Console.WriteLine("RLBot is waiting for Rocket League to connect on port " + gamePort);
+logger.LogInformation("Waiting for Rocket League to connect on port " + gamePort);
 
 // Set up the handler to use bridge to talk with the game
 var bridgeChannel = Channel.CreateUnbounded<IBridgeMessage>();
@@ -54,20 +57,20 @@ bridgeHandler.Start();
 void WaitForShutdown()
 {
     rlbotServer.Join();
-    Console.WriteLine("RLBot server has shut down successfully.");
+    logger.LogInformation("RLBot server has shut down successfully.");
 
     bridgeWriter.TryComplete();
 
     bridgeHandler.Join();
-    Console.WriteLine("Bridge handler has shut down successfully.");
+    logger.LogInformation("Bridge handler has shut down successfully.");
 }
 
 void Terminate()
 {
-    Console.WriteLine("Core is shutting down...");
+    logger.LogInformation("Core is shutting down...");
     serverWriter.TryComplete();
     WaitForShutdown();
-    Console.WriteLine("Core has shut down successfully.");
+    logger.LogInformation("Core has shut down successfully.");
 }
 
 // Catch sudden termination to clean up the server

@@ -1,4 +1,6 @@
-﻿using RLBotCS.Types;
+﻿using Microsoft.Extensions.Logging;
+using RLBotCS.ManagerTools;
+using RLBotCS.Types;
 
 namespace RLBotCS.Server;
 
@@ -8,6 +10,8 @@ namespace RLBotCS.Server;
  */
 internal class SocketSpecStreamWriter(Stream stream)
 {
+    private static readonly ILogger Logger = Logging.GetLogger("SocketSpecStreamWriter");
+
     private readonly byte[] _dataTypeBuffer = new byte[2];
     private readonly byte[] _messageLengthBuffer = new byte[2];
     private readonly byte[] _messageBuffer = new byte[4 + ushort.MaxValue];
@@ -29,16 +33,15 @@ internal class SocketSpecStreamWriter(Stream stream)
         if (message.Payload.Count > ushort.MaxValue)
         {
             // Can't send if the message size is bigger than our header can describe.
-            Console.WriteLine(
-                "Warning! Core cannot send message because size of {0} cannot be described by a ushort.",
-                message.Payload.Count
+            Logger.LogError(
+                $"Cannot send message because size of {message.Payload.Count} cannot be described by a ushort."
             );
             return;
         }
 
         if (message.Payload.Count == 0 || message.Payload.Array == null)
         {
-            Console.WriteLine("Warning! Cannot send an empty message.");
+            Logger.LogWarning("Cannot send an empty message.");
             return;
         }
 

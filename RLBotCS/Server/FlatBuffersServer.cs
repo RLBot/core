@@ -1,5 +1,6 @@
 using System.Net.Sockets;
 using System.Threading.Channels;
+using Microsoft.Extensions.Logging;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.FlatbuffersMessage;
 
@@ -45,11 +46,11 @@ internal class FlatBuffersServer(
                 }
                 catch (IOException)
                 {
-                    Console.WriteLine("Session suddenly terminated the connection?");
+                    _context.Logger.LogWarning("Session suddenly terminated the connection?");
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Error in session: {e}");
+                    _context.Logger.LogError($"Error in session: {e}");
                 }
                 finally
                 {
@@ -74,7 +75,7 @@ internal class FlatBuffersServer(
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Error while handling incoming message: {e}");
+                    _context.Logger.LogError($"Error while handling incoming message: {e}");
                 }
             }
     }

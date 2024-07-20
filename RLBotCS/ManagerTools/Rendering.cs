@@ -122,7 +122,6 @@ public class Rendering(TcpMessenger tcpMessenger)
         // Remove the client from the tracker
         _clientRenderTracker.Remove(clientId);
         _renderingSender.Send();
-        Console.WriteLine($"Client {clientId} renders cleared");
     }
 
     public void ClearAllRenders()
