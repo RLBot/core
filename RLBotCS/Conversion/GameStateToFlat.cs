@@ -26,7 +26,7 @@ internal static class GameStateToFlat
             Roll = vec.Roll
         };
 
-    internal static ushort GetBallActorIdFromIndex(this GameState gameState, uint index)
+    internal static ushort? GetBallActorIdFromIndex(this GameState gameState, uint index)
     {
         try
         {
@@ -34,7 +34,7 @@ internal static class GameStateToFlat
         }
         catch (ArgumentOutOfRangeException)
         {
-            return 0;
+            return null;
         }
     }
 
