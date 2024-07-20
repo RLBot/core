@@ -57,7 +57,12 @@ public static class ConfigParser
     }
 
     // Get the enum value of a given enum and the string name of the desired key
-    private static T ParseEnum<T>(TomlTable table, string key, T fallback)
+    private static T ParseEnum<T>(
+        TomlTable table,
+        string key,
+        T fallback,
+        List<string> missingValues
+    )
         where T : struct, Enum
     {
         try
@@ -66,20 +71,23 @@ public static class ConfigParser
                 return value;
 
             Console.WriteLine(
-                $"Warning! Unable to read '{key}', using default setting instead"
+                $"Warning! '{key}' has invalid value, using default setting instead"
             );
             return fallback;
         }
         catch (KeyNotFoundException)
         {
-            Console.WriteLine(
-                $"Warning! Could not find the '{key}' field in toml. Using default setting instead"
-            );
+            missingValues.Add(key);
             return fallback;
         }
     }
 
-    private static int ParseInt(TomlTable table, string key, int fallback)
+    private static int ParseInt(
+        TomlTable table,
+        string key,
+        int fallback,
+        List<string> missingValues
+    )
     {
         try
         {
@@ -87,14 +95,17 @@ public static class ConfigParser
         }
         catch (KeyNotFoundException)
         {
-            Console.WriteLine(
-                $"Could not find the '{key}' field in toml. Using default setting '{fallback}' instead"
-            );
+            missingValues.Add(key);
             return fallback;
         }
     }
 
-    private static uint ParseUint(TomlTable table, string key, uint fallback)
+    private static uint ParseUint(
+        TomlTable table,
+        string key,
+        uint fallback,
+        List<string> missingValues
+    )
     {
         try
         {
@@ -102,9 +113,7 @@ public static class ConfigParser
         }
         catch (KeyNotFoundException)
         {
-            Console.WriteLine(
-                $"Could not find the '{key}' field in toml. Using default setting '{fallback}' instead"
-            );
+            missingValues.Add(key);
             return fallback;
         }
     }
@@ -124,7 +133,12 @@ public static class ConfigParser
         }
     }
 
-    private static string? ParseString(TomlTable table, string key, string? fallback)
+    private static string? ParseString(
+        TomlTable table,
+        string key,
+        string? fallback,
+        List<string> missingValues
+    )
     {
         try
         {
@@ -132,9 +146,7 @@ public static class ConfigParser
         }
         catch (KeyNotFoundException)
         {
-            Console.WriteLine(
-                $"Could not find the '{key}' field in toml. Using default setting '{fallback}' instead"
-            );
+            missingValues.Add(key);
             return fallback;
         }
     }
@@ -147,7 +159,12 @@ public static class ConfigParser
         return Path.Combine(parent, child);
     }
 
-    private static bool ParseBool(TomlTable table, string key, bool fallback)
+    private static bool ParseBool(
+        TomlTable table,
+        string key,
+        bool fallback,
+        List<string> missingValues
+    )
     {
         try
         {
@@ -155,17 +172,25 @@ public static class ConfigParser
         }
         catch (KeyNotFoundException)
         {
-            Console.WriteLine(
-                $"Could not find the '{key}' field in toml. Using default setting '{fallback}' instead"
-            );
+            missingValues.Add(key);
             return fallback;
         }
     }
 
-    private static string GetRunCommand(TomlTable runnableSettings)
+    private static string GetRunCommand(TomlTable runnableSettings, List<string> missingValues)
     {
-        string? runCommandWindows = ParseString(runnableSettings, "run_command", null);
-        string? runCommandLinux = ParseString(runnableSettings, "run_command_linux", null);
+        string? runCommandWindows = ParseString(
+            runnableSettings,
+            "run_command",
+            null,
+            missingValues
+        );
+        string? runCommandLinux = ParseString(
+            runnableSettings,
+            "run_command_linux",
+            null,
+            missingValues
+        );
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             return runCommandWindows ?? "";
@@ -182,42 +207,53 @@ public static class ConfigParser
 
     private static ScriptConfigurationT GetScriptConfig(
         TomlTable scriptTable,
-        string playerTomlPath
+        string playerTomlPath,
+        List<string> missingValues
     )
     {
-        string? scriptTomlPath = ParseString(scriptTable, "config", null);
+        string? scriptTomlPath = ParseString(scriptTable, "config", null, missingValues);
         TomlTable scriptToml = GetTable(CombinePaths(playerTomlPath, scriptTomlPath));
         string tomlParent = Path.GetDirectoryName(scriptTomlPath) ?? "";
 
         ScriptConfigurationT scriptConfig =
             new()
             {
-                Location = CombinePaths(tomlParent, ParseString(scriptToml, "location", "")),
-                RunCommand = GetRunCommand(scriptToml)
+                Location = CombinePaths(
+                    tomlParent,
+                    ParseString(scriptToml, "location", "", missingValues)
+                ),
+                RunCommand = GetRunCommand(scriptToml, missingValues)
             };
         return scriptConfig;
     }
 
     private static PlayerConfigurationT GetPlayerConfig(
         TomlTable table,
-        string matchConfigPath
+        string matchConfigPath,
+        List<string> missingValues
     ) =>
-        ParseEnum(table, "type", PlayerClass.RLBot) switch
+        ParseEnum(table, "type", PlayerClass.RLBot, missingValues) switch
         {
             PlayerClass.RLBot
                 => GetBotConfig(
                     table,
                     PlayerClassUnion.FromRLBot(new RLBotT()),
-                    matchConfigPath
+                    matchConfigPath,
+                    missingValues
                 ),
             PlayerClass.Human
-                => GetHumanConfig(table, PlayerClassUnion.FromHuman(new HumanT())),
+                => GetHumanConfig(
+                    table,
+                    PlayerClassUnion.FromHuman(new HumanT()),
+                    missingValues
+                ),
             PlayerClass.Psyonix
                 => GetPsyonixConfig(
                     table,
                     PlayerClassUnion.FromPsyonix(
                         new PsyonixT { BotSkill = ParseFloat(table, "skill", 1.0f) }
-                    )
+                    ),
+                    missingValues
                 ),
             PlayerClass.PartyMember
                 => throw new NotImplementedException("PartyMember not implemented"),
@@ -226,12 +262,13 @@ public static class ConfigParser
 
     private static PlayerConfigurationT GetHumanConfig(
         TomlTable table,
-        PlayerClassUnion classUnion
+        PlayerClassUnion classUnion,
+        List<string> missingValues
     ) =>
         new()
         {
             Variety = classUnion,
-            Team = ParseUint(table, "team", 0),
+            Team = ParseUint(table, "team", 0, missingValues),
             Name = "Human",
             Location = "",
             RunCommand = ""
@@ -239,10 +276,11 @@ public static class ConfigParser
 
     private static PlayerConfigurationT GetPsyonixConfig(
         TomlTable table,
-        PlayerClassUnion classUnion
+        PlayerClassUnion classUnion,
+        List<string> missingValues
     )
     {
-        var team = ParseUint(table, "team", 0);
+        var team = ParseUint(table, "team", 0, missingValues);
         var (fullName, preset) = PsyonixPresets.GetRandom((int)team);
 
         var namePrefix = classUnion.AsPsyonix().BotSkill switch
@@ -267,7 +305,8 @@ public static class ConfigParser
     private static PlayerConfigurationT GetBotConfig(
         TomlTable rlbotPlayerTable,
         PlayerClassUnion classUnion,
-        string matchConfigPath
+        string matchConfigPath,
+        List<string> missingValues
     )
     {
         /*
@@ -283,7 +322,7 @@ public static class ConfigParser
 
         string? playerTomlPath = CombinePaths(
             matchConfigParent,
-            ParseString(rlbotPlayerTable, "config", null)
+            ParseString(rlbotPlayerTable, "config", null, missingValues)
         );
         TomlTable playerToml = GetTable(CombinePaths(matchConfigParent, playerTomlPath));
         string? tomlParent = Path.GetDirectoryName(playerTomlPath);
@@ -291,13 +330,15 @@ public static class ConfigParser
         TomlTable playerSettings = ParseTable(playerToml, "settings");
         string? loadoutTomlPath = CombinePaths(
             tomlParent,
-            ParseString(playerSettings, "looks_config", null)
+            ParseString(playerSettings, "looks_config", null, missingValues)
         );
 
         TomlTable loadoutToml = GetTable(loadoutTomlPath);
 
         string teamLoadoutString =
-            ParseInt(rlbotPlayerTable, "team", 0) == 0 ? "blue_loadout" : "orange_loadout";
+            ParseInt(rlbotPlayerTable, "team", 0, missingValues) == 0
+                ? "blue_loadout"
+                : "orange_loadout";
         TomlTable teamLoadout = ParseTable(loadoutToml, teamLoadoutString);
 
         TomlTable teamPaint = ParseTable(teamLoadout, "paint");
@@ -305,79 +346,150 @@ public static class ConfigParser
         return new PlayerConfigurationT
         {
             Variety = classUnion,
-            Team = ParseUint(rlbotPlayerTable, "team", 0),
-            Name = ParseString(playerSettings, "name", "Unnamed RLBot"),
-            Location = CombinePaths(tomlParent, ParseString(playerSettings, "location", "")),
-            RunCommand = GetRunCommand(playerSettings),
+            Team = ParseUint(rlbotPlayerTable, "team", 0, missingValues),
+            Name = ParseString(playerSettings, "name", "Unnamed RLBot", missingValues),
+            Location = CombinePaths(
+                tomlParent,
+                ParseString(playerSettings, "location", "", missingValues)
+            ),
+            RunCommand = GetRunCommand(playerSettings, missingValues),
             Loadout = new PlayerLoadoutT()
             {
-                TeamColorId = ParseUint(teamLoadout, "team_color_id", 0),
-                CustomColorId = ParseUint(teamLoadout, "custom_color_id", 0),
-                CarId = ParseUint(teamLoadout, "car_id", 0),
-                DecalId = ParseUint(teamLoadout, "decal_id", 0),
-                WheelsId = ParseUint(teamLoadout, "wheels_id", 0),
-                BoostId = ParseUint(teamLoadout, "boost_id", 0),
-                AntennaId = ParseUint(teamLoadout, "antenna_id", 0),
-                HatId = ParseUint(teamLoadout, "hat_id", 0),
-                PaintFinishId = ParseUint(teamLoadout, "paint_finish_id", 0),
-                CustomFinishId = ParseUint(teamLoadout, "custom_finish_id", 0),
-                EngineAudioId = ParseUint(teamLoadout, "engine_audio_id", 0),
-                TrailsId = ParseUint(teamLoadout, "trails_id", 0),
-                GoalExplosionId = ParseUint(teamLoadout, "goal_explosion_id", 0),
+                TeamColorId = ParseUint(teamLoadout, "team_color_id", 0, missingValues),
+                CustomColorId = ParseUint(teamLoadout, "custom_color_id", 0, missingValues),
+                CarId = ParseUint(teamLoadout, "car_id", 0, missingValues),
+                DecalId = ParseUint(teamLoadout, "decal_id", 0, missingValues),
+                WheelsId = ParseUint(teamLoadout, "wheels_id", 0, missingValues),
+                BoostId = ParseUint(teamLoadout, "boost_id", 0, missingValues),
+                AntennaId = ParseUint(teamLoadout, "antenna_id", 0, missingValues),
+                HatId = ParseUint(teamLoadout, "hat_id", 0, missingValues),
+                PaintFinishId = ParseUint(teamLoadout, "paint_finish_id", 0, missingValues),
+                CustomFinishId = ParseUint(teamLoadout, "custom_finish_id", 0, missingValues),
+                EngineAudioId = ParseUint(teamLoadout, "engine_audio_id", 0, missingValues),
+                TrailsId = ParseUint(teamLoadout, "trails_id", 0, missingValues),
+                GoalExplosionId = ParseUint(
+                    teamLoadout,
+                    "goal_explosion_id",
+                    0,
+                    missingValues
+                ),
                 LoadoutPaint = new LoadoutPaintT()
                 {
-                    CarPaintId = ParseUint(teamPaint, "car_paint_id", 0),
-                    DecalPaintId = ParseUint(teamPaint, "decal_paint_id", 0),
-                    WheelsPaintId = ParseUint(teamPaint, "wheels_paint_id", 0),
-                    BoostPaintId = ParseUint(teamPaint, "boost_paint_id", 0),
-                    AntennaPaintId = ParseUint(teamPaint, "antenna_paint_id", 0),
-                    HatPaintId = ParseUint(teamPaint, "hat_paint_id", 0),
-                    TrailsPaintId = ParseUint(teamPaint, "trails_paint_id", 0),
-                    GoalExplosionPaintId = ParseUint(teamPaint, "goal_explosion_paint_id", 0),
+                    CarPaintId = ParseUint(teamPaint, "car_paint_id", 0, missingValues),
+                    DecalPaintId = ParseUint(teamPaint, "decal_paint_id", 0, missingValues),
+                    WheelsPaintId = ParseUint(teamPaint, "wheels_paint_id", 0, missingValues),
+                    BoostPaintId = ParseUint(teamPaint, "boost_paint_id", 0, missingValues),
+                    AntennaPaintId = ParseUint(
+                        teamPaint,
+                        "antenna_paint_id",
+                        0,
+                        missingValues
+                    ),
+                    HatPaintId = ParseUint(teamPaint, "hat_paint_id", 0, missingValues),
+                    TrailsPaintId = ParseUint(teamPaint, "trails_paint_id", 0, missingValues),
+                    GoalExplosionPaintId = ParseUint(
+                        teamPaint,
+                        "goal_explosion_paint_id",
+                        0,
+                        missingValues
+                    ),
                 },
                 // TODO - GetPrimary/Secondary color? Do any bots use this?
             }
         };
     }
 
-    private static MutatorSettingsT GetMutatorSettings(TomlTable mutatorTable) =>
+    private static MutatorSettingsT GetMutatorSettings(
+        TomlTable mutatorTable,
+        List<string> missingValues
+    ) =>
         new MutatorSettingsT()
         {
-            MatchLength = ParseEnum(mutatorTable, "match_length", MatchLength.Five_Minutes),
-            MaxScore = ParseEnum(mutatorTable, "max_score", MaxScore.Default),
-            MultiBall = ParseEnum(mutatorTable, "multi_ball", MultiBall.One),
-            OvertimeOption = ParseEnum(mutatorTable, "overtime", OvertimeOption.Unlimited),
-            GameSpeedOption = ParseEnum(mutatorTable, "game_speed", GameSpeedOption.Default),
+            MatchLength = ParseEnum(
+                mutatorTable,
+                "match_length",
+                MatchLength.Five_Minutes,
+                missingValues
+            ),
+            MaxScore = ParseEnum(mutatorTable, "max_score", MaxScore.Default, missingValues),
+            MultiBall = ParseEnum(mutatorTable, "multi_ball", MultiBall.One, missingValues),
+            OvertimeOption = ParseEnum(
+                mutatorTable,
+                "overtime",
+                OvertimeOption.Unlimited,
+                missingValues
+            ),
+            GameSpeedOption = ParseEnum(
+                mutatorTable,
+                "game_speed",
+                GameSpeedOption.Default,
+                missingValues
+            ),
             BallMaxSpeedOption = ParseEnum(
                 mutatorTable,
                 "ball_max_speed",
-                BallMaxSpeedOption.Default
+                BallMaxSpeedOption.Default,
+                missingValues
             ),
-            BallTypeOption = ParseEnum(mutatorTable, "ball_type", BallTypeOption.Default),
+            BallTypeOption = ParseEnum(
+                mutatorTable,
+                "ball_type",
+                BallTypeOption.Default,
+                missingValues
+            ),
             BallWeightOption = ParseEnum(
                 mutatorTable,
                 "ball_weight",
-                BallWeightOption.Default
+                BallWeightOption.Default,
+                missingValues
             ),
-            BallSizeOption = ParseEnum(mutatorTable, "ball_size", BallSizeOption.Default),
+            BallSizeOption = ParseEnum(
+                mutatorTable,
+                "ball_size",
+                BallSizeOption.Default,
+                missingValues
+            ),
             BallBouncinessOption = ParseEnum(
                 mutatorTable,
                 "ball_bounciness",
-                BallBouncinessOption.Default
+                BallBouncinessOption.Default,
+                missingValues
             ),
-            BoostOption = ParseEnum(mutatorTable, "boost_amount", BoostOption.Normal_Boost),
-            RumbleOption = ParseEnum(mutatorTable, "rumble", RumbleOption.No_Rumble),
+            BoostOption = ParseEnum(
+                mutatorTable,
+                "boost_amount",
+                BoostOption.Normal_Boost,
+                missingValues
+            ),
+            RumbleOption = ParseEnum(
+                mutatorTable,
+                "rumble",
+                RumbleOption.No_Rumble,
+                missingValues
+            ),
             BoostStrengthOption = ParseEnum(
                 mutatorTable,
                 "boost_strength",
-                BoostStrengthOption.One
+                BoostStrengthOption.One,
+                missingValues
             ),
-            GravityOption = ParseEnum(mutatorTable, "gravity", GravityOption.Default),
-            DemolishOption = ParseEnum(mutatorTable, "demolish", DemolishOption.Default),
+            GravityOption = ParseEnum(
+                mutatorTable,
+                "gravity",
+                GravityOption.Default,
+                missingValues
+            ),
+            DemolishOption = ParseEnum(
+                mutatorTable,
+                "demolish",
+                DemolishOption.Default,
+                missingValues
+            ),
             RespawnTimeOption = ParseEnum(
                 mutatorTable,
                 "respawn_time",
-                RespawnTimeOption.Three_Seconds
+                RespawnTimeOption.Three_Seconds,
+                missingValues
             ),
         };
 
@@ -398,38 +510,102 @@ public static class ConfigParser
         TomlTableArray players = ParseTableArray(rlbotToml, "cars");
         TomlTableArray scripts = ParseTableArray(rlbotToml, "scripts");
 
+        Dictionary<string, List<string>> missingValues = new();
+        missingValues["rlbot"] = [];
+        missingValues["match"] = [];
+        missingValues["mutators"] = [];
+        missingValues["cars"] = [];
+        missingValues["scripts"] = [];
+
         List<PlayerConfigurationT> playerConfigs = [];
         // Gets the PlayerConfigT object for the number of players requested
-        int numBots = ParseInt(matchTable, "num_cars", 0);
+        int numBots = ParseInt(matchTable, "num_cars", 0, missingValues["match"]);
         for (int i = 0; i < Math.Min(numBots, players.Count); i++)
-            playerConfigs.Add(GetPlayerConfig(players[i], path));
+            playerConfigs.Add(GetPlayerConfig(players[i], path, missingValues["cars"]));
 
         List<ScriptConfigurationT> scriptConfigs = [];
-        int numScripts = ParseInt(matchTable, "num_scripts", 0);
+        int numScripts = ParseInt(matchTable, "num_scripts", 0, missingValues["match"]);
         for (int i = 0; i < Math.Min(numScripts, scripts.Count); i++)
-            scriptConfigs.Add(GetScriptConfig(scripts[i], path));
+            scriptConfigs.Add(GetScriptConfig(scripts[i], path, missingValues["scripts"]));
 
-        return new MatchSettingsT
+        var matchSettings = new MatchSettingsT
         {
-            Launcher = ParseEnum(rlbotTable, "launcher", Launcher.Steam),
-            AutoStartBots = ParseBool(rlbotTable, "auto_start_bots", true),
-            GamePath = ParseString(rlbotTable, "rocket_league_exe_path", ""),
-            GameMode = ParseEnum(matchTable, "game_mode", GameMode.Soccer),
-            GameMapUpk = ParseString(matchTable, "game_map_upk", "Stadium_P"),
-            SkipReplays = ParseBool(matchTable, "skip_replays", false),
-            InstantStart = ParseBool(matchTable, "start_without_countdown", false),
-            EnableRendering = ParseBool(matchTable, "enable_rendering", false),
-            EnableStateSetting = ParseBool(matchTable, "enable_state_setting", true),
+            Launcher = ParseEnum(
+                rlbotTable,
+                "launcher",
+                Launcher.Steam,
+                missingValues["rlbot"]
+            ),
+            AutoStartBots = ParseBool(
+                rlbotTable,
+                "auto_start_bots",
+                true,
+                missingValues["rlbot"]
+            ),
+            GamePath = ParseString(
+                rlbotTable,
+                "rocket_league_exe_path",
+                "",
+                missingValues["rlbot"]
+            ),
+            GameMode = ParseEnum(
+                matchTable,
+                "game_mode",
+                GameMode.Soccer,
+                missingValues["match"]
+            ),
+            GameMapUpk = ParseString(
+                matchTable,
+                "game_map_upk",
+                "Stadium_P",
+                missingValues["match"]
+            ),
+            SkipReplays = ParseBool(matchTable, "skip_replays", false, missingValues["match"]),
+            InstantStart = ParseBool(
+                matchTable,
+                "start_without_countdown",
+                false,
+                missingValues["match"]
+            ),
+            EnableRendering = ParseBool(
+                matchTable,
+                "enable_rendering",
+                false,
+                missingValues["match"]
+            ),
+            EnableStateSetting = ParseBool(
+                matchTable,
+                "enable_state_setting",
+                true,
+                missingValues["match"]
+            ),
             ExistingMatchBehavior = ParseEnum(
                 matchTable,
                 "existing_match_behavior",
-                ExistingMatchBehavior.Restart
+                ExistingMatchBehavior.Restart,
+                missingValues["match"]
             ),
-            AutoSaveReplay = ParseBool(matchTable, "auto_save_replay", false),
-            Freeplay = ParseBool(matchTable, "freeplay", false),
-            MutatorSettings = GetMutatorSettings(mutatorTable),
+            AutoSaveReplay = ParseBool(
+                matchTable,
+                "auto_save_replay",
+                false,
+                missingValues["match"]
+            ),
+            Freeplay = ParseBool(matchTable, "freeplay", false, missingValues["match"]),
+            MutatorSettings = GetMutatorSettings(mutatorTable, missingValues["mutators"]),
             PlayerConfigurations = playerConfigs,
             ScriptConfigurations = scriptConfigs
         };
+
+        if (missingValues.Count > 0)
+        {
+            string missingValuesString = string.Join(
+                ", ",
+                missingValues.SelectMany(kvp => kvp.Value.Select(v => $"{kvp.Key}.{v}"))
+            );
+            Console.WriteLine($"Warning! Missing values in toml: {missingValuesString}");
+        }
+
+        return matchSettings;
     }
 }
