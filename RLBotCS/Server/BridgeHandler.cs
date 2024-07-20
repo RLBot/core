@@ -18,7 +18,16 @@ internal class BridgeHandler(
     {
         await foreach (IBridgeMessage message in _context.Reader.ReadAllAsync())
             lock (_context)
-                message.HandleMessage(_context);
+            {
+                try
+                {
+                    message.HandleMessage(_context);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error while handling message in BridgeHandler: {e}");
+                }
+            }
     }
 
     private async Task HandleServer()

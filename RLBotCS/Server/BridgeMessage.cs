@@ -230,34 +230,42 @@ internal record SetGameState(DesiredGameStateT GameState) : IBridgeMessage
         for (int i = 0; i < GameState.BallStates.Count; i++)
         {
             var ball = GameState.BallStates[i];
+            var id = context.GameState.GetBallActorIdFromIndex((uint)i);
+
+            if (id == null)
+                continue;
 
             if (ball.Physics is DesiredPhysicsT physics)
             {
-                var id = context.GameState.GetBallActorIdFromIndex((uint)i);
-                var currentPhysics = context.GameState.Balls[(ushort)i].Physics;
+                var currentPhysics = context.GameState.Balls[(ushort)id].Physics;
                 var fullState = FlatToModel.DesiredToPhysics(physics, currentPhysics);
 
-                context.MatchCommandSender.AddSetPhysicsCommand(id, fullState);
+                context.MatchCommandSender.AddSetPhysicsCommand((ushort)id, fullState);
             }
         }
 
         for (int i = 0; i < GameState.CarStates.Count; i++)
         {
             var car = GameState.CarStates[i];
+            var id = context.GameState.PlayerMapping.ActorIdFromPlayerIndex((uint)i);
+
+            if (id == null)
+                continue;
 
             if (car.Physics is DesiredPhysicsT physics)
             {
-                var id = context.GameState.GetBallActorIdFromIndex((uint)i);
-                var currentPhysics = context.GameState.GameCars[(ushort)i].Physics;
+                var currentPhysics = context.GameState.GameCars[(ushort)id].Physics;
                 var fullState = FlatToModel.DesiredToPhysics(physics, currentPhysics);
 
-                context.MatchCommandSender.AddSetPhysicsCommand(id, fullState);
+                context.MatchCommandSender.AddSetPhysicsCommand((ushort)id, fullState);
             }
 
             if (car.BoostAmount is FloatT boostAmount)
             {
-                var id = context.GameState.GetBallActorIdFromIndex((uint)i);
-                context.MatchCommandSender.AddSetBoostCommand(id, (int)boostAmount.Val);
+                context.MatchCommandSender.AddSetBoostCommand(
+                    (ushort)id,
+                    (int)boostAmount.Val
+                );
             }
         }
 

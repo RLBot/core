@@ -53,7 +53,7 @@ internal static class FlatToModel
             rlbot.flat.BallAnchorT { Index: var index, Local: var local }
                 => new RelativeAnchor()
                 {
-                    ActorId = gameState.GetBallActorIdFromIndex(index),
+                    ActorId = gameState.GetBallActorIdFromIndex(index) ?? 0,
                     Local = ToVectorFromT(local)
                 },
             _ => new RelativeAnchor(),
