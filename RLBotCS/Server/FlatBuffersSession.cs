@@ -265,8 +265,9 @@ internal class FlatBuffersSession
 
     public void BlockingRun()
     {
-        Task incomingMessagesTask = new Task(async () =>
+        Task incomingMessagesTask = Task.Run(async () =>
         {
+            Console.WriteLine("Starting incoming messages task.");
             try
             {
                 await HandleIncomingMessages();
@@ -276,10 +277,10 @@ internal class FlatBuffersSession
                 Logger.LogError($"Error while handling incoming messages: {e}");
             }
         });
-        incomingMessagesTask.Start();
 
-        Task clientMessagesTask = new Task(async () =>
+        Task clientMessagesTask = Task.Run(async () =>
         {
+            Console.WriteLine("Starting client messages task.");
             try
             {
                 await HandleClientMessages();
@@ -289,7 +290,6 @@ internal class FlatBuffersSession
                 Logger.LogError($"Error while handling client messages: {e}");
             }
         });
-        clientMessagesTask.Start();
 
         Task.WhenAny(incomingMessagesTask, clientMessagesTask).Wait();
     }
@@ -297,6 +297,7 @@ internal class FlatBuffersSession
     public void Cleanup()
     {
         // try to politely close the connection
+        Logger.LogInformation($"Closing session {_clientId}.");
         try
         {
             TypedPayload msg =
