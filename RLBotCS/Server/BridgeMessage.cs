@@ -13,20 +13,11 @@ internal interface IBridgeMessage
     public void HandleMessage(BridgeContext context);
 }
 
-internal record Input(PlayerInput PlayerInput) : IBridgeMessage
+internal record Input(PlayerInputT PlayerInput) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
-        if (PlayerInput.ControllerState == null)
-        {
-            Console.WriteLine(
-                "Received input with null ControllerState from index {0}",
-                PlayerInput.PlayerIndex
-            );
-            return;
-        }
-
-        CarInput carInput = FlatToModel.ToCarInput(PlayerInput.ControllerState.Value);
+        CarInput carInput = FlatToModel.ToCarInput(PlayerInput.ControllerState);
         ushort? actorId = context.GameState.PlayerMapping.ActorIdFromPlayerIndex(
             PlayerInput.PlayerIndex
         );
@@ -271,4 +262,10 @@ internal record SetGameState(DesiredGameStateT GameState) : IBridgeMessage
 
         context.MatchCommandSender.Send();
     }
+}
+
+internal record ShowQuickChat(MatchCommT MatchComm) : IBridgeMessage
+{
+    public void HandleMessage(BridgeContext context) =>
+        context.QuickChat.AddChat(MatchComm, context.GameState.SecondsElapsed);
 }

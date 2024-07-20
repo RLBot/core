@@ -58,6 +58,16 @@ internal class BridgeHandler(
                     _context.Writer.TryWrite(new MapSpawned());
                 }
 
+                if (_context.GameState.MatchEnded)
+                {
+                    _context.QuickChat.ClearChats();
+                    _context.RenderingMgmt.ClearAllRenders();
+                }
+                else
+                {
+                    _context.QuickChat.RenderChats(_context.RenderingMgmt, _context.GameState);
+                }
+
                 if (
                     _context is
                     {
