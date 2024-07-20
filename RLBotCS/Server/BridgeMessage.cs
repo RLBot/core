@@ -19,24 +19,34 @@ internal record Input(PlayerInput PlayerInput) : IBridgeMessage
     {
         if (PlayerInput.ControllerState == null)
         {
-            Console.WriteLine("Received input with null ControllerState from index {0}", PlayerInput.PlayerIndex);
+            Console.WriteLine(
+                "Received input with null ControllerState from index {0}",
+                PlayerInput.PlayerIndex
+            );
             return;
         }
 
         CarInput carInput = FlatToModel.ToCarInput(PlayerInput.ControllerState.Value);
-        ushort? actorId = context.GameState.PlayerMapping.ActorIdFromPlayerIndex(PlayerInput.PlayerIndex);
+        ushort? actorId = context.GameState.PlayerMapping.ActorIdFromPlayerIndex(
+            PlayerInput.PlayerIndex
+        );
 
         if (actorId.HasValue)
         {
-            Bridge.Models.Control.PlayerInput playerInput = new() { ActorId = actorId.Value, CarInput = carInput };
+            Bridge.Models.Control.PlayerInput playerInput =
+                new() { ActorId = actorId.Value, CarInput = carInput };
             context.PlayerInputSender.SendPlayerInput(playerInput);
         }
         else
-            Console.WriteLine("Core got input from unknown player index {0}", PlayerInput.PlayerIndex);
+            Console.WriteLine(
+                "Core got input from unknown player index {0}",
+                PlayerInput.PlayerIndex
+            );
     }
 }
 
-internal record SpawnHuman(PlayerConfigurationT PlayerConfig, uint DesiredIndex) : IBridgeMessage
+internal record SpawnHuman(PlayerConfigurationT PlayerConfig, uint DesiredIndex)
+    : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
@@ -54,8 +64,12 @@ internal record SpawnHuman(PlayerConfigurationT PlayerConfig, uint DesiredIndex)
     }
 }
 
-internal record SpawnBot(PlayerConfigurationT PlayerConfig, BotSkill Skill, uint DesiredIndex, bool IsCustomBot)
-    : IBridgeMessage
+internal record SpawnBot(
+    PlayerConfigurationT PlayerConfig,
+    BotSkill Skill,
+    uint DesiredIndex,
+    bool IsCustomBot
+) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
@@ -112,12 +126,18 @@ internal record SpawnMap(MatchSettingsT MatchSettings) : IBridgeMessage
     }
 }
 
-internal record AddRenders(int ClientId, int RenderId, List<RenderMessageT> RenderItems) : IBridgeMessage
+internal record AddRenders(int ClientId, int RenderId, List<RenderMessageT> RenderItems)
+    : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
         lock (context)
-            context.RenderingMgmt.AddRenderGroup(ClientId, RenderId, RenderItems, context.GameState);
+            context.RenderingMgmt.AddRenderGroup(
+                ClientId,
+                RenderId,
+                RenderItems,
+                context.GameState
+            );
     }
 }
 
@@ -129,7 +149,8 @@ internal record RemoveRenders(int ClientId, int RenderId) : IBridgeMessage
 
 internal record RemoveClientRenders(int ClientId) : IBridgeMessage
 {
-    public void HandleMessage(BridgeContext context) => context.RenderingMgmt.ClearClientRenders(ClientId);
+    public void HandleMessage(BridgeContext context) =>
+        context.RenderingMgmt.ClearClientRenders(ClientId);
 }
 
 internal record SetMutators(MutatorSettingsT MutatorSettings) : IBridgeMessage
@@ -190,10 +211,14 @@ internal record SetGameState(DesiredGameStateT GameState) : IBridgeMessage
         if (GameState.GameInfoState is DesiredGameInfoStateT gameInfo)
         {
             if (gameInfo.WorldGravityZ is FloatT gravity)
-                context.MatchCommandSender.AddConsoleCommand(FlatToCommand.MakeGravityCommand(gravity.Val));
+                context.MatchCommandSender.AddConsoleCommand(
+                    FlatToCommand.MakeGravityCommand(gravity.Val)
+                );
 
             if (gameInfo.GameSpeed is FloatT speed)
-                context.MatchCommandSender.AddConsoleCommand(FlatToCommand.MakeGameSpeedCommand(speed.Val));
+                context.MatchCommandSender.AddConsoleCommand(
+                    FlatToCommand.MakeGameSpeedCommand(speed.Val)
+                );
 
             if (gameInfo.Paused is BoolT paused)
                 context.MatchCommandSender.AddSetPausedCommand(paused.Val);

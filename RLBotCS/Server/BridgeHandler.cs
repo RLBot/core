@@ -35,7 +35,10 @@ internal class BridgeHandler(
                     _context.Writer.TryWrite(new StartCommunication());
                 }
 
-                _context.GameState = MessageHandler.CreateUpdatedState(messageClump, _context.GameState);
+                _context.GameState = MessageHandler.CreateUpdatedState(
+                    messageClump,
+                    _context.GameState
+                );
                 _context.Writer.TryWrite(new DistributeGameState(_context.GameState));
 
                 var matchStarted = MessageHandler.ReceivedMatchInfo(messageClump);
@@ -66,7 +69,8 @@ internal class BridgeHandler(
         }
     }
 
-    public void BlockingRun() => Task.WhenAny(Task.Run(HandleIncomingMessages), Task.Run(HandleServer)).Wait();
+    public void BlockingRun() =>
+        Task.WhenAny(Task.Run(HandleIncomingMessages), Task.Run(HandleServer)).Wait();
 
     public void Cleanup()
     {

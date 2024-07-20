@@ -17,8 +17,14 @@ public class TomlParser
         Assert.AreEqual(emptyMS.GamePath, defaultMS.GamePath);
         Assert.AreEqual(emptyMS.AutoStartBots, defaultMS.AutoStartBots);
         Assert.AreEqual(emptyMS.GameMapUpk, defaultMS.GameMapUpk);
-        Assert.AreEqual(emptyMS.PlayerConfigurations.Count, defaultMS.PlayerConfigurations.Count);
-        Assert.AreEqual(emptyMS.ScriptConfigurations.Count, defaultMS.ScriptConfigurations.Count);
+        Assert.AreEqual(
+            emptyMS.PlayerConfigurations.Count,
+            defaultMS.PlayerConfigurations.Count
+        );
+        Assert.AreEqual(
+            emptyMS.ScriptConfigurations.Count,
+            defaultMS.ScriptConfigurations.Count
+        );
         Assert.AreEqual(emptyMS.GameMode, defaultMS.GameMode);
         Assert.AreEqual(emptyMS.SkipReplays, defaultMS.SkipReplays);
         Assert.AreEqual(emptyMS.InstantStart, defaultMS.InstantStart);

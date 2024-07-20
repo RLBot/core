@@ -12,9 +12,11 @@ internal class SocketSpecStreamWriter(Stream stream)
     private readonly byte[] _messageLengthBuffer = new byte[2];
     private readonly byte[] _messageBuffer = new byte[4 + ushort.MaxValue];
 
-    private void PrepareMessageLength(ushort length) => WriteBigEndian(length, _messageLengthBuffer);
+    private void PrepareMessageLength(ushort length) =>
+        WriteBigEndian(length, _messageLengthBuffer);
 
-    private void PrepareDataType(DataType dataType) => WriteBigEndian((ushort)dataType, _dataTypeBuffer);
+    private void PrepareDataType(DataType dataType) =>
+        WriteBigEndian((ushort)dataType, _dataTypeBuffer);
 
     private static void WriteBigEndian(ushort value, byte[] buffer)
     {
@@ -45,7 +47,13 @@ internal class SocketSpecStreamWriter(Stream stream)
 
         Array.Copy(_dataTypeBuffer, 0, _messageBuffer, 0, 2);
         Array.Copy(_messageLengthBuffer, 0, _messageBuffer, 2, 2);
-        Array.Copy(message.Payload.Array, message.Payload.Offset, _messageBuffer, 4, message.Payload.Count);
+        Array.Copy(
+            message.Payload.Array,
+            message.Payload.Offset,
+            _messageBuffer,
+            4,
+            message.Payload.Count
+        );
         await stream.WriteAsync(_messageBuffer.AsMemory(0, 4 + message.Payload.Count));
     }
 

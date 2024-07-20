@@ -66,7 +66,9 @@ public class BallPrediction
         }
 
         float averageTime = (float)stopWatch.ElapsedMilliseconds / numIterations;
-        TestContext.WriteLine("Average time to generate ball prediction: " + averageTime + "ms");
+        TestContext.WriteLine(
+            "Average time to generate ball prediction: " + averageTime + "ms"
+        );
 
         // makes the above result print out
         Assert.IsTrue(false);

@@ -65,12 +65,16 @@ public static class ConfigParser
             if (Enum.TryParse((string)table[key], true, out T value))
                 return value;
 
-            Console.WriteLine($"Warning! Unable to read '{key}', using default setting instead");
+            Console.WriteLine(
+                $"Warning! Unable to read '{key}', using default setting instead"
+            );
             return fallback;
         }
         catch (KeyNotFoundException)
         {
-            Console.WriteLine($"Warning! Could not find the '{key}' field in toml. Using default setting instead");
+            Console.WriteLine(
+                $"Warning! Could not find the '{key}' field in toml. Using default setting instead"
+            );
             return fallback;
         }
     }
@@ -176,7 +180,10 @@ public static class ConfigParser
         return runCommandWindows ?? "";
     }
 
-    private static ScriptConfigurationT GetScriptConfig(TomlTable scriptTable, string playerTomlPath)
+    private static ScriptConfigurationT GetScriptConfig(
+        TomlTable scriptTable,
+        string playerTomlPath
+    )
     {
         string? scriptTomlPath = ParseString(scriptTable, "config", null);
         TomlTable scriptToml = GetTable(CombinePaths(playerTomlPath, scriptTomlPath));
@@ -191,21 +198,36 @@ public static class ConfigParser
         return scriptConfig;
     }
 
-    private static PlayerConfigurationT GetPlayerConfig(TomlTable table, string matchConfigPath) =>
+    private static PlayerConfigurationT GetPlayerConfig(
+        TomlTable table,
+        string matchConfigPath
+    ) =>
         ParseEnum(table, "type", PlayerClass.RLBot) switch
         {
-            PlayerClass.RLBot => GetBotConfig(table, PlayerClassUnion.FromRLBot(new RLBotT()), matchConfigPath),
-            PlayerClass.Human => GetHumanConfig(table, PlayerClassUnion.FromHuman(new HumanT())),
+            PlayerClass.RLBot
+                => GetBotConfig(
+                    table,
+                    PlayerClassUnion.FromRLBot(new RLBotT()),
+                    matchConfigPath
+                ),
+            PlayerClass.Human
+                => GetHumanConfig(table, PlayerClassUnion.FromHuman(new HumanT())),
             PlayerClass.Psyonix
                 => GetPsyonixConfig(
                     table,
-                    PlayerClassUnion.FromPsyonix(new PsyonixT { BotSkill = ParseFloat(table, "skill", 1.0f) })
+                    PlayerClassUnion.FromPsyonix(
+                        new PsyonixT { BotSkill = ParseFloat(table, "skill", 1.0f) }
+                    )
                 ),
-            PlayerClass.PartyMember => throw new NotImplementedException("PartyMember not implemented"),
+            PlayerClass.PartyMember
+                => throw new NotImplementedException("PartyMember not implemented"),
             _ => throw new NotImplementedException("Unimplemented PlayerClass type")
         };
 
-    private static PlayerConfigurationT GetHumanConfig(TomlTable table, PlayerClassUnion classUnion) =>
+    private static PlayerConfigurationT GetHumanConfig(
+        TomlTable table,
+        PlayerClassUnion classUnion
+    ) =>
         new()
         {
             Variety = classUnion,
@@ -215,7 +237,10 @@ public static class ConfigParser
             RunCommand = ""
         };
 
-    private static PlayerConfigurationT GetPsyonixConfig(TomlTable table, PlayerClassUnion classUnion)
+    private static PlayerConfigurationT GetPsyonixConfig(
+        TomlTable table,
+        PlayerClassUnion classUnion
+    )
     {
         var team = ParseUint(table, "team", 0);
         var (fullName, preset) = PsyonixPresets.GetRandom((int)team);
@@ -256,16 +281,23 @@ public static class ConfigParser
          */
         string? matchConfigParent = Path.GetDirectoryName(matchConfigPath);
 
-        string? playerTomlPath = CombinePaths(matchConfigParent, ParseString(rlbotPlayerTable, "config", null));
+        string? playerTomlPath = CombinePaths(
+            matchConfigParent,
+            ParseString(rlbotPlayerTable, "config", null)
+        );
         TomlTable playerToml = GetTable(CombinePaths(matchConfigParent, playerTomlPath));
         string? tomlParent = Path.GetDirectoryName(playerTomlPath);
 
         TomlTable playerSettings = ParseTable(playerToml, "settings");
-        string? loadoutTomlPath = CombinePaths(tomlParent, ParseString(playerSettings, "looks_config", null));
+        string? loadoutTomlPath = CombinePaths(
+            tomlParent,
+            ParseString(playerSettings, "looks_config", null)
+        );
 
         TomlTable loadoutToml = GetTable(loadoutTomlPath);
 
-        string teamLoadoutString = ParseInt(rlbotPlayerTable, "team", 0) == 0 ? "blue_loadout" : "orange_loadout";
+        string teamLoadoutString =
+            ParseInt(rlbotPlayerTable, "team", 0) == 0 ? "blue_loadout" : "orange_loadout";
         TomlTable teamLoadout = ParseTable(loadoutToml, teamLoadoutString);
 
         TomlTable teamPaint = ParseTable(teamLoadout, "paint");
@@ -307,6 +339,47 @@ public static class ConfigParser
             }
         };
     }
+
+    private static MutatorSettingsT GetMutatorSettings(TomlTable mutatorTable) =>
+        new MutatorSettingsT()
+        {
+            MatchLength = ParseEnum(mutatorTable, "match_length", MatchLength.Five_Minutes),
+            MaxScore = ParseEnum(mutatorTable, "max_score", MaxScore.Default),
+            MultiBall = ParseEnum(mutatorTable, "multi_ball", MultiBall.One),
+            OvertimeOption = ParseEnum(mutatorTable, "overtime", OvertimeOption.Unlimited),
+            GameSpeedOption = ParseEnum(mutatorTable, "game_speed", GameSpeedOption.Default),
+            BallMaxSpeedOption = ParseEnum(
+                mutatorTable,
+                "ball_max_speed",
+                BallMaxSpeedOption.Default
+            ),
+            BallTypeOption = ParseEnum(mutatorTable, "ball_type", BallTypeOption.Default),
+            BallWeightOption = ParseEnum(
+                mutatorTable,
+                "ball_weight",
+                BallWeightOption.Default
+            ),
+            BallSizeOption = ParseEnum(mutatorTable, "ball_size", BallSizeOption.Default),
+            BallBouncinessOption = ParseEnum(
+                mutatorTable,
+                "ball_bounciness",
+                BallBouncinessOption.Default
+            ),
+            BoostOption = ParseEnum(mutatorTable, "boost_amount", BoostOption.Normal_Boost),
+            RumbleOption = ParseEnum(mutatorTable, "rumble", RumbleOption.No_Rumble),
+            BoostStrengthOption = ParseEnum(
+                mutatorTable,
+                "boost_strength",
+                BoostStrengthOption.One
+            ),
+            GravityOption = ParseEnum(mutatorTable, "gravity", GravityOption.Default),
+            DemolishOption = ParseEnum(mutatorTable, "demolish", DemolishOption.Default),
+            RespawnTimeOption = ParseEnum(
+                mutatorTable,
+                "respawn_time",
+                RespawnTimeOption.Three_Seconds
+            ),
+        };
 
     public static MatchSettingsT GetMatchSettings(string path)
     {
@@ -354,25 +427,7 @@ public static class ConfigParser
             ),
             AutoSaveReplay = ParseBool(matchTable, "auto_save_replay", false),
             Freeplay = ParseBool(matchTable, "freeplay", false),
-            MutatorSettings = new MutatorSettingsT()
-            {
-                MatchLength = ParseEnum(mutatorTable, "match_length", MatchLength.Five_Minutes),
-                MaxScore = ParseEnum(mutatorTable, "max_score", MaxScore.Default),
-                MultiBall = ParseEnum(mutatorTable, "multi_ball", MultiBall.One),
-                OvertimeOption = ParseEnum(mutatorTable, "overtime", OvertimeOption.Unlimited),
-                GameSpeedOption = ParseEnum(mutatorTable, "game_speed", GameSpeedOption.Default),
-                BallMaxSpeedOption = ParseEnum(mutatorTable, "ball_max_speed", BallMaxSpeedOption.Default),
-                BallTypeOption = ParseEnum(mutatorTable, "ball_type", BallTypeOption.Default),
-                BallWeightOption = ParseEnum(mutatorTable, "ball_weight", BallWeightOption.Default),
-                BallSizeOption = ParseEnum(mutatorTable, "ball_size", BallSizeOption.Default),
-                BallBouncinessOption = ParseEnum(mutatorTable, "ball_bounciness", BallBouncinessOption.Default),
-                BoostOption = ParseEnum(mutatorTable, "boost_amount", BoostOption.Normal_Boost),
-                RumbleOption = ParseEnum(mutatorTable, "rumble", RumbleOption.No_Rumble),
-                BoostStrengthOption = ParseEnum(mutatorTable, "boost_strength", BoostStrengthOption.One),
-                GravityOption = ParseEnum(mutatorTable, "gravity", GravityOption.Default),
-                DemolishOption = ParseEnum(mutatorTable, "demolish", DemolishOption.Default),
-                RespawnTimeOption = ParseEnum(mutatorTable, "respawn_time", RespawnTimeOption.Three_Seconds),
-            },
+            MutatorSettings = GetMutatorSettings(mutatorTable),
             PlayerConfigurations = playerConfigs,
             ScriptConfigurations = scriptConfigs
         };

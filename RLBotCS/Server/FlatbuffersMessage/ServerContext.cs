@@ -13,8 +13,12 @@ internal class ServerContext(
 {
     public TcpListener? Server { get; init; }
     public ChannelReader<IServerMessage> IncomingMessages { get; } = incomingMessages.Reader;
-    public ChannelWriter<IServerMessage> IncomingMessagesWriter { get; } = incomingMessages.Writer;
-    public Dictionary<int, (ChannelWriter<SessionMessage> writer, Thread thread)> Sessions { get; } = [];
+    public ChannelWriter<IServerMessage> IncomingMessagesWriter { get; } =
+        incomingMessages.Writer;
+    public Dictionary<
+        int,
+        (ChannelWriter<SessionMessage> writer, Thread thread)
+    > Sessions { get; } = [];
 
     public FieldInfoT? FieldInfo { get; set; }
     public bool ShouldUpdateFieldInfo { get; set; }

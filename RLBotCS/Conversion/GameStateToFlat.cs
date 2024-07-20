@@ -38,7 +38,10 @@ internal static class GameStateToFlat
         }
     }
 
-    public static TypedPayload ToFlatBuffers(this GameState gameState, FlatBufferBuilder builder)
+    public static TypedPayload ToFlatBuffers(
+        this GameState gameState,
+        FlatBufferBuilder builder
+    )
     {
         List<BallInfoT> balls = new(gameState.Balls.Count);
         foreach (var ball in gameState.Balls.Values)
@@ -76,12 +79,21 @@ internal static class GameStateToFlat
                         }
                     ),
                 ICollisionShape.Sphere sphereShape
-                    => CollisionShapeUnion.FromSphereShape(new() { Diameter = sphereShape.Diameter }),
+                    => CollisionShapeUnion.FromSphereShape(
+                        new() { Diameter = sphereShape.Diameter }
+                    ),
                 ICollisionShape.Cylinder cylinderShape
                     => CollisionShapeUnion.FromCylinderShape(
-                        new() { Diameter = cylinderShape.Diameter, Height = cylinderShape.Height }
+                        new()
+                        {
+                            Diameter = cylinderShape.Diameter,
+                            Height = cylinderShape.Height
+                        }
                     ),
-                _ => CollisionShapeUnion.FromSphereShape(new SphereShapeT { Diameter = 91.25f * 2 })
+                _
+                    => CollisionShapeUnion.FromSphereShape(
+                        new SphereShapeT { Diameter = 91.25f * 2 }
+                    )
             };
 
             balls.Add(
