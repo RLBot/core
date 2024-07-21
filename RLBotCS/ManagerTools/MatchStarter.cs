@@ -119,8 +119,6 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
             _ => true
         };
 
-        _matchSettings = matchSettings;
-
         if (shouldSpawnNewMap)
         {
             _needsSpawnBots = true;
@@ -129,8 +127,27 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
             bridge.TryWrite(new SpawnMap(matchSettings));
         }
         else
+        {
             // No need to load a new map, just spawn the players.
             SpawnCars(matchSettings);
+
+            // despawn old bots that aren't in the new match
+            if (_matchSettings is MatchSettingsT lastMatchSettings)
+            {
+                var lastSpawnIds = lastMatchSettings.PlayerConfigurations.Select(p => p.SpawnId).ToList();
+                var currentSpawnIds = matchSettings.PlayerConfigurations.Select(p => p.SpawnId).ToList();
+                var toDespawn = lastSpawnIds.Except(currentSpawnIds).ToList();
+
+                if (toDespawn.Count > 0)
+                {
+                    bridge.TryWrite(new RemoveOldPlayers(toDespawn));
+                }
+            }
+
+            bridge.TryWrite(new FlushMatchCommands());
+        }
+
+        _matchSettings = matchSettings;
     }
 
     private bool IsDifferentFromLast(MatchSettingsT matchSettings)
@@ -197,7 +214,7 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
             {
                 case PlayerClass.RLBot:
                     Logger.LogInformation(
-                        "Core is spawning player "
+                        "Spawning player "
                             + playerConfig.Name
                             + " with spawn id "
                             + playerConfig.SpawnId
