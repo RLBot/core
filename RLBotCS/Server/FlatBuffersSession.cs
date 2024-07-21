@@ -294,8 +294,12 @@ internal class FlatBuffersSession
 
     public void Cleanup()
     {
-        // try to politely close the connection
         Logger.LogInformation($"Closing session {_clientId}.");
+
+        _isReady = false;
+        _incomingMessages.Writer.TryComplete();
+
+        // try to politely close the connection
         try
         {
             TypedPayload msg =
