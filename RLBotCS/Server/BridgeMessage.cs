@@ -36,8 +36,7 @@ internal record Input(PlayerInputT PlayerInput) : IBridgeMessage
     }
 }
 
-internal record SpawnHuman(PlayerConfigurationT Config, uint DesiredIndex)
-    : IBridgeMessage
+internal record SpawnHuman(PlayerConfigurationT Config, uint DesiredIndex) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
@@ -112,9 +111,9 @@ internal record RemoveOldPlayers(List<int> spawnIds) : IBridgeMessage
     {
         foreach (int spawnId in spawnIds)
         {
-            PlayerMetadata? player = context.GameState.PlayerMapping.GetKnownPlayers().FirstOrDefault(
-                p => p.SpawnId == spawnId
-            );
+            PlayerMetadata? player = context
+                .GameState.PlayerMapping.GetKnownPlayers()
+                .FirstOrDefault(p => p.SpawnId == spawnId);
 
             if (player != null)
             {

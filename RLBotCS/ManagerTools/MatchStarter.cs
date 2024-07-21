@@ -91,12 +91,12 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
             }
 
             playerConfig.SpawnId = playerConfig.Name.GetHashCode();
-            playerConfig.Location = playerConfig.Location ?? "";
-            playerConfig.RunCommand = playerConfig.RunCommand ?? "";
+            playerConfig.Location ??= "";
+            playerConfig.RunCommand ??= "";
         }
 
-        matchSettings.GamePath = matchSettings.GamePath ?? "";
-        matchSettings.GameMapUpk = matchSettings.GameMapUpk ?? "";
+        matchSettings.GamePath ??= "";
+        matchSettings.GameMapUpk ??= "";
 
         if (matchSettings.AutoStartBots)
         {
@@ -134,8 +134,12 @@ internal class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort)
             // despawn old bots that aren't in the new match
             if (_matchSettings is MatchSettingsT lastMatchSettings)
             {
-                var lastSpawnIds = lastMatchSettings.PlayerConfigurations.Select(p => p.SpawnId).ToList();
-                var currentSpawnIds = matchSettings.PlayerConfigurations.Select(p => p.SpawnId).ToList();
+                var lastSpawnIds = lastMatchSettings
+                    .PlayerConfigurations.Select(p => p.SpawnId)
+                    .ToList();
+                var currentSpawnIds = matchSettings
+                    .PlayerConfigurations.Select(p => p.SpawnId)
+                    .ToList();
                 var toDespawn = lastSpawnIds.Except(currentSpawnIds).ToList();
 
                 if (toDespawn.Count > 0)
