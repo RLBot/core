@@ -20,7 +20,7 @@ skip_replays = false
 # Skip the kickoff countdown
 start_without_countdown = false
 # What should we do if you click run while a match is already in progress?
-# "Restart If Different", "Restart", "Continue And Spawn"
+# "Restart_If_Different", "Restart", "Continue_And_Spawn"
 existing_match_behavior = "Restart"
 enable_rendering = false
 enable_state_setting = true

@@ -36,17 +36,27 @@ internal record Input(PlayerInputT PlayerInput) : IBridgeMessage
     }
 }
 
-internal record SpawnHuman(PlayerConfigurationT PlayerConfig, uint DesiredIndex)
+internal record SpawnHuman(PlayerConfigurationT Config, uint DesiredIndex)
     : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
-        context.QueueConsoleCommand("ChangeTeam " + PlayerConfig.Team);
+        context.QueueConsoleCommand("ChangeTeam " + Config.Team);
+
+        PlayerMetadata? alreadySpawnedPlayer = context
+            .GameState.PlayerMapping.GetKnownPlayers()
+            .FirstOrDefault(kp => Config.SpawnId == kp.SpawnId);
+        if (alreadySpawnedPlayer is PlayerMetadata metadata)
+        {
+            metadata.PlayerIndex = DesiredIndex;
+            return;
+        }
+
         context.GameState.PlayerMapping.AddPendingSpawn(
             new SpawnTracker
             {
                 CommandId = 0,
-                SpawnId = PlayerConfig.SpawnId,
+                SpawnId = Config.SpawnId,
                 DesiredPlayerIndex = DesiredIndex,
                 IsBot = false,
                 IsCustomBot = false
@@ -56,7 +66,7 @@ internal record SpawnHuman(PlayerConfigurationT PlayerConfig, uint DesiredIndex)
 }
 
 internal record SpawnBot(
-    PlayerConfigurationT PlayerConfig,
+    PlayerConfigurationT Config,
     BotSkill Skill,
     uint DesiredIndex,
     bool IsCustomBot
@@ -64,22 +74,21 @@ internal record SpawnBot(
 {
     public void HandleMessage(BridgeContext context)
     {
-        PlayerConfigurationT config = PlayerConfig;
         PlayerMetadata? alreadySpawnedPlayer = context
             .GameState.PlayerMapping.GetKnownPlayers()
-            .FirstOrDefault(kp => config.SpawnId == kp.SpawnId);
+            .FirstOrDefault(kp => Config.SpawnId == kp.SpawnId);
         if (alreadySpawnedPlayer != null)
             // We've already spawned this player, don't duplicate them.
             return;
 
-        config.Loadout ??= new PlayerLoadoutT();
-        config.Loadout.LoadoutPaint ??= new LoadoutPaintT();
-        Loadout loadout = FlatToModel.ToLoadout(config.Loadout, config.Team);
+        Config.Loadout ??= new PlayerLoadoutT();
+        Config.Loadout.LoadoutPaint ??= new LoadoutPaintT();
+        Loadout loadout = FlatToModel.ToLoadout(Config.Loadout, Config.Team);
 
         context.QueuedMatchCommands = true;
         ushort commandId = context.MatchCommandSender.AddBotSpawnCommand(
-            config.Name,
-            (int)config.Team,
+            Config.Name,
+            (int)Config.Team,
             Skill,
             loadout
         );
@@ -88,12 +97,30 @@ internal record SpawnBot(
             new SpawnTracker
             {
                 CommandId = commandId,
-                SpawnId = config.SpawnId,
+                SpawnId = Config.SpawnId,
                 DesiredPlayerIndex = DesiredIndex,
                 IsCustomBot = IsCustomBot,
                 IsBot = true
             }
         );
+    }
+}
+
+internal record RemoveOldPlayers(List<int> spawnIds) : IBridgeMessage
+{
+    public void HandleMessage(BridgeContext context)
+    {
+        foreach (int spawnId in spawnIds)
+        {
+            PlayerMetadata? player = context.GameState.PlayerMapping.GetKnownPlayers().FirstOrDefault(
+                p => p.SpawnId == spawnId
+            );
+
+            if (player != null)
+            {
+                context.MatchCommandSender.AddDespawnCommand(player.ActorId);
+            }
+        }
     }
 }
 
@@ -114,6 +141,19 @@ internal record SpawnMap(MatchSettingsT MatchSettings) : IBridgeMessage
 
         context.MatchCommandSender.AddConsoleCommand(loadMapCommand);
         context.MatchCommandSender.Send();
+    }
+}
+
+internal record FlushMatchCommands() : IBridgeMessage
+{
+    public void HandleMessage(BridgeContext context)
+    {
+        if (context.QueuedMatchCommands)
+        {
+            context.MatchCommandSender.Send();
+            context.DelayMatchCommandSend = false;
+            context.QueuedMatchCommands = false;
+        }
     }
 }
 

@@ -67,10 +67,10 @@ void WaitForShutdown()
 
 void Terminate()
 {
-    logger.LogInformation("Core is shutting down...");
+    logger.LogInformation("Shutting down server...");
     serverWriter.TryComplete();
     WaitForShutdown();
-    logger.LogInformation("Core has shut down successfully.");
+    logger.LogInformation("Server shut down successfully.");
 }
 
 // Catch sudden termination to clean up the server
