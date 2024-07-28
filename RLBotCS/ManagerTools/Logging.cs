@@ -50,7 +50,7 @@ public class Logging : ILogger
         {
             var logBuilder = new StringBuilder();
             logBuilder.Append(
-                $"{logLevelColors[0]}{DateTime.Now:yyyy-MM-dd HH:mm:ss}{Reset} "
+                $"{logLevelColors[0]}{DateTime.Now:HH:mm:ss}{Reset} "
             );
             logBuilder.Append(
                 $"{logLevelColors[1]}{logLevelString}:{Reset}{Green}{AppName}{Reset}"
