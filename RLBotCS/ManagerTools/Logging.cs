@@ -22,7 +22,7 @@ public class Logging : ILogger
 
     public Logging(string name, LogLevel minLevel)
     {
-        _name = name.PadLeft(20);
+        _name = name.PadLeft(16);
         _minLevel = minLevel;
     }
 
