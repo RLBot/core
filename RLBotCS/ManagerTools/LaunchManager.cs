@@ -74,7 +74,10 @@ internal static class LaunchManager
             "-nomovie"
         ];
 
-    public static void LaunchBots(List<rlbot.flat.PlayerConfigurationT> players)
+    public static void LaunchBots(
+        List<rlbot.flat.PlayerConfigurationT> players,
+        int rlbotSocketsPort
+    )
     {
         foreach (var player in players)
         {
@@ -94,6 +97,8 @@ internal static class LaunchManager
 
                 botProcess.StartInfo.EnvironmentVariables["BOT_SPAWN_ID"] =
                     player.SpawnId.ToString();
+                botProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
+                    rlbotSocketsPort.ToString();
 
                 botProcess.Start();
             }
@@ -104,7 +109,10 @@ internal static class LaunchManager
         }
     }
 
-    public static void LaunchScripts(List<rlbot.flat.ScriptConfigurationT> scripts)
+    public static void LaunchScripts(
+        List<rlbot.flat.ScriptConfigurationT> scripts,
+        int rlbotSocketsPort
+    )
     {
         foreach (var script in scripts)
         {
@@ -121,6 +129,9 @@ internal static class LaunchManager
                 string[] commandParts = script.RunCommand.Split(' ', 2);
                 scriptProcess.StartInfo.FileName = Path.Join(script.Location, commandParts[0]);
                 scriptProcess.StartInfo.Arguments = commandParts[1];
+
+                scriptProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
+                    rlbotSocketsPort.ToString();
 
                 scriptProcess.Start();
             }

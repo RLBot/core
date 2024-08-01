@@ -49,9 +49,7 @@ public class Logging : ILogger
         lock (_lock)
         {
             var logBuilder = new StringBuilder();
-            logBuilder.Append(
-                $"{logLevelColors[0]}{DateTime.Now:HH:mm:ss}{Reset} "
-            );
+            logBuilder.Append($"{logLevelColors[0]}{DateTime.Now:HH:mm:ss}{Reset} ");
             logBuilder.Append(
                 $"{logLevelColors[1]}{logLevelString}:{Reset}{Green}{AppName}{Reset}"
             );

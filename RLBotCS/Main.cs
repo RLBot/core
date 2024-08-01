@@ -7,6 +7,9 @@ using RLBotCS.Server.FlatbuffersMessage;
 
 var logger = Logging.GetLogger("Main");
 
+int rlbotSocketsPort = args.Length > 0 ? int.Parse(args[0]) : LaunchManager.RlbotSocketsPort;
+logger.LogInformation("Server will start on port " + rlbotSocketsPort);
+
 int gamePort = LaunchManager.FindUsableGamePort();
 logger.LogInformation("Waiting for Rocket League to connect on port " + gamePort);
 
@@ -21,9 +24,9 @@ var serverWriter = serverChannel.Writer;
 Thread rlbotServer =
     new(() =>
     {
-        MatchStarter matchStarter = new(bridgeWriter, gamePort);
+        MatchStarter matchStarter = new(bridgeWriter, gamePort, rlbotSocketsPort);
         FlatBuffersServer flatBuffersServer =
-            new(LaunchManager.RlbotSocketsPort, serverChannel, matchStarter, bridgeWriter);
+            new(rlbotSocketsPort, serverChannel, matchStarter, bridgeWriter);
 
         try
         {
