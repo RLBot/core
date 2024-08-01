@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using WmiLight;
@@ -74,6 +75,20 @@ internal static class LaunchManager
             "-nomovie"
         ];
 
+    private static List<string> ParseCommand(string command)
+    {
+        var parts = new List<string>();
+        var regex = new Regex(@"(?<match>[\""].+?[\""]|[^ ]+)");
+        var matches = regex.Matches(command);
+
+        foreach (Match match in matches)
+        {
+            parts.Add(match.Groups["match"].Value.Trim('"'));
+        }
+
+        return parts;
+    }
+
     public static void LaunchBots(
         List<rlbot.flat.PlayerConfigurationT> players,
         int rlbotSocketsPort
@@ -91,11 +106,11 @@ internal static class LaunchManager
 
             try
             {
-                string[] commandParts = player.RunCommand.Split(' ', 2);
+                var commandParts = ParseCommand(player.RunCommand);
                 botProcess.StartInfo.FileName = Path.Join(player.Location, commandParts[0]);
-                botProcess.StartInfo.Arguments = commandParts[1];
+                botProcess.StartInfo.Arguments = string.Join(' ', commandParts.Skip(1));
 
-                botProcess.StartInfo.EnvironmentVariables["BOT_SPAWN_ID"] =
+                botProcess.StartInfo.EnvironmentVariables["RLBOT_SPAWN_IDS"] =
                     player.SpawnId.ToString();
                 botProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
                     rlbotSocketsPort.ToString();
@@ -126,9 +141,9 @@ internal static class LaunchManager
 
             try
             {
-                string[] commandParts = script.RunCommand.Split(' ', 2);
+                var commandParts = ParseCommand(script.RunCommand);
                 scriptProcess.StartInfo.FileName = Path.Join(script.Location, commandParts[0]);
-                scriptProcess.StartInfo.Arguments = commandParts[1];
+                scriptProcess.StartInfo.Arguments = string.Join(' ', commandParts.Skip(1));
 
                 scriptProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
                     rlbotSocketsPort.ToString();
