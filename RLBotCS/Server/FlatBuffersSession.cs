@@ -182,8 +182,16 @@ internal class FlatBuffersSession
 
     private async Task SendPayloadToClientAsync(TypedPayload payload)
     {
-        await _socketSpecWriter.WriteAsync(payload);
-        await _socketSpecWriter.SendAsync();
+        try
+        {
+            await _socketSpecWriter.WriteAsync(payload);
+            await _socketSpecWriter.SendAsync();
+        }
+        catch (ObjectDisposedException)
+        {
+            // client disconnected before we could send the message
+            return;
+        }
     }
 
     private async Task HandleIncomingMessages()
