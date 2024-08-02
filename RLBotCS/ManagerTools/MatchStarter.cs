@@ -95,7 +95,9 @@ internal class MatchStarter(
                 playerConfig.Name = playerName;
             }
 
-            playerConfig.SpawnId = playerConfig.Name.GetHashCode();
+            if (playerConfig.SpawnId == 0)
+                playerConfig.SpawnId = playerConfig.Name.GetHashCode();
+
             playerConfig.Location ??= "";
             playerConfig.RunCommand ??= "";
 
