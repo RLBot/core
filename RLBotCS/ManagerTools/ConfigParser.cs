@@ -50,13 +50,6 @@ public static class ConfigParser
         }
     }
 
-    private static TomlTable? ParseTableOrNull(TomlTable table, string key)
-    {
-        if (table.TryGetValue(key, out var value) && value is TomlTable tableValue)
-            return tableValue;
-        return null;
-    }
-
     private static TomlTableArray ParseTableArray(
         TomlTable table,
         string key,
