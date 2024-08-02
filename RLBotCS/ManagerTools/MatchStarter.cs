@@ -77,6 +77,7 @@ internal class MatchStarter(
         if (matchSettings == null)
             return;
 
+        Dictionary<string, List<PlayerConfigurationT>> processes = new();
         Dictionary<string, int> playerNames = [];
 
         foreach (var playerConfig in matchSettings.PlayerConfigurations)
@@ -97,6 +98,22 @@ internal class MatchStarter(
             playerConfig.SpawnId = playerConfig.Name.GetHashCode();
             playerConfig.Location ??= "";
             playerConfig.RunCommand ??= "";
+
+            if (playerConfig.Hivemind)
+            {
+                // only add once per group by name_team
+                string nameTeam = playerName + "_" + playerConfig.Team;
+                if (!processes.ContainsKey(nameTeam))
+                {
+                    processes[nameTeam] = new List<PlayerConfigurationT>();
+                }
+                // but we need _all_ the spawn ids
+                processes[nameTeam].Add(playerConfig);
+            }
+            else
+            {
+                processes[playerConfig.Name] = new List<PlayerConfigurationT> { playerConfig };
+            }
         }
 
         matchSettings.GamePath ??= "";
@@ -104,7 +121,7 @@ internal class MatchStarter(
 
         if (matchSettings.AutoStartBots)
         {
-            LaunchManager.LaunchBots(matchSettings.PlayerConfigurations, rlbotSocketsPort);
+            LaunchManager.LaunchBots(processes, rlbotSocketsPort);
             LaunchManager.LaunchScripts(matchSettings.ScriptConfigurations, rlbotSocketsPort);
         }
 

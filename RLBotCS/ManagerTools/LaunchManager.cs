@@ -90,28 +90,35 @@ internal static class LaunchManager
     }
 
     public static void LaunchBots(
-        List<rlbot.flat.PlayerConfigurationT> players,
+        Dictionary<string, List<rlbot.flat.PlayerConfigurationT>> processGroups,
         int rlbotSocketsPort
     )
     {
-        foreach (var player in players)
+        foreach (var processGroup in processGroups.Values)
         {
-            if (player.RunCommand == "")
+            var mainPlayer = processGroup[0];
+            if (mainPlayer.RunCommand == "")
                 continue;
 
             Process botProcess = new();
 
-            if (player.Location != "")
-                botProcess.StartInfo.WorkingDirectory = player.Location;
+            if (mainPlayer.Location != "")
+                botProcess.StartInfo.WorkingDirectory = mainPlayer.Location;
 
             try
             {
-                var commandParts = ParseCommand(player.RunCommand);
-                botProcess.StartInfo.FileName = Path.Join(player.Location, commandParts[0]);
+                var commandParts = ParseCommand(mainPlayer.RunCommand);
+                botProcess.StartInfo.FileName = Path.Join(
+                    mainPlayer.Location,
+                    commandParts[0]
+                );
                 botProcess.StartInfo.Arguments = string.Join(' ', commandParts.Skip(1));
 
-                botProcess.StartInfo.EnvironmentVariables["RLBOT_SPAWN_IDS"] =
-                    player.SpawnId.ToString();
+                List<int> spawnIds = processGroup.Select(player => player.SpawnId).ToList();
+                botProcess.StartInfo.EnvironmentVariables["RLBOT_SPAWN_IDS"] = string.Join(
+                    ',',
+                    spawnIds
+                );
                 botProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
                     rlbotSocketsPort.ToString();
 
@@ -119,7 +126,7 @@ internal static class LaunchManager
             }
             catch (Exception e)
             {
-                Logger.LogError($"Failed to launch bot {player.Name}: {e.Message}");
+                Logger.LogError($"Failed to launch bot {mainPlayer.Name}: {e.Message}");
             }
         }
     }
