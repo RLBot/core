@@ -219,22 +219,29 @@ public static class ConfigParser
 
     private static ScriptConfigurationT GetScriptConfig(
         TomlTable scriptTable,
-        string playerTomlPath,
+        string matchConfigPath,
         List<string> missingValues
     )
     {
-        string? scriptTomlPath = ParseString(scriptTable, "config", null, missingValues);
-        TomlTable scriptToml = GetTable(CombinePaths(playerTomlPath, scriptTomlPath));
+        string? matchConfigParent = Path.GetDirectoryName(matchConfigPath);
+
+        string? scriptTomlPath = CombinePaths(
+            matchConfigParent,
+            ParseString(scriptTable, "config", null, missingValues)
+        );
+        TomlTable scriptToml = GetTable(scriptTomlPath);
         string tomlParent = Path.GetDirectoryName(scriptTomlPath) ?? "";
+
+        TomlTable scriptSettings = ParseTable(scriptToml, "settings", missingValues);
 
         ScriptConfigurationT scriptConfig =
             new()
             {
                 Location = CombinePaths(
                     tomlParent,
-                    ParseString(scriptToml, "location", "", missingValues)
+                    ParseString(scriptSettings, "location", "", missingValues)
                 ),
-                RunCommand = GetRunCommand(scriptToml, missingValues)
+                RunCommand = GetRunCommand(scriptSettings, missingValues)
             };
         return scriptConfig;
     }
@@ -397,7 +404,7 @@ public static class ConfigParser
             matchConfigParent,
             ParseString(rlbotPlayerTable, "config", null, missingValues)
         );
-        TomlTable playerToml = GetTable(CombinePaths(matchConfigParent, playerTomlPath));
+        TomlTable playerToml = GetTable(playerTomlPath);
         string? tomlParent = Path.GetDirectoryName(playerTomlPath);
 
         TomlTable playerSettings = ParseTable(playerToml, "settings", missingValues);
