@@ -18,7 +18,7 @@ internal record SessionMessage
 
     public record DistributeBallPrediction(BallPredictionT BallPrediction) : SessionMessage;
 
-    public record DistributeGameState(Bridge.State.GameState GameState) : SessionMessage;
+    public record DistributeGameState(GameTickPacketT GameState) : SessionMessage;
 
     public record RendersAllowed(bool Allowed) : SessionMessage;
 
@@ -235,7 +235,17 @@ internal class FlatBuffersSession
                     );
                     break;
                 case SessionMessage.DistributeGameState m when _isReady:
-                    await SendPayloadToClientAsync(m.GameState.ToFlatBuffers(_messageBuilder));
+                    _messageBuilder.Clear();
+                    _messageBuilder.Finish(
+                        GameTickPacket.Pack(_messageBuilder, m.GameState).Value
+                    );
+
+                    await SendPayloadToClientAsync(
+                        TypedPayload.FromFlatBufferBuilder(
+                            DataType.GameTickPacket,
+                            _messageBuilder
+                        )
+                    );
                     break;
                 case SessionMessage.RendersAllowed m:
                     _renderingIsEnabled = m.Allowed;

@@ -38,10 +38,7 @@ internal static class GameStateToFlat
         }
     }
 
-    public static TypedPayload ToFlatBuffers(
-        this GameState gameState,
-        FlatBufferBuilder builder
-    )
+    public static GameTickPacketT ToFlatBuffers(this GameState gameState)
     {
         List<BallInfoT> balls = new(gameState.Balls.Count);
         foreach (var ball in gameState.Balls.Values)
@@ -210,7 +207,7 @@ internal static class GameStateToFlat
             );
         }
 
-        var gameTickPacket = new GameTickPacketT
+        return new GameTickPacketT
         {
             Balls = balls,
             GameInfo = gameInfo,
@@ -219,9 +216,18 @@ internal static class GameStateToFlat
             Players = players
         };
 
-        builder.Clear();
-        builder.Finish(GameTickPacket.Pack(builder, gameTickPacket).Value);
+        // var gameTickPacket = new GameTickPacketT
+        // {
+        //     Balls = balls,
+        //     GameInfo = gameInfo,
+        //     Teams = teams,
+        //     BoostPadStates = boostStates,
+        //     Players = players
+        // };
 
-        return TypedPayload.FromFlatBufferBuilder(DataType.GameTickPacket, builder);
+        // builder.Clear();
+        // builder.Finish(GameTickPacket.Pack(builder, gameTickPacket).Value);
+
+        // return TypedPayload.FromFlatBufferBuilder(DataType.GameTickPacket, builder);
     }
 }
