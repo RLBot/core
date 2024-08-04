@@ -8,8 +8,12 @@ namespace RLBotCS.ManagerTools;
 
 public class Rendering(TcpMessenger tcpMessenger)
 {
+    private static int MaxClearsPerTick = 1024;
+
     private readonly RenderingSender _renderingSender = new(tcpMessenger);
     private readonly Dictionary<int, Dictionary<int, List<ushort>>> _clientRenderTracker = [];
+
+    private readonly Queue<ushort> _RenderClearQueue = new();
 
     private ushort? RenderItem(RenderTypeUnion renderItem, GameState gameState) =>
         renderItem.Value switch
@@ -76,10 +80,9 @@ public class Rendering(TcpMessenger tcpMessenger)
     )
     {
         var clientRenders = _clientRenderTracker.GetValueOrDefault(clientId, []);
-        // Clear the previous render group
-        if (clientRenders.TryGetValue(renderId, out var previousRenderGroup))
-            foreach (ushort renderItem in previousRenderGroup)
-                _renderingSender.RemoveRenderItem(renderItem);
+
+        // Clear the previous render group, if any
+        RemoveRenderGroup(clientId, renderId);
 
         List<ushort> renderGroup = [];
         foreach (RenderMessageT renderItem in renderItems)
@@ -102,11 +105,10 @@ public class Rendering(TcpMessenger tcpMessenger)
             return;
 
         foreach (ushort renderItem in renderItems)
-            _renderingSender.RemoveRenderItem(renderItem);
+            _RenderClearQueue.Enqueue(renderItem);
 
         // Remove the renderId from the client
         clientRenders.Remove(renderId);
-        _renderingSender.Send();
     }
 
     public void ClearClientRenders(int clientId)
@@ -117,24 +119,39 @@ public class Rendering(TcpMessenger tcpMessenger)
         // Tell the game to remove all the renders
         foreach (int renderId in clientRenders.Keys)
         foreach (ushort renderItem in clientRenders[renderId])
-            _renderingSender.RemoveRenderItem(renderItem);
+            _RenderClearQueue.Enqueue(renderItem);
 
         // Remove the client from the tracker
         _clientRenderTracker.Remove(clientId);
-        _renderingSender.Send();
     }
 
     public void ClearAllRenders()
     {
-        // Tell the game to remove all the renders
-        // TODO: We might not be able to remove all the renders in one tick
-        foreach (var clientRenders in _clientRenderTracker.Values)
+        foreach (var (clientId, clientRenders) in _clientRenderTracker)
         foreach (int renderId in clientRenders.Keys)
         foreach (ushort renderItem in clientRenders[renderId])
-            _renderingSender.RemoveRenderItem(renderItem);
+            _RenderClearQueue.Enqueue(renderItem);
 
-        // Clear the tracker
         _clientRenderTracker.Clear();
+    }
+
+    public bool SendRenderClears()
+    {
+        if (_RenderClearQueue.Count == 0)
+            return true;
+
+        Console.WriteLine($"{_RenderClearQueue.Count}");
+
+        int clears = 0;
+        while (_RenderClearQueue.Count > 0 && clears < MaxClearsPerTick)
+        {
+            var renderItem = _RenderClearQueue.Dequeue();
+            _renderingSender.RemoveRenderItem(renderItem);
+            clears++;
+        }
+
         _renderingSender.Send();
+
+        return _RenderClearQueue.Count == 0;
     }
 }

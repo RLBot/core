@@ -47,10 +47,14 @@ internal class BridgeHandler(
                     _context.Writer.TryWrite(new StartCommunication());
                 }
 
+                // reset the counter that lets us know if we're sending too many bytes
+                messenger.ResetByteCount();
+
                 _context.GameState = MessageHandler.CreateUpdatedState(
                     messageClump,
                     _context.GameState
                 );
+
                 _context.Writer.TryWrite(new DistributeGameState(_context.GameState));
 
                 var matchStarted = MessageHandler.ReceivedMatchInfo(messageClump);
@@ -92,6 +96,8 @@ internal class BridgeHandler(
 
                     _context.MatchCommandSender.Send();
                 }
+
+                _context.RenderingMgmt.SendRenderClears();
             }
         }
     }
@@ -108,8 +114,22 @@ internal class BridgeHandler(
             try
             {
                 _context.RenderingMgmt.ClearAllRenders();
+
+                // we can only clear so many renders each tick
+                // so we do this until we've cleared them all
+                // or rocket league has been closed
+                while (!_context.RenderingMgmt.SendRenderClears())
+                {
+                    if (!messenger.WaitForAnyMessageAsync().Result)
+                        break;
+
+                    messenger.ResetByteCount();
+                }
             }
-            catch (Exception) { }
+            catch (Exception e)
+            {
+                _context.Logger.LogError($"Error while clearning up BridgeHandler: {e}");
+            }
             finally
             {
                 _context.Messenger.Dispose();

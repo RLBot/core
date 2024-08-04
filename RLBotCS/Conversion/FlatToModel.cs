@@ -43,31 +43,26 @@ internal static class FlatToModel
         relative?.Value switch
         {
             rlbot.flat.CarAnchorT { Index: var index, Local: var local }
-                => (
-                    new RelativeAnchor()
-                    {
-                        ActorId = gameState.PlayerMapping.ActorIdFromPlayerIndex(index) ?? 0,
-                        Local = ToVectorFromT(local)
-                    }
+                => new RelativeAnchor(
+                    ToVectorFromT(local),
+                    gameState.PlayerMapping.ActorIdFromPlayerIndex(index) ?? 0
                 ),
             rlbot.flat.BallAnchorT { Index: var index, Local: var local }
-                => new RelativeAnchor()
-                {
-                    ActorId = gameState.GetBallActorIdFromIndex(index) ?? 0,
-                    Local = ToVectorFromT(local)
-                },
-            _ => new RelativeAnchor(),
+                => new RelativeAnchor(
+                    ToVectorFromT(local),
+                    gameState.GetBallActorIdFromIndex(index) ?? 0
+                ),
+            _ => new RelativeAnchor(new Vector3(0, 0, 0), 0),
         };
 
     internal static RenderAnchor ToRenderAnchor(
         rlbot.flat.RenderAnchorT offset,
         GameState gameState
     ) =>
-        new RenderAnchor
-        {
-            World = ToVectorFromT(offset.World),
-            Relative = ExtractRelativeAnchor(offset.Relative, gameState)
-        };
+        new RenderAnchor(
+            ToVectorFromT(offset.World),
+            ExtractRelativeAnchor(offset.Relative, gameState)
+        );
 
     internal static Color ToColor(rlbot.flat.ColorT c) => Color.FromArgb(c.A, c.R, c.G, c.B);
 
