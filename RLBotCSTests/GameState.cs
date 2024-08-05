@@ -1,6 +1,7 @@
 using Bridge.State;
 using Google.FlatBuffers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using rlbot.flat;
 using RLBotCS.Conversion;
 
 namespace RLBotCSTests;
@@ -13,7 +14,8 @@ public class TestGameState
     {
         var packet = new GameState();
 
-        FlatBufferBuilder build = new(1024);
-        packet.ToFlatBuffers(build);
+        FlatBufferBuilder builder = new(1024);
+        var offset = GameTickPacket.Pack(builder, packet.ToFlatBuffers());
+        builder.Finish(offset.Value);
     }
 }

@@ -140,8 +140,6 @@ public class Rendering(TcpMessenger tcpMessenger)
         if (_RenderClearQueue.Count == 0)
             return true;
 
-        Console.WriteLine($"{_RenderClearQueue.Count}");
-
         int clears = 0;
         while (_RenderClearQueue.Count > 0 && clears < MaxClearsPerTick)
         {
