@@ -18,6 +18,8 @@ internal class MatchStarter(
 
     private MatchSettingsT? _deferredMatchSettings;
     private MatchSettingsT? _matchSettings;
+    private int _expectedConnections;
+    private int _connectionReadies;
 
     private bool _communicationStarted;
     private bool _hasEverLoadedMap;
@@ -36,8 +38,11 @@ internal class MatchStarter(
     public void StartCommunication()
     {
         _communicationStarted = true;
-        MakeMatch(_deferredMatchSettings);
-        _deferredMatchSettings = null;
+        if (_deferredMatchSettings != null)
+        {
+            MakeMatch(_deferredMatchSettings);
+            _deferredMatchSettings = null;
+        }
     }
 
     public void StartMatch(MatchSettingsT matchSettings)
@@ -67,16 +72,14 @@ internal class MatchStarter(
             if (_needsSpawnBots)
             {
                 SpawnCars(_matchSettings);
+                bridge.TryWrite(new FlushMatchCommands());
                 _needsSpawnBots = false;
             }
         }
     }
 
-    private void MakeMatch(MatchSettingsT? matchSettings)
+    private void MakeMatch(MatchSettingsT matchSettings)
     {
-        if (matchSettings == null)
-            return;
-
         Dictionary<string, List<PlayerConfigurationT>> processes = new();
         Dictionary<string, int> playerNames = [];
 
@@ -121,6 +124,8 @@ internal class MatchStarter(
         matchSettings.GamePath ??= "";
         matchSettings.GameMapUpk ??= "";
 
+        _connectionReadies = 0;
+        _expectedConnections = 0;
         if (matchSettings.AutoStartBots)
         {
             LaunchManager.LaunchBots(processes, rlbotSocketsPort);
@@ -232,6 +237,7 @@ internal class MatchStarter(
         PlayerConfigurationT? humanConfig = null;
         int numPlayers = matchSettings.PlayerConfigurations.Count;
         int indexOffset = 0;
+        _expectedConnections = matchSettings.ScriptConfigurations.Count;
 
         for (int i = 0; i < numPlayers; i++)
         {
@@ -246,6 +252,7 @@ internal class MatchStarter(
                             + " with spawn id "
                             + playerConfig.SpawnId
                     );
+                    _expectedConnections++;
 
                     bridge.TryWrite(
                         new SpawnBot(
@@ -301,6 +308,21 @@ internal class MatchStarter(
         else
         {
             bridge.TryWrite(new SpawnHuman(humanConfig, (uint)(numPlayers - indexOffset)));
+        }
+
+        // If bots still need to be spawned, pause the game
+        if (matchSettings.AutoStartBots && _expectedConnections != 0 && _expectedConnections > _connectionReadies)
+            bridge.TryWrite(new SetPaused(true));
+    }
+
+    public void IncrementConnectionReadies()
+    {
+        _connectionReadies++;
+
+        if (_connectionReadies == _expectedConnections)
+        {
+            bridge.TryWrite(new SetPaused(false));
+            bridge.TryWrite(new FlushMatchCommands());
         }
     }
 }
