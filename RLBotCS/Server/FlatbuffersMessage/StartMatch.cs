@@ -10,6 +10,9 @@ internal record StartMatch(MatchSettingsT MatchSettings) : IServerMessage
         foreach (var (writer, _) in context.Sessions.Values)
             writer.TryWrite(new SessionMessage.StopMatch());
 
+        if (MatchSettings.MutatorSettings == null)
+            MatchSettings.MutatorSettings = new();
+
         context.RenderingIsEnabled = MatchSettings.EnableRendering;
         context.StateSettingIsEnabled = MatchSettings.EnableStateSetting;
 
