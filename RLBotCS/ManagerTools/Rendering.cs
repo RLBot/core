@@ -127,7 +127,7 @@ public class Rendering(TcpMessenger tcpMessenger)
 
     public void ClearAllRenders()
     {
-        foreach (var (clientId, clientRenders) in _clientRenderTracker)
+        foreach (var clientRenders in _clientRenderTracker.Values)
         foreach (int renderId in clientRenders.Keys)
         foreach (ushort renderItem in clientRenders[renderId])
             _RenderClearQueue.Enqueue(renderItem);

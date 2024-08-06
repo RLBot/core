@@ -311,7 +311,11 @@ internal class MatchStarter(
         }
 
         // If bots still need to be spawned, pause the game
-        if (matchSettings.AutoStartBots && _expectedConnections != 0 && _expectedConnections > _connectionReadies)
+        if (
+            matchSettings.AutoStartBots
+            && _expectedConnections != 0
+            && _expectedConnections > _connectionReadies
+        )
             bridge.TryWrite(new SetPaused(true));
     }
 

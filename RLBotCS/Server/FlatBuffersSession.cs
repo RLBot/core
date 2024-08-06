@@ -3,7 +3,6 @@ using System.Threading.Channels;
 using Google.FlatBuffers;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
-using RLBotCS.Conversion;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.FlatbuffersMessage;
 using RLBotCS.Types;

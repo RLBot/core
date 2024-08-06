@@ -1,8 +1,6 @@
 using Bridge.Models.Message;
 using Bridge.State;
-using Google.FlatBuffers;
 using rlbot.flat;
-using RLBotCS.Types;
 using CollisionShapeUnion = rlbot.flat.CollisionShapeUnion;
 using GameStateType = Bridge.Models.Message.GameStateType;
 
