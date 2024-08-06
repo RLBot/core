@@ -18,7 +18,7 @@ internal static class LaunchManager
 
     private static readonly ILogger Logger = Logging.GetLogger("LaunchManager");
 
-    public static int FindUsableGamePort()
+    public static int FindUsableGamePort(int rlbotSocketsPort)
     {
         Process[] candidates = Process.GetProcessesByName("RocketLeague");
 
@@ -37,7 +37,7 @@ internal static class LaunchManager
 
         for (int portToTest = IdealGamePort; portToTest < 65535; portToTest++)
         {
-            if (portToTest == RlbotSocketsPort)
+            if (portToTest == rlbotSocketsPort)
                 // Skip the port we're using for sockets
                 continue;
 

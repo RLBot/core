@@ -10,7 +10,7 @@ var logger = Logging.GetLogger("Main");
 int rlbotSocketsPort = args.Length > 0 ? int.Parse(args[0]) : LaunchManager.RlbotSocketsPort;
 logger.LogInformation("Server will start on port " + rlbotSocketsPort);
 
-int gamePort = LaunchManager.FindUsableGamePort();
+int gamePort = LaunchManager.FindUsableGamePort(rlbotSocketsPort);
 logger.LogInformation("Waiting for Rocket League to connect on port " + gamePort);
 
 // Set up the handler to use bridge to talk with the game
