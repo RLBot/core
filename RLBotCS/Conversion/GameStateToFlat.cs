@@ -215,19 +215,5 @@ internal static class GameStateToFlat
             BoostPadStates = boostStates,
             Players = players
         };
-
-        // var gameTickPacket = new GameTickPacketT
-        // {
-        //     Balls = balls,
-        //     GameInfo = gameInfo,
-        //     Teams = teams,
-        //     BoostPadStates = boostStates,
-        //     Players = players
-        // };
-
-        // builder.Clear();
-        // builder.Finish(GameTickPacket.Pack(builder, gameTickPacket).Value);
-
-        // return TypedPayload.FromFlatBufferBuilder(DataType.GameTickPacket, builder);
     }
 }
