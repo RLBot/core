@@ -54,9 +54,7 @@ public class QuickChat
     private void RemoveOldChats(float gameTime)
     {
         while (
-            _chats.First != null
-                ? _chats.First.Value.Item1 + ChatDisplaySeconds < gameTime
-                : false
+            _chats.First != null && _chats.First.Value.Item1 + ChatDisplaySeconds < gameTime
         )
         {
             _hasUpdate = true;
