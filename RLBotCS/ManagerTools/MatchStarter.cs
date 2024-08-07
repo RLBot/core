@@ -106,14 +106,25 @@ internal class MatchStarter(
 
             if (playerConfig.Hivemind)
             {
-                // only add once per group by name_team
-                string nameTeam = playerName + "_" + playerConfig.Team;
-                if (!processes.ContainsKey(nameTeam))
+                // only add one process per team
+                // make sure to not accidentally include two bots
+                // with the same names in the same hivemind process
+                string uniqueName =
+                    playerConfig.Location
+                    + "_"
+                    + playerConfig.RunCommand
+                    + "_"
+                    + playerName
+                    + "_"
+                    + playerConfig.Team;
+
+                if (!processes.ContainsKey(uniqueName))
                 {
-                    processes[nameTeam] = new List<PlayerConfigurationT>();
+                    processes[uniqueName] = new List<PlayerConfigurationT>();
                 }
-                // but we need _all_ the spawn ids
-                processes[nameTeam].Add(playerConfig);
+
+                // the process needs _all_ the spawn ids
+                processes[uniqueName].Add(playerConfig);
             }
             else
             {
