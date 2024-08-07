@@ -128,7 +128,7 @@ internal class BridgeHandler(
             }
             catch (Exception e)
             {
-                _context.Logger.LogError($"Error while clearning up BridgeHandler: {e}");
+                _context.Logger.LogError($"Error while cleaning up BridgeHandler: {e}");
             }
             finally
             {
