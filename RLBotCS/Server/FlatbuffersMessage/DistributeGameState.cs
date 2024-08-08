@@ -1,5 +1,6 @@
 ﻿using Bridge.State;
 using rlbot.flat;
+using RLBotCS.Conversion;
 using RLBotCS.ManagerTools;
 using GoalInfo = Bridge.Packet.GoalInfo;
 
@@ -95,9 +96,10 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
     {
         context.MatchStarter.MatchEnded = gameState.MatchEnded;
 
+        var gameTickPacket = gameState.ToFlatBuffers();
         foreach (var (writer, _) in context.Sessions.Values)
         {
-            SessionMessage message = new SessionMessage.DistributeGameState(gameState);
+            SessionMessage message = new SessionMessage.DistributeGameState(gameTickPacket);
             writer.TryWrite(message);
         }
     }

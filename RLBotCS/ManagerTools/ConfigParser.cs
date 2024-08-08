@@ -219,22 +219,29 @@ public static class ConfigParser
 
     private static ScriptConfigurationT GetScriptConfig(
         TomlTable scriptTable,
-        string playerTomlPath,
+        string matchConfigPath,
         List<string> missingValues
     )
     {
-        string? scriptTomlPath = ParseString(scriptTable, "config", null, missingValues);
-        TomlTable scriptToml = GetTable(CombinePaths(playerTomlPath, scriptTomlPath));
+        string? matchConfigParent = Path.GetDirectoryName(matchConfigPath);
+
+        string? scriptTomlPath = CombinePaths(
+            matchConfigParent,
+            ParseString(scriptTable, "config", null, missingValues)
+        );
+        TomlTable scriptToml = GetTable(scriptTomlPath);
         string tomlParent = Path.GetDirectoryName(scriptTomlPath) ?? "";
+
+        TomlTable scriptSettings = ParseTable(scriptToml, "settings", missingValues);
 
         ScriptConfigurationT scriptConfig =
             new()
             {
                 Location = CombinePaths(
                     tomlParent,
-                    ParseString(scriptToml, "location", "", missingValues)
+                    ParseString(scriptSettings, "location", "", missingValues)
                 ),
-                RunCommand = GetRunCommand(scriptToml, missingValues)
+                RunCommand = GetRunCommand(scriptSettings, missingValues)
             };
         return scriptConfig;
     }
@@ -317,6 +324,64 @@ public static class ConfigParser
         };
     }
 
+    private static PlayerLoadoutT? GetPlayerLoadout(
+        TomlTable playerTable,
+        string? tomlParent,
+        List<string> missingValues
+    )
+    {
+        string? loadoutTomlPath = CombinePaths(
+            tomlParent,
+            ParseString(playerTable, "looks_config", null, missingValues)
+        );
+
+        if (loadoutTomlPath == null)
+            return null;
+
+        TomlTable loadoutToml = GetTable(loadoutTomlPath);
+
+        string teamLoadoutString =
+            ParseInt(playerTable, "team", 0, missingValues) == 0
+                ? "blue_loadout"
+                : "orange_loadout";
+        TomlTable teamLoadout = ParseTable(loadoutToml, teamLoadoutString, missingValues);
+        TomlTable teamPaint = ParseTable(teamLoadout, "paint", missingValues);
+
+        return new PlayerLoadoutT()
+        {
+            TeamColorId = ParseUint(teamLoadout, "team_color_id", 0, missingValues),
+            CustomColorId = ParseUint(teamLoadout, "custom_color_id", 0, missingValues),
+            CarId = ParseUint(teamLoadout, "car_id", 0, missingValues),
+            DecalId = ParseUint(teamLoadout, "decal_id", 0, missingValues),
+            WheelsId = ParseUint(teamLoadout, "wheels_id", 0, missingValues),
+            BoostId = ParseUint(teamLoadout, "boost_id", 0, missingValues),
+            AntennaId = ParseUint(teamLoadout, "antenna_id", 0, missingValues),
+            HatId = ParseUint(teamLoadout, "hat_id", 0, missingValues),
+            PaintFinishId = ParseUint(teamLoadout, "paint_finish_id", 0, missingValues),
+            CustomFinishId = ParseUint(teamLoadout, "custom_finish_id", 0, missingValues),
+            EngineAudioId = ParseUint(teamLoadout, "engine_audio_id", 0, missingValues),
+            TrailsId = ParseUint(teamLoadout, "trails_id", 0, missingValues),
+            GoalExplosionId = ParseUint(teamLoadout, "goal_explosion_id", 0, missingValues),
+            LoadoutPaint = new LoadoutPaintT()
+            {
+                CarPaintId = ParseUint(teamPaint, "car_paint_id", 0, missingValues),
+                DecalPaintId = ParseUint(teamPaint, "decal_paint_id", 0, missingValues),
+                WheelsPaintId = ParseUint(teamPaint, "wheels_paint_id", 0, missingValues),
+                BoostPaintId = ParseUint(teamPaint, "boost_paint_id", 0, missingValues),
+                AntennaPaintId = ParseUint(teamPaint, "antenna_paint_id", 0, missingValues),
+                HatPaintId = ParseUint(teamPaint, "hat_paint_id", 0, missingValues),
+                TrailsPaintId = ParseUint(teamPaint, "trails_paint_id", 0, missingValues),
+                GoalExplosionPaintId = ParseUint(
+                    teamPaint,
+                    "goal_explosion_paint_id",
+                    0,
+                    missingValues
+                ),
+            },
+            // TODO - GetPrimary/Secondary color? Do any bots use this?
+        };
+    }
+
     private static PlayerConfigurationT GetBotConfig(
         TomlTable rlbotPlayerTable,
         PlayerClassUnion classUnion,
@@ -339,24 +404,10 @@ public static class ConfigParser
             matchConfigParent,
             ParseString(rlbotPlayerTable, "config", null, missingValues)
         );
-        TomlTable playerToml = GetTable(CombinePaths(matchConfigParent, playerTomlPath));
+        TomlTable playerToml = GetTable(playerTomlPath);
         string? tomlParent = Path.GetDirectoryName(playerTomlPath);
 
         TomlTable playerSettings = ParseTable(playerToml, "settings", missingValues);
-        string? loadoutTomlPath = CombinePaths(
-            tomlParent,
-            ParseString(playerSettings, "looks_config", null, missingValues)
-        );
-
-        TomlTable loadoutToml = GetTable(loadoutTomlPath);
-
-        string teamLoadoutString =
-            ParseInt(rlbotPlayerTable, "team", 0, missingValues) == 0
-                ? "blue_loadout"
-                : "orange_loadout";
-        TomlTable teamLoadout = ParseTable(loadoutToml, teamLoadoutString, missingValues);
-
-        TomlTable teamPaint = ParseTable(teamLoadout, "paint", missingValues);
 
         return new PlayerConfigurationT
         {
@@ -368,49 +419,8 @@ public static class ConfigParser
                 ParseString(playerSettings, "location", "", missingValues)
             ),
             RunCommand = GetRunCommand(playerSettings, missingValues),
-            Loadout = new PlayerLoadoutT()
-            {
-                TeamColorId = ParseUint(teamLoadout, "team_color_id", 0, missingValues),
-                CustomColorId = ParseUint(teamLoadout, "custom_color_id", 0, missingValues),
-                CarId = ParseUint(teamLoadout, "car_id", 0, missingValues),
-                DecalId = ParseUint(teamLoadout, "decal_id", 0, missingValues),
-                WheelsId = ParseUint(teamLoadout, "wheels_id", 0, missingValues),
-                BoostId = ParseUint(teamLoadout, "boost_id", 0, missingValues),
-                AntennaId = ParseUint(teamLoadout, "antenna_id", 0, missingValues),
-                HatId = ParseUint(teamLoadout, "hat_id", 0, missingValues),
-                PaintFinishId = ParseUint(teamLoadout, "paint_finish_id", 0, missingValues),
-                CustomFinishId = ParseUint(teamLoadout, "custom_finish_id", 0, missingValues),
-                EngineAudioId = ParseUint(teamLoadout, "engine_audio_id", 0, missingValues),
-                TrailsId = ParseUint(teamLoadout, "trails_id", 0, missingValues),
-                GoalExplosionId = ParseUint(
-                    teamLoadout,
-                    "goal_explosion_id",
-                    0,
-                    missingValues
-                ),
-                LoadoutPaint = new LoadoutPaintT()
-                {
-                    CarPaintId = ParseUint(teamPaint, "car_paint_id", 0, missingValues),
-                    DecalPaintId = ParseUint(teamPaint, "decal_paint_id", 0, missingValues),
-                    WheelsPaintId = ParseUint(teamPaint, "wheels_paint_id", 0, missingValues),
-                    BoostPaintId = ParseUint(teamPaint, "boost_paint_id", 0, missingValues),
-                    AntennaPaintId = ParseUint(
-                        teamPaint,
-                        "antenna_paint_id",
-                        0,
-                        missingValues
-                    ),
-                    HatPaintId = ParseUint(teamPaint, "hat_paint_id", 0, missingValues),
-                    TrailsPaintId = ParseUint(teamPaint, "trails_paint_id", 0, missingValues),
-                    GoalExplosionPaintId = ParseUint(
-                        teamPaint,
-                        "goal_explosion_paint_id",
-                        0,
-                        missingValues
-                    ),
-                },
-                // TODO - GetPrimary/Secondary color? Do any bots use this?
-            }
+            Loadout = GetPlayerLoadout(playerSettings, tomlParent, missingValues),
+            Hivemind = ParseBool(playerSettings, "hivemind", false, missingValues),
         };
     }
 

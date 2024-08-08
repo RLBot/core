@@ -128,6 +128,15 @@ internal record ConsoleCommand(string Command) : IBridgeMessage
     public void HandleMessage(BridgeContext context) => context.QueueConsoleCommand(Command);
 }
 
+internal record SetPaused(bool pause) : IBridgeMessage
+{
+    public void HandleMessage(BridgeContext context)
+    {
+        context.QueuedMatchCommands = true;
+        context.MatchCommandSender.AddSetPausedCommand(pause);
+    }
+}
+
 internal record SpawnMap(MatchSettingsT MatchSettings) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)

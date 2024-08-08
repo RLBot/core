@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using WmiLight;
@@ -17,7 +18,7 @@ internal static class LaunchManager
 
     private static readonly ILogger Logger = Logging.GetLogger("LaunchManager");
 
-    public static int FindUsableGamePort()
+    public static int FindUsableGamePort(int rlbotSocketsPort)
     {
         Process[] candidates = Process.GetProcessesByName("RocketLeague");
 
@@ -36,7 +37,7 @@ internal static class LaunchManager
 
         for (int portToTest = IdealGamePort; portToTest < 65535; portToTest++)
         {
-            if (portToTest == RlbotSocketsPort)
+            if (portToTest == rlbotSocketsPort)
                 // Skip the port we're using for sockets
                 continue;
 
@@ -74,37 +75,66 @@ internal static class LaunchManager
             "-nomovie"
         ];
 
-    public static void LaunchBots(List<rlbot.flat.PlayerConfigurationT> players)
+    private static List<string> ParseCommand(string command)
     {
-        foreach (var player in players)
+        var parts = new List<string>();
+        var regex = new Regex(@"(?<match>[\""].+?[\""]|[^ ]+)");
+        var matches = regex.Matches(command);
+
+        foreach (Match match in matches)
         {
-            if (player.RunCommand == "")
+            parts.Add(match.Groups["match"].Value.Trim('"'));
+        }
+
+        return parts;
+    }
+
+    public static void LaunchBots(
+        Dictionary<string, List<rlbot.flat.PlayerConfigurationT>> processGroups,
+        int rlbotSocketsPort
+    )
+    {
+        foreach (var processGroup in processGroups.Values)
+        {
+            var mainPlayer = processGroup[0];
+            if (mainPlayer.RunCommand == "")
                 continue;
 
             Process botProcess = new();
 
-            if (player.Location != "")
-                botProcess.StartInfo.WorkingDirectory = player.Location;
+            if (mainPlayer.Location != "")
+                botProcess.StartInfo.WorkingDirectory = mainPlayer.Location;
 
             try
             {
-                string[] commandParts = player.RunCommand.Split(' ', 2);
-                botProcess.StartInfo.FileName = Path.Join(player.Location, commandParts[0]);
-                botProcess.StartInfo.Arguments = commandParts[1];
+                var commandParts = ParseCommand(mainPlayer.RunCommand);
+                botProcess.StartInfo.FileName = Path.Join(
+                    mainPlayer.Location,
+                    commandParts[0]
+                );
+                botProcess.StartInfo.Arguments = string.Join(' ', commandParts.Skip(1));
 
-                botProcess.StartInfo.EnvironmentVariables["BOT_SPAWN_ID"] =
-                    player.SpawnId.ToString();
+                List<int> spawnIds = processGroup.Select(player => player.SpawnId).ToList();
+                botProcess.StartInfo.EnvironmentVariables["RLBOT_SPAWN_IDS"] = string.Join(
+                    ',',
+                    spawnIds
+                );
+                botProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
+                    rlbotSocketsPort.ToString();
 
                 botProcess.Start();
             }
             catch (Exception e)
             {
-                Logger.LogError($"Failed to launch bot {player.Name}: {e.Message}");
+                Logger.LogError($"Failed to launch bot {mainPlayer.Name}: {e.Message}");
             }
         }
     }
 
-    public static void LaunchScripts(List<rlbot.flat.ScriptConfigurationT> scripts)
+    public static void LaunchScripts(
+        List<rlbot.flat.ScriptConfigurationT> scripts,
+        int rlbotSocketsPort
+    )
     {
         foreach (var script in scripts)
         {
@@ -118,9 +148,12 @@ internal static class LaunchManager
 
             try
             {
-                string[] commandParts = script.RunCommand.Split(' ', 2);
+                var commandParts = ParseCommand(script.RunCommand);
                 scriptProcess.StartInfo.FileName = Path.Join(script.Location, commandParts[0]);
-                scriptProcess.StartInfo.Arguments = commandParts[1];
+                scriptProcess.StartInfo.Arguments = string.Join(' ', commandParts.Skip(1));
+
+                scriptProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
+                    rlbotSocketsPort.ToString();
 
                 scriptProcess.Start();
             }

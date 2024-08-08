@@ -3,7 +3,6 @@ using System.Threading.Channels;
 using Google.FlatBuffers;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
-using RLBotCS.Conversion;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.FlatbuffersMessage;
 using RLBotCS.Types;
@@ -18,7 +17,7 @@ internal record SessionMessage
 
     public record DistributeBallPrediction(BallPredictionT BallPrediction) : SessionMessage;
 
-    public record DistributeGameState(Bridge.State.GameState GameState) : SessionMessage;
+    public record DistributeGameState(GameTickPacketT GameState) : SessionMessage;
 
     public record RendersAllowed(bool Allowed) : SessionMessage;
 
@@ -42,7 +41,7 @@ internal class FlatBuffersSession
     private readonly ChannelWriter<IServerMessage> _rlbotServer;
     private readonly ChannelWriter<IBridgeMessage> _bridge;
 
-    private bool _isReady;
+    private bool _connectionEstablished;
     private bool _wantsBallPredictions;
     private bool _wantsComms;
     private bool _closeAfterMatch;
@@ -84,7 +83,7 @@ internal class FlatBuffersSession
                 // The client requested that we close the connection
                 return false;
 
-            case DataType.ReadyMessage:
+            case DataType.ReadyMessage when !_connectionEstablished:
                 var readyMsg = ReadyMessage.GetRootAsReadyMessage(byteBuffer);
 
                 _wantsBallPredictions = readyMsg.WantsBallPredictions;
@@ -93,7 +92,10 @@ internal class FlatBuffersSession
 
                 await _rlbotServer.WriteAsync(new IntroDataRequest(_incomingMessages.Writer));
 
-                _isReady = true;
+                if (_closeAfterMatch)
+                    await _rlbotServer.WriteAsync(new SessionReady());
+
+                _connectionEstablished = true;
                 break;
 
             case DataType.StopCommand:
@@ -182,8 +184,16 @@ internal class FlatBuffersSession
 
     private async Task SendPayloadToClientAsync(TypedPayload payload)
     {
-        await _socketSpecWriter.WriteAsync(payload);
-        await _socketSpecWriter.SendAsync();
+        try
+        {
+            await _socketSpecWriter.WriteAsync(payload);
+            await _socketSpecWriter.SendAsync();
+        }
+        catch (ObjectDisposedException)
+        {
+            // client disconnected before we could send the message
+            return;
+        }
     }
 
     private async Task HandleIncomingMessages()
@@ -213,7 +223,7 @@ internal class FlatBuffersSession
                     );
                     break;
                 case SessionMessage.DistributeBallPrediction m
-                    when _isReady && _wantsBallPredictions:
+                    when _connectionEstablished && _wantsBallPredictions:
                     _messageBuilder.Clear();
                     _messageBuilder.Finish(
                         BallPrediction.Pack(_messageBuilder, m.BallPrediction).Value
@@ -226,8 +236,18 @@ internal class FlatBuffersSession
                         )
                     );
                     break;
-                case SessionMessage.DistributeGameState m when _isReady:
-                    await SendPayloadToClientAsync(m.GameState.ToFlatBuffers(_messageBuilder));
+                case SessionMessage.DistributeGameState m when _connectionEstablished:
+                    _messageBuilder.Clear();
+                    _messageBuilder.Finish(
+                        GameTickPacket.Pack(_messageBuilder, m.GameState).Value
+                    );
+
+                    await SendPayloadToClientAsync(
+                        TypedPayload.FromFlatBufferBuilder(
+                            DataType.GameTickPacket,
+                            _messageBuilder
+                        )
+                    );
                     break;
                 case SessionMessage.RendersAllowed m:
                     _renderingIsEnabled = m.Allowed;
@@ -235,7 +255,7 @@ internal class FlatBuffersSession
                 case SessionMessage.StateSettingAllowed m:
                     _stateSettingIsEnabled = m.Allowed;
                     break;
-                case SessionMessage.MatchComm m when _isReady && _wantsComms:
+                case SessionMessage.MatchComm m when _connectionEstablished && _wantsComms:
                     _messageBuilder.Clear();
                     _messageBuilder.Finish(MatchComm.Pack(_messageBuilder, m.matchComm).Value);
 
@@ -247,7 +267,7 @@ internal class FlatBuffersSession
                     );
 
                     break;
-                case SessionMessage.StopMatch when _isReady && _closeAfterMatch:
+                case SessionMessage.StopMatch when _connectionEstablished && _closeAfterMatch:
                     return;
             }
     }
@@ -296,7 +316,7 @@ internal class FlatBuffersSession
     {
         Logger.LogInformation($"Closing session {_clientId}.");
 
-        _isReady = false;
+        _connectionEstablished = false;
         _incomingMessages.Writer.TryComplete();
 
         // try to politely close the connection

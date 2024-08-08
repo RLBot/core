@@ -1,8 +1,6 @@
 using Bridge.Models.Message;
 using Bridge.State;
-using Google.FlatBuffers;
 using rlbot.flat;
-using RLBotCS.Types;
 using CollisionShapeUnion = rlbot.flat.CollisionShapeUnion;
 using GameStateType = Bridge.Models.Message.GameStateType;
 
@@ -38,10 +36,7 @@ internal static class GameStateToFlat
         }
     }
 
-    public static TypedPayload ToFlatBuffers(
-        this GameState gameState,
-        FlatBufferBuilder builder
-    )
+    public static GameTickPacketT ToFlatBuffers(this GameState gameState)
     {
         List<BallInfoT> balls = new(gameState.Balls.Count);
         foreach (var ball in gameState.Balls.Values)
@@ -210,7 +205,7 @@ internal static class GameStateToFlat
             );
         }
 
-        var gameTickPacket = new GameTickPacketT
+        return new GameTickPacketT
         {
             Balls = balls,
             GameInfo = gameInfo,
@@ -218,10 +213,5 @@ internal static class GameStateToFlat
             BoostPadStates = boostStates,
             Players = players
         };
-
-        builder.Clear();
-        builder.Finish(GameTickPacket.Pack(builder, gameTickPacket).Value);
-
-        return TypedPayload.FromFlatBufferBuilder(DataType.GameTickPacket, builder);
     }
 }

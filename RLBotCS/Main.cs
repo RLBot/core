@@ -7,7 +7,34 @@ using RLBotCS.Server.FlatbuffersMessage;
 
 var logger = Logging.GetLogger("Main");
 
-int gamePort = LaunchManager.FindUsableGamePort();
+int rlbotSocketsPort;
+try
+{
+    rlbotSocketsPort = args.Length > 0 ? int.Parse(args[0]) : LaunchManager.RlbotSocketsPort;
+
+    // additional validation to ensure it's a valid port number
+    if (rlbotSocketsPort < 0)
+    {
+        throw new FormatException();
+    } else if (rlbotSocketsPort > 65535)
+    {
+        throw new OverflowException();
+    }
+}
+catch (FormatException)
+{
+    logger.LogError("Invalid port number provided. Please provide a valid port number.");
+    return;
+}
+catch (OverflowException)
+{
+    logger.LogError("Port number provided is too large. Please provide a valid port number.");
+    return;
+}
+
+logger.LogInformation("Server will start on port " + rlbotSocketsPort);
+
+int gamePort = LaunchManager.FindUsableGamePort(rlbotSocketsPort);
 logger.LogInformation("Waiting for Rocket League to connect on port " + gamePort);
 
 // Set up the handler to use bridge to talk with the game
@@ -21,9 +48,9 @@ var serverWriter = serverChannel.Writer;
 Thread rlbotServer =
     new(() =>
     {
-        MatchStarter matchStarter = new(bridgeWriter, gamePort);
+        MatchStarter matchStarter = new(bridgeWriter, gamePort, rlbotSocketsPort);
         FlatBuffersServer flatBuffersServer =
-            new(LaunchManager.RlbotSocketsPort, serverChannel, matchStarter, bridgeWriter);
+            new(rlbotSocketsPort, serverChannel, matchStarter, bridgeWriter);
 
         try
         {
