@@ -7,7 +7,31 @@ using RLBotCS.Server.FlatbuffersMessage;
 
 var logger = Logging.GetLogger("Main");
 
-int rlbotSocketsPort = args.Length > 0 ? int.Parse(args[0]) : LaunchManager.RlbotSocketsPort;
+int rlbotSocketsPort;
+try
+{
+    rlbotSocketsPort = args.Length > 0 ? int.Parse(args[0]) : LaunchManager.RlbotSocketsPort;
+
+    // additional validation to ensure it's a valid port number
+    if (rlbotSocketsPort < 0)
+    {
+        throw new FormatException();
+    } else if (rlbotSocketsPort > 65535)
+    {
+        throw new OverflowException();
+    }
+}
+catch (FormatException)
+{
+    logger.LogError("Invalid port number provided. Please provide a valid port number.");
+    return;
+}
+catch (OverflowException)
+{
+    logger.LogError("Port number provided is too large. Please provide a valid port number.");
+    return;
+}
+
 logger.LogInformation("Server will start on port " + rlbotSocketsPort);
 
 int gamePort = LaunchManager.FindUsableGamePort(rlbotSocketsPort);
