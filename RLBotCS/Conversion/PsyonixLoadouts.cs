@@ -1,22 +1,27 @@
+using System.Collections.Frozen;
 using rlbot.flat;
 
 namespace RLBotCS.Conversion;
 
-internal static class PsyonixPresets
+internal static class PsyonixLoadouts
 {
-    private static Random _random = new Random();
+    private static Random _random = new();
+    
+    /// Unused loadout names to avoid spawning multiple of the same Psyonix bot
+    private static List<string> Unused = new();
 
-    public static (string, PlayerLoadoutT) GetRandom(int team)
+    public static (string, PlayerLoadoutT) GetNext(int team)
     {
-        var randomPreset = _random.Next(0, BotPresets.Count);
-        var preset = BotPresets.ElementAt(randomPreset);
-        var teamPreset = preset.Value[team];
-
-        return (preset.Key, teamPreset);
+        if (Unused.Count == 0) Unused = DefaultLoadouts.Keys.OrderBy(_ => _random.Next()).ToList();
+        var fullName = Unused.Last();
+        Unused.RemoveAt(Unused.Count - 1);
+        var loadout = DefaultLoadouts[fullName][team];
+        var name = fullName.Split('_')[1];
+        return (name, loadout);
     }
 
-    private static readonly Dictionary<string, List<PlayerLoadoutT>> BotPresets =
-        new()
+    private static readonly FrozenDictionary<string, List<PlayerLoadoutT>> DefaultLoadouts =
+        new Dictionary<string, List<PlayerLoadoutT>>()
         {
             {
                 "Bombers_Casper",
@@ -2178,5 +2183,5 @@ internal static class PsyonixPresets
                     },
                 }
             },
-        };
+        }.ToFrozenDictionary();
 }
