@@ -29,12 +29,6 @@ internal class MatchStarter(
 
     public MatchSettingsT? GetMatchSettings() => _deferredMatchSettings ?? _matchSettings;
 
-    public void SetNullMatchSettings()
-    {
-        _matchSettings = null;
-        _deferredMatchSettings = null;
-    }
-
     public void StartCommunication()
     {
         _communicationStarted = true;
@@ -65,13 +59,13 @@ internal class MatchStarter(
 
     public void MapSpawned()
     {
-        if (_matchSettings != null)
+        if (_matchSettings is MatchSettingsT matchSettings)
         {
-            bridge.TryWrite(new SetMutators(_matchSettings.MutatorSettings));
+            bridge.TryWrite(new SetMutators(matchSettings.MutatorSettings));
 
             if (_needsSpawnBots)
             {
-                SpawnCars(_matchSettings);
+                SpawnCars(matchSettings);
                 bridge.TryWrite(new FlushMatchCommands());
                 _needsSpawnBots = false;
             }
@@ -158,18 +152,17 @@ internal class MatchStarter(
             _ => true
         };
 
+
         if (shouldSpawnNewMap)
         {
             _needsSpawnBots = true;
             _hasEverLoadedMap = true;
+            _matchSettings = matchSettings;
 
             bridge.TryWrite(new SpawnMap(matchSettings));
         }
         else
         {
-            // No need to load a new map, just spawn the players.
-            SpawnCars(matchSettings);
-
             // despawn old bots that aren't in the new match
             if (_matchSettings is MatchSettingsT lastMatchSettings)
             {
@@ -187,10 +180,12 @@ internal class MatchStarter(
                 }
             }
 
+            // No need to load a new map, just spawn the players.
+            SpawnCars(matchSettings);
+
+            _matchSettings = matchSettings;
             bridge.TryWrite(new FlushMatchCommands());
         }
-
-        _matchSettings = matchSettings;
     }
 
     private bool IsDifferentFromLast(MatchSettingsT matchSettings)
