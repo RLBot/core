@@ -29,6 +29,15 @@ internal class MatchStarter(
 
     public MatchSettingsT? GetMatchSettings() => _deferredMatchSettings ?? _matchSettings;
 
+    public void SetNullMatchSettings()
+    {
+        if (!_needsSpawnBots)
+        {
+            _matchSettings = null;
+            _deferredMatchSettings = null;
+        }
+    }
+
     public void StartCommunication()
     {
         _communicationStarted = true;

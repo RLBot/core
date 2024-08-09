@@ -71,7 +71,7 @@ internal static class LaunchManager
         [
             "-rlbot",
             $"RLBot_ControllerURL=127.0.0.1:{gamePort}",
-            "RLBot_PacketSendRate=240",
+            "RLBot_PacketSendRate=120",
             "-nomovie"
         ];
 
