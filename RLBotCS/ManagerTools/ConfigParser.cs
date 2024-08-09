@@ -324,7 +324,7 @@ public static class ConfigParser
     {
         string? loadoutTomlPath = CombinePaths(
             tomlParent,
-            ParseString(playerTable, "looks_config", null, missingValues)
+            ParseString(playerTable, "loadout_config", null, missingValues)
         );
 
         if (loadoutTomlPath == null)
