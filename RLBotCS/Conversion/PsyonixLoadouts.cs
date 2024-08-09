@@ -7,9 +7,14 @@ internal static class PsyonixLoadouts
 {
     private static Random _random = new();
     
-    /// Unused loadout names to avoid spawning multiple of the same Psyonix bot
+    /// Unused loadout names, used to avoid spawning multiple of the same Psyonix bot
     private static List<string> Unused = new();
 
+    public static void Reset()
+    {
+        Unused.Clear();
+    }
+    
     public static (string, PlayerLoadoutT) GetNext(int team)
     {
         if (Unused.Count == 0) Unused = DefaultLoadouts.Keys.OrderBy(_ => _random.Next()).ToList();

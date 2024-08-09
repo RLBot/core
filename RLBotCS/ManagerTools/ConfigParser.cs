@@ -536,6 +536,7 @@ public static class ConfigParser
         TomlTableArray players = ParseTableArray(rlbotToml, "cars", missingValues[""]);
         TomlTableArray scripts = ParseTableArray(rlbotToml, "scripts", missingValues[""]);
 
+        PsyonixLoadouts.Reset();
         List<PlayerConfigurationT> playerConfigs = [];
         // Gets the PlayerConfigT object for the number of players requested
         int numBots = ParseInt(matchTable, "num_cars", 0, missingValues["match"]);
