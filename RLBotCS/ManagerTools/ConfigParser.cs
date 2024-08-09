@@ -303,24 +303,16 @@ public static class ConfigParser
     )
     {
         var team = ParseUint(table, "team", 0, missingValues);
-        var (fullName, preset) = PsyonixPresets.GetRandom((int)team);
-
-        var namePrefix = classUnion.AsPsyonix().BotSkill switch
-        {
-            < 0 => "Beginner ",
-            < 0.5f => "Rookie ",
-            < 1 => "Pro ",
-            _ => ""
-        };
+        var (name, loadout) = PsyonixLoadouts.GetNext((int)team);
 
         return new()
         {
             Variety = classUnion,
             Team = team,
-            Name = namePrefix + fullName.Split('_')[1],
+            Name = name,
             Location = "",
             RunCommand = "",
-            Loadout = preset,
+            Loadout = loadout,
         };
     }
 
@@ -544,6 +536,7 @@ public static class ConfigParser
         TomlTableArray players = ParseTableArray(rlbotToml, "cars", missingValues[""]);
         TomlTableArray scripts = ParseTableArray(rlbotToml, "scripts", missingValues[""]);
 
+        PsyonixLoadouts.Reset();
         List<PlayerConfigurationT> playerConfigs = [];
         // Gets the PlayerConfigT object for the number of players requested
         int numBots = ParseInt(matchTable, "num_cars", 0, missingValues["match"]);
