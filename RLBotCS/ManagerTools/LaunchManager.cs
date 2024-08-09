@@ -152,6 +152,8 @@ internal static class LaunchManager
                 scriptProcess.StartInfo.FileName = Path.Join(script.Location, commandParts[0]);
                 scriptProcess.StartInfo.Arguments = string.Join(' ', commandParts.Skip(1));
 
+                scriptProcess.StartInfo.EnvironmentVariables["RLBOT_SPAWN_IDS"] =
+                    script.SpawnId.ToString();
                 scriptProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
                     rlbotSocketsPort.ToString();
 

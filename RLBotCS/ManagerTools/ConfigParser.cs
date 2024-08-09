@@ -272,9 +272,15 @@ public static class ConfigParser
                     PlayerClassUnion.FromPsyonix(
                         new PsyonixT
                         {
-                            BotSkill = ParseFloat(table, "skill", 1.0f, missingValues)
+                            BotSkill = ParseEnum(
+                                table,
+                                "skill",
+                                PsyonixSkill.AllStar,
+                                missingValues
+                            )
                         }
                     ),
+                    matchConfigPath,
                     missingValues
                 ),
             PlayerClass.PartyMember
@@ -297,21 +303,54 @@ public static class ConfigParser
         };
 
     private static PlayerConfigurationT GetPsyonixConfig(
-        TomlTable table,
+        TomlTable playerTable,
         PlayerClassUnion classUnion,
+        string matchConfigPath,
         List<string> missingValues
     )
     {
-        var team = ParseUint(table, "team", 0, missingValues);
-        var (name, loadout) = PsyonixLoadouts.GetNext((int)team);
+        string? matchConfigParent = Path.GetDirectoryName(matchConfigPath);
+
+        string? playerTomlPath = CombinePaths(
+            matchConfigParent,
+            ParseString(playerTable, "config", null, missingValues)
+        );
+        TomlTable playerToml = GetTable(playerTomlPath);
+        string? tomlParent = Path.GetDirectoryName(playerTomlPath);
+
+        TomlTable playerSettings = ParseTable(playerToml, "settings", missingValues);
+
+        var team = ParseUint(playerTable, "team", 0, missingValues);
+        string? name = ParseString(playerSettings, "name", null, missingValues);
+        PlayerLoadoutT? loadout = GetPlayerLoadout(playerSettings, tomlParent, missingValues);
+
+        if (name == null)
+        {
+            (name, loadout) = PsyonixLoadouts.GetNext((int)team);
+        }
+        else if (PsyonixLoadouts.GetFromName(name, (int)team) is PlayerLoadoutT newLoadout)
+        {
+            loadout = newLoadout;
+        }
+
+        var runCommand = GetRunCommand(playerSettings, missingValues);
+        var location = "";
+
+        if (runCommand != "")
+        {
+            location = CombinePaths(
+                tomlParent,
+                ParseString(playerSettings, "location", "", missingValues)
+            );
+        }
 
         return new()
         {
             Variety = classUnion,
             Team = team,
             Name = name,
-            Location = "",
-            RunCommand = "",
+            Location = location,
+            RunCommand = runCommand,
             Loadout = loadout,
         };
     }

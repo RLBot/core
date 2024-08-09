@@ -6,7 +6,7 @@ namespace RLBotCS.Conversion;
 internal static class PsyonixLoadouts
 {
     private static Random _random = new();
-    
+
     /// Unused loadout names, used to avoid spawning multiple of the same Psyonix bot
     private static List<string> Unused = new();
 
@@ -14,10 +14,22 @@ internal static class PsyonixLoadouts
     {
         Unused.Clear();
     }
-    
+
+    public static PlayerLoadoutT? GetFromName(string name, int team)
+    {
+        int index = Unused.FindIndex(n => n.Contains(name));
+        if (index == -1)
+            return null;
+
+        var loadout = DefaultLoadouts[Unused[index]][team];
+        Unused.RemoveAt(index);
+        return loadout;
+    }
+
     public static (string, PlayerLoadoutT) GetNext(int team)
     {
-        if (Unused.Count == 0) Unused = DefaultLoadouts.Keys.OrderBy(_ => _random.Next()).ToList();
+        if (Unused.Count == 0)
+            Unused = DefaultLoadouts.Keys.OrderBy(_ => _random.Next()).ToList();
         var fullName = Unused.Last();
         Unused.RemoveAt(Unused.Count - 1);
         var loadout = DefaultLoadouts[fullName][team];

@@ -8,7 +8,7 @@ internal record StartMatch(MatchSettingsT MatchSettings) : IServerMessage
     public ServerAction Execute(ServerContext context)
     {
         foreach (var (writer, _) in context.Sessions.Values)
-            writer.TryWrite(new SessionMessage.StopMatch());
+            writer.TryWrite(new SessionMessage.StopMatch(false));
 
         if (MatchSettings.MutatorSettings == null)
             MatchSettings.MutatorSettings = new();

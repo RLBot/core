@@ -16,7 +16,8 @@ try
     if (rlbotSocketsPort < 0)
     {
         throw new FormatException();
-    } else if (rlbotSocketsPort > 65535)
+    }
+    else if (rlbotSocketsPort > 65535)
     {
         throw new OverflowException();
     }
