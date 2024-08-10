@@ -65,7 +65,8 @@ internal class BridgeHandler(
                     _context.Writer.TryWrite(new MapSpawned());
                 }
 
-                if (_context.GameState.MatchEnded)
+                bool matchEnded = _context.GameState.GameStateType == GameStateType.Inactive;
+                if (matchEnded)
                 {
                     if (!_context.LastMatchEnded)
                     {
@@ -78,7 +79,7 @@ internal class BridgeHandler(
                 {
                     _context.QuickChat.RenderChats(_context.RenderingMgmt, _context.GameState);
                 }
-                _context.LastMatchEnded = _context.GameState.MatchEnded;
+                _context.LastMatchEnded = matchEnded;
 
                 if (
                     _context is
