@@ -26,6 +26,7 @@ internal class BridgeContext(
     public PlayerInputSender PlayerInputSender { get; } = new(messenger);
     public Rendering RenderingMgmt { get; } = new(messenger);
     public QuickChat QuickChat { get; } = new();
+    public PerfMonitor PerfMonitor { get; } = new();
 
     public bool GotFirstMessage { get; set; }
     public bool MatchHasStarted { get; set; }

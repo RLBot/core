@@ -71,12 +71,27 @@ internal class BridgeHandler(
                     if (!_context.LastMatchEnded)
                     {
                         _context.QuickChat.ClearChats();
+                        _context.PerfMonitor.ClearAll();
                         _context.RenderingMgmt.ClearAllRenders();
                         _context.Writer.TryWrite(new StopMatch(false));
                     }
                 }
-                else
+                else if (
+                    _context.GameState.GameStateType != GameStateType.Replay
+                    && _context.GameState.GameStateType != GameStateType.Paused
+                )
                 {
+                    if (
+                        _context.GameState.GameStateType != GameStateType.GoalScored
+                        && _context.GameState.GameStateType != GameStateType.Ended
+                    )
+                        _context.PerfMonitor.RenderSummary(
+                            _context.RenderingMgmt,
+                            _context.GameState
+                        );
+                    else
+                        _context.PerfMonitor.ClearAll();
+
                     _context.QuickChat.RenderChats(_context.RenderingMgmt, _context.GameState);
                 }
                 _context.LastMatchEnded = matchEnded;

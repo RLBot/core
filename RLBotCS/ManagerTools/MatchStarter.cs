@@ -295,23 +295,26 @@ internal class MatchStarter(
             switch (playerConfig.Variety.Type)
             {
                 case PlayerClass.RLBot:
+                    _expectedConnections++;
+
+                    if (!doSpawning)
+                        break;
+
                     Logger.LogInformation(
                         "Spawning player "
                             + playerConfig.Name
                             + " with spawn id "
                             + playerConfig.SpawnId
                     );
-                    _expectedConnections++;
 
-                    if (doSpawning)
-                        bridge.TryWrite(
-                            new SpawnBot(
-                                playerConfig,
-                                BotSkill.Custom,
-                                (uint)(i - indexOffset),
-                                true
-                            )
-                        );
+                    bridge.TryWrite(
+                        new SpawnBot(
+                            playerConfig,
+                            BotSkill.Custom,
+                            (uint)(i - indexOffset),
+                            true
+                        )
+                    );
 
                     break;
                 case PlayerClass.Psyonix when doSpawning:

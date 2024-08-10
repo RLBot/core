@@ -50,6 +50,7 @@ internal class FlatBuffersSession
     private bool _renderingIsEnabled;
 
     private int _spawnId;
+    private bool _gotInput;
     private bool _sessionForceClosed;
     private bool _closed;
 
@@ -138,6 +139,8 @@ internal class FlatBuffersSession
 
             case DataType.PlayerInput:
                 var playerInputMsg = PlayerInput.GetRootAsPlayerInput(byteBuffer).UnPack();
+                _gotInput = true;
+
                 await _bridge.WriteAsync(new Input(playerInputMsg));
                 break;
 
@@ -265,6 +268,9 @@ internal class FlatBuffersSession
                             _messageBuilder
                         )
                     );
+
+                    await _bridge.WriteAsync(new AddPerfSample(_spawnId, _gotInput));
+                    _gotInput = false;
                     break;
                 case SessionMessage.RendersAllowed m:
                     _renderingIsEnabled = m.Allowed;
