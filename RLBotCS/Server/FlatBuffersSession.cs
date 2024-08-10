@@ -50,6 +50,8 @@ internal class FlatBuffersSession
     private bool _renderingIsEnabled;
 
     private int _spawnId;
+    private bool _sessionForceClosed;
+    private bool _closed;
 
     private readonly FlatBufferBuilder _messageBuilder = new(1 << 10);
 
@@ -284,6 +286,7 @@ internal class FlatBuffersSession
                     break;
                 case SessionMessage.StopMatch m
                     when m.Force || (_connectionEstablished && _closeAfterMatch):
+                    _sessionForceClosed = m.Force;
                     return;
             }
     }
@@ -292,6 +295,11 @@ internal class FlatBuffersSession
     {
         await foreach (TypedPayload message in _socketSpecReader.ReadAllAsync())
         {
+            // if the session is closed, ignore any incoming messages
+            // this should allow the client to close cleanly
+            if (_closed)
+                continue;
+
             bool keepRunning = await ParseClientMessage(message);
             if (keepRunning)
                 continue;
@@ -349,7 +357,11 @@ internal class FlatBuffersSession
             // if an exception was thrown, the client disconnected first
             // remove this session from the server
             _rlbotServer.TryWrite(new SessionClosed(_clientId));
-            _client.Close();
+
+            // if we're trying to shutdown cleanly,
+            // let the bot finish sending messages and close the connection itself
+            if (!_sessionForceClosed)
+                _client.Close();
         }
     }
 }
