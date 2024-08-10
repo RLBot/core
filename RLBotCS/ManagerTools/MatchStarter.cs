@@ -23,7 +23,7 @@ internal class MatchStarter(
 
     private bool _communicationStarted;
     private bool _hasEverLoadedMap;
-    private bool _needsSpawnBots;
+    private bool _needsSpawnCars;
 
     public bool MatchEnded = false;
 
@@ -31,7 +31,7 @@ internal class MatchStarter(
 
     public void SetNullMatchSettings()
     {
-        if (!_needsSpawnBots)
+        if (!_needsSpawnCars)
         {
             _matchSettings = null;
             _deferredMatchSettings = null;
@@ -72,11 +72,10 @@ internal class MatchStarter(
         {
             bridge.TryWrite(new SetMutators(matchSettings.MutatorSettings));
 
-            if (_needsSpawnBots)
+            if (_needsSpawnCars)
             {
                 SpawnCars(matchSettings);
                 bridge.TryWrite(new FlushMatchCommands());
-                _needsSpawnBots = false;
             }
         }
     }
@@ -183,9 +182,10 @@ internal class MatchStarter(
             _ => true
         };
 
+        _needsSpawnCars = true;
+
         if (shouldSpawnNewMap)
         {
-            _needsSpawnBots = true;
             _hasEverLoadedMap = true;
             _matchSettings = matchSettings;
 
@@ -270,11 +270,18 @@ internal class MatchStarter(
 
     private void SpawnCars(MatchSettingsT matchSettings)
     {
+        // ensure this function is only called once
+        if (!_needsSpawnCars)
+            return;
+
         // we need to count the number of expected connections still
         bool doSpawning =
             matchSettings.AutoStartBots
             && _expectedConnections != 0
-            && _expectedConnections == _connectionReadies;
+            && _expectedConnections >= _connectionReadies;
+
+        if (doSpawning)
+            _needsSpawnCars = false;
 
         PlayerConfigurationT? humanConfig = null;
         int numPlayers = matchSettings.PlayerConfigurations.Count;
@@ -365,6 +372,7 @@ internal class MatchStarter(
         if (
             _matchSettings is MatchSettingsT matchSettings
             && _connectionReadies == _expectedConnections
+            && _needsSpawnCars
         )
         {
             SpawnCars(matchSettings);
