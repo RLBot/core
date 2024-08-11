@@ -24,7 +24,6 @@ internal class MatchStarter(
     private bool _communicationStarted;
     private bool _hasEverLoadedMap;
     private bool _needsSpawnCars;
-    private bool _mapLoaded;
 
     public bool MatchEnded = false;
 
@@ -68,10 +67,6 @@ internal class MatchStarter(
         if (!_needsSpawnCars)
             return;
 
-        Logger.LogInformation("Setting mapLoaded to true");
-
-        _mapLoaded = true;
-
         if (_deferredMatchSettings is MatchSettingsT matchSettings)
         {
             bridge.TryWrite(new SetMutators(matchSettings.MutatorSettings));
@@ -82,7 +77,6 @@ internal class MatchStarter(
 
             _matchSettings = matchSettings;
             _deferredMatchSettings = null;
-            bridge.TryWrite(new FlushMatchCommands());
         }
     }
 
@@ -196,7 +190,6 @@ internal class MatchStarter(
 
         if (shouldSpawnNewMap)
         {
-            _mapLoaded = false;
             _hasEverLoadedMap = true;
             _deferredMatchSettings = matchSettings;
 
@@ -404,15 +397,12 @@ internal class MatchStarter(
                 + _expectedConnections
                 + "; needs spawn cars: "
                 + _needsSpawnCars
-                + "; map loaded: "
-                + _mapLoaded
         );
 
         if (
             _deferredMatchSettings is MatchSettingsT matchSettings
             && _connectionReadies >= _expectedConnections
             && _needsSpawnCars
-            && _mapLoaded
         )
         {
             bool needsFlush = SpawnCars(matchSettings);
@@ -421,8 +411,6 @@ internal class MatchStarter(
 
             _matchSettings = matchSettings;
             _deferredMatchSettings = null;
-
-            bridge.TryWrite(new FlushMatchCommands());
         }
     }
 }
