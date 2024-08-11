@@ -63,14 +63,19 @@ internal class MatchStarter(
 
     public void MapSpawned()
     {
+        Logger.LogInformation("Got map info");
+
+        if (!_needsSpawnCars)
+            return;
+
+        Logger.LogInformation("Setting mapLoaded to true");
+
         _mapLoaded = true;
 
         if (_deferredMatchSettings is MatchSettingsT matchSettings)
         {
             bridge.TryWrite(new SetMutators(matchSettings.MutatorSettings));
 
-            if (!_needsSpawnCars)
-                return;
             bool needsFlush = SpawnCars(matchSettings);
             if (!needsFlush)
                 return;

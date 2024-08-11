@@ -1,5 +1,6 @@
 using System.Threading.Channels;
 using Bridge.Conversion;
+using Bridge.State;
 using Bridge.TCP;
 using Microsoft.Extensions.Logging;
 using RLBotCS.Server.FlatbuffersMessage;
@@ -70,56 +71,50 @@ internal class BridgeHandler(
                 {
                     _context.RenderingMgmt.ClearAllRenders();
                     _context.MatchHasStarted = true;
-                    _context.Writer.TryWrite(new MapSpawned());
+                    _context.Writer.TryWrite(
+                        new MapSpawned(
+                            _context.GameState.GameStateType == GameStateType.Inactive
+                        )
+                    );
                 }
 
-                if (timeAdvanced)
+                bool matchEnded = _context.GameState.GameStateType == GameStateType.Inactive;
+                if (matchEnded)
                 {
-                    bool matchEnded =
-                        _context.GameState.GameStateType == GameStateType.Inactive;
-                    if (matchEnded)
-                    {
-                        // ensure we only reset once after a match actually ended
-                        if (prevGameStateType != GameStateType.Inactive)
-                        {
-                            // reset everything
-                            _context.QuickChat.ClearChats();
-                            _context.PerfMonitor.ClearAll();
-                            _context.RenderingMgmt.ClearAllRenders();
-                        }
+                    // reset everything
+                    _context.QuickChat.ClearChats();
+                    _context.PerfMonitor.ClearAll();
+                    _context.RenderingMgmt.ClearAllRenders();
 
-                        // don't close connections unless it was a true "match ended"
-                        if (
-                            prevGameStateType == GameStateType.Ended
-                            && !_context.MatchHasStarted
-                            && !matchStarted
-                        )
-                            _context.Writer.TryWrite(new StopMatch(false));
-                    }
-                    else if (
-                        _context.GameState.GameStateType != GameStateType.Replay
-                        && _context.GameState.GameStateType != GameStateType.Paused
+                    // don't close connections unless it was a true "match ended"
+                    if (
+                        prevGameStateType == GameStateType.Ended
+                        && !_context.MatchHasStarted
+                        && !matchStarted
                     )
-                    {
-                        // only rerender if we're not in a replay or paused
-                        _context.QuickChat.RenderChats(
-                            _context.RenderingMgmt,
-                            _context.GameState
-                        );
+                        _context.Writer.TryWrite(new StopMatch(false));
+                }
+                else if (
+                    _context.GameState.GameStateType != GameStateType.Replay
+                    && _context.GameState.GameStateType != GameStateType.Paused
+                    && timeAdvanced
+                )
+                {
+                    // only rerender if we're not in a replay or paused
+                    _context.QuickChat.RenderChats(_context.RenderingMgmt, _context.GameState);
 
-                        // only render if we're not in a goal scored or ended state
-                        if (
-                            _context.GameState.GameStateType != GameStateType.GoalScored
-                            && _context.GameState.GameStateType != GameStateType.Ended
-                        )
-                            _context.PerfMonitor.RenderSummary(
-                                _context.RenderingMgmt,
-                                _context.GameState,
-                                deltaTime
-                            );
-                        else
-                            _context.PerfMonitor.ClearAll();
-                    }
+                    // only render if we're not in a goal scored or ended state
+                    if (
+                        _context.GameState.GameStateType != GameStateType.GoalScored
+                        && _context.GameState.GameStateType != GameStateType.Ended
+                    )
+                        _context.PerfMonitor.RenderSummary(
+                            _context.RenderingMgmt,
+                            _context.GameState,
+                            deltaTime
+                        );
+                    else
+                        _context.PerfMonitor.ClearAll();
                 }
 
                 if (

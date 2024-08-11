@@ -322,7 +322,7 @@ internal record AddPerfSample(uint Index, bool GotInput) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
-        string name = context.GameState.GameCars[Index].Name;
-        context.PerfMonitor.AddSample(name, GotInput);
+        if (context.GameState.GameCars.TryGetValue(Index, out var car))
+            context.PerfMonitor.AddSample(car.Name, GotInput);
     }
 }
