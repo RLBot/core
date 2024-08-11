@@ -128,15 +128,6 @@ internal record ConsoleCommand(string Command) : IBridgeMessage
     public void HandleMessage(BridgeContext context) => context.QueueConsoleCommand(Command);
 }
 
-internal record SetPaused(bool Pause) : IBridgeMessage
-{
-    public void HandleMessage(BridgeContext context)
-    {
-        context.QueuedMatchCommands = true;
-        context.MatchCommandSender.AddSetPausedCommand(Pause);
-    }
-}
-
 internal record SpawnMap(MatchSettingsT MatchSettings) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
@@ -308,6 +299,15 @@ internal record SetGameState(DesiredGameStateT GameState) : IBridgeMessage
             }
         }
 
+        context.MatchCommandSender.Send();
+    }
+}
+
+internal record EndMatch() : IBridgeMessage
+{
+    public void HandleMessage(BridgeContext context)
+    {
+        context.MatchCommandSender.AddMatchEndCommand();
         context.MatchCommandSender.Send();
     }
 }

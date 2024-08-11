@@ -61,21 +61,17 @@ internal class BridgeHandler(
                 bool timeAdvanced = deltaTime > 0.001;
 
                 if (timeAdvanced)
-                {
                     _context.PerfMonitor.AddRLBotSample(deltaTime);
-                    _context.Writer.TryWrite(new DistributeGameState(_context.GameState));
-                }
+                _context.Writer.TryWrite(
+                    new DistributeGameState(_context.GameState, timeAdvanced)
+                );
 
                 var matchStarted = MessageHandler.ReceivedMatchInfo(messageClump);
                 if (matchStarted)
                 {
                     _context.RenderingMgmt.ClearAllRenders();
                     _context.MatchHasStarted = true;
-                    _context.Writer.TryWrite(
-                        new MapSpawned(
-                            _context.GameState.GameStateType == GameStateType.Inactive
-                        )
-                    );
+                    _context.Writer.TryWrite(new MapSpawned());
                 }
 
                 bool matchEnded = _context.GameState.GameStateType == GameStateType.Inactive;
@@ -131,6 +127,7 @@ internal class BridgeHandler(
                     _context.DelayMatchCommandSend = false;
                     _context.QueuedMatchCommands = false;
 
+                    _context.Logger.LogInformation("Sending delayed match commands");
                     _context.MatchCommandSender.Send();
                 }
 

@@ -1,6 +1,6 @@
 ﻿namespace RLBotCS.Server.FlatbuffersMessage;
 
-internal record MapSpawned(bool NotifyMatchStarter) : IServerMessage
+internal record MapSpawned() : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {

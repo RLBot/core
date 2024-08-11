@@ -6,7 +6,7 @@ using GoalInfo = Bridge.Packet.GoalInfo;
 
 namespace RLBotCS.Server.FlatbuffersMessage;
 
-internal record DistributeGameState(GameState GameState) : IServerMessage
+internal record DistributeGameState(GameState GameState, bool timeAdvanced) : IServerMessage
 {
     private static void UpdateFieldInfo(ServerContext context, GameState gameState)
     {
@@ -107,8 +107,12 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
     public ServerAction Execute(ServerContext context)
     {
         UpdateFieldInfo(context, GameState);
-        DistributeBallPrediction(context, GameState);
-        DistributeState(context, GameState);
+
+        if (timeAdvanced)
+        {
+            DistributeBallPrediction(context, GameState);
+            DistributeState(context, GameState);
+        }
 
         return ServerAction.Continue;
     }
