@@ -51,6 +51,7 @@ internal class BridgeHandler(
                 messenger.ResetByteCount();
 
                 float prevTime = _context.GameState.SecondsElapsed;
+                GameStateType prevGameStateType = _context.GameState.GameStateType;
                 _context.GameState = MessageHandler.CreateUpdatedState(
                     messageClump,
                     _context.GameState
@@ -78,14 +79,22 @@ internal class BridgeHandler(
                         _context.GameState.GameStateType == GameStateType.Inactive;
                     if (matchEnded)
                     {
-                        if (!_context.LastMatchEnded)
+                        // ensure we only reset once after a match actually ended
+                        if (prevGameStateType != GameStateType.Inactive)
                         {
-                            // after a match ends, reset everything
+                            // reset everything
                             _context.QuickChat.ClearChats();
                             _context.PerfMonitor.ClearAll();
                             _context.RenderingMgmt.ClearAllRenders();
-                            _context.Writer.TryWrite(new StopMatch(false));
                         }
+
+                        // don't close connections unless it was a true "match ended"
+                        if (
+                            prevGameStateType == GameStateType.Ended
+                            && !_context.MatchHasStarted
+                            && !matchStarted
+                        )
+                            _context.Writer.TryWrite(new StopMatch(false));
                     }
                     else if (
                         _context.GameState.GameStateType != GameStateType.Replay
@@ -111,9 +120,6 @@ internal class BridgeHandler(
                         else
                             _context.PerfMonitor.ClearAll();
                     }
-
-                    // ensure we only reset once after a match ends
-                    _context.LastMatchEnded = matchEnded;
                 }
 
                 if (

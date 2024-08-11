@@ -158,7 +158,6 @@ internal record FlushMatchCommands() : IBridgeMessage
     {
         if (context.QueuedMatchCommands)
         {
-            Console.WriteLine("Sending match commands");
             context.MatchCommandSender.Send();
             context.DelayMatchCommandSend = false;
             context.QueuedMatchCommands = false;

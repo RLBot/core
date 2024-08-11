@@ -63,6 +63,8 @@ internal class MatchStarter(
 
     public void MapSpawned()
     {
+        _mapLoaded = true;
+
         if (_deferredMatchSettings is MatchSettingsT matchSettings)
         {
             bridge.TryWrite(new SetMutators(matchSettings.MutatorSettings));
@@ -77,8 +79,6 @@ internal class MatchStarter(
             _deferredMatchSettings = null;
             bridge.TryWrite(new FlushMatchCommands());
         }
-        else
-            _mapLoaded = true;
     }
 
     private void MakeMatch(MatchSettingsT matchSettings)
@@ -391,6 +391,17 @@ internal class MatchStarter(
     public void IncrementConnectionReadies()
     {
         _connectionReadies++;
+
+        Logger.LogInformation(
+            "Connection readies: "
+                + _connectionReadies
+                + " / "
+                + _expectedConnections
+                + "; needs spawn cars: "
+                + _needsSpawnCars
+                + "; map loaded: "
+                + _mapLoaded
+        );
 
         if (
             _deferredMatchSettings is MatchSettingsT matchSettings
