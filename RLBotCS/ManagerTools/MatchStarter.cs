@@ -215,13 +215,10 @@ internal class MatchStarter(
             }
 
             // No need to load a new map, just spawn the players.
-            bool spawnedCars = SpawnCars(matchSettings);
-            if (spawnedCars)
-                _matchSettings = matchSettings;
-            else
-                _deferredMatchSettings = matchSettings;
-
+            SpawnCars(matchSettings, true);
             bridge.TryWrite(new FlushMatchCommands());
+
+            _matchSettings = matchSettings;
         }
     }
 
@@ -288,7 +285,7 @@ internal class MatchStarter(
         }
     }
 
-    private bool SpawnCars(MatchSettingsT matchSettings)
+    private bool SpawnCars(MatchSettingsT matchSettings, bool force = false)
     {
         // ensure this function is only called once
         if (!_needsSpawnCars)
