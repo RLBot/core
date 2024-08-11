@@ -50,12 +50,19 @@ internal class BridgeHandler(
                 // reset the counter that lets us know if we're sending too many bytes
                 messenger.ResetByteCount();
 
+                float prevTime = _context.GameState.SecondsElapsed;
                 _context.GameState = MessageHandler.CreateUpdatedState(
                     messageClump,
                     _context.GameState
                 );
+                float deltaTime = _context.GameState.SecondsElapsed - prevTime;
+                bool timeAdvanced = deltaTime > 0.001;                
 
-                _context.Writer.TryWrite(new DistributeGameState(_context.GameState));
+                if (timeAdvanced)
+                {
+                    _context.PerfMonitor.AddRLBotSample(deltaTime);
+                    _context.Writer.TryWrite(new DistributeGameState(_context.GameState));
+                }
 
                 var matchStarted = MessageHandler.ReceivedMatchInfo(messageClump);
                 if (matchStarted)
@@ -65,36 +72,45 @@ internal class BridgeHandler(
                     _context.Writer.TryWrite(new MapSpawned());
                 }
 
-                bool matchEnded = _context.GameState.GameStateType == GameStateType.Inactive;
-                if (matchEnded)
+                if (timeAdvanced)
                 {
-                    if (!_context.LastMatchEnded)
+                    bool matchEnded = _context.GameState.GameStateType == GameStateType.Inactive;
+                    if (matchEnded)
                     {
-                        _context.QuickChat.ClearChats();
-                        _context.PerfMonitor.ClearAll();
-                        _context.RenderingMgmt.ClearAllRenders();
-                        _context.Writer.TryWrite(new StopMatch(false));
+                        if (!_context.LastMatchEnded)
+                        {
+                            // after a match ends, reset everything
+                            _context.QuickChat.ClearChats();
+                            _context.PerfMonitor.ClearAll();
+                            _context.RenderingMgmt.ClearAllRenders();
+                            _context.Writer.TryWrite(new StopMatch(false));
+                        }
                     }
-                }
-                else if (
-                    _context.GameState.GameStateType != GameStateType.Replay
-                    && _context.GameState.GameStateType != GameStateType.Paused
-                )
-                {
-                    if (
-                        _context.GameState.GameStateType != GameStateType.GoalScored
-                        && _context.GameState.GameStateType != GameStateType.Ended
+                    else if (
+                        _context.GameState.GameStateType != GameStateType.Replay
+                        && _context.GameState.GameStateType != GameStateType.Paused
                     )
-                        _context.PerfMonitor.RenderSummary(
-                            _context.RenderingMgmt,
-                            _context.GameState
-                        );
-                    else
-                        _context.PerfMonitor.ClearAll();
+                    {
+                        // only rerender if we're not in a replay or paused
+                        _context.QuickChat.RenderChats(_context.RenderingMgmt, _context.GameState);
 
-                    _context.QuickChat.RenderChats(_context.RenderingMgmt, _context.GameState);
+                        // only render if we're not in a goal scored or ended state
+                        if (
+                            _context.GameState.GameStateType != GameStateType.GoalScored
+                            && _context.GameState.GameStateType != GameStateType.Ended
+                        )
+                            _context.PerfMonitor.RenderSummary(
+                                _context.RenderingMgmt,
+                                _context.GameState,
+                                deltaTime
+                            );
+                        else
+                            _context.PerfMonitor.ClearAll();
+                    }
+
+                    // ensure we only reset once after a match ends
+                    _context.LastMatchEnded = matchEnded;
                 }
-                _context.LastMatchEnded = matchEnded;
 
                 if (
                     _context is

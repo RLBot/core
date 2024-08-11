@@ -40,6 +40,7 @@ internal class FlatBuffersSession
     private readonly Channel<SessionMessage> _incomingMessages;
     private readonly ChannelWriter<IServerMessage> _rlbotServer;
     private readonly ChannelWriter<IBridgeMessage> _bridge;
+    private readonly Dictionary<uint, bool> _gotInput = new();
 
     private bool _connectionEstablished;
     private bool _wantsBallPredictions;
@@ -50,7 +51,6 @@ internal class FlatBuffersSession
     private bool _renderingIsEnabled;
 
     private int _spawnId;
-    private bool _gotInput;
     private bool _sessionForceClosed;
     private bool _closed;
 
@@ -139,7 +139,7 @@ internal class FlatBuffersSession
 
             case DataType.PlayerInput:
                 var playerInputMsg = PlayerInput.GetRootAsPlayerInput(byteBuffer).UnPack();
-                _gotInput = true;
+                _gotInput[playerInputMsg.PlayerIndex] = true;
 
                 await _bridge.WriteAsync(new Input(playerInputMsg));
                 break;
@@ -269,8 +269,12 @@ internal class FlatBuffersSession
                         )
                     );
 
-                    await _bridge.WriteAsync(new AddPerfSample(_spawnId, _gotInput));
-                    _gotInput = false;
+                    foreach (var (index, gotInput) in _gotInput)
+                    {
+                        await _bridge.WriteAsync(new AddPerfSample(index, gotInput));
+                        _gotInput[index] = false;
+                    }
+
                     break;
                 case SessionMessage.RendersAllowed m:
                     _renderingIsEnabled = m.Allowed;
@@ -278,7 +282,7 @@ internal class FlatBuffersSession
                 case SessionMessage.StateSettingAllowed m:
                     _stateSettingIsEnabled = m.Allowed;
                     break;
-                case SessionMessage.MatchComm m when _connectionEstablished && _wantsComms:
+                case SessionMessage.MatchComm m when _isReady && _wantsComms:
                     _messageBuilder.Clear();
                     _messageBuilder.Finish(MatchComm.Pack(_messageBuilder, m.Message).Value);
 
@@ -366,6 +370,7 @@ internal class FlatBuffersSession
 
             // if we're trying to shutdown cleanly,
             // let the bot finish sending messages and close the connection itself
+            _closed = true;
             if (!_sessionForceClosed)
                 _client.Close();
         }

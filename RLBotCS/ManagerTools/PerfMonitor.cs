@@ -9,7 +9,7 @@ public class PerfMonitor
     private const int ClientId = 0;
     private const int RenderGroupId = 1;
     private const int _maxSamples = 120;
-    private const int _tickSkip = 60;
+    private const float _timeSkip = 0.5f;
 
     private static readonly ColorT TextColor = new ColorT()
     {
@@ -26,22 +26,23 @@ public class PerfMonitor
         B = 0,
     };
 
-    private readonly SortedDictionary<string, LinkedList<bool>> _samples = new();
-    private int tick = 0;
+    private readonly CircularBuffer<float> _rlbotSamples = new(_maxSamples);
+    private readonly SortedDictionary<string, CircularBuffer<bool>> _samples = new();
+    private float time = 0;
+
+    public void AddRLBotSample(float timeDiff)
+    {
+        _rlbotSamples.AddLast(timeDiff);
+    }
 
     public void AddSample(string name, bool gotInput)
     {
         if (!_samples.ContainsKey(name))
         {
-            _samples[name] = new();
+            _samples[name] = new(_maxSamples);
         }
 
         _samples[name].AddLast(gotInput);
-
-        if (_samples[name].Count > _maxSamples)
-        {
-            _samples[name].RemoveFirst();
-        }
     }
 
     public void RemoveBot(string name)
@@ -49,23 +50,27 @@ public class PerfMonitor
         _samples.Remove(name);
     }
 
-    public void RenderSummary(Rendering rendering, GameState gameState)
+    public void RenderSummary(Rendering rendering, GameState gameState, float deltaTime)
     {
-        tick = (tick + 1) % _tickSkip;
-        if (tick != 0)
+        time += deltaTime;
+        if (time < _timeSkip)
             return;
+        time = 0;
 
-        string message = "RLBot";
-        bool shouldRender = false;
+        float averageTimeDiff = _rlbotSamples.Count > 0 ? _rlbotSamples.Iter().Average() : 1;
+        float timeDiffPercentage = 1 / (120f * averageTimeDiff);
+
+        string message = $"RLBot: {timeDiffPercentage * 100:0.0}%";
+        bool shouldRender = timeDiffPercentage < 0.9999 || timeDiffPercentage > 1.0001;
 
         foreach (var (name, samples) in _samples)
         {
-            int gotInputCount = samples.Count(sample => sample);
+            int gotInputCount = samples.Iter().Count(sample => sample);
             float gotInputPercentage = (float)gotInputCount / samples.Count;
 
             message += $"\n{name}: {gotInputPercentage * 100:0.0}%";
 
-            if (gotInputPercentage < 0.999)
+            if (gotInputPercentage < 0.9999 || gotInputPercentage > 1.0001)
                 shouldRender = true;
         }
 
