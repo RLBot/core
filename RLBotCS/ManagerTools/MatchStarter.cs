@@ -24,6 +24,7 @@ internal class MatchStarter(
     private bool _communicationStarted;
     private bool _hasEverLoadedMap;
     private bool _needsSpawnCars;
+    private bool _mapLoaded;
 
     public bool MatchEnded = false;
 
@@ -32,20 +33,14 @@ internal class MatchStarter(
     public void SetNullMatchSettings()
     {
         if (!_needsSpawnCars)
-        {
             _matchSettings = null;
-            _deferredMatchSettings = null;
-        }
     }
 
     public void StartCommunication()
     {
         _communicationStarted = true;
-        if (_deferredMatchSettings != null)
-        {
-            MakeMatch(_deferredMatchSettings);
-            _deferredMatchSettings = null;
-        }
+        if (_deferredMatchSettings is MatchSettingsT matchSettings)
+            MakeMatch(matchSettings);
     }
 
     public void StartMatch(MatchSettingsT matchSettings)
@@ -68,16 +63,22 @@ internal class MatchStarter(
 
     public void MapSpawned()
     {
-        if (_matchSettings is MatchSettingsT matchSettings)
+        if (_deferredMatchSettings is MatchSettingsT matchSettings)
         {
             bridge.TryWrite(new SetMutators(matchSettings.MutatorSettings));
 
-            if (_needsSpawnCars)
-            {
-                SpawnCars(matchSettings);
-                bridge.TryWrite(new FlushMatchCommands());
-            }
+            if (!_needsSpawnCars)
+                return;
+            bool needsFlush = SpawnCars(matchSettings);
+            if (!needsFlush)
+                return;
+
+            _matchSettings = matchSettings;
+            _deferredMatchSettings = null;
+            bridge.TryWrite(new FlushMatchCommands());
         }
+        else
+            _mapLoaded = true;
     }
 
     private void MakeMatch(MatchSettingsT matchSettings)
@@ -161,6 +162,8 @@ internal class MatchStarter(
 
         _connectionReadies = 0;
         _expectedConnections = 0;
+        CountExpectedConnections(matchSettings);
+
         if (matchSettings.AutoStartBots)
         {
             LaunchManager.LaunchBots(processes, rlbotSocketsPort);
@@ -183,11 +186,14 @@ internal class MatchStarter(
         };
 
         _needsSpawnCars = true;
+        _matchSettings = null;
+        _deferredMatchSettings = null;
 
         if (shouldSpawnNewMap)
         {
+            _mapLoaded = false;
             _hasEverLoadedMap = true;
-            _matchSettings = matchSettings;
+            _deferredMatchSettings = matchSettings;
 
             bridge.TryWrite(new SpawnMap(matchSettings));
         }
@@ -211,9 +217,12 @@ internal class MatchStarter(
             }
 
             // No need to load a new map, just spawn the players.
-            SpawnCars(matchSettings);
+            bool spawnedCars = SpawnCars(matchSettings);
+            if (spawnedCars)
+                _matchSettings = matchSettings;
+            else
+                _deferredMatchSettings = matchSettings;
 
-            _matchSettings = matchSettings;
             bridge.TryWrite(new FlushMatchCommands());
         }
     }
@@ -268,25 +277,46 @@ internal class MatchStarter(
             || lastMutators.RespawnTimeOption != mutators.RespawnTimeOption;
     }
 
-    private void SpawnCars(MatchSettingsT matchSettings)
+    private void CountExpectedConnections(MatchSettingsT matchSettings)
+    {
+        if (_expectedConnections != 0)
+            return;
+
+        _expectedConnections = matchSettings.ScriptConfigurations.Count;
+        foreach (var playerConfig in matchSettings.PlayerConfigurations)
+        {
+            if (playerConfig.Variety.Type == PlayerClass.RLBot)
+                _expectedConnections++;
+        }
+    }
+
+    private bool SpawnCars(MatchSettingsT matchSettings)
     {
         // ensure this function is only called once
         if (!_needsSpawnCars)
-            return;
+            return false;
 
-        // we need to count the number of expected connections still
         bool doSpawning =
             matchSettings.AutoStartBots
             && _expectedConnections != 0
-            && _expectedConnections >= _connectionReadies;
+            && _expectedConnections <= _connectionReadies;
+        Logger.LogInformation(
+            "Spawning cars: "
+                + _expectedConnections
+                + " expected connections, "
+                + _connectionReadies
+                + " connection readies, "
+                + (doSpawning ? "spawning" : "not spawning")
+        );
 
-        if (doSpawning)
-            _needsSpawnCars = false;
+        if (!doSpawning)
+            return false;
+
+        _needsSpawnCars = false;
 
         PlayerConfigurationT? humanConfig = null;
         int numPlayers = matchSettings.PlayerConfigurations.Count;
         int indexOffset = 0;
-        _expectedConnections = matchSettings.ScriptConfigurations.Count;
 
         for (int i = 0; i < numPlayers; i++)
         {
@@ -295,11 +325,6 @@ internal class MatchStarter(
             switch (playerConfig.Variety.Type)
             {
                 case PlayerClass.RLBot:
-                    _expectedConnections++;
-
-                    if (!doSpawning)
-                        break;
-
                     Logger.LogInformation(
                         "Spawning player "
                             + playerConfig.Name
@@ -317,7 +342,7 @@ internal class MatchStarter(
                     );
 
                     break;
-                case PlayerClass.Psyonix when doSpawning:
+                case PlayerClass.Psyonix:
                     var skillEnum = playerConfig.Variety.AsPsyonix().BotSkill switch
                     {
                         PsyonixSkill.Beginner => BotSkill.Intro,
@@ -331,7 +356,7 @@ internal class MatchStarter(
                     );
 
                     break;
-                case PlayerClass.Human when doSpawning:
+                case PlayerClass.Human:
                     // ensure there's no gap in the player indices
                     indexOffset++;
 
@@ -353,19 +378,14 @@ internal class MatchStarter(
             }
         }
 
-        if (!doSpawning)
-            return;
-
+        // If no human was requested for the match,
+        // then make the human spectate so we can start the match
         if (humanConfig is null)
-        {
-            // If no human was requested for the match,
-            // then make the human spectate so we can start the match
             bridge.TryWrite(new ConsoleCommand("spectate"));
-        }
         else
-        {
             bridge.TryWrite(new SpawnHuman(humanConfig, (uint)(numPlayers - indexOffset)));
-        }
+
+        return true;
     }
 
     public void IncrementConnectionReadies()
@@ -373,12 +393,19 @@ internal class MatchStarter(
         _connectionReadies++;
 
         if (
-            _matchSettings is MatchSettingsT matchSettings
-            && _connectionReadies == _expectedConnections
+            _deferredMatchSettings is MatchSettingsT matchSettings
+            && _connectionReadies >= _expectedConnections
             && _needsSpawnCars
+            && _mapLoaded
         )
         {
-            SpawnCars(matchSettings);
+            bool needsFlush = SpawnCars(matchSettings);
+            if (!needsFlush)
+                return;
+
+            _matchSettings = matchSettings;
+            _deferredMatchSettings = null;
+
             bridge.TryWrite(new FlushMatchCommands());
         }
     }

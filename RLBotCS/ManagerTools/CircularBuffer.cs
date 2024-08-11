@@ -16,7 +16,7 @@ public class CircularBuffer<T>
     public void AddLast(T item)
     {
         _buffer[_currentIndex] = item;
-    
+
         // continuously overwrite the oldest item once full
         _currentIndex = (_currentIndex + 1) % _buffer.Length;
         if (_currentIndex == _startIndex)

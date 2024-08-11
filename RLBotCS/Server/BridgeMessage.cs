@@ -128,12 +128,12 @@ internal record ConsoleCommand(string Command) : IBridgeMessage
     public void HandleMessage(BridgeContext context) => context.QueueConsoleCommand(Command);
 }
 
-internal record SetPaused(bool pause) : IBridgeMessage
+internal record SetPaused(bool Pause) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
         context.QueuedMatchCommands = true;
-        context.MatchCommandSender.AddSetPausedCommand(pause);
+        context.MatchCommandSender.AddSetPausedCommand(Pause);
     }
 }
 
@@ -158,6 +158,7 @@ internal record FlushMatchCommands() : IBridgeMessage
     {
         if (context.QueuedMatchCommands)
         {
+            Console.WriteLine("Sending match commands");
             context.MatchCommandSender.Send();
             context.DelayMatchCommandSend = false;
             context.QueuedMatchCommands = false;

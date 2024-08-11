@@ -56,7 +56,7 @@ internal class BridgeHandler(
                     _context.GameState
                 );
                 float deltaTime = _context.GameState.SecondsElapsed - prevTime;
-                bool timeAdvanced = deltaTime > 0.001;                
+                bool timeAdvanced = deltaTime > 0.001;
 
                 if (timeAdvanced)
                 {
@@ -74,7 +74,8 @@ internal class BridgeHandler(
 
                 if (timeAdvanced)
                 {
-                    bool matchEnded = _context.GameState.GameStateType == GameStateType.Inactive;
+                    bool matchEnded =
+                        _context.GameState.GameStateType == GameStateType.Inactive;
                     if (matchEnded)
                     {
                         if (!_context.LastMatchEnded)
@@ -92,7 +93,10 @@ internal class BridgeHandler(
                     )
                     {
                         // only rerender if we're not in a replay or paused
-                        _context.QuickChat.RenderChats(_context.RenderingMgmt, _context.GameState);
+                        _context.QuickChat.RenderChats(
+                            _context.RenderingMgmt,
+                            _context.GameState
+                        );
 
                         // only render if we're not in a goal scored or ended state
                         if (
