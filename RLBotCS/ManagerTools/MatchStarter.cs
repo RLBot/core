@@ -180,7 +180,7 @@ internal class MatchStarter(
         var shouldSpawnNewMap = matchSettings.ExistingMatchBehavior switch
         {
             ExistingMatchBehavior.Continue_And_Spawn => !_hasEverLoadedMap || MatchEnded,
-            ExistingMatchBehavior.Restart_If_Different => IsDifferentFromLast(matchSettings),
+            ExistingMatchBehavior.Restart_If_Different => MatchEnded || IsDifferentFromLast(matchSettings),
             _ => true
         };
 
@@ -292,6 +292,7 @@ internal class MatchStarter(
             return false;
 
         bool doSpawning =
+            force ||
             matchSettings.AutoStartBots
             && _expectedConnections != 0
             && _expectedConnections <= _connectionReadies;
@@ -402,8 +403,8 @@ internal class MatchStarter(
             && _needsSpawnCars
         )
         {
-            bool needsFlush = SpawnCars(matchSettings);
-            if (!needsFlush)
+            bool spawned = SpawnCars(matchSettings);
+            if (!spawned)
                 return;
 
             _matchSettings = matchSettings;
