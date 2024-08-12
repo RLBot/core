@@ -18,6 +18,20 @@ internal static class LaunchManager
 
     private static readonly ILogger Logger = Logging.GetLogger("LaunchManager");
 
+    public static string? GetGameArgsAndKill()
+    {
+        Process[] candidates = Process.GetProcessesByName("RocketLeague");
+
+        foreach (var candidate in candidates)
+        {
+            string args = GetProcessArgs(candidate);
+            candidate.Kill();
+            return args;
+        }
+
+        return null;
+    }
+
     public static int FindUsableGamePort(int rlbotSocketsPort)
     {
         Process[] candidates = Process.GetProcessesByName("RocketLeague");
@@ -25,7 +39,7 @@ internal static class LaunchManager
         // Search cmd line args for port
         foreach (var candidate in candidates)
         {
-            string[] args = GetProcessArgs(candidate);
+            string[] args = GetProcessArgs(candidate).Split(" ");
             foreach (var arg in args)
                 if (arg.Contains("RLBot_ControllerURL"))
                 {
@@ -55,16 +69,16 @@ internal static class LaunchManager
         return DefaultGamePort;
     }
 
-    private static string[] GetProcessArgs(Process process)
+    private static string GetProcessArgs(Process process)
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            return process.StartInfo.Arguments.Split(' ');
+            return process.StartInfo.Arguments;
 
         using WmiConnection con = new WmiConnection();
         WmiQuery objects = con.CreateQuery(
             $"SELECT CommandLine FROM Win32_Process WHERE ProcessId = {process.Id}"
         );
-        return objects.SingleOrDefault()?["CommandLine"]?.ToString()?.Split(" ") ?? [];
+        return objects.SingleOrDefault()?["CommandLine"]?.ToString() ?? "";
     }
 
     private static string[] GetIdealArgs(int gamePort) =>
@@ -166,10 +180,10 @@ internal static class LaunchManager
         }
     }
 
-    public static void LaunchRocketLeague(rlbot.flat.Launcher launcher, int gamePort)
+    public static void LaunchRocketLeague(rlbot.flat.Launcher launcherPref, int gamePort)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            switch (launcher)
+            switch (launcherPref)
             {
                 case rlbot.flat.Launcher.Steam:
                     string steamPath = GetWindowsSteamPath();
@@ -185,12 +199,70 @@ internal static class LaunchManager
                     rocketLeague.Start();
                     break;
                 case rlbot.flat.Launcher.Epic:
-                    throw new NotSupportedException("Epic Games not supported.");
+                    // we need a hack to launch the game properly
+
+                    // start the game
+                    Process launcher = new();
+                    launcher.StartInfo.FileName = "cmd.exe";
+                    launcher.StartInfo.Arguments =
+                        "/c start \"\" \"com.epicgames.launcher://apps/9773aa1aa54f4f7b80e44bef04986cea%3A530145df28a24424923f5828cc9031a1%3ASugar?action=launch&silent=true\"";
+                    launcher.Start();
+
+                    Console.WriteLine("Waiting for Rocket League path details...");
+
+                    // get the game path & login args, the quickly kill the game
+                    // todo: add max number of retries
+                    string? args = null;
+                    while (args is null)
+                    {
+                        Thread.Sleep(1000);
+                        args = GetGameArgsAndKill();
+                    }
+
+                    if (args is null)
+                        throw new Exception("Failed to get Rocket League args");
+
+                    string gamePath = ParseCommand(args)[0];
+                    Logger.LogInformation($"Found Rocket League @ \"{gamePath}\"");
+
+                    // append RLBot args
+                    args = args.Replace(gamePath, "");
+                    args = args.Replace("\"\"", "");
+                    string idealArgs = string.Join(" ", GetIdealArgs(gamePort));
+                    // rlbot args need to be first or the game might ignore them :(
+                    string modifiedArgs = $"\"{gamePath}\" {idealArgs} {args}";
+
+                    // wait for the game to fully close
+                    while (IsRocketLeagueRunning())
+                        Thread.Sleep(500);
+
+                    // relaunch the game with the new args
+                    Process epicRocketLeague = new();
+                    epicRocketLeague.StartInfo.FileName = "cmd.exe";
+                    epicRocketLeague.StartInfo.Arguments = $"/c \"{modifiedArgs}\"";
+
+                    // prevent the game from printing to the console
+                    epicRocketLeague.StartInfo.UseShellExecute = false;
+                    epicRocketLeague.StartInfo.RedirectStandardOutput = true;
+                    epicRocketLeague.StartInfo.RedirectStandardError = true;
+                    epicRocketLeague.Start();
+
+                    Logger.LogInformation(
+                        $"Starting RocketLeague.exe directly with {idealArgs}"
+                    );
+
+                    // if we don't read the output, the game will hang
+                    new Thread(() =>
+                    {
+                        epicRocketLeague.StandardOutput.ReadToEnd();
+                    }).Start();
+
+                    break;
                 case rlbot.flat.Launcher.Custom:
                     throw new NotSupportedException("Unexpected launcher. Use Steam.");
             }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            switch (launcher)
+            switch (launcherPref)
             {
                 case rlbot.flat.Launcher.Steam:
                     string args = string.Join("%20", GetIdealArgs(gamePort));
@@ -206,7 +278,7 @@ internal static class LaunchManager
                     rocketLeague.Start();
                     break;
                 case rlbot.flat.Launcher.Epic:
-                    throw new NotSupportedException("Epic Games not supported.");
+                    throw new NotSupportedException("Epic Games not supported on Linux.");
                 case rlbot.flat.Launcher.Custom:
                     throw new NotSupportedException("Unexpected launcher. Use Steam.");
             }
