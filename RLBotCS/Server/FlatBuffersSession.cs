@@ -112,9 +112,9 @@ internal class FlatBuffersSession
 
                 _spawnId = initComplete.SpawnId;
 
-                if (_closeAfterMatch)
-                    await _rlbotServer.WriteAsync(new SessionReady());
-
+                await _rlbotServer.WriteAsync(
+                    new SessionReady(_closeAfterMatch, _clientId, _spawnId)
+                );
                 _isReady = true;
                 break;
 
@@ -149,7 +149,9 @@ internal class FlatBuffersSession
                     break;
 
                 var matchComms = MatchComm.GetRootAsMatchComm(byteBuffer).UnPack();
-                await _rlbotServer.WriteAsync(new SendMatchComm(_clientId, matchComms));
+                await _rlbotServer.WriteAsync(
+                    new SendMatchComm(_clientId, _spawnId, matchComms)
+                );
                 await _bridge.WriteAsync(new ShowQuickChat(matchComms));
 
                 break;

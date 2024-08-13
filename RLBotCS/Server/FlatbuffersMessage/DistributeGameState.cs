@@ -85,7 +85,7 @@ internal record DistributeGameState(GameState GameState, bool timeAdvanced) : IS
             firstBall
         );
 
-        foreach (var (writer, _) in context.Sessions.Values)
+        foreach (var (writer, _, _) in context.Sessions.Values)
         {
             SessionMessage message = new SessionMessage.DistributeBallPrediction(prediction);
             writer.TryWrite(message);
@@ -96,10 +96,12 @@ internal record DistributeGameState(GameState GameState, bool timeAdvanced) : IS
     {
         context.MatchStarter.MatchEnded = gameState.MatchEnded;
 
-        var gameTickPacket = gameState.ToFlatBuffers();
-        foreach (var (writer, _) in context.Sessions.Values)
+        context.LastTickPacket = gameState.ToFlatBuffers();
+        foreach (var (writer, _, _) in context.Sessions.Values)
         {
-            SessionMessage message = new SessionMessage.DistributeGameState(gameTickPacket);
+            SessionMessage message = new SessionMessage.DistributeGameState(
+                context.LastTickPacket
+            );
             writer.TryWrite(message);
         }
     }

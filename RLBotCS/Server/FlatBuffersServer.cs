@@ -59,7 +59,7 @@ internal class FlatBuffersServer(
             });
         sessionThread.Start();
 
-        _context.Sessions.Add(clientId, (sessionChannel.Writer, sessionThread));
+        _context.Sessions.Add(clientId, (sessionChannel.Writer, sessionThread, 0));
     }
 
     private async Task HandleIncomingMessages()
@@ -106,11 +106,11 @@ internal class FlatBuffersServer(
     public void Cleanup()
     {
         // Send stop message to all sessions
-        foreach (var (writer, _) in _context.Sessions.Values)
+        foreach (var (writer, _, _) in _context.Sessions.Values)
             writer.TryComplete();
 
         // Ensure all sessions are stopped
-        foreach (var (_, thread) in _context.Sessions.Values)
+        foreach (var (_, thread, _) in _context.Sessions.Values)
             thread.Join();
 
         _context.Sessions.Clear();
