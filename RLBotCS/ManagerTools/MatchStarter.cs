@@ -23,6 +23,7 @@ internal class MatchStarter(
 
     private bool _communicationStarted;
     private bool _hasEverLoadedMap;
+    private bool _hasSpawnedMap;
     private bool _needsSpawnCars;
 
     public bool MatchEnded = false;
@@ -64,6 +65,7 @@ internal class MatchStarter(
     {
         Logger.LogInformation("Got map info");
         _hasEverLoadedMap = true;
+        _hasSpawnedMap = true;
 
         if (!_needsSpawnCars)
             return;
@@ -72,8 +74,8 @@ internal class MatchStarter(
         {
             bridge.TryWrite(new SetMutators(matchSettings.MutatorSettings));
 
-            bool needsFlush = SpawnCars(matchSettings);
-            if (!needsFlush)
+            bool spawned = SpawnCars(matchSettings);
+            if (!spawned)
                 return;
 
             _matchSettings = matchSettings;
@@ -190,6 +192,7 @@ internal class MatchStarter(
         if (shouldSpawnNewMap)
         {
             _hasEverLoadedMap = true;
+            _hasSpawnedMap = false;
             _matchSettings = null;
             _deferredMatchSettings = matchSettings;
 
@@ -293,7 +296,8 @@ internal class MatchStarter(
     private bool SpawnCars(MatchSettingsT matchSettings, bool force = false)
     {
         // ensure this function is only called once
-        if (!_needsSpawnCars)
+        // and only if the map has been spawned
+        if (!_needsSpawnCars || !_hasSpawnedMap)
             return false;
 
         bool doSpawning =
