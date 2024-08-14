@@ -23,10 +23,10 @@ internal class MatchStarter(
 
     private bool _communicationStarted;
     private bool _hasEverLoadedMap;
-    private bool _hasSpawnedMap;
     private bool _needsSpawnCars;
 
-    public bool MatchEnded = false;
+    public bool HasSpawnedMap;
+    public bool MatchEnded;
 
     public MatchSettingsT? GetMatchSettings() => _deferredMatchSettings ?? _matchSettings;
 
@@ -65,7 +65,7 @@ internal class MatchStarter(
     {
         Logger.LogInformation("Got map info");
         _hasEverLoadedMap = true;
-        _hasSpawnedMap = true;
+        HasSpawnedMap = true;
 
         if (!_needsSpawnCars)
             return;
@@ -192,7 +192,7 @@ internal class MatchStarter(
         if (shouldSpawnNewMap)
         {
             _hasEverLoadedMap = true;
-            _hasSpawnedMap = false;
+            HasSpawnedMap = false;
             _matchSettings = null;
             _deferredMatchSettings = matchSettings;
 
@@ -297,7 +297,7 @@ internal class MatchStarter(
     {
         // ensure this function is only called once
         // and only if the map has been spawned
-        if (!_needsSpawnCars || !_hasSpawnedMap)
+        if (!_needsSpawnCars || !HasSpawnedMap)
             return false;
 
         bool doSpawning =

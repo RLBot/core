@@ -10,6 +10,9 @@ internal record StopMatch(bool ShutdownServer) : IServerMessage
             return ServerAction.Stop;
         }
 
+        if (!context.MatchStarter.HasSpawnedMap)
+            return ServerAction.Continue;
+
         context.MatchStarter.SetNullMatchSettings();
         context.FieldInfo = null;
         context.ShouldUpdateFieldInfo = false;
