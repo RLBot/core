@@ -63,6 +63,7 @@ internal class MatchStarter(
     public void MapSpawned()
     {
         Logger.LogInformation("Got map info");
+        _hasEverLoadedMap = true;
 
         if (!_needsSpawnCars)
             return;
@@ -186,12 +187,10 @@ internal class MatchStarter(
         };
 
         _needsSpawnCars = true;
-        _matchSettings = null;
-        _deferredMatchSettings = null;
-
         if (shouldSpawnNewMap)
         {
             _hasEverLoadedMap = true;
+            _matchSettings = null;
             _deferredMatchSettings = matchSettings;
 
             bridge.TryWrite(new SpawnMap(matchSettings));
@@ -211,6 +210,10 @@ internal class MatchStarter(
 
                 if (toDespawn.Count > 0)
                 {
+                    Logger.LogInformation(
+                        "Despawning old players: "
+                            + string.Join(", ", toDespawn)
+                    );
                     bridge.TryWrite(new RemoveOldPlayers(toDespawn));
                 }
             }
@@ -220,6 +223,7 @@ internal class MatchStarter(
             bridge.TryWrite(new FlushMatchCommands());
 
             _matchSettings = matchSettings;
+            _deferredMatchSettings = null;
         }
     }
 
