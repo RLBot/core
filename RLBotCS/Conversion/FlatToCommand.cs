@@ -232,6 +232,9 @@ internal static class FlatToCommand
         // Parse game mode
         command += MapGameMode(matchSettings.GameMode);
 
+        if (matchSettings.SkipReplays)
+            command += "?noreplay";
+
         // Whether to or not to skip the kickoff countdown
         if (!matchSettings.InstantStart)
             command += "?Playtest";

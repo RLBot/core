@@ -144,10 +144,7 @@ internal class FlatBuffersSession
                 await _bridge.WriteAsync(new Input(playerInputMsg));
                 break;
 
-            case DataType.MatchComms:
-                if (!_wantsComms)
-                    break;
-
+            case DataType.MatchComms when _wantsComms:
                 var matchComms = MatchComm.GetRootAsMatchComm(byteBuffer).UnPack();
                 await _rlbotServer.WriteAsync(
                     new SendMatchComm(_clientId, _spawnId, matchComms)
