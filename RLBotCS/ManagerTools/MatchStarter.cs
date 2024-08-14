@@ -294,11 +294,8 @@ internal class MatchStarter(
 
         bool doSpawning =
             force
-            || (
-                matchSettings.AutoStartBots
-                && _expectedConnections != 0
-                && _expectedConnections <= _connectionReadies
-            );
+            || !matchSettings.AutoStartBots
+            || (_expectedConnections != 0 && _expectedConnections <= _connectionReadies);
         Logger.LogInformation(
             "Spawning cars: "
                 + _expectedConnections
