@@ -210,6 +210,11 @@ internal class FlatBuffersSession
         }
         catch (ObjectDisposedException)
         {
+            // we disconnected before the message could be sent
+            return;
+        }
+        catch (IOException)
+        {
             // client disconnected before we could send the message
             return;
         }
