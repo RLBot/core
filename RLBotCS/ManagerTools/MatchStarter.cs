@@ -163,8 +163,7 @@ internal class MatchStarter(
         matchSettings.GameMapUpk ??= "";
 
         _connectionReadies = 0;
-        _expectedConnections = 0;
-        CountExpectedConnections(matchSettings);
+        _expectedConnections = matchSettings.ScriptConfigurations.Count + processes.Count;
 
         if (matchSettings.AutoStartBots)
         {
@@ -214,8 +213,7 @@ internal class MatchStarter(
                 if (toDespawn.Count > 0)
                 {
                     Logger.LogInformation(
-                        "Despawning old players: "
-                            + string.Join(", ", toDespawn)
+                        "Despawning old players: " + string.Join(", ", toDespawn)
                     );
                     bridge.TryWrite(new RemoveOldPlayers(toDespawn));
                 }
@@ -278,19 +276,6 @@ internal class MatchStarter(
             || lastMutators.BoostStrengthOption != mutators.BoostStrengthOption
             || lastMutators.DemolishOption != mutators.DemolishOption
             || lastMutators.RespawnTimeOption != mutators.RespawnTimeOption;
-    }
-
-    private void CountExpectedConnections(MatchSettingsT matchSettings)
-    {
-        if (_expectedConnections != 0)
-            return;
-
-        _expectedConnections = matchSettings.ScriptConfigurations.Count;
-        foreach (var playerConfig in matchSettings.PlayerConfigurations)
-        {
-            if (playerConfig.Variety.Type == PlayerClass.RLBot)
-                _expectedConnections++;
-        }
     }
 
     private bool SpawnCars(MatchSettingsT matchSettings, bool force = false)
