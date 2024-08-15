@@ -121,12 +121,20 @@ internal static class LaunchManager
 
             try
             {
-                var commandParts = ParseCommand(mainPlayer.RunCommand);
-                botProcess.StartInfo.FileName = Path.Join(
-                    mainPlayer.Location,
-                    commandParts[0]
-                );
-                botProcess.StartInfo.Arguments = string.Join(' ', commandParts.Skip(1));
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    botProcess.StartInfo.FileName = "cmd.exe";
+                    botProcess.StartInfo.Arguments = $"/c {mainPlayer.RunCommand}";
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    botProcess.StartInfo.FileName = "/bin/sh";
+                    botProcess.StartInfo.Arguments = $"-c \"{mainPlayer.RunCommand}\"";
+                }
+                else
+                    throw new PlatformNotSupportedException(
+                        "RLBot is not supported on non-Windows/Linux platforms"
+                    );
 
                 List<int> spawnIds = processGroup.Select(player => player.SpawnId).ToList();
                 botProcess.StartInfo.EnvironmentVariables["RLBOT_SPAWN_IDS"] = string.Join(
@@ -162,9 +170,20 @@ internal static class LaunchManager
 
             try
             {
-                var commandParts = ParseCommand(script.RunCommand);
-                scriptProcess.StartInfo.FileName = Path.Join(script.Location, commandParts[0]);
-                scriptProcess.StartInfo.Arguments = string.Join(' ', commandParts.Skip(1));
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    scriptProcess.StartInfo.FileName = "cmd.exe";
+                    scriptProcess.StartInfo.Arguments = $"/c {script.RunCommand}";
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    scriptProcess.StartInfo.FileName = "/bin/sh";
+                    scriptProcess.StartInfo.Arguments = $"-c \"{script.RunCommand}\"";
+                }
+                else
+                    throw new PlatformNotSupportedException(
+                        "RLBot is not supported on non-Windows/Linux platforms"
+                    );
 
                 scriptProcess.StartInfo.EnvironmentVariables["RLBOT_SPAWN_IDS"] =
                     script.SpawnId.ToString();
