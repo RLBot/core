@@ -312,6 +312,16 @@ internal record EndMatch() : IBridgeMessage
     }
 }
 
+internal record ClearRenders() : IBridgeMessage
+{
+    public void HandleMessage(BridgeContext context)
+    {
+        context.QuickChat.ClearChats();
+        context.PerfMonitor.ClearAll();
+        context.RenderingMgmt.ClearAllRenders(context.MatchCommandSender);
+    }
+}
+
 internal record ShowQuickChat(MatchCommT MatchComm) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context) =>

@@ -79,7 +79,6 @@ internal class BridgeHandler(
                     // reset everything
                     _context.QuickChat.ClearChats();
                     _context.PerfMonitor.ClearAll();
-                    _context.RenderingMgmt.ClearAllRenders(_context.MatchCommandSender);
                 }
                 else if (
                     _context.GameState.GameStateType != GameStateType.Replay
@@ -136,6 +135,17 @@ internal class BridgeHandler(
             try
             {
                 _context.RenderingMgmt.ClearAllRenders(_context.MatchCommandSender);
+
+                // we can only clear so many renders each tick
+                // so we do this until we've cleared them all
+                // or rocket league has been closed
+                while (!_context.RenderingMgmt.SendRenderClears())
+                {
+                    if (!messenger.WaitForAnyMessageAsync().Result)
+                        break;
+
+                    messenger.ResetByteCount();
+                }
             }
             catch (Exception e)
             {

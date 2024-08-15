@@ -17,6 +17,7 @@ internal record StopMatch(bool ShutdownServer) : IServerMessage
         context.FieldInfo = null;
         context.ShouldUpdateFieldInfo = false;
         context.LastTickPacket = null;
+        context.Bridge.TryWrite(new ClearRenders());
         context.Bridge.TryWrite(new EndMatch());
 
         foreach (var (writer, _, _) in context.Sessions.Values)

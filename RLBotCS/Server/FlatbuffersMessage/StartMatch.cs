@@ -8,6 +8,7 @@ internal record StartMatch(MatchSettingsT MatchSettings) : IServerMessage
     public ServerAction Execute(ServerContext context)
     {
         context.LastTickPacket = null;
+        context.Bridge.TryWrite(new ClearRenders());
 
         foreach (var (writer, _, _) in context.Sessions.Values)
             writer.TryWrite(new SessionMessage.StopMatch(false));
