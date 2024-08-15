@@ -1,6 +1,5 @@
 using System.Threading.Channels;
 using Bridge.Conversion;
-using Bridge.State;
 using Bridge.TCP;
 using Microsoft.Extensions.Logging;
 using RLBotCS.Server.FlatbuffersMessage;
@@ -52,11 +51,11 @@ internal class BridgeHandler(
                 messenger.ResetByteCount();
 
                 float prevTime = _context.GameState.SecondsElapsed;
-                GameStateType prevGameStateType = _context.GameState.GameStateType;
                 _context.GameState = MessageHandler.CreateUpdatedState(
                     messageClump,
                     _context.GameState
                 );
+
                 float deltaTime = _context.GameState.SecondsElapsed - prevTime;
                 bool timeAdvanced = deltaTime > 0.001;
 
@@ -69,26 +68,18 @@ internal class BridgeHandler(
                 var matchStarted = MessageHandler.ReceivedMatchInfo(messageClump);
                 if (matchStarted)
                 {
-                    _context.RenderingMgmt.ClearAllRenders();
+                    // _context.Logger.LogInformation("Map name: " + _context.GameState.MapName);
+                    _context.RenderingMgmt.ClearAllRenders(_context.MatchCommandSender);
                     _context.MatchHasStarted = true;
                     _context.Writer.TryWrite(new MapSpawned());
                 }
 
-                bool matchEnded = _context.GameState.GameStateType == GameStateType.Inactive;
-                if (matchEnded)
+                if (_context.GameState.MatchEnded)
                 {
                     // reset everything
                     _context.QuickChat.ClearChats();
                     _context.PerfMonitor.ClearAll();
-                    _context.RenderingMgmt.ClearAllRenders();
-
-                    // don't close connections unless it was a true "match ended"
-                    if (
-                        prevGameStateType == GameStateType.Ended
-                        && !_context.MatchHasStarted
-                        && !matchStarted
-                    )
-                        _context.Writer.TryWrite(new StopMatch(false));
+                    _context.RenderingMgmt.ClearAllRenders(_context.MatchCommandSender);
                 }
                 else if (
                     _context.GameState.GameStateType != GameStateType.Replay
@@ -100,10 +91,7 @@ internal class BridgeHandler(
                     _context.QuickChat.RenderChats(_context.RenderingMgmt, _context.GameState);
 
                     // only render if we're not in a goal scored or ended state
-                    if (
-                        _context.GameState.GameStateType != GameStateType.GoalScored
-                        && _context.GameState.GameStateType != GameStateType.Ended
-                    )
+                    if (_context.GameState.GameStateType != GameStateType.GoalScored)
                         _context.PerfMonitor.RenderSummary(
                             _context.RenderingMgmt,
                             _context.GameState,
@@ -147,18 +135,7 @@ internal class BridgeHandler(
 
             try
             {
-                _context.RenderingMgmt.ClearAllRenders();
-
-                // we can only clear so many renders each tick
-                // so we do this until we've cleared them all
-                // or rocket league has been closed
-                while (!_context.RenderingMgmt.SendRenderClears())
-                {
-                    if (!messenger.WaitForAnyMessageAsync().Result)
-                        break;
-
-                    messenger.ResetByteCount();
-                }
+                _context.RenderingMgmt.ClearAllRenders(_context.MatchCommandSender);
             }
             catch (Exception e)
             {
