@@ -109,6 +109,9 @@ internal class MatchStarter(
             playerConfig.Location ??= "";
             playerConfig.RunCommand ??= "";
 
+            if (playerConfig.Variety.Type != PlayerClass.RLBot)
+                continue;
+
             if (playerConfig.Hivemind)
             {
                 // only add one process per team
