@@ -16,6 +16,7 @@ internal class BridgeContext(
 {
     public readonly ILogger Logger = Logging.GetLogger("BridgeHandler");
 
+    public int ticksSkipped = 0;
     public GameState GameState = new();
 
     public ChannelWriter<IServerMessage> Writer { get; } = writer;

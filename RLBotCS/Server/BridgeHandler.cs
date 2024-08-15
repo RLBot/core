@@ -15,6 +15,7 @@ internal class BridgeHandler(
     TcpMessenger messenger
 )
 {
+    private const int MAX_TICK_SKIP = 1;
     private readonly BridgeContext _context = new(writer, reader, messenger);
 
     private async Task HandleIncomingMessages()
@@ -60,13 +61,18 @@ internal class BridgeHandler(
 
                 float deltaTime = _context.GameState.SecondsElapsed - prevTime;
                 bool timeAdvanced = deltaTime > 0.001;
+                if (timeAdvanced)
+                    _context.ticksSkipped = 0;
+                else
+                    _context.ticksSkipped++;
 
                 if (timeAdvanced)
                     _context.PerfMonitor.AddRLBotSample(deltaTime);
 
-                GameTickPacketT? packet = timeAdvanced
-                    ? _context.GameState.ToFlatBuffers()
-                    : null;
+                GameTickPacketT? packet =
+                    timeAdvanced || _context.ticksSkipped > MAX_TICK_SKIP
+                        ? _context.GameState.ToFlatBuffers()
+                        : null;
                 _context.Writer.TryWrite(new DistributeGameState(_context.GameState, packet));
 
                 var matchStarted = MessageHandler.ReceivedMatchInfo(messageClump);
