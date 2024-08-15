@@ -1,12 +1,12 @@
 ﻿using Bridge.State;
 using rlbot.flat;
-using RLBotCS.Conversion;
 using RLBotCS.ManagerTools;
 using GoalInfo = Bridge.Packet.GoalInfo;
 
 namespace RLBotCS.Server.FlatbuffersMessage;
 
-internal record DistributeGameState(GameState GameState, bool timeAdvanced) : IServerMessage
+internal record DistributeGameState(GameState GameState, GameTickPacketT? Packet)
+    : IServerMessage
 {
     private static void UpdateFieldInfo(ServerContext context, GameState gameState)
     {
@@ -73,15 +73,15 @@ internal record DistributeGameState(GameState GameState, bool timeAdvanced) : IS
         context.FieldInfoWriters.Clear();
     }
 
-    private static void DistributeBallPrediction(ServerContext context, GameState gameState)
+    private static void DistributeBallPrediction(ServerContext context, GameTickPacketT packet)
     {
-        var firstBall = gameState.Balls.Values.FirstOrDefault();
+        var firstBall = packet.Balls.FirstOrDefault();
         if (firstBall is null)
             return;
 
         BallPredictionT prediction = BallPredictor.Generate(
             context.PredictionMode,
-            gameState.SecondsElapsed,
+            packet.GameInfo.SecondsElapsed,
             firstBall
         );
 
@@ -92,11 +92,9 @@ internal record DistributeGameState(GameState GameState, bool timeAdvanced) : IS
         }
     }
 
-    private static void DistributeState(ServerContext context, GameState gameState)
+    private static void DistributeState(ServerContext context, GameTickPacketT packet)
     {
-        context.MatchStarter.MatchEnded = gameState.MatchEnded;
-
-        context.LastTickPacket = gameState.ToFlatBuffers();
+        context.LastTickPacket = packet;
         foreach (var (writer, _, _) in context.Sessions.Values)
         {
             SessionMessage message = new SessionMessage.DistributeGameState(
@@ -109,11 +107,12 @@ internal record DistributeGameState(GameState GameState, bool timeAdvanced) : IS
     public ServerAction Execute(ServerContext context)
     {
         UpdateFieldInfo(context, GameState);
+        context.MatchStarter.MatchEnded = GameState.MatchEnded;
 
-        if (timeAdvanced)
+        if (Packet is GameTickPacketT packet)
         {
-            DistributeBallPrediction(context, GameState);
-            DistributeState(context, GameState);
+            DistributeBallPrediction(context, packet);
+            DistributeState(context, packet);
         }
 
         return ServerAction.Continue;

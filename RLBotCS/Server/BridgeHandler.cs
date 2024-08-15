@@ -2,6 +2,8 @@ using System.Threading.Channels;
 using Bridge.Conversion;
 using Bridge.TCP;
 using Microsoft.Extensions.Logging;
+using rlbot.flat;
+using RLBotCS.Conversion;
 using RLBotCS.Server.FlatbuffersMessage;
 using GameStateType = Bridge.Models.Message.GameStateType;
 
@@ -61,9 +63,11 @@ internal class BridgeHandler(
 
                 if (timeAdvanced)
                     _context.PerfMonitor.AddRLBotSample(deltaTime);
-                _context.Writer.TryWrite(
-                    new DistributeGameState(_context.GameState, timeAdvanced)
-                );
+
+                GameTickPacketT? packet = timeAdvanced
+                    ? _context.GameState.ToFlatBuffers()
+                    : null;
+                _context.Writer.TryWrite(new DistributeGameState(_context.GameState, packet));
 
                 var matchStarted = MessageHandler.ReceivedMatchInfo(messageClump);
                 if (matchStarted)
