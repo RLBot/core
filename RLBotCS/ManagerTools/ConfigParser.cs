@@ -237,6 +237,7 @@ public static class ConfigParser
         ScriptConfigurationT scriptConfig =
             new()
             {
+                Name = ParseString(scriptSettings, "name", "Unnamed Script", missingValues),
                 Location = CombinePaths(
                     tomlParent,
                     ParseString(scriptSettings, "location", "", missingValues)
