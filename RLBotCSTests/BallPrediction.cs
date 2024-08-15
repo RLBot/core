@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Bridge.Models.Phys;
 using Bridge.State;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using RLBotCS.Conversion;
 using RLBotCS.ManagerTools;
 
 namespace RLBotCSTests;
@@ -28,8 +29,9 @@ public class BallPrediction
 
         var packet = new GameState();
         packet.Balls[12345] = new();
+        var gTP = packet.ToFlatBuffers();
 
-        BallPredictor.Generate(PredictionMode.Standard, 1, packet.Balls[12345]);
+        BallPredictor.Generate(PredictionMode.Standard, 1, gTP.Balls[0]);
 
         packet.Balls[12345].Physics = new Physics(
             new Vector3(0, 0, 1.1f * 91.25f),
@@ -37,8 +39,9 @@ public class BallPrediction
             new Vector3(0, 0, 0),
             new Rotator(0, 0, 0)
         );
+        var gTP2 = packet.ToFlatBuffers();
 
-        var ballPred = BallPredictor.Generate(PredictionMode.Standard, 1, packet.Balls[12345]);
+        var ballPred = BallPredictor.Generate(PredictionMode.Standard, 1, gTP2.Balls[0]);
 
         int numSlices = 6 * 120;
         Assert.AreEqual(numSlices, ballPred.Slices.Count);
@@ -59,9 +62,10 @@ public class BallPrediction
                 new Vector3(0, 0, 0),
                 new Rotator(0, 0, 0)
             );
+            var gTP3 = packet.ToFlatBuffers();
 
             stopWatch.Start();
-            BallPredictor.Generate(PredictionMode.Standard, 1, packet.Balls[12345]);
+            BallPredictor.Generate(PredictionMode.Standard, 1, gTP3.Balls[0]);
             stopWatch.Stop();
         }
 
