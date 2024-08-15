@@ -11,32 +11,23 @@ public class Rendering(TcpMessenger tcpMessenger)
     private static int MaxClearsPerTick = 1024;
 
     private readonly RenderingSender _renderingSender = new(tcpMessenger);
-    private readonly Dictionary<
-        int,
-        Dictionary<int, List<(ushort, bool)>>
-    > _clientRenderTracker = [];
+    private readonly Dictionary<int, Dictionary<int, List<ushort>>> _clientRenderTracker = [];
 
     private readonly Queue<ushort> _RenderClearQueue = new();
 
-    private (ushort, bool)? RenderItem(RenderTypeUnion renderItem, GameState gameState) =>
+    private ushort? RenderItem(RenderTypeUnion renderItem, GameState gameState) =>
         renderItem.Value switch
         {
             Line3DT { Start: var start, End: var end, Color: var color }
-                => (
-                    _renderingSender.AddLine3D(
-                        FlatToModel.ToRenderAnchor(start, gameState),
-                        FlatToModel.ToRenderAnchor(end, gameState),
-                        FlatToModel.ToColor(color)
-                    ),
-                    true
+                => _renderingSender.AddLine3D(
+                    FlatToModel.ToRenderAnchor(start, gameState),
+                    FlatToModel.ToRenderAnchor(end, gameState),
+                    FlatToModel.ToColor(color)
                 ),
             PolyLine3DT { Points: var points, Color: var color }
-                => (
-                    _renderingSender.AddLine3DSeries(
-                        points.Select(FlatToModel.ToVectorFromT).ToList(),
-                        FlatToModel.ToColor(color)
-                    ),
-                    true
+                => _renderingSender.AddLine3DSeries(
+                    points.Select(FlatToModel.ToVectorFromT).ToList(),
+                    FlatToModel.ToColor(color)
                 ),
             String2DT
             {
@@ -49,18 +40,15 @@ public class Rendering(TcpMessenger tcpMessenger)
                 VAlign: var vAlign,
                 Scale: var scale
             }
-                => (
-                    _renderingSender.AddText2D(
-                        text,
-                        x,
-                        y,
-                        FlatToModel.ToColor(foreground),
-                        FlatToModel.ToColor(background),
-                        (byte)hAlign,
-                        (byte)vAlign,
-                        scale
-                    ),
-                    false
+                => _renderingSender.AddText2D(
+                    text,
+                    x,
+                    y,
+                    FlatToModel.ToColor(foreground),
+                    FlatToModel.ToColor(background),
+                    (byte)hAlign,
+                    (byte)vAlign,
+                    scale
                 ),
             String3DT
             {
@@ -72,17 +60,14 @@ public class Rendering(TcpMessenger tcpMessenger)
                 VAlign: var vAlign,
                 Scale: var scale
             }
-                => (
-                    _renderingSender.AddText3D(
-                        text,
-                        FlatToModel.ToRenderAnchor(anchor, gameState),
-                        FlatToModel.ToColor(foreground),
-                        FlatToModel.ToColor(background),
-                        (byte)hAlign,
-                        (byte)vAlign,
-                        scale
-                    ),
-                    false
+                => _renderingSender.AddText3D(
+                    text,
+                    FlatToModel.ToRenderAnchor(anchor, gameState),
+                    FlatToModel.ToColor(foreground),
+                    FlatToModel.ToColor(background),
+                    (byte)hAlign,
+                    (byte)vAlign,
+                    scale
                 ),
             _ => null
         };
@@ -99,7 +84,7 @@ public class Rendering(TcpMessenger tcpMessenger)
         // Clear the previous render group, if any
         RemoveRenderGroup(clientId, renderId);
 
-        List<(ushort, bool)> renderGroup = [];
+        List<ushort> renderGroup = [];
         foreach (RenderMessageT renderItem in renderItems)
             if (RenderItem(renderItem.Variety, gameState) is { } renderItemId)
                 renderGroup.Add(renderItemId);
@@ -119,7 +104,7 @@ public class Rendering(TcpMessenger tcpMessenger)
         if (!clientRenders.TryGetValue(renderId, out var renderItems))
             return;
 
-        foreach ((ushort renderItem, _) in renderItems)
+        foreach (ushort renderItem in renderItems)
             _RenderClearQueue.Enqueue(renderItem);
 
         // Remove the renderId from the client
@@ -133,7 +118,7 @@ public class Rendering(TcpMessenger tcpMessenger)
 
         // Tell the game to remove all the renders
         foreach (int renderId in clientRenders.Keys)
-        foreach ((ushort renderItem, _) in clientRenders[renderId])
+        foreach (ushort renderItem in clientRenders[renderId])
             _RenderClearQueue.Enqueue(renderItem);
 
         // Remove the client from the tracker
@@ -147,9 +132,8 @@ public class Rendering(TcpMessenger tcpMessenger)
 
         foreach (var clientRenders in _clientRenderTracker.Values)
         foreach (int renderId in clientRenders.Keys)
-        foreach ((ushort renderItem, bool isDebugLine) in clientRenders[renderId])
-            if (!isDebugLine)
-                _RenderClearQueue.Enqueue(renderItem);
+        foreach (ushort renderItem in clientRenders[renderId])
+            _RenderClearQueue.Enqueue(renderItem);
 
         _clientRenderTracker.Clear();
     }
