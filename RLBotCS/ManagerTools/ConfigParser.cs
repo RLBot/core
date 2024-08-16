@@ -191,30 +191,29 @@ public static class ConfigParser
 
     private static string GetRunCommand(TomlTable runnableSettings, List<string> missingValues)
     {
-        string? runCommandWindows = ParseString(
-            runnableSettings,
-            "run_command",
-            null,
-            missingValues
-        );
-        string? runCommandLinux = ParseString(
-            runnableSettings,
-            "run_command_linux",
-            null,
-            missingValues
-        );
+        string runCommandWindows =
+            ParseString(runnableSettings, "run_command", null, missingValues) ?? "";
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            return runCommandWindows ?? "";
+            return runCommandWindows;
 
-        if (runCommandLinux != null)
+        string runCommandLinux =
+            ParseString(runnableSettings, "run_command_linux", null, missingValues) ?? "";
+
+        if (runCommandLinux != "")
             return runCommandLinux;
 
-        // TODO:
-        // We're currently on Linux but there's no Linux-specific run command
-        // Try running the Windows command under Wine instead
-        Logger.LogError("No Linux-specific run command found for script!");
-        return runCommandWindows ?? "";
+        if (runCommandWindows != "")
+        {
+            // TODO:
+            // We're currently on Linux but there's no Linux-specific run command
+            // Try running the Windows command under Wine instead
+            Logger.LogError("No Linux-specific run command found for script!");
+            return runCommandWindows;
+        }
+
+        // No run command found
+        return "";
     }
 
     private static ScriptConfigurationT GetScriptConfig(
@@ -548,6 +547,19 @@ public static class ConfigParser
                 RespawnTimeOption.Three_Seconds,
                 missingValues
             ),
+            MaxTimeOption = ParseEnum(
+                mutatorTable,
+                "max_time",
+                MaxTimeOption.Default,
+                missingValues
+            ),
+            GameEventOption = ParseEnum(
+                mutatorTable,
+                "game_event",
+                GameEventOption.Default,
+                missingValues
+            ),
+            AudioOption = ParseEnum(mutatorTable, "audio", AudioOption.Default, missingValues),
         };
 
     public static MatchSettingsT GetMatchSettings(string path)
