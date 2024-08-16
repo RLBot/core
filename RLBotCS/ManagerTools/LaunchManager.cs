@@ -103,6 +103,36 @@ internal static class LaunchManager
         return parts;
     }
 
+    private static Process RunCommandInShell(string command)
+    {
+        Process process = new();
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            process.StartInfo.FileName = "cmd.exe";
+            process.StartInfo.Arguments = $"/c {command}";
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            process.StartInfo.FileName = "/bin/sh";
+            process.StartInfo.Arguments = $"-c \"{command}\"";
+        }
+        else
+            throw new PlatformNotSupportedException(
+                "RLBot is not supported on non-Windows/Linux platforms"
+            );
+
+        return process;
+    }
+
+    private static void LaunchGameViaLegendary()
+    {
+        Process legendary = RunCommandInShell(
+            "legendary launch Sugar -rlbot RLBot_ControllerURL=127.0.0.1:23233 RLBot_PacketSendRate=240 -nomovie"
+        );
+        legendary.Start();
+    }
+
     public static void LaunchBots(
         Dictionary<string, List<rlbot.flat.PlayerConfigurationT>> processGroups,
         int rlbotSocketsPort
@@ -114,36 +144,21 @@ internal static class LaunchManager
             if (mainPlayer.RunCommand == "")
                 continue;
 
-            Process botProcess = new();
+            Process botProcess = RunCommandInShell(mainPlayer.RunCommand);
 
             if (mainPlayer.Location != "")
                 botProcess.StartInfo.WorkingDirectory = mainPlayer.Location;
 
+            List<int> spawnIds = processGroup.Select(player => player.SpawnId).ToList();
+            botProcess.StartInfo.EnvironmentVariables["RLBOT_SPAWN_IDS"] = string.Join(
+                ',',
+                spawnIds
+            );
+            botProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
+                rlbotSocketsPort.ToString();
+
             try
             {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                {
-                    botProcess.StartInfo.FileName = "cmd.exe";
-                    botProcess.StartInfo.Arguments = $"/c {mainPlayer.RunCommand}";
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                {
-                    botProcess.StartInfo.FileName = "/bin/sh";
-                    botProcess.StartInfo.Arguments = $"-c \"{mainPlayer.RunCommand}\"";
-                }
-                else
-                    throw new PlatformNotSupportedException(
-                        "RLBot is not supported on non-Windows/Linux platforms"
-                    );
-
-                List<int> spawnIds = processGroup.Select(player => player.SpawnId).ToList();
-                botProcess.StartInfo.EnvironmentVariables["RLBOT_SPAWN_IDS"] = string.Join(
-                    ',',
-                    spawnIds
-                );
-                botProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
-                    rlbotSocketsPort.ToString();
-
                 botProcess.Start();
             }
             catch (Exception e)
@@ -163,33 +178,18 @@ internal static class LaunchManager
             if (script.RunCommand == "")
                 continue;
 
-            Process scriptProcess = new();
+            Process scriptProcess = RunCommandInShell(script.RunCommand);
 
             if (script.Location != "")
                 scriptProcess.StartInfo.WorkingDirectory = script.Location;
 
+            scriptProcess.StartInfo.EnvironmentVariables["RLBOT_SPAWN_IDS"] =
+                script.SpawnId.ToString();
+            scriptProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
+                rlbotSocketsPort.ToString();
+
             try
             {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                {
-                    scriptProcess.StartInfo.FileName = "cmd.exe";
-                    scriptProcess.StartInfo.Arguments = $"/c {script.RunCommand}";
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                {
-                    scriptProcess.StartInfo.FileName = "/bin/sh";
-                    scriptProcess.StartInfo.Arguments = $"-c \"{script.RunCommand}\"";
-                }
-                else
-                    throw new PlatformNotSupportedException(
-                        "RLBot is not supported on non-Windows/Linux platforms"
-                    );
-
-                scriptProcess.StartInfo.EnvironmentVariables["RLBOT_SPAWN_IDS"] =
-                    script.SpawnId.ToString();
-                scriptProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
-                    rlbotSocketsPort.ToString();
-
                 scriptProcess.Start();
             }
             catch (Exception e)
@@ -199,7 +199,11 @@ internal static class LaunchManager
         }
     }
 
-    public static void LaunchRocketLeague(rlbot.flat.Launcher launcherPref, int gamePort)
+    public static void LaunchRocketLeague(
+        rlbot.flat.Launcher launcherPref,
+        string gamePath,
+        int gamePort
+    )
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             switch (launcherPref)
@@ -241,15 +245,15 @@ internal static class LaunchManager
                     if (args is null)
                         throw new Exception("Failed to get Rocket League args");
 
-                    string gamePath = ParseCommand(args)[0];
-                    Logger.LogInformation($"Found Rocket League @ \"{gamePath}\"");
+                    string directGamePath = ParseCommand(args)[0];
+                    Logger.LogInformation($"Found Rocket League @ \"{directGamePath}\"");
 
                     // append RLBot args
-                    args = args.Replace(gamePath, "");
+                    args = args.Replace(directGamePath, "");
                     args = args.Replace("\"\"", "");
                     string idealArgs = string.Join(" ", GetIdealArgs(gamePort));
                     // rlbot args need to be first or the game might ignore them :(
-                    string modifiedArgs = $"\"{gamePath}\" {idealArgs} {args}";
+                    string modifiedArgs = $"\"{directGamePath}\" {idealArgs} {args}";
 
                     // wait for the game to fully close
                     while (IsRocketLeagueRunning())
@@ -278,6 +282,12 @@ internal static class LaunchManager
 
                     break;
                 case rlbot.flat.Launcher.Custom:
+                    if (gamePath.ToLower() == "legendary")
+                    {
+                        LaunchGameViaLegendary();
+                        return;
+                    }
+
                     throw new NotSupportedException("Unexpected launcher. Use Steam.");
             }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -299,6 +309,12 @@ internal static class LaunchManager
                 case rlbot.flat.Launcher.Epic:
                     throw new NotSupportedException("Epic Games not supported on Linux.");
                 case rlbot.flat.Launcher.Custom:
+                    if (gamePath.ToLower() == "legendary")
+                    {
+                        LaunchGameViaLegendary();
+                        return;
+                    }
+
                     throw new NotSupportedException("Unexpected launcher. Use Steam.");
             }
         else

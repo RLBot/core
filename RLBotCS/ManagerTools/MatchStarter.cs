@@ -48,7 +48,11 @@ internal class MatchStarter(
         if (!LaunchManager.IsRocketLeagueRunning())
         {
             _communicationStarted = false;
-            LaunchManager.LaunchRocketLeague(matchSettings.Launcher, gamePort);
+            LaunchManager.LaunchRocketLeague(
+                matchSettings.Launcher,
+                matchSettings.GamePath,
+                gamePort
+            );
         }
 
         if (!_communicationStarted)
@@ -172,6 +176,12 @@ internal class MatchStarter(
         {
             LaunchManager.LaunchBots(processes, rlbotSocketsPort);
             LaunchManager.LaunchScripts(matchSettings.ScriptConfigurations, rlbotSocketsPort);
+        }
+        else
+        {
+            Logger.LogWarning(
+                "AutoStartBots is disabled in match settings. Bots & scripts will not be started automatically!"
+            );
         }
 
         LoadMatch(matchSettings);
