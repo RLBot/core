@@ -81,7 +81,7 @@ internal class BridgeHandler(
                     // _context.Logger.LogInformation("Map name: " + _context.GameState.MapName);
                     _context.RenderingMgmt.ClearAllRenders(_context.MatchCommandSender);
                     _context.MatchHasStarted = true;
-                    _context.Writer.TryWrite(new MapSpawned());
+                    _context.Writer.TryWrite(new MapSpawned(_context.GameState.MapName));
                 }
 
                 if (_context.GameState.MatchEnded)

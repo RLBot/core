@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using Bridge.Packet;
 using rlbot.flat;
 
 namespace RLBotCS.ManagerTools;

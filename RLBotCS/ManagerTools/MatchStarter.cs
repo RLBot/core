@@ -61,9 +61,9 @@ internal class MatchStarter(
         MakeMatch(matchSettings);
     }
 
-    public void MapSpawned()
+    public void MapSpawned(string MapName)
     {
-        Logger.LogInformation("Got map info");
+        Logger.LogInformation("Got map info for " + MapName);
         _hasEverLoadedMap = true;
         HasSpawnedMap = true;
 
