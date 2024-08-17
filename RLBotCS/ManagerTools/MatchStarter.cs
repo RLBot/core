@@ -390,6 +390,40 @@ internal class MatchStarter(
         return true;
     }
 
+    public void AddLoadout(PlayerLoadoutT loadout, int spawnId)
+    {
+        if (_matchSettings is null)
+        {
+            Logger.LogError("Match settings not loaded yet.");
+            return;
+        }
+
+        if (!_needsSpawnCars)
+        {
+            // todo: when the match is already running,
+            // respawn the car with the new loadout in the same position
+            Logger.LogError("Match already started, can't add loadout - feature has not implemented!");
+            return;
+        }
+
+        var player = _matchSettings.PlayerConfigurations.Find(p => p.SpawnId == spawnId);
+        if (player is null)
+        {
+            Logger.LogError($"Player with spawn id {spawnId} not found to add loadout to.");
+            return;
+        }
+
+        if (player.Loadout is not null)
+        {
+            Logger.LogError(
+                $"Player \"{player.Name}\" with spawn id {spawnId} already has a loadout."
+            );
+            return;
+        }
+
+        player.Loadout = loadout;
+    }
+
     public void IncrementConnectionReadies()
     {
         _connectionReadies++;

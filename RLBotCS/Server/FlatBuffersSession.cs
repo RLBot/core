@@ -103,8 +103,10 @@ internal class FlatBuffersSession
 
             case DataType.SetLoadout when !_isReady || _stateSettingIsEnabled:
                 var setLoadout = SetLoadout.GetRootAsSetLoadout(byteBuffer).UnPack();
-                // TODO
-                // await _bridge.WriteAsync(new SetLoadout(_spawnId, setLoadout));
+
+                await _rlbotServer.WriteAsync(
+                    new SpawnLoadout(setLoadout.Loadout, setLoadout.SpawnId)
+                );
                 break;
 
             case DataType.InitComplete when _connectionEstablished && !_isReady:
