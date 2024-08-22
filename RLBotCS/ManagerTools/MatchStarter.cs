@@ -402,7 +402,9 @@ internal class MatchStarter(
         {
             // todo: when the match is already running,
             // respawn the car with the new loadout in the same position
-            Logger.LogError("Match already started, can't add loadout - feature has not implemented!");
+            Logger.LogError(
+                "Match already started, can't add loadout - feature has not implemented!"
+            );
             return;
         }
 

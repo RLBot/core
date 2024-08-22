@@ -157,6 +157,7 @@ internal class BridgeHandler(
                     messenger.ResetByteCount();
                 }
             }
+            catch (InvalidOperationException) { }
             catch (Exception e)
             {
                 _context.Logger.LogError($"Error while cleaning up BridgeHandler: {e}");
