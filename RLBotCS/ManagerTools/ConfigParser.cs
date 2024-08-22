@@ -614,12 +614,7 @@ public static class ConfigParser
                 true,
                 missingValues["rlbot"]
             ),
-            GamePath = ParseString(
-                rlbotTable,
-                "game_path",
-                "",
-                missingValues["rlbot"]
-            ),
+            GamePath = ParseString(rlbotTable, "game_path", "", missingValues["rlbot"]),
             GameMode = ParseEnum(
                 matchTable,
                 "game_mode",
