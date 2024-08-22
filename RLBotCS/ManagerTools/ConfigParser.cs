@@ -616,7 +616,7 @@ public static class ConfigParser
             ),
             GamePath = ParseString(
                 rlbotTable,
-                "rocket_league_exe_path",
+                "game_path",
                 "",
                 missingValues["rlbot"]
             ),
