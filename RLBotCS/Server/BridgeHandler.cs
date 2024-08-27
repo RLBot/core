@@ -70,7 +70,16 @@ internal class BridgeHandler(
                     _context.PerfMonitor.AddRLBotSample(deltaTime);
 
                 GameTickPacketT? packet =
-                    timeAdvanced || _context.ticksSkipped > MAX_TICK_SKIP
+                    timeAdvanced
+                    || (
+                        _context.ticksSkipped > MAX_TICK_SKIP
+                        && (
+                            _context.GameState.GameStateType == GameStateType.Replay
+                            || _context.GameState.GameStateType == GameStateType.Paused
+                            || _context.GameState.GameStateType == GameStateType.Ended
+                            || _context.GameState.GameStateType == GameStateType.Inactive
+                        )
+                    )
                         ? _context.GameState.ToFlatBuffers()
                         : null;
                 _context.Writer.TryWrite(new DistributeGameState(_context.GameState, packet));
