@@ -387,6 +387,8 @@ internal class MatchStarter(
         else
             bridge.TryWrite(new SpawnHuman(humanConfig, (uint)(numPlayers - indexOffset)));
 
+        bridge.TryWrite(new MarkQueuingComplete());
+
         return true;
     }
 

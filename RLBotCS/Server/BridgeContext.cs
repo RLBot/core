@@ -32,10 +32,12 @@ internal class BridgeContext(
     public bool MatchHasStarted { get; set; }
     public bool QueuedMatchCommands { get; set; }
     public bool DelayMatchCommandSend { get; set; }
+    public bool QueuingCommandsComplete { get; set; }
 
     public void QueueConsoleCommand(string command)
     {
         QueuedMatchCommands = true;
+        QueuingCommandsComplete = false;
         MatchCommandSender.AddConsoleCommand(command);
     }
 }

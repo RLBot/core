@@ -85,6 +85,7 @@ internal record SpawnBot(
         Loadout loadout = FlatToModel.ToLoadout(Config.Loadout, Config.Team);
 
         context.QueuedMatchCommands = true;
+        context.QueuingCommandsComplete = false;
         ushort commandId = context.MatchCommandSender.AddBotSpawnCommand(
             Config.Name,
             (int)Config.Team,
@@ -102,6 +103,14 @@ internal record SpawnBot(
                 IsBot = true
             }
         );
+    }
+}
+
+internal record MarkQueuingComplete() : IBridgeMessage
+{
+    public void HandleMessage(BridgeContext context)
+    {
+        context.QueuingCommandsComplete = true;
     }
 }
 

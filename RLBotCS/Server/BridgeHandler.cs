@@ -115,6 +115,7 @@ internal class BridgeHandler(
                     {
                         DelayMatchCommandSend: true,
                         QueuedMatchCommands: true,
+                        QueuingCommandsComplete: true,
                         MatchHasStarted: true,
                         GameState.GameStateType: GameStateType.Paused
                     }
