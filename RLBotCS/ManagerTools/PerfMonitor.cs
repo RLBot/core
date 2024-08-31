@@ -3,7 +3,6 @@ using rlbot.flat;
 
 namespace RLBotCS.ManagerTools;
 
-// https://github.com/RLBotPrivate/RLBot/blob/psyonix/src/main/cpp/RLBotInterface/src/RLBot/Performance/PerformanceMonitor.cpp
 public class PerfMonitor
 {
     private const int ClientId = 0;
