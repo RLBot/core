@@ -168,6 +168,7 @@ internal class BridgeHandler(
                 }
             }
             catch (InvalidOperationException) { }
+            catch (IOException) { }
             catch (Exception e)
             {
                 _context.Logger.LogError($"Error while cleaning up BridgeHandler: {e}");
