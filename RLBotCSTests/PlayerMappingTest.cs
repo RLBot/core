@@ -1,4 +1,3 @@
-using Bridge.Models.Message;
 using Bridge.State;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
