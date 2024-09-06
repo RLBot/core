@@ -33,16 +33,13 @@ public class PlayerMappingTest
 
         _playerMapping.AddPendingSpawn(spawnTracker);
 
-        var carSpawn = new CarSpawn() { ActorId = actorId, CommandId = commandId, };
-        var metadata = _playerMapping.ApplyCarSpawn(carSpawn);
+        var metadata = _playerMapping.ApplyCarSpawn(actorId, commandId);
 
         Assert.AreEqual(desiredIndex, _playerMapping.PlayerIndexFromActorId(actorId));
         Assert.IsTrue(metadata.IsBot);
         Assert.IsTrue(!metadata.IsCustomBot);
 
-        var metadata2 = _playerMapping.ApplyCarSpawn(
-            new CarSpawn() { ActorId = 111, CommandId = 222, }
-        );
+        var metadata2 = _playerMapping.ApplyCarSpawn(111, 222);
         uint? index = _playerMapping.PlayerIndexFromActorId(111);
 
         Assert.AreEqual(0u, _playerMapping.PlayerIndexFromActorId(111));
