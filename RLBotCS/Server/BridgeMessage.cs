@@ -293,7 +293,7 @@ internal record SetGameState(DesiredGameStateT GameState) : IBridgeMessage
 
             if (car.Physics is DesiredPhysicsT physics)
             {
-                var currentPhysics = context.GameState.GameCars[(ushort)id].Physics;
+                var currentPhysics = context.GameState.GameCars[(uint)i].Physics;
                 var fullState = FlatToModel.DesiredToPhysics(physics, currentPhysics);
 
                 context.MatchCommandSender.AddSetPhysicsCommand((ushort)id, fullState);
