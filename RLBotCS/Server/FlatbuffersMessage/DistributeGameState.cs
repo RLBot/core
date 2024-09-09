@@ -64,6 +64,15 @@ internal record DistributeGameState(GameState GameState, GameTickPacketT? Packet
             );
         }
 
+        context.FieldInfo.BoostPads.Sort(
+            (a, b) =>
+            {
+                if (a.Location.Y != b.Location.Y)
+                    return a.Location.Y.CompareTo(b.Location.Y);
+                return a.Location.X.CompareTo(b.Location.X);
+            }
+        );
+
         // Distribute the field info to all waiting sessions
         foreach (var writer in context.FieldInfoWriters)
         {
