@@ -134,7 +134,10 @@ internal static class GameStateToFlat
         ];
 
         List<BoostPadStateT> boostStates = gameState
-            .BoostPads.Values.Select(
+            .BoostPads.Values
+            .OrderBy(boost => boost.SpawnPosition.Y)
+            .ThenBy(boost => boost.SpawnPosition.X)
+            .Select(
                 boost => new BoostPadStateT { IsActive = boost.IsActive, Timer = boost.Timer }
             )
             .ToList();
