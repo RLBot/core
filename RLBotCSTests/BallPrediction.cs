@@ -31,7 +31,7 @@ public class BallPrediction
         packet.Balls[12345] = new();
         var gTP = packet.ToFlatBuffers();
 
-        BallPredictor.Generate(PredictionMode.Standard, 1, gTP.Balls[0]);
+        BallPredictor.Generate(PredictionMode.Standard, 1, gTP.Balls[0], null);
 
         packet.Balls[12345].Physics = new Physics(
             new Vector3(0, 0, 1.1f * 91.25f),
@@ -41,7 +41,7 @@ public class BallPrediction
         );
         var gTP2 = packet.ToFlatBuffers();
 
-        var ballPred = BallPredictor.Generate(PredictionMode.Standard, 1, gTP2.Balls[0]);
+        var ballPred = BallPredictor.Generate(PredictionMode.Standard, 1, gTP2.Balls[0], null);
 
         int numSlices = 6 * 120;
         Assert.AreEqual(numSlices, ballPred.Slices.Count);
@@ -65,7 +65,7 @@ public class BallPrediction
             var gTP3 = packet.ToFlatBuffers();
 
             stopWatch.Start();
-            BallPredictor.Generate(PredictionMode.Standard, 1, gTP3.Balls[0]);
+            BallPredictor.Generate(PredictionMode.Standard, 1, gTP3.Balls[0], null);
             stopWatch.Stop();
         }
 

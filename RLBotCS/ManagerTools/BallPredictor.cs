@@ -110,7 +110,8 @@ public static partial class BallPredictor
     public static BallPredictionT Generate(
         PredictionMode mode,
         float currentTime,
-        BallInfoT currentBall
+        BallInfoT currentBall,
+        (TouchT, uint)? lastTouch
     )
     {
         BallSlice ball =
@@ -130,20 +131,23 @@ public static partial class BallPredictor
 
         if (mode == PredictionMode.Heatseeker)
         {
-            if (currentBall.LatestTouch.GameSeconds < float.Epsilon)
+            if (lastTouch is (TouchT, uint) lastestTouch)
+            {
+                if (currentTime - lastestTouch.Item1.GameSeconds < 0.1)
+                {
+                    // Target goal is the opposite of the last touch
+                    SetHeatseekerTarget(lastestTouch.Item2 == 1 ? (byte)0 : (byte)1);
+                }
+                else if (GetHeatseekerTargetY() == 0 || MathF.Abs(ball.Location.Y) >= 4820)
+                {
+                    // We're very likely to hit a wall that will redirect the ball towards the other goal
+                    SetHeatseekerTarget(ball.LinearVelocity.Y < 0 ? (byte)1 : (byte)0);
+                }
+            }
+            else
             {
                 // A goal happened, we're in kickoff
                 ResetHeatseekerTarget();
-            }
-            else if (currentTime - currentBall.LatestTouch.GameSeconds < 0.1)
-            {
-                // Target goal is the opposite of the last touch
-                SetHeatseekerTarget(currentBall.LatestTouch.Team == 1 ? (byte)0 : (byte)1);
-            }
-            else if (GetHeatseekerTargetY() == 0 || MathF.Abs(ball.Location.Y) >= 4820)
-            {
-                // We're very likely to hit a wall that will redirect the ball towards the other goal
-                SetHeatseekerTarget(ball.LinearVelocity.Y < 0 ? (byte)1 : (byte)0);
             }
         }
 

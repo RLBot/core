@@ -88,10 +88,22 @@ internal record DistributeGameState(GameState GameState, GameTickPacketT? Packet
         if (firstBall is null)
             return;
 
+        (TouchT, uint)? lastTouch = null;
+
+        foreach (var car in packet.Players)
+        {
+            if (car.LastestTouch is TouchT touch && touch.BallIndex == 0)
+            {
+                lastTouch = (touch, car.Team);
+                break;
+            }
+        }
+
         BallPredictionT prediction = BallPredictor.Generate(
             context.PredictionMode,
             packet.GameInfo.SecondsElapsed,
-            firstBall
+            firstBall,
+            lastTouch
         );
 
         foreach (var (writer, _, _) in context.Sessions.Values)
