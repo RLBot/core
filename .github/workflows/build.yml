@@ -61,7 +61,7 @@ jobs:
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          files: ./**/publish/RLBotServer*
+          files: ./RLBotCS/**/publish/RLBotServer*
           generate_release_notes: true
           body: |
             Pre-built binaries that allows bots to interface with Rocket League via the RLBot v5 spec
