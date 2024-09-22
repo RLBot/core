@@ -24,7 +24,13 @@ compiled binaries at `RLBotCS\bin\Release\net8.0`.
 
 ## Deployment
 
-New deployment method is still TBD.
+1. Ensure all changes are on the `master` branch
+1. Create a new tag with the next version number - e.x. `git tag v0.1.0 -m "Core v0.1.0"`
+   - Preferably sign the tag too - `git tag -s v0.1.0 -m "Core v0.1.0"`
+1. Push the tag - `git push --tags`
+1. Wait for the Github Actions to build the release and upload it to the release page!
+
+Further deployment steps for automatic updates are still in progress.
 
 ## Maintenance
 
@@ -35,11 +41,11 @@ This project uses the CSharpier formatter. You can run it with `dotnet csharpier
 ### Flatbuffers
 
 The Core project uses flatbuffers, which involves generating C# code based on a specification
-file called `rlbot.fbs`. Find this in `RLBotCS/FlatBuffer` after it's been generated.
+file called `rlbot.fbs`. Find this in `./FlatBuffer` after it's been generated.
 
 The [flatbuffers-schema](https://github.com/RLBot/flatbuffers-schema) submodule should be kept update to date:
 
-- `cd RLBotCS/flatbuffers-schema`
+- `cd flatbuffers-schema`
 - `git checkout main`
 - `git fetch`
 - `git pull`
@@ -52,3 +58,10 @@ The `Bridge.dll` file in `RLBotCS/lib` is built from a _closed-source_ repositor
 It is maintained by RLBot developers who have signed an agreement with Psyonix to keep it private.
 
 The dll file is platform-independent and works for building the project on both Windows and Linux.
+
+### rl_ball_sym
+
+The native binaries that live in `RLBotCS/lib/rl_ball_sym` generate the ball prediction that core then distributes to bots & scripts that request it.
+The `dll`/`so` are dynamically loaded at run time while developing core, and the `a`/`lib` files are statically linked during publishing.
+
+All source code and releases for building the dlls can be found at <https://github.com/VirxEC/rl_ball_sym_dll> but the core of the code is a library that's published for anyone's use at <https://crates.io/crates/rl_ball_sym>.

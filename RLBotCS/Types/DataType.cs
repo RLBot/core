@@ -7,14 +7,20 @@ public enum DataType : ushort
 {
     None,
 
-    // Arrives at a high rate according to https://wiki.rlbot.org/botmaking/tick-rate/ except
-    // "desired tick rate" is not relevant here
+    /// <summary>
+    /// Arrives at a high rate according to https://wiki.rlbot.org/botmaking/tick-rate/ except
+    /// "desired tick rate" is not relevant here
+    /// </summary>
     GameTickPacket,
 
-    // Sent once when a match starts, or when you first connect.
+    /// <summary>
+    /// Sent once when a match starts, or when you first connect.
+    /// </summary>
     FieldInfo,
 
-    // Sent once when a match starts, or when you first connect.
+    /// <summary>
+    /// Sent once when a match starts, or when you first connect.
+    /// </summary>
     StartCommand,
     MatchSettings,
     PlayerInput,
@@ -23,13 +29,29 @@ public enum DataType : ushort
     RemoveRenderGroup,
     MatchComms,
 
-    // Sent every time the ball diverges from the previous prediction,
-    // or when the previous prediction no longer gives a full 6 seconds into the future
+    /// <summary>
+    /// Sent every time the ball diverges from the previous prediction,
+    /// or when the previous prediction no longer gives a full 6 seconds into the future
+    /// </summary>
     BallPrediction,
 
-    // Clients must send this after connecting to the socket.
-    ReadyMessage,
+    /// <summary>
+    /// Clients must send this after connecting to the socket.
+    /// </summary>
+    ConnectionSettings,
 
-    // used to end a match and shut down bots (optionally the server as well)
-    StopCommand
+    /// <summary>
+    /// used to end a match and shut down bots (optionally the server as well)
+    /// </summary>
+    StopCommand,
+
+    /// <summary>
+    /// Use to dynamically set the loadout of a bot
+    /// </summary>
+    SetLoadout,
+
+    /// <summary>
+    /// Indicates that a connection is ready to receive `GameTickPacket`s
+    /// </summary>
+    InitComplete
 }

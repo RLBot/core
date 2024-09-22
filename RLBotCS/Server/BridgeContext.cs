@@ -16,8 +16,8 @@ internal class BridgeContext(
 {
     public readonly ILogger Logger = Logging.GetLogger("BridgeHandler");
 
+    public int ticksSkipped = 0;
     public GameState GameState = new();
-    public bool LastMatchEnded { get; set; }
 
     public ChannelWriter<IServerMessage> Writer { get; } = writer;
     public ChannelReader<IBridgeMessage> Reader { get; } = reader;
@@ -26,15 +26,18 @@ internal class BridgeContext(
     public PlayerInputSender PlayerInputSender { get; } = new(messenger);
     public Rendering RenderingMgmt { get; } = new(messenger);
     public QuickChat QuickChat { get; } = new();
+    public PerfMonitor PerfMonitor { get; } = new();
 
     public bool GotFirstMessage { get; set; }
     public bool MatchHasStarted { get; set; }
     public bool QueuedMatchCommands { get; set; }
     public bool DelayMatchCommandSend { get; set; }
+    public bool QueuingCommandsComplete { get; set; }
 
     public void QueueConsoleCommand(string command)
     {
         QueuedMatchCommands = true;
+        QueuingCommandsComplete = false;
         MatchCommandSender.AddConsoleCommand(command);
     }
 }

@@ -1,4 +1,3 @@
-using Bridge.Models.Message;
 using Bridge.State;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -33,20 +32,25 @@ public class PlayerMappingTest
 
         _playerMapping.AddPendingSpawn(spawnTracker);
 
-        var carSpawn = new CarSpawn() { ActorId = actorId, CommandId = commandId, };
-        var metadata = _playerMapping.ApplyCarSpawn(carSpawn);
+        var metadata = _playerMapping.ApplyCarSpawn(actorId, commandId);
 
         Assert.AreEqual(desiredIndex, _playerMapping.PlayerIndexFromActorId(actorId));
         Assert.IsTrue(metadata.IsBot);
         Assert.IsTrue(!metadata.IsCustomBot);
 
-        var metadata2 = _playerMapping.ApplyCarSpawn(
-            new CarSpawn() { ActorId = 111, CommandId = 222, }
-        );
+        var metadata2 = _playerMapping.ApplyCarSpawn(111, 222);
+        uint? index = _playerMapping.PlayerIndexFromActorId(111);
 
         Assert.AreEqual(0u, _playerMapping.PlayerIndexFromActorId(111));
+        Assert.IsNotNull(index);
+        Assert.AreEqual(index, 0u);
         Assert.AreEqual(desiredIndex, _playerMapping.PlayerIndexFromActorId(actorId));
         Assert.IsTrue(!metadata2.IsBot);
         Assert.IsTrue(!metadata2.IsCustomBot);
+
+        uint? index2 = _playerMapping.PlayerIndexFromActorId(456);
+
+        Assert.IsNull(index2);
+        Assert.AreNotEqual(index2, 0u);
     }
 }

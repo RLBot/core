@@ -1,12 +1,12 @@
 ﻿using Bridge.State;
 using rlbot.flat;
-using RLBotCS.Conversion;
 using RLBotCS.ManagerTools;
 using GoalInfo = Bridge.Packet.GoalInfo;
 
 namespace RLBotCS.Server.FlatbuffersMessage;
 
-internal record DistributeGameState(GameState GameState) : IServerMessage
+internal record DistributeGameState(GameState GameState, GameTickPacketT? Packet)
+    : IServerMessage
 {
     private static void UpdateFieldInfo(ServerContext context, GameState gameState)
     {
@@ -64,6 +64,15 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
             );
         }
 
+        context.FieldInfo.BoostPads.Sort(
+            (a, b) =>
+            {
+                if (a.Location.Y != b.Location.Y)
+                    return a.Location.Y.CompareTo(b.Location.Y);
+                return a.Location.X.CompareTo(b.Location.X);
+            }
+        );
+
         // Distribute the field info to all waiting sessions
         foreach (var writer in context.FieldInfoWriters)
         {
@@ -73,33 +82,45 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
         context.FieldInfoWriters.Clear();
     }
 
-    private static void DistributeBallPrediction(ServerContext context, GameState gameState)
+    private static void DistributeBallPrediction(ServerContext context, GameTickPacketT packet)
     {
-        var firstBall = gameState.Balls.Values.FirstOrDefault();
+        var firstBall = packet.Balls.FirstOrDefault();
         if (firstBall is null)
             return;
 
+        (TouchT, uint)? lastTouch = null;
+
+        foreach (var car in packet.Players)
+        {
+            if (car.LastestTouch is TouchT touch && touch.BallIndex == 0)
+            {
+                lastTouch = (touch, car.Team);
+                break;
+            }
+        }
+
         BallPredictionT prediction = BallPredictor.Generate(
             context.PredictionMode,
-            gameState.SecondsElapsed,
-            firstBall
+            packet.GameInfo.SecondsElapsed,
+            firstBall,
+            lastTouch
         );
 
-        foreach (var (writer, _) in context.Sessions.Values)
+        foreach (var (writer, _, _) in context.Sessions.Values)
         {
             SessionMessage message = new SessionMessage.DistributeBallPrediction(prediction);
             writer.TryWrite(message);
         }
     }
 
-    private static void DistributeState(ServerContext context, GameState gameState)
+    private static void DistributeState(ServerContext context, GameTickPacketT packet)
     {
-        context.MatchStarter.MatchEnded = gameState.MatchEnded;
-
-        var gameTickPacket = gameState.ToFlatBuffers();
-        foreach (var (writer, _) in context.Sessions.Values)
+        context.LastTickPacket = packet;
+        foreach (var (writer, _, _) in context.Sessions.Values)
         {
-            SessionMessage message = new SessionMessage.DistributeGameState(gameTickPacket);
+            SessionMessage message = new SessionMessage.DistributeGameState(
+                context.LastTickPacket
+            );
             writer.TryWrite(message);
         }
     }
@@ -107,8 +128,13 @@ internal record DistributeGameState(GameState GameState) : IServerMessage
     public ServerAction Execute(ServerContext context)
     {
         UpdateFieldInfo(context, GameState);
-        DistributeBallPrediction(context, GameState);
-        DistributeState(context, GameState);
+        context.MatchStarter.MatchEnded = GameState.MatchEnded;
+
+        if (Packet is GameTickPacketT packet)
+        {
+            DistributeBallPrediction(context, packet);
+            DistributeState(context, packet);
+        }
 
         return ServerAction.Continue;
     }

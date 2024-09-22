@@ -7,8 +7,11 @@ internal record StartMatch(MatchSettingsT MatchSettings) : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {
-        foreach (var (writer, _) in context.Sessions.Values)
-            writer.TryWrite(new SessionMessage.StopMatch());
+        context.LastTickPacket = null;
+        context.Bridge.TryWrite(new ClearRenders());
+
+        foreach (var (writer, _, _) in context.Sessions.Values)
+            writer.TryWrite(new SessionMessage.StopMatch(false));
 
         if (MatchSettings.MutatorSettings == null)
             MatchSettings.MutatorSettings = new();
@@ -26,7 +29,7 @@ internal record StartMatch(MatchSettingsT MatchSettings) : IServerMessage
         }
 
         // update all sessions with the new rendering and state setting settings
-        foreach (var (writer, _) in context.Sessions.Values)
+        foreach (var (writer, _, _) in context.Sessions.Values)
         {
             SessionMessage render = new SessionMessage.RendersAllowed(
                 MatchSettings.EnableRendering

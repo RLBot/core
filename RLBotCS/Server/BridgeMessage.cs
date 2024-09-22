@@ -85,6 +85,7 @@ internal record SpawnBot(
         Loadout loadout = FlatToModel.ToLoadout(Config.Loadout, Config.Team);
 
         context.QueuedMatchCommands = true;
+        context.QueuingCommandsComplete = false;
         ushort commandId = context.MatchCommandSender.AddBotSpawnCommand(
             Config.Name,
             (int)Config.Team,
@@ -102,6 +103,14 @@ internal record SpawnBot(
                 IsBot = true
             }
         );
+    }
+}
+
+internal record MarkQueuingComplete() : IBridgeMessage
+{
+    public void HandleMessage(BridgeContext context)
+    {
+        context.QueuingCommandsComplete = true;
     }
 }
 
@@ -128,15 +137,6 @@ internal record ConsoleCommand(string Command) : IBridgeMessage
     public void HandleMessage(BridgeContext context) => context.QueueConsoleCommand(Command);
 }
 
-internal record SetPaused(bool pause) : IBridgeMessage
-{
-    public void HandleMessage(BridgeContext context)
-    {
-        context.QueuedMatchCommands = true;
-        context.MatchCommandSender.AddSetPausedCommand(pause);
-    }
-}
-
 internal record SpawnMap(MatchSettingsT MatchSettings) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
@@ -156,12 +156,12 @@ internal record FlushMatchCommands() : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
-        if (context.QueuedMatchCommands)
-        {
-            context.MatchCommandSender.Send();
-            context.DelayMatchCommandSend = false;
-            context.QueuedMatchCommands = false;
-        }
+        if (!context.QueuedMatchCommands)
+            return;
+
+        context.MatchCommandSender.Send();
+        context.DelayMatchCommandSend = false;
+        context.QueuedMatchCommands = false;
     }
 }
 
@@ -293,7 +293,7 @@ internal record SetGameState(DesiredGameStateT GameState) : IBridgeMessage
 
             if (car.Physics is DesiredPhysicsT physics)
             {
-                var currentPhysics = context.GameState.GameCars[(ushort)id].Physics;
+                var currentPhysics = context.GameState.GameCars[(uint)i].Physics;
                 var fullState = FlatToModel.DesiredToPhysics(physics, currentPhysics);
 
                 context.MatchCommandSender.AddSetPhysicsCommand((ushort)id, fullState);
@@ -312,8 +312,36 @@ internal record SetGameState(DesiredGameStateT GameState) : IBridgeMessage
     }
 }
 
+internal record EndMatch() : IBridgeMessage
+{
+    public void HandleMessage(BridgeContext context)
+    {
+        context.MatchCommandSender.AddMatchEndCommand();
+        context.MatchCommandSender.Send();
+    }
+}
+
+internal record ClearRenders() : IBridgeMessage
+{
+    public void HandleMessage(BridgeContext context)
+    {
+        context.QuickChat.ClearChats();
+        context.PerfMonitor.ClearAll();
+        context.RenderingMgmt.ClearAllRenders(context.MatchCommandSender);
+    }
+}
+
 internal record ShowQuickChat(MatchCommT MatchComm) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context) =>
         context.QuickChat.AddChat(MatchComm, context.GameState.SecondsElapsed);
+}
+
+internal record AddPerfSample(uint Index, bool GotInput) : IBridgeMessage
+{
+    public void HandleMessage(BridgeContext context)
+    {
+        if (context.GameState.GameCars.TryGetValue(Index, out var car))
+            context.PerfMonitor.AddSample(car.Name, GotInput);
+    }
 }

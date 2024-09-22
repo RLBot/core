@@ -47,6 +47,7 @@ public class FlatbufferTest
             scriptConfigurations.Add(
                 new ScriptConfigurationT()
                 {
+                    Name = RandomString(64),
                     Location = RandomString(64),
                     RunCommand = RandomString(64),
                 }

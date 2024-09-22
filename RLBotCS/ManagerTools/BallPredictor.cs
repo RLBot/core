@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using Bridge.Packet;
 using rlbot.flat;
 
 namespace RLBotCS.ManagerTools;
@@ -62,7 +61,7 @@ public static partial class BallPredictor
     [LibraryImport("rl_ball_sym", EntryPoint = "free_ball_slices")]
     private static unsafe partial void FreeBallSlices(BallSlice* slices, ushort ticks);
 
-    private static Vec3 ToVec3(Bridge.Models.Phys.Vector3 vec) => new(vec.X, vec.Y, vec.Z);
+    private static Vec3 ToVec3(Vector3T vec) => new(vec.X, vec.Y, vec.Z);
 
     private static Vector3T ToVector3T(Vec3 vec) =>
         new()
@@ -111,7 +110,8 @@ public static partial class BallPredictor
     public static BallPredictionT Generate(
         PredictionMode mode,
         float currentTime,
-        Ball currentBall
+        BallInfoT currentBall,
+        (TouchT, uint)? lastTouch
     )
     {
         BallSlice ball =
@@ -131,20 +131,23 @@ public static partial class BallPredictor
 
         if (mode == PredictionMode.Heatseeker)
         {
-            if (currentBall.LatestTouch.TimeSeconds < float.Epsilon)
+            if (lastTouch is (TouchT, uint) lastestTouch)
+            {
+                if (currentTime - lastestTouch.Item1.GameSeconds < 0.1)
+                {
+                    // Target goal is the opposite of the last touch
+                    SetHeatseekerTarget(lastestTouch.Item2 == 1 ? (byte)0 : (byte)1);
+                }
+                else if (GetHeatseekerTargetY() == 0 || MathF.Abs(ball.Location.Y) >= 4820)
+                {
+                    // We're very likely to hit a wall that will redirect the ball towards the other goal
+                    SetHeatseekerTarget(ball.LinearVelocity.Y < 0 ? (byte)1 : (byte)0);
+                }
+            }
+            else
             {
                 // A goal happened, we're in kickoff
                 ResetHeatseekerTarget();
-            }
-            else if (currentTime - currentBall.LatestTouch.TimeSeconds < 0.1)
-            {
-                // Target goal is the opposite of the last touch
-                SetHeatseekerTarget(currentBall.LatestTouch.Team == 1 ? (byte)0 : (byte)1);
-            }
-            else if (GetHeatseekerTargetY() == 0 || MathF.Abs(ball.Location.Y) >= 4820)
-            {
-                // We're very likely to hit a wall that will redirect the ball towards the other goal
-                SetHeatseekerTarget(ball.LinearVelocity.Y < 0 ? (byte)1 : (byte)0);
             }
         }
 

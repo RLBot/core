@@ -18,6 +18,7 @@ internal static class FlatToCommand
             GameMode.Rumble => "?game=TAGame.GameInfo_Items_TA",
             GameMode.Heatseeker => "?game=TAGame.GameInfo_GodBall_TA",
             GameMode.Gridiron => "?game=TAGame.GameInfo_Football_TA",
+            GameMode.Knockout => "?game=TAGame.GameInfo_KnockOut_TA",
             _ => throw new ArgumentOutOfRangeException(nameof(gameMode), gameMode, null)
         };
 
@@ -101,6 +102,8 @@ internal static class FlatToCommand
             BallTypeOption.Beachball => "Ball_BeachBall",
             BallTypeOption.Anniversary => "Ball_Anniversary",
             BallTypeOption.Haunted => "Ball_Haunted",
+            BallTypeOption.Ekin => "Ball_Ekin",
+            BallTypeOption.SpookyCube => "Ball_SpookyCube",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
         };
 
@@ -113,6 +116,7 @@ internal static class FlatToCommand
             BallWeightOption.Super_Light => "SuperLightBall",
             BallWeightOption.Curve_Ball => "MagnusBall",
             BallWeightOption.Beach_Ball_Curve => "MagnusBeachBall",
+            BallWeightOption.Magnus_FutBall => "MagnusFutBallTest",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
         };
 
@@ -121,6 +125,7 @@ internal static class FlatToCommand
         {
             BallSizeOption.Default => "",
             BallSizeOption.Small => "SmallBall",
+            BallSizeOption.Medium => "MediumBall",
             BallSizeOption.Large => "BigBall",
             BallSizeOption.Gigantic => "GiantBall",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
@@ -133,6 +138,7 @@ internal static class FlatToCommand
             BallBouncinessOption.Low => "LowBounciness",
             BallBouncinessOption.High => "HighBounciness",
             BallBouncinessOption.Super_High => "SuperBounciness",
+            BallBouncinessOption.LowishBounciness => "LowishBounciness",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
         };
 
@@ -160,6 +166,7 @@ internal static class FlatToCommand
             RumbleOption.Spike_Rush => "ItemsModeRugby",
             RumbleOption.Haunted_Ball_Beam => "ItemsModeHauntedBallBeam",
             RumbleOption.Tactical => "ItemsModeSelection",
+            RumbleOption.BatmanRumble => "ItemsMode_BM",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
         };
 
@@ -169,6 +176,7 @@ internal static class FlatToCommand
             BoostStrengthOption.One => "",
             BoostStrengthOption.OneAndAHalf => "BoostMultiplier1_5x",
             BoostStrengthOption.Two => "BoostMultiplier2x",
+            BoostStrengthOption.Five => "BoostMultiplier5x",
             BoostStrengthOption.Ten => "BoostMultiplier10x",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
         };
@@ -205,6 +213,31 @@ internal static class FlatToCommand
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
         };
 
+    private static string MapMaxTime(MaxTimeOption option) =>
+        option switch
+        {
+            MaxTimeOption.Default => "",
+            MaxTimeOption.Eleven_Minutes => "MaxTime11Minutes",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
+        };
+
+    private static string MapGameEvent(GameEventOption option) =>
+        option switch
+        {
+            GameEventOption.Default => "",
+            GameEventOption.Rugby => "RugbyGameEventRules",
+            GameEventOption.Haunted => "HauntedGameEventRules",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
+        };
+
+    private static string MapAudio(AudioOption option) =>
+        option switch
+        {
+            AudioOption.Default => "",
+            AudioOption.Haunted => "HauntedAudio",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
+        };
+
     private static string GetOption(string option)
     {
         if (option != "")
@@ -231,6 +264,9 @@ internal static class FlatToCommand
 
         // Parse game mode
         command += MapGameMode(matchSettings.GameMode);
+
+        if (matchSettings.SkipReplays)
+            command += "?noreplay";
 
         // Whether to or not to skip the kickoff countdown
         if (!matchSettings.InstantStart)
@@ -262,6 +298,9 @@ internal static class FlatToCommand
         command += GetOption(MapGravity(mutatorSettings.GravityOption));
         command += GetOption(MapDemolish(mutatorSettings.DemolishOption));
         command += GetOption(MapRespawnTime(mutatorSettings.RespawnTimeOption));
+        command += GetOption(MapMaxTime(mutatorSettings.MaxTimeOption));
+        command += GetOption(MapGameEvent(mutatorSettings.GameEventOption));
+        command += GetOption(MapAudio(mutatorSettings.AudioOption));
 
         return command;
     }

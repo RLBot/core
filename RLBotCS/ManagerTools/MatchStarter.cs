@@ -23,26 +23,24 @@ internal class MatchStarter(
 
     private bool _communicationStarted;
     private bool _hasEverLoadedMap;
-    private bool _needsSpawnBots;
+    private bool _needsSpawnCars;
 
-    public bool MatchEnded = false;
+    public bool HasSpawnedMap;
+    public bool MatchEnded;
 
     public MatchSettingsT? GetMatchSettings() => _deferredMatchSettings ?? _matchSettings;
 
     public void SetNullMatchSettings()
     {
-        _matchSettings = null;
-        _deferredMatchSettings = null;
+        if (!_needsSpawnCars)
+            _matchSettings = null;
     }
 
     public void StartCommunication()
     {
         _communicationStarted = true;
-        if (_deferredMatchSettings != null)
-        {
-            MakeMatch(_deferredMatchSettings);
-            _deferredMatchSettings = null;
-        }
+        if (_deferredMatchSettings is MatchSettingsT matchSettings)
+            MakeMatch(matchSettings);
     }
 
     public void StartMatch(MatchSettingsT matchSettings)
@@ -50,7 +48,11 @@ internal class MatchStarter(
         if (!LaunchManager.IsRocketLeagueRunning())
         {
             _communicationStarted = false;
-            LaunchManager.LaunchRocketLeague(matchSettings.Launcher, gamePort);
+            LaunchManager.LaunchRocketLeague(
+                matchSettings.Launcher,
+                matchSettings.GamePath,
+                gamePort
+            );
         }
 
         if (!_communicationStarted)
@@ -63,18 +65,25 @@ internal class MatchStarter(
         MakeMatch(matchSettings);
     }
 
-    public void MapSpawned()
+    public void MapSpawned(string MapName)
     {
-        if (_matchSettings != null)
-        {
-            bridge.TryWrite(new SetMutators(_matchSettings.MutatorSettings));
+        Logger.LogInformation("Got map info for " + MapName);
+        _hasEverLoadedMap = true;
+        HasSpawnedMap = true;
 
-            if (_needsSpawnBots)
-            {
-                SpawnCars(_matchSettings);
-                bridge.TryWrite(new FlushMatchCommands());
-                _needsSpawnBots = false;
-            }
+        if (!_needsSpawnCars)
+            return;
+
+        if (_deferredMatchSettings is MatchSettingsT matchSettings)
+        {
+            bridge.TryWrite(new SetMutators(matchSettings.MutatorSettings));
+
+            bool spawned = SpawnCars(matchSettings);
+            if (!spawned)
+                return;
+
+            _matchSettings = matchSettings;
+            _deferredMatchSettings = null;
         }
     }
 
@@ -104,6 +113,9 @@ internal class MatchStarter(
             playerConfig.Location ??= "";
             playerConfig.RunCommand ??= "";
 
+            if (playerConfig.Variety.Type != PlayerClass.RLBot)
+                continue;
+
             if (playerConfig.Hivemind)
             {
                 // only add one process per team
@@ -132,15 +144,44 @@ internal class MatchStarter(
             }
         }
 
+        foreach (var scriptConfig in matchSettings.ScriptConfigurations)
+        {
+            // De-duplicating similar names, Overwrites original value
+            string scriptName = scriptConfig.Name ?? "";
+            if (playerNames.TryGetValue(scriptName, out int value))
+            {
+                playerNames[scriptName] = ++value;
+                scriptConfig.Name = scriptName + $" ({value})";
+            }
+            else
+            {
+                playerNames[scriptName] = 0;
+                scriptConfig.Name = scriptName;
+            }
+
+            if (scriptConfig.SpawnId == 0)
+                scriptConfig.SpawnId = scriptConfig.Name.GetHashCode();
+
+            scriptConfig.Location ??= "";
+            scriptConfig.RunCommand ??= "";
+        }
+
         matchSettings.GamePath ??= "";
         matchSettings.GameMapUpk ??= "";
 
         _connectionReadies = 0;
-        _expectedConnections = 0;
+        _expectedConnections = matchSettings.ScriptConfigurations.Count + processes.Count;
+
         if (matchSettings.AutoStartBots)
         {
             LaunchManager.LaunchBots(processes, rlbotSocketsPort);
             LaunchManager.LaunchScripts(matchSettings.ScriptConfigurations, rlbotSocketsPort);
+        }
+        else
+        {
+            Logger.LogWarning(
+                "AutoStartBots is disabled in match settings. Bots & scripts will not be started automatically!"
+            );
         }
 
         LoadMatch(matchSettings);
@@ -153,23 +194,24 @@ internal class MatchStarter(
 
         var shouldSpawnNewMap = matchSettings.ExistingMatchBehavior switch
         {
-            ExistingMatchBehavior.Continue_And_Spawn => !_hasEverLoadedMap || MatchEnded,
-            ExistingMatchBehavior.Restart_If_Different => IsDifferentFromLast(matchSettings),
+            ExistingMatchBehavior.Continue_And_Spawn => !_hasEverLoadedMap,
+            ExistingMatchBehavior.Restart_If_Different
+                => MatchEnded || IsDifferentFromLast(matchSettings),
             _ => true
         };
 
+        _needsSpawnCars = true;
         if (shouldSpawnNewMap)
         {
-            _needsSpawnBots = true;
             _hasEverLoadedMap = true;
+            HasSpawnedMap = false;
+            _matchSettings = null;
+            _deferredMatchSettings = matchSettings;
 
             bridge.TryWrite(new SpawnMap(matchSettings));
         }
         else
         {
-            // No need to load a new map, just spawn the players.
-            SpawnCars(matchSettings);
-
             // despawn old bots that aren't in the new match
             if (_matchSettings is MatchSettingsT lastMatchSettings)
             {
@@ -183,14 +225,20 @@ internal class MatchStarter(
 
                 if (toDespawn.Count > 0)
                 {
+                    Logger.LogInformation(
+                        "Despawning old players: " + string.Join(", ", toDespawn)
+                    );
                     bridge.TryWrite(new RemoveOldPlayers(toDespawn));
                 }
             }
 
+            // No need to load a new map, just spawn the players.
+            SpawnCars(matchSettings, true);
             bridge.TryWrite(new FlushMatchCommands());
-        }
 
-        _matchSettings = matchSettings;
+            _matchSettings = matchSettings;
+            _deferredMatchSettings = null;
+        }
     }
 
     private bool IsDifferentFromLast(MatchSettingsT matchSettings)
@@ -243,12 +291,34 @@ internal class MatchStarter(
             || lastMutators.RespawnTimeOption != mutators.RespawnTimeOption;
     }
 
-    private void SpawnCars(MatchSettingsT matchSettings)
+    private bool SpawnCars(MatchSettingsT matchSettings, bool force = false)
     {
+        // ensure this function is only called once
+        // and only if the map has been spawned
+        if (!_needsSpawnCars || !HasSpawnedMap)
+            return false;
+
+        bool doSpawning =
+            force
+            || !matchSettings.AutoStartBots
+            || _expectedConnections <= _connectionReadies;
+        Logger.LogInformation(
+            "Spawning cars: "
+                + _expectedConnections
+                + " expected connections, "
+                + _connectionReadies
+                + " connection readies, "
+                + (doSpawning ? "spawning" : "not spawning")
+        );
+
+        if (!doSpawning)
+            return false;
+
+        _needsSpawnCars = false;
+
         PlayerConfigurationT? humanConfig = null;
         int numPlayers = matchSettings.PlayerConfigurations.Count;
         int indexOffset = 0;
-        _expectedConnections = matchSettings.ScriptConfigurations.Count;
 
         for (int i = 0; i < numPlayers; i++)
         {
@@ -263,7 +333,6 @@ internal class MatchStarter(
                             + " with spawn id "
                             + playerConfig.SpawnId
                     );
-                    _expectedConnections++;
 
                     bridge.TryWrite(
                         new SpawnBot(
@@ -278,11 +347,12 @@ internal class MatchStarter(
                 case PlayerClass.Psyonix:
                     var skillEnum = playerConfig.Variety.AsPsyonix().BotSkill switch
                     {
-                        < 0 => BotSkill.Intro,
-                        < 0.5f => BotSkill.Easy,
-                        < 1 => BotSkill.Medium,
+                        PsyonixSkill.Beginner => BotSkill.Intro,
+                        PsyonixSkill.Rookie => BotSkill.Easy,
+                        PsyonixSkill.Pro => BotSkill.Medium,
                         _ => BotSkill.Hard
                     };
+
                     bridge.TryWrite(
                         new SpawnBot(playerConfig, skillEnum, (uint)(i - indexOffset), false)
                     );
@@ -310,34 +380,79 @@ internal class MatchStarter(
             }
         }
 
+        // If no human was requested for the match,
+        // then make the human spectate so we can start the match
         if (humanConfig is null)
-        {
-            // If no human was requested for the match,
-            // then make the human spectate so we can start the match
             bridge.TryWrite(new ConsoleCommand("spectate"));
-        }
         else
-        {
             bridge.TryWrite(new SpawnHuman(humanConfig, (uint)(numPlayers - indexOffset)));
+
+        bridge.TryWrite(new MarkQueuingComplete());
+
+        return true;
+    }
+
+    public void AddLoadout(PlayerLoadoutT loadout, int spawnId)
+    {
+        if (_matchSettings is null)
+        {
+            Logger.LogError("Match settings not loaded yet.");
+            return;
         }
 
-        // If bots still need to be spawned, pause the game
-        if (
-            matchSettings.AutoStartBots
-            && _expectedConnections != 0
-            && _expectedConnections > _connectionReadies
-        )
-            bridge.TryWrite(new SetPaused(true));
+        if (!_needsSpawnCars)
+        {
+            // todo: when the match is already running,
+            // respawn the car with the new loadout in the same position
+            Logger.LogError(
+                "Match already started, can't add loadout - feature has not implemented!"
+            );
+            return;
+        }
+
+        var player = _matchSettings.PlayerConfigurations.Find(p => p.SpawnId == spawnId);
+        if (player is null)
+        {
+            Logger.LogError($"Player with spawn id {spawnId} not found to add loadout to.");
+            return;
+        }
+
+        if (player.Loadout is not null)
+        {
+            Logger.LogError(
+                $"Player \"{player.Name}\" with spawn id {spawnId} already has a loadout."
+            );
+            return;
+        }
+
+        player.Loadout = loadout;
     }
 
     public void IncrementConnectionReadies()
     {
         _connectionReadies++;
 
-        if (_connectionReadies == _expectedConnections)
+        Logger.LogInformation(
+            "Connection readies: "
+                + _connectionReadies
+                + " / "
+                + _expectedConnections
+                + "; needs spawn cars: "
+                + _needsSpawnCars
+        );
+
+        if (
+            _deferredMatchSettings is MatchSettingsT matchSettings
+            && _connectionReadies >= _expectedConnections
+            && _needsSpawnCars
+        )
         {
-            bridge.TryWrite(new SetPaused(false));
-            bridge.TryWrite(new FlushMatchCommands());
+            bool spawned = SpawnCars(matchSettings);
+            if (!spawned)
+                return;
+
+            _matchSettings = matchSettings;
+            _deferredMatchSettings = null;
         }
     }
 }

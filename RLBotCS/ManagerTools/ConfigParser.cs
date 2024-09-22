@@ -191,30 +191,29 @@ public static class ConfigParser
 
     private static string GetRunCommand(TomlTable runnableSettings, List<string> missingValues)
     {
-        string? runCommandWindows = ParseString(
-            runnableSettings,
-            "run_command",
-            null,
-            missingValues
-        );
-        string? runCommandLinux = ParseString(
-            runnableSettings,
-            "run_command_linux",
-            null,
-            missingValues
-        );
+        string runCommandWindows =
+            ParseString(runnableSettings, "run_command", null, missingValues) ?? "";
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            return runCommandWindows ?? "";
+            return runCommandWindows;
 
-        if (runCommandLinux != null)
+        string runCommandLinux =
+            ParseString(runnableSettings, "run_command_linux", null, missingValues) ?? "";
+
+        if (runCommandLinux != "")
             return runCommandLinux;
 
-        // TODO:
-        // We're currently on Linux but there's no Linux-specific run command
-        // Try running the Windows command under Wine instead
-        Logger.LogError("No Linux-specific run command found for script!");
-        return runCommandWindows ?? "";
+        if (runCommandWindows != "")
+        {
+            // TODO:
+            // We're currently on Linux but there's no Linux-specific run command
+            // Try running the Windows command under Wine instead
+            Logger.LogError("No Linux-specific run command found for script!");
+            return runCommandWindows;
+        }
+
+        // No run command found
+        return "";
     }
 
     private static ScriptConfigurationT GetScriptConfig(
@@ -237,6 +236,7 @@ public static class ConfigParser
         ScriptConfigurationT scriptConfig =
             new()
             {
+                Name = ParseString(scriptSettings, "name", "Unnamed Script", missingValues),
                 Location = CombinePaths(
                     tomlParent,
                     ParseString(scriptSettings, "location", "", missingValues)
@@ -272,9 +272,15 @@ public static class ConfigParser
                     PlayerClassUnion.FromPsyonix(
                         new PsyonixT
                         {
-                            BotSkill = ParseFloat(table, "skill", 1.0f, missingValues)
+                            BotSkill = ParseEnum(
+                                table,
+                                "skill",
+                                PsyonixSkill.AllStar,
+                                missingValues
+                            )
                         }
                     ),
+                    matchConfigPath,
                     missingValues
                 ),
             PlayerClass.PartyMember
@@ -297,21 +303,54 @@ public static class ConfigParser
         };
 
     private static PlayerConfigurationT GetPsyonixConfig(
-        TomlTable table,
+        TomlTable playerTable,
         PlayerClassUnion classUnion,
+        string matchConfigPath,
         List<string> missingValues
     )
     {
-        var team = ParseUint(table, "team", 0, missingValues);
-        var (name, loadout) = PsyonixLoadouts.GetNext((int)team);
+        string? matchConfigParent = Path.GetDirectoryName(matchConfigPath);
+
+        string? playerTomlPath = CombinePaths(
+            matchConfigParent,
+            ParseString(playerTable, "config", null, missingValues)
+        );
+        TomlTable playerToml = GetTable(playerTomlPath);
+        string? tomlParent = Path.GetDirectoryName(playerTomlPath);
+
+        TomlTable playerSettings = ParseTable(playerToml, "settings", missingValues);
+
+        var team = ParseUint(playerTable, "team", 0, missingValues);
+        string? name = ParseString(playerSettings, "name", null, missingValues);
+        PlayerLoadoutT? loadout = GetPlayerLoadout(playerSettings, tomlParent, missingValues);
+
+        if (name == null)
+        {
+            (name, loadout) = PsyonixLoadouts.GetNext((int)team);
+        }
+        else if (PsyonixLoadouts.GetFromName(name, (int)team) is PlayerLoadoutT newLoadout)
+        {
+            loadout = newLoadout;
+        }
+
+        var runCommand = GetRunCommand(playerSettings, missingValues);
+        var location = "";
+
+        if (runCommand != "")
+        {
+            location = CombinePaths(
+                tomlParent,
+                ParseString(playerSettings, "location", "", missingValues)
+            );
+        }
 
         return new()
         {
             Variety = classUnion,
             Team = team,
             Name = name,
-            Location = "",
-            RunCommand = "",
+            Location = location,
+            RunCommand = runCommand,
             Loadout = loadout,
         };
     }
@@ -324,7 +363,7 @@ public static class ConfigParser
     {
         string? loadoutTomlPath = CombinePaths(
             tomlParent,
-            ParseString(playerTable, "looks_config", null, missingValues)
+            ParseString(playerTable, "loadout_config", null, missingValues)
         );
 
         if (loadoutTomlPath == null)
@@ -508,6 +547,19 @@ public static class ConfigParser
                 RespawnTimeOption.Three_Seconds,
                 missingValues
             ),
+            MaxTimeOption = ParseEnum(
+                mutatorTable,
+                "max_time",
+                MaxTimeOption.Default,
+                missingValues
+            ),
+            GameEventOption = ParseEnum(
+                mutatorTable,
+                "game_event",
+                GameEventOption.Default,
+                missingValues
+            ),
+            AudioOption = ParseEnum(mutatorTable, "audio", AudioOption.Default, missingValues),
         };
 
     public static MatchSettingsT GetMatchSettings(string path)
@@ -562,12 +614,7 @@ public static class ConfigParser
                 true,
                 missingValues["rlbot"]
             ),
-            GamePath = ParseString(
-                rlbotTable,
-                "rocket_league_exe_path",
-                "",
-                missingValues["rlbot"]
-            ),
+            GamePath = ParseString(rlbotTable, "game_path", "", missingValues["rlbot"]),
             GameMode = ParseEnum(
                 matchTable,
                 "game_mode",

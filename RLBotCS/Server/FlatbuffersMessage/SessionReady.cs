@@ -1,10 +1,14 @@
 namespace RLBotCS.Server.FlatbuffersMessage;
 
-internal record SessionReady() : IServerMessage
+internal record SessionReady(bool incrConnections, int ClientId, int SpawnId) : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {
-        context.MatchStarter.IncrementConnectionReadies();
+        if (incrConnections)
+            context.MatchStarter.IncrementConnectionReadies();
+
+        var (writer, session, _) = context.Sessions[ClientId];
+        context.Sessions[ClientId] = (writer, session, SpawnId);
 
         return ServerAction.Continue;
     }

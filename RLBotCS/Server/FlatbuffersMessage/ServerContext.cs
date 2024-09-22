@@ -20,7 +20,7 @@ internal class ServerContext(
         incomingMessages.Writer;
     public Dictionary<
         int,
-        (ChannelWriter<SessionMessage> writer, Thread thread)
+        (ChannelWriter<SessionMessage> writer, Thread thread, int spawnId)
     > Sessions { get; } = [];
 
     public FieldInfoT? FieldInfo { get; set; }
@@ -34,4 +34,6 @@ internal class ServerContext(
     public PredictionMode PredictionMode { get; set; }
     public bool StateSettingIsEnabled = false;
     public bool RenderingIsEnabled = false;
+
+    public GameTickPacketT? LastTickPacket { get; set; }
 }
