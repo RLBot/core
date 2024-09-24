@@ -157,7 +157,7 @@ internal static class GameStateToFlat
                         Velocity = car.Physics.Velocity.ToVector3T(),
                         AngularVelocity = car.Physics.AngularVelocity.ToVector3T()
                     },
-                    LastestTouch = lastTouch,
+                    LatestTouch = lastTouch,
                     AirState = airState,
                     DodgeTimeout = car.DodgeTimeout,
                     DemolishedTimeout = car.DemolishedTimeout,

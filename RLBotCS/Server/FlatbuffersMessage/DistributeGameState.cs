@@ -92,7 +92,7 @@ internal record DistributeGameState(GameState GameState, GameTickPacketT? Packet
 
         foreach (var car in packet.Players)
         {
-            if (car.LastestTouch is TouchT touch && touch.BallIndex == 0)
+            if (car.LatestTouch is TouchT touch && touch.BallIndex == 0)
             {
                 lastTouch = (touch, car.Team);
                 break;
