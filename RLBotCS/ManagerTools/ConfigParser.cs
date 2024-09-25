@@ -309,6 +309,14 @@ public static class ConfigParser
         List<string> missingValues
     )
     {
+        string? nameOverride = ParseString(playerTable, "name", null, missingValues);
+        string? loadoutPathOverride = ParseString(
+            playerTable,
+            "loadout_config",
+            null,
+            missingValues
+        );
+
         string? matchConfigParent = Path.GetDirectoryName(matchConfigPath);
 
         string? playerTomlPath = CombinePaths(
@@ -321,8 +329,16 @@ public static class ConfigParser
         TomlTable playerSettings = ParseTable(playerToml, "settings", missingValues);
 
         var team = ParseUint(playerTable, "team", 0, missingValues);
-        string? name = ParseString(playerSettings, "name", null, missingValues);
-        PlayerLoadoutT? loadout = GetPlayerLoadout(playerSettings, tomlParent, missingValues);
+        string? name =
+            nameOverride ?? ParseString(playerSettings, "name", null, missingValues);
+        PlayerLoadoutT? loadout = GetPlayerLoadout(
+            playerSettings,
+            loadoutPathOverride,
+            tomlParent,
+            missingValues
+        );
+
+        Console.WriteLine($"Name: {name}, Loadout: {loadout}");
 
         if (name == null)
         {
@@ -332,6 +348,8 @@ public static class ConfigParser
         {
             loadout = newLoadout;
         }
+
+        Console.WriteLine($"Name: {name}, Loadout: {loadout}");
 
         var runCommand = GetRunCommand(playerSettings, missingValues);
         var location = "";
@@ -357,14 +375,17 @@ public static class ConfigParser
 
     private static PlayerLoadoutT? GetPlayerLoadout(
         TomlTable playerTable,
+        string? pathOverride,
         string? tomlParent,
         List<string> missingValues
     )
     {
-        string? loadoutTomlPath = CombinePaths(
-            tomlParent,
-            ParseString(playerTable, "loadout_config", null, missingValues)
-        );
+        string? loadoutTomlPath =
+            pathOverride
+            ?? CombinePaths(
+                tomlParent,
+                ParseString(playerTable, "loadout_config", null, missingValues)
+            );
 
         if (loadoutTomlPath == null)
             return null;
@@ -429,6 +450,14 @@ public static class ConfigParser
          *  "teamLoadout" is either the "blue_loadout" or "orange_loadout" in bot_looks.toml, contains player items
          *  "teamPaint" is the "paint" table within the loadout tables, contains paint colors of player items
          */
+        string? nameOverride = ParseString(rlbotPlayerTable, "name", null, missingValues);
+        string? loadoutPathOverride = ParseString(
+            rlbotPlayerTable,
+            "loadout_config",
+            null,
+            missingValues
+        );
+
         string? matchConfigParent = Path.GetDirectoryName(matchConfigPath);
 
         string? playerTomlPath = CombinePaths(
@@ -444,13 +473,20 @@ public static class ConfigParser
         {
             Variety = classUnion,
             Team = ParseUint(rlbotPlayerTable, "team", 0, missingValues),
-            Name = ParseString(playerSettings, "name", "Unnamed RLBot", missingValues),
+            Name =
+                nameOverride
+                ?? ParseString(playerSettings, "name", "Unnamed RLBot", missingValues),
             Location = CombinePaths(
                 tomlParent,
                 ParseString(playerSettings, "location", "", missingValues)
             ),
             RunCommand = GetRunCommand(playerSettings, missingValues),
-            Loadout = GetPlayerLoadout(playerSettings, tomlParent, missingValues),
+            Loadout = GetPlayerLoadout(
+                playerSettings,
+                loadoutPathOverride,
+                tomlParent,
+                missingValues
+            ),
             Hivemind = ParseBool(playerSettings, "hivemind", false, missingValues),
         };
     }
