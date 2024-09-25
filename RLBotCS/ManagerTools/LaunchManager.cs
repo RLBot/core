@@ -18,14 +18,16 @@ internal static class LaunchManager
 
     private static readonly ILogger Logger = Logging.GetLogger("LaunchManager");
 
-    public static string? GetGameArgsAndKill()
+    public static string? GetGameArgs(bool kill)
     {
         Process[] candidates = Process.GetProcessesByName("RocketLeague");
 
         foreach (var candidate in candidates)
         {
             string args = GetProcessArgs(candidate);
-            candidate.Kill();
+            if (kill)
+                candidate.Kill();
+
             return args;
         }
 
@@ -222,24 +224,33 @@ internal static class LaunchManager
                     rocketLeague.Start();
                     break;
                 case rlbot.flat.Launcher.Epic:
-                    // we need a hack to launch the game properly
+                    bool nonRLBotGameRunning = IsRocketLeagueRunning();
 
-                    // start the game
-                    Process launcher = new();
-                    launcher.StartInfo.FileName = "cmd.exe";
-                    launcher.StartInfo.Arguments =
-                        "/c start \"\" \"com.epicgames.launcher://apps/9773aa1aa54f4f7b80e44bef04986cea%3A530145df28a24424923f5828cc9031a1%3ASugar?action=launch&silent=true\"";
-                    launcher.Start();
+                    // we don't need to start the game because there's another instance of non-rlbot rocket league open
+                    if (!nonRLBotGameRunning)
+                    {
+                        // we need a hack to launch the game properly
+                        // start the game
+                        Process launcher = new();
+                        launcher.StartInfo.FileName = "cmd.exe";
+                        launcher.StartInfo.Arguments =
+                            "/c start \"\" \"com.epicgames.launcher://apps/9773aa1aa54f4f7b80e44bef04986cea%3A530145df28a24424923f5828cc9031a1%3ASugar?action=launch&silent=true\"";
+                        launcher.Start();
+
+                        // wait for it to start
+                        Thread.Sleep(1000);
+                    }
 
                     Console.WriteLine("Waiting for Rocket League path details...");
+                    string? args = null;
 
                     // get the game path & login args, the quickly kill the game
                     // todo: add max number of retries
-                    string? args = null;
                     while (args is null)
                     {
+                        // don't kill the game if it was already running, and not for RLBot
+                        args = GetGameArgs(!nonRLBotGameRunning);
                         Thread.Sleep(1000);
-                        args = GetGameArgsAndKill();
                     }
 
                     if (args is null)
@@ -327,6 +338,23 @@ internal static class LaunchManager
         Process
             .GetProcesses()
             .Any(candidate => candidate.ProcessName.Contains("RocketLeague"));
+
+    public static bool IsRocketLeagueRunningWithArgs()
+    {
+        Process[] candidates = Process.GetProcesses("RocketLeague");
+
+        foreach (var candidate in candidates)
+        {
+            if (!candidate.ProcessName.Contains("RocketLeague"))
+                continue;
+
+            var args = GetProcessArgs(candidate);
+            if (args.Contains("rlbot"))
+                return true;
+        }
+
+        return false;
+    }
 
     private static string GetWindowsSteamPath()
     {

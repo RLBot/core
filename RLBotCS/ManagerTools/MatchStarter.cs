@@ -45,7 +45,7 @@ internal class MatchStarter(
 
     public void StartMatch(MatchSettingsT matchSettings)
     {
-        if (!LaunchManager.IsRocketLeagueRunning())
+        if (!LaunchManager.IsRocketLeagueRunningWithArgs())
         {
             _communicationStarted = false;
             LaunchManager.LaunchRocketLeague(
