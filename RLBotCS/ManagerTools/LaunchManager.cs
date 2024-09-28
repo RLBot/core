@@ -341,12 +341,15 @@ internal static class LaunchManager
 
     public static bool IsRocketLeagueRunningWithArgs()
     {
-        Process[] candidates = Process.GetProcesses("RocketLeague");
+        Process[] candidates = Process.GetProcesses();
 
         foreach (var candidate in candidates)
         {
             if (!candidate.ProcessName.Contains("RocketLeague"))
                 continue;
+
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return true;
 
             var args = GetProcessArgs(candidate);
             if (args.Contains("rlbot"))
