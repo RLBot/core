@@ -197,6 +197,9 @@ internal static class GameStateToFlat
                         Handbrake = car.LastInput.Handbrake
                     },
                     LastSpectated = car.LastSpectated,
+                    HasJumped = car.HasJumped,
+                    HasDoubleJumped = car.HasDoubleJumped,
+                    HasFlipped = car.HasFlipped,
                 }
             );
         }
