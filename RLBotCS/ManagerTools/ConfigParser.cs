@@ -333,6 +333,7 @@ public static class ConfigParser
         PlayerLoadoutT? loadout = GetPlayerLoadout(
             playerSettings,
             loadoutPathOverride,
+            team,
             tomlParent,
             missingValues
         );
@@ -375,6 +376,7 @@ public static class ConfigParser
     private static PlayerLoadoutT? GetPlayerLoadout(
         TomlTable playerTable,
         string? pathOverride,
+        uint team,
         string? tomlParent,
         List<string> missingValues
     )
@@ -391,10 +393,7 @@ public static class ConfigParser
 
         TomlTable loadoutToml = GetTable(loadoutTomlPath);
 
-        string teamLoadoutString =
-            ParseInt(playerTable, "team", 0, missingValues) == 0
-                ? "blue_loadout"
-                : "orange_loadout";
+        string teamLoadoutString = team == 0 ? "blue_loadout" : "orange_loadout";
         TomlTable teamLoadout = ParseTable(loadoutToml, teamLoadoutString, missingValues);
         TomlTable teamPaint = ParseTable(teamLoadout, "paint", missingValues);
 
@@ -473,11 +472,12 @@ public static class ConfigParser
             ?? "Unnamed RLBot";
         var groupId =
             ParseString(playerSettings, "group_id", missingValues) ?? $"rlbot/{name}";
+        uint team = ParseUint(rlbotPlayerTable, "team", 0, missingValues);
 
         return new PlayerConfigurationT
         {
             Variety = classUnion,
-            Team = ParseUint(rlbotPlayerTable, "team", 0, missingValues),
+            Team = team,
             Name = name,
             Location = CombinePaths(
                 tomlParent,
@@ -487,6 +487,7 @@ public static class ConfigParser
             Loadout = GetPlayerLoadout(
                 playerSettings,
                 loadoutPathOverride,
+                team,
                 tomlParent,
                 missingValues
             ),
