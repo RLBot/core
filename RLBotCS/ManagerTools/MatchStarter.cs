@@ -40,7 +40,7 @@ internal class MatchStarter(
     {
         _communicationStarted = true;
         if (_deferredMatchSettings is MatchSettingsT matchSettings)
-            MakeMatch(matchSettings);
+            LoadMatch(matchSettings);
     }
 
     public void StartMatch(MatchSettingsT matchSettings)
@@ -55,6 +55,8 @@ internal class MatchStarter(
             );
         }
 
+        PreprocessMatch(matchSettings);
+
         if (!_communicationStarted)
         {
             // Defer the message
@@ -62,7 +64,7 @@ internal class MatchStarter(
             return;
         }
 
-        MakeMatch(matchSettings);
+        LoadMatch(matchSettings);
     }
 
     public void MapSpawned(string MapName)
@@ -87,9 +89,8 @@ internal class MatchStarter(
         }
     }
 
-    private void MakeMatch(MatchSettingsT matchSettings)
+    private void PreprocessMatch(MatchSettingsT matchSettings)
     {
-        Dictionary<string, List<PlayerConfigurationT>> processes = new();
         Dictionary<string, int> playerNames = [];
 
         foreach (var playerConfig in matchSettings.PlayerConfigurations)
@@ -112,36 +113,7 @@ internal class MatchStarter(
 
             playerConfig.Location ??= "";
             playerConfig.RunCommand ??= "";
-
-            if (playerConfig.Variety.Type != PlayerClass.RLBot)
-                continue;
-
-            if (playerConfig.Hivemind)
-            {
-                // only add one process per team
-                // make sure to not accidentally include two bots
-                // with the same names in the same hivemind process
-                string uniqueName =
-                    playerConfig.Location
-                    + "_"
-                    + playerConfig.RunCommand
-                    + "_"
-                    + playerName
-                    + "_"
-                    + playerConfig.Team;
-
-                if (!processes.ContainsKey(uniqueName))
-                {
-                    processes[uniqueName] = new List<PlayerConfigurationT>();
-                }
-
-                // the process needs _all_ the spawn ids
-                processes[uniqueName].Add(playerConfig);
-            }
-            else
-            {
-                processes[playerConfig.Name] = new List<PlayerConfigurationT> { playerConfig };
-            }
+            playerConfig.GroupId ??= "";
         }
 
         foreach (var scriptConfig in matchSettings.ScriptConfigurations)
@@ -164,10 +136,44 @@ internal class MatchStarter(
 
             scriptConfig.Location ??= "";
             scriptConfig.RunCommand ??= "";
+            scriptConfig.GroupId ??= "";
         }
 
         matchSettings.GamePath ??= "";
         matchSettings.GameMapUpk ??= "";
+    }
+
+    private void StartBots(MatchSettingsT matchSettings)
+    {
+        Dictionary<string, PlayerConfigurationT> processes = new();
+
+        foreach (var playerConfig in matchSettings.PlayerConfigurations)
+        {
+            if (playerConfig.Variety.Type != PlayerClass.RLBot)
+                continue;
+
+            if (playerConfig.Hivemind)
+            {
+                // only add one process per team
+                // make sure to not accidentally include two bots
+                // with the same names in the same hivemind process
+                string uniqueName =
+                    playerConfig.Location
+                    + "_"
+                    + playerConfig.RunCommand
+                    + "_"
+                    + playerConfig.Name
+                    + "_"
+                    + playerConfig.Team;
+
+                if (!processes.ContainsKey(uniqueName))
+                    processes[uniqueName] = playerConfig;
+            }
+            else
+            {
+                processes[playerConfig.Name] = playerConfig;
+            }
+        }
 
         _connectionReadies = 0;
         _expectedConnections = matchSettings.ScriptConfigurations.Count + processes.Count;
@@ -183,12 +189,12 @@ internal class MatchStarter(
                 "AutoStartBots is disabled in match settings. Bots & scripts will not be started automatically!"
             );
         }
-
-        LoadMatch(matchSettings);
     }
 
     private void LoadMatch(MatchSettingsT matchSettings)
     {
+        StartBots(matchSettings);
+
         if (matchSettings.AutoSaveReplay)
             bridge.TryWrite(new ConsoleCommand(FlatToCommand.MakeAutoSaveReplayCommand()));
 
@@ -330,8 +336,8 @@ internal class MatchStarter(
                     Logger.LogInformation(
                         "Spawning player "
                             + playerConfig.Name
-                            + " with spawn id "
-                            + playerConfig.SpawnId
+                            + " with group id "
+                            + playerConfig.GroupId
                     );
 
                     bridge.TryWrite(

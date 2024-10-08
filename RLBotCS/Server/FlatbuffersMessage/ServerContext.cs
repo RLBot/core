@@ -25,7 +25,7 @@ internal class ServerContext(
 
     public FieldInfoT? FieldInfo { get; set; }
     public bool ShouldUpdateFieldInfo { get; set; }
-    public List<ChannelWriter<SessionMessage>> MatchSettingsWriters { get; } = [];
+    public List<(ChannelWriter<SessionMessage>, string)> MatchSettingsWriters { get; } = [];
     public List<ChannelWriter<SessionMessage>> FieldInfoWriters { get; } = [];
 
     public MatchStarter MatchStarter { get; } = matchStarter;

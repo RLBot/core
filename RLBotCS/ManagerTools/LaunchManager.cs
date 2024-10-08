@@ -136,13 +136,12 @@ internal static class LaunchManager
     }
 
     public static void LaunchBots(
-        Dictionary<string, List<rlbot.flat.PlayerConfigurationT>> processGroups,
+        Dictionary<string, rlbot.flat.PlayerConfigurationT> processGroups,
         int rlbotSocketsPort
     )
     {
-        foreach (var processGroup in processGroups.Values)
+        foreach (var mainPlayer in processGroups.Values)
         {
-            var mainPlayer = processGroup[0];
             if (mainPlayer.RunCommand == "")
                 continue;
 
@@ -151,11 +150,7 @@ internal static class LaunchManager
             if (mainPlayer.Location != "")
                 botProcess.StartInfo.WorkingDirectory = mainPlayer.Location;
 
-            List<int> spawnIds = processGroup.Select(player => player.SpawnId).ToList();
-            botProcess.StartInfo.EnvironmentVariables["RLBOT_SPAWN_IDS"] = string.Join(
-                ',',
-                spawnIds
-            );
+            botProcess.StartInfo.EnvironmentVariables["RLBOT_GROUP_ID"] = mainPlayer.GroupId;
             botProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
                 rlbotSocketsPort.ToString();
 
@@ -185,8 +180,8 @@ internal static class LaunchManager
             if (script.Location != "")
                 scriptProcess.StartInfo.WorkingDirectory = script.Location;
 
-            scriptProcess.StartInfo.EnvironmentVariables["RLBOT_SPAWN_IDS"] =
-                script.SpawnId.ToString();
+            scriptProcess.StartInfo.EnvironmentVariables["RLBOT_GROUP_ID"] =
+                script.GroupId.ToString();
             scriptProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
                 rlbotSocketsPort.ToString();
 
