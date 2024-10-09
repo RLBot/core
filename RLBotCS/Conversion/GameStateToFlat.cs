@@ -9,6 +9,9 @@ namespace RLBotCS.Conversion;
 
 internal static class GameStateToFlat
 {
+    private static Vector2T ToVector2T(this Bridge.Models.Phys.Vector2 vec) =>
+        new() { X = vec.X, Y = vec.Y };
+
     private static Vector3T ToVector3T(this Bridge.Models.Phys.Vector3 vec) =>
         new()
         {
@@ -199,7 +202,9 @@ internal static class GameStateToFlat
                     LastSpectated = car.LastSpectated,
                     HasJumped = car.HasJumped,
                     HasDoubleJumped = car.HasDoubleJumped,
-                    HasFlipped = car.HasFlipped,
+                    HasDodged = car.HasDodged,
+                    DodgeElapsed = car.DodgeElapsed,
+                    DodgeDir = car.DodgeDir.ToVector2T(),
                 }
             );
         }
