@@ -7,10 +7,6 @@ launcher = "steam"
 auto_start_bots = true
 
 [match]
-# Number of bots/players which will be spawned.
-num_cars = 0
-# Number of scripts which will be spawned.
-num_scripts = 0
 # What game mode the game should load.
 # Accepted values are "Soccer", "Hoops", "Dropshot", "Hockey", "Rumble", "Heatseeker", "Gridiron", "Knockout"
 game_mode = "Soccer"

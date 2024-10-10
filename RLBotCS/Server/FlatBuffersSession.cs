@@ -224,7 +224,7 @@ internal class FlatBuffersSession
 
                 break;
 
-            case DataType.GameTickPacket:
+            case DataType.GamePacket:
                 break;
             case DataType.FieldInfo:
                 break;
@@ -334,12 +334,12 @@ internal class FlatBuffersSession
                 case SessionMessage.DistributeGameState m when _isReady:
                     _messageBuilder.Clear();
                     _messageBuilder.Finish(
-                        GameTickPacket.Pack(_messageBuilder, m.GameState).Value
+                        GamePacket.Pack(_messageBuilder, m.GameState).Value
                     );
 
                     await SendPayloadToClientAsync(
                         TypedPayload.FromFlatBufferBuilder(
-                            DataType.GameTickPacket,
+                            DataType.GamePacket,
                             _messageBuilder
                         )
                     );

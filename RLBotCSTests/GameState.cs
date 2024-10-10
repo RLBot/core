@@ -16,7 +16,7 @@ public class TestGameState
         var packet = new GameState();
 
         FlatBufferBuilder builder = new(1024);
-        var offset = GameTickPacket.Pack(builder, packet.ToFlatBuffers());
+        var offset = GamePacket.Pack(builder, packet.ToFlatBuffers());
         builder.Finish(offset.Value);
 
         packet.BoostPads.Add(

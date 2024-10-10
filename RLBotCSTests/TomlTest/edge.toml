@@ -3,7 +3,6 @@ launcher = "custom"
 game_path = "legendary"
 
 [match]
-num_cars = 1
 game_mode = "Soccer"
 game_map_upk = "Stadium_P"
 

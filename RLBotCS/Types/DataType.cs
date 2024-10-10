@@ -11,7 +11,7 @@ public enum DataType : ushort
     /// Arrives at a high rate according to https://wiki.rlbot.org/botmaking/tick-rate/ except
     /// "desired tick rate" is not relevant here
     /// </summary>
-    GameTickPacket,
+    GamePacket,
 
     /// <summary>
     /// Sent once when a match starts, or when you first connect.

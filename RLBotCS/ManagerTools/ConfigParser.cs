@@ -627,15 +627,12 @@ public static class ConfigParser
 
         PsyonixLoadouts.Reset();
         List<PlayerConfigurationT> playerConfigs = [];
-        // Gets the PlayerConfigT object for the number of players requested
-        int numBots = ParseInt(matchTable, "num_cars", 0, missingValues["match"]);
-        for (int i = 0; i < Math.Min(numBots, players.Count); i++)
-            playerConfigs.Add(GetPlayerConfig(players[i], path, missingValues["cars"]));
+        foreach (var player in players)
+            playerConfigs.Add(GetPlayerConfig(player, path, missingValues["cars"]));
 
         List<ScriptConfigurationT> scriptConfigs = [];
-        int numScripts = ParseInt(matchTable, "num_scripts", 0, missingValues["match"]);
-        for (int i = 0; i < Math.Min(numScripts, scripts.Count); i++)
-            scriptConfigs.Add(GetScriptConfig(scripts[i], path, missingValues["scripts"]));
+        foreach (var script in scripts)
+            scriptConfigs.Add(GetScriptConfig(script, path, missingValues["scripts"]));
 
         var matchSettings = new MatchSettingsT
         {
