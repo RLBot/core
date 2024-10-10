@@ -3,7 +3,7 @@ using Bridge.Packet;
 using Bridge.State;
 using rlbot.flat;
 using CollisionShapeUnion = rlbot.flat.CollisionShapeUnion;
-using GameStateType = Bridge.Models.Message.GameStateType;
+using GameStatus = Bridge.Models.Message.GameStatus;
 
 namespace RLBotCS.Conversion;
 
@@ -40,7 +40,7 @@ internal static class GameStateToFlat
         }
     }
 
-    public static GameTickPacketT ToFlatBuffers(this GameState gameState)
+    public static GamePacketT ToFlatBuffers(this GameState gameState)
     {
         List<BallInfoT> balls = new(gameState.Balls.Count);
         foreach (var ball in gameState.Balls.Values)
@@ -87,17 +87,17 @@ internal static class GameStateToFlat
             balls.Add(new() { Physics = ballPhysics, Shape = collisionShape });
         }
 
-        rlbot.flat.GameStateType gameStateType = gameState.GameStateType switch
+        rlbot.flat.GameStatus gameStatus = gameState.GameStatus switch
         {
-            GameStateType.Inactive => rlbot.flat.GameStateType.Inactive,
-            GameStateType.Countdown => rlbot.flat.GameStateType.Countdown,
-            GameStateType.Kickoff => rlbot.flat.GameStateType.Kickoff,
-            GameStateType.Active => rlbot.flat.GameStateType.Active,
-            GameStateType.GoalScored => rlbot.flat.GameStateType.GoalScored,
-            GameStateType.Replay => rlbot.flat.GameStateType.Replay,
-            GameStateType.Paused => rlbot.flat.GameStateType.Paused,
-            GameStateType.Ended => rlbot.flat.GameStateType.Ended,
-            _ => rlbot.flat.GameStateType.Inactive
+            GameStatus.Inactive => rlbot.flat.GameStatus.Inactive,
+            GameStatus.Countdown => rlbot.flat.GameStatus.Countdown,
+            GameStatus.Kickoff => rlbot.flat.GameStatus.Kickoff,
+            GameStatus.Active => rlbot.flat.GameStatus.Active,
+            GameStatus.GoalScored => rlbot.flat.GameStatus.GoalScored,
+            GameStatus.Replay => rlbot.flat.GameStatus.Replay,
+            GameStatus.Paused => rlbot.flat.GameStatus.Paused,
+            GameStatus.Ended => rlbot.flat.GameStatus.Ended,
+            _ => rlbot.flat.GameStatus.Inactive
         };
 
         GameInfoT gameInfo =
@@ -107,7 +107,7 @@ internal static class GameStateToFlat
                 GameTimeRemaining = gameState.GameTimeRemaining,
                 IsOvertime = gameState.IsOvertime,
                 IsUnlimitedTime = gameState.MatchLength == Bridge.Packet.MatchLength.Unlimited,
-                GameStateType = gameStateType,
+                GameStatus = gameStatus,
                 WorldGravityZ = gameState.WorldGravityZ,
                 GameSpeed = gameState.GameSpeed,
                 FrameNum = gameState.FrameNum
@@ -209,7 +209,7 @@ internal static class GameStateToFlat
             );
         }
 
-        return new GameTickPacketT
+        return new GamePacketT
         {
             Balls = balls,
             GameInfo = gameInfo,

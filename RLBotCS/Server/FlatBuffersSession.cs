@@ -20,7 +20,7 @@ internal record SessionMessage
 
     public record DistributeBallPrediction(BallPredictionT BallPrediction) : SessionMessage;
 
-    public record DistributeGameState(GameTickPacketT GameState) : SessionMessage;
+    public record DistributeGameState(GamePacketT GameState) : SessionMessage;
 
     public record RendersAllowed(bool Allowed) : SessionMessage;
 

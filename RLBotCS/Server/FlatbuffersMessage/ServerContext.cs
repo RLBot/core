@@ -35,5 +35,5 @@ internal class ServerContext(
     public bool StateSettingIsEnabled = false;
     public bool RenderingIsEnabled = false;
 
-    public GameTickPacketT? LastTickPacket { get; set; }
+    public GamePacketT? LastTickPacket { get; set; }
 }

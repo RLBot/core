@@ -5,8 +5,7 @@ using GoalInfo = Bridge.Packet.GoalInfo;
 
 namespace RLBotCS.Server.FlatbuffersMessage;
 
-internal record DistributeGameState(GameState GameState, GameTickPacketT? Packet)
-    : IServerMessage
+internal record DistributeGameState(GameState GameState, GamePacketT? Packet) : IServerMessage
 {
     private static void UpdateFieldInfo(ServerContext context, GameState gameState)
     {
@@ -82,7 +81,7 @@ internal record DistributeGameState(GameState GameState, GameTickPacketT? Packet
         context.FieldInfoWriters.Clear();
     }
 
-    private static void DistributeBallPrediction(ServerContext context, GameTickPacketT packet)
+    private static void DistributeBallPrediction(ServerContext context, GamePacketT packet)
     {
         var firstBall = packet.Balls.FirstOrDefault();
         if (firstBall is null)
@@ -113,7 +112,7 @@ internal record DistributeGameState(GameState GameState, GameTickPacketT? Packet
         }
     }
 
-    private static void DistributeState(ServerContext context, GameTickPacketT packet)
+    private static void DistributeState(ServerContext context, GamePacketT packet)
     {
         context.LastTickPacket = packet;
         foreach (var (writer, _, _) in context.Sessions.Values)
@@ -130,7 +129,7 @@ internal record DistributeGameState(GameState GameState, GameTickPacketT? Packet
         UpdateFieldInfo(context, GameState);
         context.MatchStarter.MatchEnded = GameState.MatchEnded;
 
-        if (Packet is GameTickPacketT packet)
+        if (Packet is GamePacketT packet)
         {
             DistributeBallPrediction(context, packet);
             DistributeState(context, packet);
