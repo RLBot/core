@@ -1,0 +1,15 @@
+[rlbot]
+launcher = "custom"
+game_path = "legendary"
+
+[match]
+game_mode = "Soccer"
+game_map_upk = "Stadium_P"
+
+[mutators]
+match_length = "random stuff"
+
+[[cars]]
+name = "Boomer"
+type = "psyonix"
+skill = "allstar"

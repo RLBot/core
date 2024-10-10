@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotCS.Server.FlatbuffersMessage;
-using GameStateType = Bridge.Models.Message.GameStateType;
+using GameStatus = Bridge.Models.Message.GameStatus;
 
 namespace RLBotCS.Server;
 
@@ -69,15 +69,15 @@ internal class BridgeHandler(
                 if (timeAdvanced)
                     _context.PerfMonitor.AddRLBotSample(deltaTime);
 
-                GameTickPacketT? packet =
+                GamePacketT? packet =
                     timeAdvanced
                     || (
                         _context.ticksSkipped > MAX_TICK_SKIP
                         && (
-                            _context.GameState.GameStateType == GameStateType.Replay
-                            || _context.GameState.GameStateType == GameStateType.Paused
-                            || _context.GameState.GameStateType == GameStateType.Ended
-                            || _context.GameState.GameStateType == GameStateType.Inactive
+                            _context.GameState.GameStatus == GameStatus.Replay
+                            || _context.GameState.GameStatus == GameStatus.Paused
+                            || _context.GameState.GameStatus == GameStatus.Ended
+                            || _context.GameState.GameStatus == GameStatus.Inactive
                         )
                     )
                         ? _context.GameState.ToFlatBuffers()
@@ -100,8 +100,8 @@ internal class BridgeHandler(
                     _context.PerfMonitor.ClearAll();
                 }
                 else if (
-                    _context.GameState.GameStateType != GameStateType.Replay
-                    && _context.GameState.GameStateType != GameStateType.Paused
+                    _context.GameState.GameStatus != GameStatus.Replay
+                    && _context.GameState.GameStatus != GameStatus.Paused
                     && timeAdvanced
                 )
                 {
@@ -109,7 +109,7 @@ internal class BridgeHandler(
                     _context.QuickChat.RenderChats(_context.RenderingMgmt, _context.GameState);
 
                     // only render if we're not in a goal scored or ended state
-                    if (_context.GameState.GameStateType != GameStateType.GoalScored)
+                    if (_context.GameState.GameStatus != GameStatus.GoalScored)
                         _context.PerfMonitor.RenderSummary(
                             _context.RenderingMgmt,
                             _context.GameState,
@@ -126,7 +126,7 @@ internal class BridgeHandler(
                         QueuedMatchCommands: true,
                         QueuingCommandsComplete: true,
                         MatchHasStarted: true,
-                        GameState.GameStateType: GameStateType.Paused
+                        GameState.GameStatus: GameStatus.Paused
                     }
                 )
                 {

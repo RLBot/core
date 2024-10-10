@@ -1,5 +1,6 @@
 using System.Net.Sockets;
 using System.Threading.Channels;
+using Bridge.Conversion;
 using Google.FlatBuffers;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
@@ -15,9 +16,11 @@ internal record SessionMessage
 
     public record FieldInfo(FieldInfoT Info) : SessionMessage;
 
+    public record PlayerIdMaps(uint Team, List<PlayerIdMap> IdMaps) : SessionMessage;
+
     public record DistributeBallPrediction(BallPredictionT BallPrediction) : SessionMessage;
 
-    public record DistributeGameState(GameTickPacketT GameState) : SessionMessage;
+    public record DistributeGameState(GamePacketT GameState) : SessionMessage;
 
     public record RendersAllowed(bool Allowed) : SessionMessage;
 
@@ -50,7 +53,9 @@ internal class FlatBuffersSession
     private bool _stateSettingIsEnabled;
     private bool _renderingIsEnabled;
 
-    private int _spawnId;
+    private string _groupId = string.Empty;
+    private uint _team;
+    private List<PlayerIdMap> _playerIdMaps = new();
     private bool _sessionForceClosed;
     private bool _closed;
 
@@ -92,11 +97,14 @@ internal class FlatBuffersSession
             case DataType.ConnectionSettings when !_connectionEstablished:
                 var readyMsg = ConnectionSettings.GetRootAsConnectionSettings(byteBuffer);
 
+                _groupId = readyMsg.GroupId;
                 _wantsBallPredictions = readyMsg.WantsBallPredictions;
                 _wantsComms = readyMsg.WantsComms;
                 _closeAfterMatch = readyMsg.CloseAfterMatch;
 
-                await _rlbotServer.WriteAsync(new IntroDataRequest(_incomingMessages.Writer));
+                await _rlbotServer.WriteAsync(
+                    new IntroDataRequest(_incomingMessages.Writer, _groupId)
+                );
 
                 _connectionEstablished = true;
                 break;
@@ -104,19 +112,26 @@ internal class FlatBuffersSession
             case DataType.SetLoadout when !_isReady || _stateSettingIsEnabled:
                 var setLoadout = SetLoadout.GetRootAsSetLoadout(byteBuffer).UnPack();
 
-                await _rlbotServer.WriteAsync(
-                    new SpawnLoadout(setLoadout.Loadout, setLoadout.SpawnId)
+                // ensure the provided index is a bot we control,
+                // and map the index to the spawn id
+                PlayerIdMap? idMaps = _playerIdMaps.FirstOrDefault(
+                    idMap => idMap.Index == setLoadout.Index
                 );
+
+                if (idMaps is PlayerIdMap info && info.SpawnId is int spawnId)
+                    await _rlbotServer.WriteAsync(
+                        new SpawnLoadout(setLoadout.Loadout, spawnId)
+                    );
+
                 break;
 
             case DataType.InitComplete when _connectionEstablished && !_isReady:
-                var initComplete = InitComplete.GetRootAsInitComplete(byteBuffer);
-
-                _spawnId = initComplete.SpawnId;
-
+                // use the first spawn id we have
+                PlayerIdMap? idMap = _playerIdMaps.FirstOrDefault();
                 await _rlbotServer.WriteAsync(
-                    new SessionReady(_closeAfterMatch, _clientId, _spawnId)
+                    new SessionReady(_closeAfterMatch, _clientId, idMap?.SpawnId ?? 0)
                 );
+
                 _isReady = true;
                 break;
 
@@ -141,17 +156,39 @@ internal class FlatBuffersSession
 
             case DataType.PlayerInput:
                 var playerInputMsg = PlayerInput.GetRootAsPlayerInput(byteBuffer).UnPack();
-                _gotInput[playerInputMsg.PlayerIndex] = true;
 
+                // ensure the provided index is a bot we control
+                if (
+                    !_playerIdMaps.Any(
+                        playerInfo => playerInfo.Index == playerInputMsg.PlayerIndex
+                    )
+                )
+                    break;
+
+                _gotInput[playerInputMsg.PlayerIndex] = true;
                 await _bridge.WriteAsync(new Input(playerInputMsg));
                 break;
 
             case DataType.MatchComms when _wantsComms:
                 var matchComms = MatchComm.GetRootAsMatchComm(byteBuffer).UnPack();
-                await _rlbotServer.WriteAsync(
-                    new SendMatchComm(_clientId, _spawnId, matchComms)
+
+                // ensure the team is correctly set
+                matchComms.Team = _team;
+
+                // ensure the provided index is a bot we control,
+                // and map the index to the spawn id
+                PlayerIdMap? playerIdMap = _playerIdMaps.FirstOrDefault(
+                    idMap => idMap.Index == matchComms.Index
                 );
-                await _bridge.WriteAsync(new ShowQuickChat(matchComms));
+
+                if (playerIdMap is PlayerIdMap pInfo && pInfo.SpawnId is int pSpawnId)
+                {
+                    await _rlbotServer.WriteAsync(
+                        new SendMatchComm(_clientId, pSpawnId, matchComms)
+                    );
+
+                    await _bridge.WriteAsync(new ShowQuickChat(matchComms));
+                }
 
                 break;
 
@@ -187,7 +224,7 @@ internal class FlatBuffersSession
 
                 break;
 
-            case DataType.GameTickPacket:
+            case DataType.GamePacket:
                 break;
             case DataType.FieldInfo:
                 break;
@@ -248,6 +285,38 @@ internal class FlatBuffersSession
                         )
                     );
                     break;
+                case SessionMessage.PlayerIdMaps m:
+                    _team = m.Team;
+                    _playerIdMaps = m.IdMaps;
+
+                    List<ControllableInfoT> controllables =
+                        new(
+                            _playerIdMaps.Select(
+                                playerInfo =>
+                                    new ControllableInfoT()
+                                    {
+                                        Index = playerInfo.Index,
+                                        SpawnId = playerInfo.SpawnId,
+                                    }
+                            )
+                        );
+
+                    TeamControllablesT playerMappings =
+                        new() { Team = m.Team, Controllables = controllables, };
+
+                    _messageBuilder.Clear();
+                    _messageBuilder.Finish(
+                        TeamControllables.Pack(_messageBuilder, playerMappings).Value
+                    );
+
+                    await SendPayloadToClientAsync(
+                        TypedPayload.FromFlatBufferBuilder(
+                            DataType.TeamControllables,
+                            _messageBuilder
+                        )
+                    );
+
+                    break;
                 case SessionMessage.DistributeBallPrediction m
                     when _isReady && _wantsBallPredictions:
                     _messageBuilder.Clear();
@@ -265,12 +334,12 @@ internal class FlatBuffersSession
                 case SessionMessage.DistributeGameState m when _isReady:
                     _messageBuilder.Clear();
                     _messageBuilder.Finish(
-                        GameTickPacket.Pack(_messageBuilder, m.GameState).Value
+                        GamePacket.Pack(_messageBuilder, m.GameState).Value
                     );
 
                     await SendPayloadToClientAsync(
                         TypedPayload.FromFlatBufferBuilder(
-                            DataType.GameTickPacket,
+                            DataType.GamePacket,
                             _messageBuilder
                         )
                     );

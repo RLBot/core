@@ -29,6 +29,7 @@ public class FlatbufferTest
                 {
                     Variety = PlayerClassUnion.FromPsyonix(new PsyonixT()),
                     Name = RandomString(64),
+                    GroupId = RandomString(64),
                     Location = RandomString(64),
                     RunCommand = RandomString(64),
                     Loadout = new PlayerLoadoutT() { LoadoutPaint = new LoadoutPaintT(), },
@@ -48,6 +49,7 @@ public class FlatbufferTest
                 new ScriptConfigurationT()
                 {
                     Name = RandomString(64),
+                    GroupId = RandomString(64),
                     Location = RandomString(64),
                     RunCommand = RandomString(64),
                 }

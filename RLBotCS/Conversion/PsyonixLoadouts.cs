@@ -17,12 +17,15 @@ internal static class PsyonixLoadouts
 
     public static PlayerLoadoutT? GetFromName(string name, int team)
     {
-        int index = Unused.FindIndex(n => n.Contains(name));
-        if (index == -1)
+        var loadoutKey = DefaultLoadouts.Keys.FirstOrDefault(k => k.Contains(name));
+        if (loadoutKey == null)
             return null;
 
-        var loadout = DefaultLoadouts[Unused[index]][team];
-        Unused.RemoveAt(index);
+        int index = Unused.FindIndex(n => n == loadoutKey);
+        if (index != -1)
+            Unused.RemoveAt(index);
+
+        var loadout = DefaultLoadouts[loadoutKey][team];
         return loadout;
     }
 

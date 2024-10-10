@@ -1,10 +1,12 @@
-﻿using Bridge.Models.Command;
+﻿using System.Threading.Channels;
+using Bridge.Models.Command;
 using Bridge.Models.Control;
 using Bridge.Models.Message;
 using Bridge.State;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.Conversion;
+using RLBotCS.ManagerTools;
 using PlayerInput = rlbot.flat.PlayerInput;
 
 namespace RLBotCS.Server;
@@ -18,18 +20,23 @@ internal record Input(PlayerInputT PlayerInput) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
-        CarInput carInput = FlatToModel.ToCarInput(PlayerInput.ControllerState);
         ushort? actorId = context.GameState.PlayerMapping.ActorIdFromPlayerIndex(
             PlayerInput.PlayerIndex
         );
 
-        if (actorId.HasValue)
+        if (actorId is ushort actorIdValue)
         {
             Bridge.Models.Control.PlayerInput playerInput =
-                new() { ActorId = actorId.Value, CarInput = carInput };
+                new()
+                {
+                    ActorId = actorIdValue,
+                    CarInput = FlatToModel.ToCarInput(PlayerInput.ControllerState)
+                };
             context.PlayerInputSender.SendPlayerInput(playerInput);
         }
-        else
+        else if (
+            !context.GameState.PlayerMapping.IsPlayerIndexPending(PlayerInput.PlayerIndex)
+        )
             context.Logger.LogError(
                 $"Got input from unknown player index {PlayerInput.PlayerIndex}"
             );
@@ -343,5 +350,85 @@ internal record AddPerfSample(uint Index, bool GotInput) : IBridgeMessage
     {
         if (context.GameState.GameCars.TryGetValue(Index, out var car))
             context.PerfMonitor.AddSample(car.Name, GotInput);
+    }
+}
+
+internal record SetMatchSettings(MatchSettingsT MatchSettings) : IBridgeMessage
+{
+    public void HandleMessage(BridgeContext context) =>
+        context.ProcPlayerPair.SetPlayers(MatchSettings);
+}
+
+internal record PlayerInfoRequest(
+    ChannelWriter<SessionMessage> SessionWriter,
+    MatchSettingsT MatchSettings,
+    string GroupId
+) : IBridgeMessage
+{
+    public void HandleMessage(BridgeContext context)
+    {
+        // special case for match controllers & the like
+        if (GroupId == "")
+            return;
+
+        bool isHivemind = false;
+        bool isScript = true;
+
+        foreach (var player in MatchSettings.PlayerConfigurations)
+        {
+            if (player.GroupId == GroupId)
+            {
+                isScript = false;
+                isHivemind = player.Hivemind;
+                break;
+            }
+        }
+
+        if (isHivemind)
+        {
+            if (
+                context.ProcPlayerPair.ReservePlayers(GroupId) is
+
+                (List<PlayerIdMap>, uint) players
+            )
+            {
+                SessionWriter.TryWrite(
+                    new SessionMessage.PlayerIdMaps(players.Item2, players.Item1)
+                );
+            }
+            else
+            {
+                context.Logger.LogError(
+                    $"Failed to reserve players for hivemind with group id {GroupId}"
+                );
+            }
+        }
+        else if (isScript)
+        {
+            for (var i = 0; i < MatchSettings.ScriptConfigurations.Count; i++)
+            {
+                var script = MatchSettings.ScriptConfigurations[i];
+                if (script.GroupId == GroupId)
+                {
+                    PlayerIdMap player = new() { Index = (uint)i, SpawnId = script.SpawnId };
+                    SessionWriter.TryWrite(
+                        new SessionMessage.PlayerIdMaps(2, new() { player })
+                    );
+                    return;
+                }
+            }
+
+            context.Logger.LogError($"Failed to find script with group id {GroupId}");
+        }
+        else if (context.ProcPlayerPair.ReservePlayer(GroupId) is (PlayerIdMap, uint) player)
+        {
+            SessionWriter.TryWrite(
+                new SessionMessage.PlayerIdMaps(player.Item2, new() { player.Item1 })
+            );
+        }
+        else
+        {
+            context.Logger.LogError($"Failed to reserve player for group id {GroupId}");
+        }
     }
 }

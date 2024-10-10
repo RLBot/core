@@ -12,6 +12,7 @@ public class TomlParser
     {
         MatchSettingsT defaultMS = ConfigParser.GetMatchSettings("TomlTest/default.toml");
         MatchSettingsT emptyMS = ConfigParser.GetMatchSettings("TomlTest/empty.toml");
+        MatchSettingsT edgeMS = ConfigParser.GetMatchSettings("TomlTest/edge.toml");
 
         Assert.AreEqual(emptyMS.Launcher, defaultMS.Launcher);
         Assert.AreEqual(emptyMS.GamePath, defaultMS.GamePath);
@@ -54,5 +55,12 @@ public class TomlParser
         Assert.AreEqual(emptyMutS.GravityOption, defaultMutS.GravityOption);
         Assert.AreEqual(emptyMutS.DemolishOption, defaultMutS.DemolishOption);
         Assert.AreEqual(emptyMutS.RespawnTimeOption, defaultMutS.RespawnTimeOption);
+
+        Assert.AreEqual(Launcher.Custom, edgeMS.Launcher);
+        Assert.AreEqual("legendary", edgeMS.GamePath);
+        Assert.AreEqual(MatchLength.Five_Minutes, edgeMS.MutatorSettings.MatchLength);
+        Assert.AreEqual("Boomer", edgeMS.PlayerConfigurations[0].Name);
+        Assert.AreEqual(PlayerClass.Psyonix, edgeMS.PlayerConfigurations[0].Variety.Type);
+        Assert.AreEqual(292u, edgeMS.PlayerConfigurations[0].Loadout.DecalId);
     }
 }
