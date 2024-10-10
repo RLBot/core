@@ -111,9 +111,9 @@ internal class MatchStarter(
             if (playerConfig.SpawnId == 0)
                 playerConfig.SpawnId = playerConfig.Name.GetHashCode();
 
-            playerConfig.Location ??= "";
+            playerConfig.RootDir ??= "";
             playerConfig.RunCommand ??= "";
-            playerConfig.GroupId ??= "";
+            playerConfig.AgentId ??= "";
         }
 
         foreach (var scriptConfig in matchSettings.ScriptConfigurations)
@@ -136,7 +136,7 @@ internal class MatchStarter(
 
             scriptConfig.Location ??= "";
             scriptConfig.RunCommand ??= "";
-            scriptConfig.GroupId ??= "";
+            scriptConfig.AgentId ??= "";
         }
 
         matchSettings.GamePath ??= "";
@@ -158,7 +158,7 @@ internal class MatchStarter(
                 // make sure to not accidentally include two bots
                 // with the same names in the same hivemind process
                 string uniqueName =
-                    playerConfig.Location
+                    playerConfig.RootDir
                     + "_"
                     + playerConfig.RunCommand
                     + "_"
@@ -336,8 +336,8 @@ internal class MatchStarter(
                     Logger.LogInformation(
                         "Spawning player "
                             + playerConfig.Name
-                            + " with group id "
-                            + playerConfig.GroupId
+                            + " with agent id "
+                            + playerConfig.AgentId
                     );
 
                     bridge.TryWrite(

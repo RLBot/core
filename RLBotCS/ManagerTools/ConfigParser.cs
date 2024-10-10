@@ -229,8 +229,8 @@ public static class ConfigParser
         TomlTable scriptSettings = ParseTable(scriptToml, "settings", missingValues);
 
         string name = ParseString(scriptSettings, "name", missingValues) ?? "Unnamed Script";
-        string groupId =
-            ParseString(scriptSettings, "group_id", missingValues) ?? $"script/{name}";
+        string agentId =
+            ParseString(scriptSettings, "agent_id", missingValues) ?? $"script/{name}";
 
         ScriptConfigurationT scriptConfig =
             new()
@@ -241,7 +241,7 @@ public static class ConfigParser
                     ParseString(scriptSettings, "location", missingValues) ?? ""
                 ),
                 RunCommand = GetRunCommand(scriptSettings, missingValues),
-                GroupId = groupId
+                AgentId = agentId
             };
         return scriptConfig;
     }
@@ -298,9 +298,9 @@ public static class ConfigParser
             Variety = classUnion,
             Team = ParseUint(table, "team", 0, missingValues),
             Name = "Human",
-            Location = "",
+            RootDir = "",
             RunCommand = "",
-            GroupId = ""
+            AgentId = ""
         };
 
     private static PlayerConfigurationT GetPsyonixConfig(
@@ -343,17 +343,17 @@ public static class ConfigParser
             loadout = newLoadout;
         }
 
-        string groupId =
-            ParseString(playerSettings, "group_id", missingValues) ?? $"psyonix/{name}";
+        string agentId =
+            ParseString(playerSettings, "agent_id", missingValues) ?? $"psyonix/{name}";
         string runCommand = GetRunCommand(playerSettings, missingValues);
-        string location = "";
+        string rootDir = "";
 
         if (runCommand != "")
         {
-            location =
+            rootDir =
                 CombinePaths(
                     tomlParent,
-                    ParseString(playerSettings, "location", missingValues)
+                    ParseString(playerSettings, "root_dir", missingValues)
                 ) ?? "";
         }
 
@@ -362,10 +362,10 @@ public static class ConfigParser
             Variety = classUnion,
             Team = team,
             Name = name,
-            Location = location,
+            RootDir = rootDir,
             RunCommand = runCommand,
             Loadout = loadout,
-            GroupId = groupId
+            AgentId = agentId
         };
     }
 
@@ -466,8 +466,8 @@ public static class ConfigParser
             nameOverride
             ?? ParseString(playerSettings, "name", missingValues)
             ?? "Unnamed RLBot";
-        var groupId =
-            ParseString(playerSettings, "group_id", missingValues) ?? $"rlbot/{name}";
+        var agentId =
+            ParseString(playerSettings, "agent_id", missingValues) ?? $"rlbot/{name}";
         uint team = ParseUint(rlbotPlayerTable, "team", 0, missingValues);
 
         return new PlayerConfigurationT
@@ -475,9 +475,9 @@ public static class ConfigParser
             Variety = classUnion,
             Team = team,
             Name = name,
-            Location = CombinePaths(
+            RootDir = CombinePaths(
                 tomlParent,
-                ParseString(playerSettings, "location", missingValues) ?? ""
+                ParseString(playerSettings, "root_dir", missingValues) ?? ""
             ),
             RunCommand = GetRunCommand(playerSettings, missingValues),
             Loadout = GetPlayerLoadout(
@@ -488,7 +488,7 @@ public static class ConfigParser
                 missingValues
             ),
             Hivemind = ParseBool(playerSettings, "hivemind", false, missingValues),
-            GroupId = groupId
+            AgentId = agentId
         };
     }
 

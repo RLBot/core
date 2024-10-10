@@ -49,5 +49,5 @@ public enum DataType : ushort
     /// Indicates that a connection is ready to receive `GameTickPacket`s
     /// </summary>
     InitComplete,
-    TeamControllables
+    ControllableTeamInfo
 }

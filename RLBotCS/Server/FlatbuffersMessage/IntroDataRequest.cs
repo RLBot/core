@@ -2,7 +2,7 @@
 
 namespace RLBotCS.Server.FlatbuffersMessage;
 
-internal record IntroDataRequest(ChannelWriter<SessionMessage> SessionWriter, string GroupId)
+internal record IntroDataRequest(ChannelWriter<SessionMessage> SessionWriter, string AgentId)
     : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
@@ -10,10 +10,10 @@ internal record IntroDataRequest(ChannelWriter<SessionMessage> SessionWriter, st
         if (context.MatchStarter.GetMatchSettings() is { } settings)
         {
             SessionWriter.TryWrite(new SessionMessage.MatchSettings(settings));
-            context.Bridge.TryWrite(new PlayerInfoRequest(SessionWriter, settings, GroupId));
+            context.Bridge.TryWrite(new PlayerInfoRequest(SessionWriter, settings, AgentId));
         }
         else
-            context.MatchSettingsWriters.Add((SessionWriter, GroupId));
+            context.MatchSettingsWriters.Add((SessionWriter, AgentId));
 
         if (context.FieldInfo != null)
             SessionWriter.TryWrite(new SessionMessage.FieldInfo(context.FieldInfo));

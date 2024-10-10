@@ -362,13 +362,13 @@ internal record SetMatchSettings(MatchSettingsT MatchSettings) : IBridgeMessage
 internal record PlayerInfoRequest(
     ChannelWriter<SessionMessage> SessionWriter,
     MatchSettingsT MatchSettings,
-    string GroupId
+    string AgentId
 ) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
         // special case for match controllers & the like
-        if (GroupId == "")
+        if (AgentId == "")
             return;
 
         bool isHivemind = false;
@@ -376,7 +376,7 @@ internal record PlayerInfoRequest(
 
         foreach (var player in MatchSettings.PlayerConfigurations)
         {
-            if (player.GroupId == GroupId)
+            if (player.AgentId == AgentId)
             {
                 isScript = false;
                 isHivemind = player.Hivemind;
@@ -387,7 +387,7 @@ internal record PlayerInfoRequest(
         if (isHivemind)
         {
             if (
-                context.ProcPlayerPair.ReservePlayers(GroupId) is
+                context.ProcPlayerPair.ReservePlayers(AgentId) is
 
                 (List<PlayerIdMap>, uint) players
             )
@@ -399,7 +399,7 @@ internal record PlayerInfoRequest(
             else
             {
                 context.Logger.LogError(
-                    $"Failed to reserve players for hivemind with group id {GroupId}"
+                    $"Failed to reserve players for hivemind with group id {AgentId}"
                 );
             }
         }
@@ -408,7 +408,7 @@ internal record PlayerInfoRequest(
             for (var i = 0; i < MatchSettings.ScriptConfigurations.Count; i++)
             {
                 var script = MatchSettings.ScriptConfigurations[i];
-                if (script.GroupId == GroupId)
+                if (script.AgentId == AgentId)
                 {
                     PlayerIdMap player = new() { Index = (uint)i, SpawnId = script.SpawnId };
                     SessionWriter.TryWrite(
@@ -418,9 +418,9 @@ internal record PlayerInfoRequest(
                 }
             }
 
-            context.Logger.LogError($"Failed to find script with group id {GroupId}");
+            context.Logger.LogError($"Failed to find script with group id {AgentId}");
         }
-        else if (context.ProcPlayerPair.ReservePlayer(GroupId) is (PlayerIdMap, uint) player)
+        else if (context.ProcPlayerPair.ReservePlayer(AgentId) is (PlayerIdMap, uint) player)
         {
             SessionWriter.TryWrite(
                 new SessionMessage.PlayerIdMaps(player.Item2, new() { player.Item1 })
@@ -428,7 +428,7 @@ internal record PlayerInfoRequest(
         }
         else
         {
-            context.Logger.LogError($"Failed to reserve player for group id {GroupId}");
+            context.Logger.LogError($"Failed to reserve player for group id {AgentId}");
         }
     }
 }

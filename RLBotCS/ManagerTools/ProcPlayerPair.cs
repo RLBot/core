@@ -15,7 +15,7 @@ public class ProcPlayerPair
         public uint Index;
         public int SpawnId;
         public uint Team;
-        public string GroupId = "";
+        public string AgentId = "";
         public bool IsReserved;
     }
 
@@ -46,17 +46,17 @@ public class ProcPlayerPair
                         Index = index,
                         SpawnId = playerConfig.SpawnId,
                         Team = playerConfig.Team,
-                        GroupId = playerConfig.GroupId,
+                        AgentId = playerConfig.AgentId,
                     }
                 )
             );
         }
     }
 
-    public (PlayerIdMap, uint)? ReservePlayer(string GroupId)
+    public (PlayerIdMap, uint)? ReservePlayer(string agentId)
     {
         PlayerMetadata? player = _knownPlayers.FirstOrDefault(
-            playerMetadata => !playerMetadata.IsReserved && playerMetadata.GroupId == GroupId
+            playerMetadata => !playerMetadata.IsReserved && playerMetadata.AgentId == agentId
         );
         if (player != null)
         {
@@ -71,10 +71,10 @@ public class ProcPlayerPair
         return null;
     }
 
-    public (List<PlayerIdMap>, uint)? ReservePlayers(string groupId)
+    public (List<PlayerIdMap>, uint)? ReservePlayers(string agentId)
     {
         // find the first player in the group
-        if (ReservePlayer(groupId) is (PlayerIdMap, uint) initalPlayer)
+        if (ReservePlayer(agentId) is (PlayerIdMap, uint) initalPlayer)
         {
             var PlayerIdMap = initalPlayer.Item1;
             var team = initalPlayer.Item2;
@@ -86,7 +86,7 @@ public class ProcPlayerPair
             var otherPlayers = _knownPlayers.Where(
                 playerMetadata =>
                     !playerMetadata.IsReserved
-                    && playerMetadata.GroupId == groupId
+                    && playerMetadata.AgentId == agentId
                     && playerMetadata.Team == team
             );
 

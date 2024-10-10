@@ -147,10 +147,10 @@ internal static class LaunchManager
 
             Process botProcess = RunCommandInShell(mainPlayer.RunCommand);
 
-            if (mainPlayer.Location != "")
-                botProcess.StartInfo.WorkingDirectory = mainPlayer.Location;
+            if (mainPlayer.RootDir != "")
+                botProcess.StartInfo.WorkingDirectory = mainPlayer.RootDir;
 
-            botProcess.StartInfo.EnvironmentVariables["RLBOT_GROUP_ID"] = mainPlayer.GroupId;
+            botProcess.StartInfo.EnvironmentVariables["RLBOT_AGENT_ID"] = mainPlayer.AgentId;
             botProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
                 rlbotSocketsPort.ToString();
 
@@ -180,8 +180,7 @@ internal static class LaunchManager
             if (script.Location != "")
                 scriptProcess.StartInfo.WorkingDirectory = script.Location;
 
-            scriptProcess.StartInfo.EnvironmentVariables["RLBOT_GROUP_ID"] =
-                script.GroupId.ToString();
+            scriptProcess.StartInfo.EnvironmentVariables["RLBOT_GROUP_ID"] = script.AgentId;
             scriptProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
                 rlbotSocketsPort.ToString();
 

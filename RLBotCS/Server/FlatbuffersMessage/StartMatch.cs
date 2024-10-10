@@ -45,10 +45,10 @@ internal record StartMatch(MatchSettingsT MatchSettings) : IServerMessage
         }
 
         // Distribute the match settings to all waiting sessions
-        foreach (var (writer, groupId) in context.MatchSettingsWriters)
+        foreach (var (writer, agentId) in context.MatchSettingsWriters)
         {
             writer.TryWrite(new SessionMessage.MatchSettings(realMatchSettings));
-            context.Bridge.TryWrite(new PlayerInfoRequest(writer, realMatchSettings, groupId));
+            context.Bridge.TryWrite(new PlayerInfoRequest(writer, realMatchSettings, agentId));
         }
 
         context.MatchSettingsWriters.Clear();

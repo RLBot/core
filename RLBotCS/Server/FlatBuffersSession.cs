@@ -53,7 +53,7 @@ internal class FlatBuffersSession
     private bool _stateSettingIsEnabled;
     private bool _renderingIsEnabled;
 
-    private string _groupId = string.Empty;
+    private string _agentId = string.Empty;
     private uint _team;
     private List<PlayerIdMap> _playerIdMaps = new();
     private bool _sessionForceClosed;
@@ -97,13 +97,13 @@ internal class FlatBuffersSession
             case DataType.ConnectionSettings when !_connectionEstablished:
                 var readyMsg = ConnectionSettings.GetRootAsConnectionSettings(byteBuffer);
 
-                _groupId = readyMsg.GroupId;
+                _agentId = readyMsg.AgentId;
                 _wantsBallPredictions = readyMsg.WantsBallPredictions;
                 _wantsComms = readyMsg.WantsComms;
                 _closeAfterMatch = readyMsg.CloseAfterMatch;
 
                 await _rlbotServer.WriteAsync(
-                    new IntroDataRequest(_incomingMessages.Writer, _groupId)
+                    new IntroDataRequest(_incomingMessages.Writer, _agentId)
                 );
 
                 _connectionEstablished = true;
@@ -301,17 +301,17 @@ internal class FlatBuffersSession
                             )
                         );
 
-                    TeamControllablesT playerMappings =
+                    ControllableTeamInfoT playerMappings =
                         new() { Team = m.Team, Controllables = controllables, };
 
                     _messageBuilder.Clear();
                     _messageBuilder.Finish(
-                        TeamControllables.Pack(_messageBuilder, playerMappings).Value
+                        ControllableTeamInfo.Pack(_messageBuilder, playerMappings).Value
                     );
 
                     await SendPayloadToClientAsync(
                         TypedPayload.FromFlatBufferBuilder(
-                            DataType.TeamControllables,
+                            DataType.ControllableTeamInfo,
                             _messageBuilder
                         )
                     );
