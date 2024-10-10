@@ -311,11 +311,7 @@ public static class ConfigParser
     )
     {
         string? nameOverride = ParseString(playerTable, "name", missingValues);
-        string? loadoutPathOverride = ParseString(
-            playerTable,
-            "loadout_config",
-            missingValues
-        );
+        string? loadoutPathOverride = ParseString(playerTable, "loadout_file", missingValues);
 
         string? matchConfigParent = Path.GetDirectoryName(matchConfigPath);
 
@@ -385,7 +381,7 @@ public static class ConfigParser
             pathOverride
             ?? CombinePaths(
                 tomlParent,
-                ParseString(playerTable, "loadout_config", missingValues)
+                ParseString(playerTable, "loadout_file", missingValues)
             );
 
         if (loadoutTomlPath == null)
@@ -451,7 +447,7 @@ public static class ConfigParser
         string? nameOverride = ParseString(rlbotPlayerTable, "name", missingValues);
         string? loadoutPathOverride = ParseString(
             rlbotPlayerTable,
-            "loadout_config",
+            "loadout_file",
             missingValues
         );
 
