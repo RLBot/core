@@ -394,7 +394,7 @@ internal record PlayerInfoRequest(
             else
             {
                 context.Logger.LogError(
-                    $"Failed to reserve players for hivemind with group id {AgentId}"
+                    $"Failed to reserve players for hivemind with agent id {AgentId}"
                 );
             }
         }
@@ -423,7 +423,7 @@ internal record PlayerInfoRequest(
         }
         else
         {
-            context.Logger.LogError($"Failed to reserve player for group id {AgentId}");
+            context.Logger.LogError($"Failed to reserve player for agent id {AgentId}");
         }
     }
 }
