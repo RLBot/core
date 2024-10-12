@@ -353,7 +353,7 @@ internal record AddPerfSample(uint Index, bool GotInput) : IBridgeMessage
     }
 }
 
-internal record SetMatchSettings(MatchSettingsT MatchSettings) : IBridgeMessage
+internal record ClearProcessPlayerReservation(MatchSettingsT MatchSettings) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context) =>
         context.ProcPlayerPair.SetPlayers(MatchSettings);

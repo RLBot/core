@@ -21,7 +21,7 @@ internal record StartMatch(MatchSettingsT MatchSettings) : IServerMessage
 
         context.MatchStarter.StartMatch(MatchSettings);
         var realMatchSettings = context.MatchStarter.GetMatchSettings() ?? MatchSettings;
-        context.Bridge.TryWrite(new SetMatchSettings(realMatchSettings));
+        context.Bridge.TryWrite(new ClearProcessPlayerReservation(realMatchSettings));
 
         var newMode = BallPredictor.GetMode(realMatchSettings);
         if (newMode != context.PredictionMode)
@@ -50,7 +50,9 @@ internal record StartMatch(MatchSettingsT MatchSettings) : IServerMessage
             writer.TryWrite(new SessionMessage.MatchSettings(realMatchSettings));
 
             if (agentId != string.Empty)
-                context.Bridge.TryWrite(new PlayerInfoRequest(writer, realMatchSettings, agentId));
+                context.Bridge.TryWrite(
+                    new PlayerInfoRequest(writer, realMatchSettings, agentId)
+                );
         }
 
         context.MatchSettingsWriters.Clear();
