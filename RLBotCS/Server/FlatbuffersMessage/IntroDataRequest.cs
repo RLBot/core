@@ -10,7 +10,9 @@ internal record IntroDataRequest(ChannelWriter<SessionMessage> SessionWriter, st
         if (context.MatchStarter.GetMatchSettings() is { } settings)
         {
             SessionWriter.TryWrite(new SessionMessage.MatchSettings(settings));
-            context.Bridge.TryWrite(new PlayerInfoRequest(SessionWriter, settings, AgentId));
+            
+            if (AgentId != string.Empty)
+                context.Bridge.TryWrite(new PlayerInfoRequest(SessionWriter, settings, AgentId));
         }
         else
             context.MatchSettingsWriters.Add((SessionWriter, AgentId));

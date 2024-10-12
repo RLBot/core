@@ -367,10 +367,6 @@ internal record PlayerInfoRequest(
 {
     public void HandleMessage(BridgeContext context)
     {
-        // special case for match controllers & the like
-        if (AgentId == "")
-            return;
-
         bool isHivemind = false;
         bool isScript = true;
 

@@ -48,7 +48,9 @@ internal record StartMatch(MatchSettingsT MatchSettings) : IServerMessage
         foreach (var (writer, agentId) in context.MatchSettingsWriters)
         {
             writer.TryWrite(new SessionMessage.MatchSettings(realMatchSettings));
-            context.Bridge.TryWrite(new PlayerInfoRequest(writer, realMatchSettings, agentId));
+
+            if (agentId != string.Empty)
+                context.Bridge.TryWrite(new PlayerInfoRequest(writer, realMatchSettings, agentId));
         }
 
         context.MatchSettingsWriters.Clear();
