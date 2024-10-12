@@ -2,13 +2,13 @@ using rlbot.flat;
 
 namespace RLBotCS.ManagerTools;
 
-public struct PlayerIdMap
+public struct PlayerIdPair
 {
     public uint Index;
     public int SpawnId;
 }
 
-public class ProcPlayerPair
+public class AgentReservation
 {
     private class PlayerMetadata
     {
@@ -53,7 +53,7 @@ public class ProcPlayerPair
         }
     }
 
-    public (PlayerIdMap, uint)? ReservePlayer(string agentId)
+    public (PlayerIdPair, uint)? ReservePlayer(string agentId)
     {
         PlayerMetadata? player = _knownPlayers.FirstOrDefault(
             playerMetadata => !playerMetadata.IsReserved && playerMetadata.AgentId == agentId
@@ -63,7 +63,7 @@ public class ProcPlayerPair
             player.IsReserved = true;
 
             return (
-                new PlayerIdMap { Index = player.Index, SpawnId = player.SpawnId },
+                new PlayerIdPair { Index = player.Index, SpawnId = player.SpawnId },
                 player.Team
             );
         }
@@ -71,15 +71,15 @@ public class ProcPlayerPair
         return null;
     }
 
-    public (List<PlayerIdMap>, uint)? ReservePlayers(string agentId)
+    public (List<PlayerIdPair>, uint)? ReservePlayers(string agentId)
     {
         // find the first player in the group
-        if (ReservePlayer(agentId) is (PlayerIdMap, uint) initalPlayer)
+        if (ReservePlayer(agentId) is (PlayerIdPair, uint) initalPlayer)
         {
-            var PlayerIdMap = initalPlayer.Item1;
+            var playerIdPair = initalPlayer.Item1;
             var team = initalPlayer.Item2;
 
-            List<PlayerIdMap> players = new() { PlayerIdMap };
+            List<PlayerIdPair> players = new() { playerIdPair };
 
             // find other players in the same group & team
 
@@ -94,7 +94,7 @@ public class ProcPlayerPair
             {
                 playerMetadata.IsReserved = true;
                 players.Add(
-                    new PlayerIdMap
+                    new PlayerIdPair
                     {
                         Index = playerMetadata.Index,
                         SpawnId = playerMetadata.SpawnId

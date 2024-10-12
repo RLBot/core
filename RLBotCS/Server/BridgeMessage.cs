@@ -1,6 +1,5 @@
 ﻿using System.Threading.Channels;
 using Bridge.Models.Command;
-using Bridge.Models.Control;
 using Bridge.Models.Message;
 using Bridge.State;
 using Microsoft.Extensions.Logging;
@@ -385,11 +384,11 @@ internal record PlayerInfoRequest(
             if (
                 context.ProcPlayerPair.ReservePlayers(AgentId) is
 
-                (List<PlayerIdMap>, uint) players
+                (List<PlayerIdPair>, uint) players
             )
             {
                 SessionWriter.TryWrite(
-                    new SessionMessage.PlayerIdMaps(players.Item2, players.Item1)
+                    new SessionMessage.PlayerIdPairs(players.Item2, players.Item1)
                 );
             }
             else
@@ -406,9 +405,9 @@ internal record PlayerInfoRequest(
                 var script = MatchSettings.ScriptConfigurations[i];
                 if (script.AgentId == AgentId)
                 {
-                    PlayerIdMap player = new() { Index = (uint)i, SpawnId = script.SpawnId };
+                    PlayerIdPair player = new() { Index = (uint)i, SpawnId = script.SpawnId };
                     SessionWriter.TryWrite(
-                        new SessionMessage.PlayerIdMaps(2, new() { player })
+                        new SessionMessage.PlayerIdPairs(2, new() { player })
                     );
                     return;
                 }
@@ -416,10 +415,10 @@ internal record PlayerInfoRequest(
 
             context.Logger.LogError($"Failed to find script with agent id {AgentId}");
         }
-        else if (context.ProcPlayerPair.ReservePlayer(AgentId) is (PlayerIdMap, uint) player)
+        else if (context.ProcPlayerPair.ReservePlayer(AgentId) is (PlayerIdPair, uint) player)
         {
             SessionWriter.TryWrite(
-                new SessionMessage.PlayerIdMaps(player.Item2, new() { player.Item1 })
+                new SessionMessage.PlayerIdPairs(player.Item2, new() { player.Item1 })
             );
         }
         else

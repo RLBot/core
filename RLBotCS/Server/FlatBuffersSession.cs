@@ -1,6 +1,5 @@
 using System.Net.Sockets;
 using System.Threading.Channels;
-using Bridge.Conversion;
 using Google.FlatBuffers;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
@@ -16,7 +15,7 @@ internal record SessionMessage
 
     public record FieldInfo(FieldInfoT Info) : SessionMessage;
 
-    public record PlayerIdMaps(uint Team, List<PlayerIdMap> IdMaps) : SessionMessage;
+    public record PlayerIdPairs(uint Team, List<PlayerIdPair> IdMaps) : SessionMessage;
 
     public record DistributeBallPrediction(BallPredictionT BallPrediction) : SessionMessage;
 
@@ -55,7 +54,7 @@ internal class FlatBuffersSession
 
     private string _agentId = string.Empty;
     private uint _team;
-    private List<PlayerIdMap> _playerIdMaps = new();
+    private List<PlayerIdPair> _playerIdPairs = new();
     private bool _sessionForceClosed;
     private bool _closed;
 
@@ -114,11 +113,11 @@ internal class FlatBuffersSession
 
                 // ensure the provided index is a bot we control,
                 // and map the index to the spawn id
-                PlayerIdMap? idMaps = _playerIdMaps.FirstOrDefault(
-                    idMap => idMap.Index == setLoadout.Index
+                PlayerIdPair? idPairs = _playerIdPairs.FirstOrDefault(
+                    idPair => idPair.Index == setLoadout.Index
                 );
 
-                if (idMaps is PlayerIdMap info && info.SpawnId is int spawnId)
+                if (idPairs is PlayerIdPair info && info.SpawnId is int spawnId)
                     await _rlbotServer.WriteAsync(
                         new SpawnLoadout(setLoadout.Loadout, spawnId)
                     );
@@ -127,9 +126,9 @@ internal class FlatBuffersSession
 
             case DataType.InitComplete when _connectionEstablished && !_isReady:
                 // use the first spawn id we have
-                PlayerIdMap? idMap = _playerIdMaps.FirstOrDefault();
+                PlayerIdPair? idPair = _playerIdPairs.FirstOrDefault();
                 await _rlbotServer.WriteAsync(
-                    new SessionReady(_closeAfterMatch, _clientId, idMap?.SpawnId ?? 0)
+                    new SessionReady(_closeAfterMatch, _clientId, idPair?.SpawnId ?? 0)
                 );
 
                 _isReady = true;
@@ -159,7 +158,7 @@ internal class FlatBuffersSession
 
                 // ensure the provided index is a bot we control
                 if (
-                    !_playerIdMaps.Any(
+                    !_playerIdPairs.Any(
                         playerInfo => playerInfo.Index == playerInputMsg.PlayerIndex
                     )
                 )
@@ -177,11 +176,11 @@ internal class FlatBuffersSession
 
                 // ensure the provided index is a bot we control,
                 // and map the index to the spawn id
-                PlayerIdMap? playerIdMap = _playerIdMaps.FirstOrDefault(
-                    idMap => idMap.Index == matchComms.Index
+                PlayerIdPair? playerIdPair = _playerIdPairs.FirstOrDefault(
+                    idPair => idPair.Index == matchComms.Index
                 );
 
-                if (playerIdMap is PlayerIdMap pInfo && pInfo.SpawnId is int pSpawnId)
+                if (playerIdPair is PlayerIdPair pInfo && pInfo.SpawnId is int pSpawnId)
                 {
                     await _rlbotServer.WriteAsync(
                         new SendMatchComm(_clientId, pSpawnId, matchComms)
@@ -285,13 +284,13 @@ internal class FlatBuffersSession
                         )
                     );
                     break;
-                case SessionMessage.PlayerIdMaps m:
+                case SessionMessage.PlayerIdPairs m:
                     _team = m.Team;
-                    _playerIdMaps = m.IdMaps;
+                    _playerIdPairs = m.IdMaps;
 
                     List<ControllableInfoT> controllables =
                         new(
-                            _playerIdMaps.Select(
+                            _playerIdPairs.Select(
                                 playerInfo =>
                                     new ControllableInfoT()
                                     {
