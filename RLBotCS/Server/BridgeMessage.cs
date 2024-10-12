@@ -418,7 +418,7 @@ internal record PlayerInfoRequest(
                 }
             }
 
-            context.Logger.LogError($"Failed to find script with group id {AgentId}");
+            context.Logger.LogError($"Failed to find script with agent id {AgentId}");
         }
         else if (context.ProcPlayerPair.ReservePlayer(AgentId) is (PlayerIdMap, uint) player)
         {
