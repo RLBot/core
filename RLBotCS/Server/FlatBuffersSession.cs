@@ -427,6 +427,7 @@ internal class FlatBuffersSession
         _connectionEstablished = false;
         _isReady = false;
         _incomingMessages.Writer.TryComplete();
+        _bridge.TryWrite(new UnreservePlayers(_team, _playerIdPairs));
 
         // try to politely close the connection
         try
