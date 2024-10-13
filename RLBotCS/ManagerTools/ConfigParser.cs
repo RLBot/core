@@ -145,12 +145,7 @@ public static class ConfigParser
         }
     }
 
-    private static string? ParseString(
-        TomlTable table,
-        string key,
-        string? fallback,
-        List<string> missingValues
-    )
+    private static string? ParseString(TomlTable table, string key, List<string> missingValues)
     {
         try
         {
@@ -159,7 +154,7 @@ public static class ConfigParser
         catch (KeyNotFoundException)
         {
             missingValues.Add(key);
-            return fallback;
+            return null;
         }
     }
 
@@ -192,13 +187,13 @@ public static class ConfigParser
     private static string GetRunCommand(TomlTable runnableSettings, List<string> missingValues)
     {
         string runCommandWindows =
-            ParseString(runnableSettings, "run_command", null, missingValues) ?? "";
+            ParseString(runnableSettings, "run_command", missingValues) ?? "";
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             return runCommandWindows;
 
         string runCommandLinux =
-            ParseString(runnableSettings, "run_command_linux", null, missingValues) ?? "";
+            ParseString(runnableSettings, "run_command_linux", missingValues) ?? "";
 
         if (runCommandLinux != "")
             return runCommandLinux;
@@ -226,22 +221,27 @@ public static class ConfigParser
 
         string? scriptTomlPath = CombinePaths(
             matchConfigParent,
-            ParseString(scriptTable, "config", null, missingValues)
+            ParseString(scriptTable, "config", missingValues)
         );
         TomlTable scriptToml = GetTable(scriptTomlPath);
         string tomlParent = Path.GetDirectoryName(scriptTomlPath) ?? "";
 
         TomlTable scriptSettings = ParseTable(scriptToml, "settings", missingValues);
 
+        string name = ParseString(scriptSettings, "name", missingValues) ?? "Unnamed Script";
+        string agentId =
+            ParseString(scriptSettings, "agent_id", missingValues) ?? $"script/{name}";
+
         ScriptConfigurationT scriptConfig =
             new()
             {
-                Name = ParseString(scriptSettings, "name", "Unnamed Script", missingValues),
+                Name = name,
                 Location = CombinePaths(
                     tomlParent,
-                    ParseString(scriptSettings, "location", "", missingValues)
+                    ParseString(scriptSettings, "location", missingValues) ?? ""
                 ),
-                RunCommand = GetRunCommand(scriptSettings, missingValues)
+                RunCommand = GetRunCommand(scriptSettings, missingValues),
+                AgentId = agentId
             };
         return scriptConfig;
     }
@@ -298,8 +298,9 @@ public static class ConfigParser
             Variety = classUnion,
             Team = ParseUint(table, "team", 0, missingValues),
             Name = "Human",
-            Location = "",
-            RunCommand = ""
+            RootDir = "",
+            RunCommand = "",
+            AgentId = ""
         };
 
     private static PlayerConfigurationT GetPsyonixConfig(
@@ -309,20 +310,29 @@ public static class ConfigParser
         List<string> missingValues
     )
     {
+        string? nameOverride = ParseString(playerTable, "name", missingValues);
+        string? loadoutPathOverride = ParseString(playerTable, "loadout_file", missingValues);
+
         string? matchConfigParent = Path.GetDirectoryName(matchConfigPath);
 
         string? playerTomlPath = CombinePaths(
             matchConfigParent,
-            ParseString(playerTable, "config", null, missingValues)
+            ParseString(playerTable, "config", missingValues)
         );
         TomlTable playerToml = GetTable(playerTomlPath);
         string? tomlParent = Path.GetDirectoryName(playerTomlPath);
 
         TomlTable playerSettings = ParseTable(playerToml, "settings", missingValues);
 
-        var team = ParseUint(playerTable, "team", 0, missingValues);
-        string? name = ParseString(playerSettings, "name", null, missingValues);
-        PlayerLoadoutT? loadout = GetPlayerLoadout(playerSettings, tomlParent, missingValues);
+        uint team = ParseUint(playerTable, "team", 0, missingValues);
+        string? name = nameOverride ?? ParseString(playerSettings, "name", missingValues);
+        PlayerLoadoutT? loadout = GetPlayerLoadout(
+            playerSettings,
+            loadoutPathOverride,
+            team,
+            tomlParent,
+            missingValues
+        );
 
         if (name == null)
         {
@@ -333,15 +343,18 @@ public static class ConfigParser
             loadout = newLoadout;
         }
 
-        var runCommand = GetRunCommand(playerSettings, missingValues);
-        var location = "";
+        string agentId =
+            ParseString(playerSettings, "agent_id", missingValues) ?? $"psyonix/{name}";
+        string runCommand = GetRunCommand(playerSettings, missingValues);
+        string rootDir = "";
 
         if (runCommand != "")
         {
-            location = CombinePaths(
-                tomlParent,
-                ParseString(playerSettings, "location", "", missingValues)
-            );
+            rootDir =
+                CombinePaths(
+                    tomlParent,
+                    ParseString(playerSettings, "root_dir", missingValues)
+                ) ?? "";
         }
 
         return new()
@@ -349,32 +362,34 @@ public static class ConfigParser
             Variety = classUnion,
             Team = team,
             Name = name,
-            Location = location,
+            RootDir = rootDir,
             RunCommand = runCommand,
             Loadout = loadout,
+            AgentId = agentId
         };
     }
 
     private static PlayerLoadoutT? GetPlayerLoadout(
         TomlTable playerTable,
+        string? pathOverride,
+        uint team,
         string? tomlParent,
         List<string> missingValues
     )
     {
-        string? loadoutTomlPath = CombinePaths(
-            tomlParent,
-            ParseString(playerTable, "loadout_config", null, missingValues)
-        );
+        string? loadoutTomlPath =
+            pathOverride
+            ?? CombinePaths(
+                tomlParent,
+                ParseString(playerTable, "loadout_file", missingValues)
+            );
 
         if (loadoutTomlPath == null)
             return null;
 
         TomlTable loadoutToml = GetTable(loadoutTomlPath);
 
-        string teamLoadoutString =
-            ParseInt(playerTable, "team", 0, missingValues) == 0
-                ? "blue_loadout"
-                : "orange_loadout";
+        string teamLoadoutString = team == 0 ? "blue_loadout" : "orange_loadout";
         TomlTable teamLoadout = ParseTable(loadoutToml, teamLoadoutString, missingValues);
         TomlTable teamPaint = ParseTable(teamLoadout, "paint", missingValues);
 
@@ -429,29 +444,51 @@ public static class ConfigParser
          *  "teamLoadout" is either the "blue_loadout" or "orange_loadout" in bot_looks.toml, contains player items
          *  "teamPaint" is the "paint" table within the loadout tables, contains paint colors of player items
          */
+        string? nameOverride = ParseString(rlbotPlayerTable, "name", missingValues);
+        string? loadoutPathOverride = ParseString(
+            rlbotPlayerTable,
+            "loadout_file",
+            missingValues
+        );
+
         string? matchConfigParent = Path.GetDirectoryName(matchConfigPath);
 
         string? playerTomlPath = CombinePaths(
             matchConfigParent,
-            ParseString(rlbotPlayerTable, "config", null, missingValues)
+            ParseString(rlbotPlayerTable, "config", missingValues)
         );
         TomlTable playerToml = GetTable(playerTomlPath);
         string? tomlParent = Path.GetDirectoryName(playerTomlPath);
 
         TomlTable playerSettings = ParseTable(playerToml, "settings", missingValues);
 
+        var name =
+            nameOverride
+            ?? ParseString(playerSettings, "name", missingValues)
+            ?? "Unnamed RLBot";
+        var agentId =
+            ParseString(playerSettings, "agent_id", missingValues) ?? $"rlbot/{name}";
+        uint team = ParseUint(rlbotPlayerTable, "team", 0, missingValues);
+
         return new PlayerConfigurationT
         {
             Variety = classUnion,
-            Team = ParseUint(rlbotPlayerTable, "team", 0, missingValues),
-            Name = ParseString(playerSettings, "name", "Unnamed RLBot", missingValues),
-            Location = CombinePaths(
+            Team = team,
+            Name = name,
+            RootDir = CombinePaths(
                 tomlParent,
-                ParseString(playerSettings, "location", "", missingValues)
+                ParseString(playerSettings, "root_dir", missingValues) ?? ""
             ),
             RunCommand = GetRunCommand(playerSettings, missingValues),
-            Loadout = GetPlayerLoadout(playerSettings, tomlParent, missingValues),
+            Loadout = GetPlayerLoadout(
+                playerSettings,
+                loadoutPathOverride,
+                team,
+                tomlParent,
+                missingValues
+            ),
             Hivemind = ParseBool(playerSettings, "hivemind", false, missingValues),
+            AgentId = agentId
         };
     }
 
@@ -590,15 +627,12 @@ public static class ConfigParser
 
         PsyonixLoadouts.Reset();
         List<PlayerConfigurationT> playerConfigs = [];
-        // Gets the PlayerConfigT object for the number of players requested
-        int numBots = ParseInt(matchTable, "num_cars", 0, missingValues["match"]);
-        for (int i = 0; i < Math.Min(numBots, players.Count); i++)
-            playerConfigs.Add(GetPlayerConfig(players[i], path, missingValues["cars"]));
+        foreach (var player in players)
+            playerConfigs.Add(GetPlayerConfig(player, path, missingValues["cars"]));
 
         List<ScriptConfigurationT> scriptConfigs = [];
-        int numScripts = ParseInt(matchTable, "num_scripts", 0, missingValues["match"]);
-        for (int i = 0; i < Math.Min(numScripts, scripts.Count); i++)
-            scriptConfigs.Add(GetScriptConfig(scripts[i], path, missingValues["scripts"]));
+        foreach (var script in scripts)
+            scriptConfigs.Add(GetScriptConfig(script, path, missingValues["scripts"]));
 
         var matchSettings = new MatchSettingsT
         {
@@ -614,19 +648,15 @@ public static class ConfigParser
                 true,
                 missingValues["rlbot"]
             ),
-            GamePath = ParseString(rlbotTable, "game_path", "", missingValues["rlbot"]),
+            GamePath = ParseString(rlbotTable, "game_path", missingValues["rlbot"]) ?? "",
             GameMode = ParseEnum(
                 matchTable,
                 "game_mode",
                 GameMode.Soccer,
                 missingValues["match"]
             ),
-            GameMapUpk = ParseString(
-                matchTable,
-                "game_map_upk",
-                "Stadium_P",
-                missingValues["match"]
-            ),
+            GameMapUpk =
+                ParseString(matchTable, "game_map_upk", missingValues["match"]) ?? "Stadium_P",
             SkipReplays = ParseBool(matchTable, "skip_replays", false, missingValues["match"]),
             InstantStart = ParseBool(
                 matchTable,

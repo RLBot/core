@@ -11,7 +11,7 @@ public enum DataType : ushort
     /// Arrives at a high rate according to https://wiki.rlbot.org/botmaking/tick-rate/ except
     /// "desired tick rate" is not relevant here
     /// </summary>
-    GameTickPacket,
+    GamePacket,
 
     /// <summary>
     /// Sent once when a match starts, or when you first connect.
@@ -28,11 +28,6 @@ public enum DataType : ushort
     RenderGroup,
     RemoveRenderGroup,
     MatchComms,
-
-    /// <summary>
-    /// Sent every time the ball diverges from the previous prediction,
-    /// or when the previous prediction no longer gives a full 6 seconds into the future
-    /// </summary>
     BallPrediction,
 
     /// <summary>
@@ -53,5 +48,6 @@ public enum DataType : ushort
     /// <summary>
     /// Indicates that a connection is ready to receive `GameTickPacket`s
     /// </summary>
-    InitComplete
+    InitComplete,
+    ControllableTeamInfo
 }

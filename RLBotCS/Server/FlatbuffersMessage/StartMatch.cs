@@ -20,8 +20,10 @@ internal record StartMatch(MatchSettingsT MatchSettings) : IServerMessage
         context.StateSettingIsEnabled = MatchSettings.EnableStateSetting;
 
         context.MatchStarter.StartMatch(MatchSettings);
+        var realMatchSettings = context.MatchStarter.GetMatchSettings() ?? MatchSettings;
+        context.Bridge.TryWrite(new ClearProcessPlayerReservation(realMatchSettings));
 
-        var newMode = BallPredictor.GetMode(MatchSettings);
+        var newMode = BallPredictor.GetMode(realMatchSettings);
         if (newMode != context.PredictionMode)
         {
             BallPredictor.SetMode(newMode);
@@ -32,20 +34,25 @@ internal record StartMatch(MatchSettingsT MatchSettings) : IServerMessage
         foreach (var (writer, _, _) in context.Sessions.Values)
         {
             SessionMessage render = new SessionMessage.RendersAllowed(
-                MatchSettings.EnableRendering
+                context.RenderingIsEnabled
             );
             writer.TryWrite(render);
 
             SessionMessage stateSetting = new SessionMessage.StateSettingAllowed(
-                MatchSettings.EnableStateSetting
+                context.StateSettingIsEnabled
             );
             writer.TryWrite(stateSetting);
         }
 
         // Distribute the match settings to all waiting sessions
-        foreach (var writer in context.MatchSettingsWriters)
+        foreach (var (writer, agentId) in context.MatchSettingsWriters)
         {
-            writer.TryWrite(new SessionMessage.MatchSettings(MatchSettings));
+            writer.TryWrite(new SessionMessage.MatchSettings(realMatchSettings));
+
+            if (agentId != string.Empty)
+                context.Bridge.TryWrite(
+                    new PlayerInfoRequest(writer, realMatchSettings, agentId)
+                );
         }
 
         context.MatchSettingsWriters.Clear();

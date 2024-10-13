@@ -18,6 +18,7 @@ public class PlayerMappingTest
     public void TestSpawnProcess()
     {
         int spawnId = 2398249;
+        string agentId = "dev/abot";
         uint desiredIndex = 2;
         ushort actorId = 2398;
         ushort commandId = 9855;
@@ -25,6 +26,7 @@ public class PlayerMappingTest
         var spawnTracker = new SpawnTracker()
         {
             SpawnId = spawnId,
+            AgentId = agentId,
             CommandId = commandId,
             DesiredPlayerIndex = desiredIndex,
             IsBot = true
@@ -35,6 +37,8 @@ public class PlayerMappingTest
         var metadata = _playerMapping.ApplyCarSpawn(actorId, commandId);
 
         Assert.AreEqual(desiredIndex, _playerMapping.PlayerIndexFromActorId(actorId));
+        Assert.AreEqual(spawnId, metadata.SpawnId);
+        Assert.AreEqual(agentId, metadata.AgentId);
         Assert.IsTrue(metadata.IsBot);
         Assert.IsTrue(!metadata.IsCustomBot);
 

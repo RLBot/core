@@ -1,10 +1,11 @@
-﻿using Bridge.Models.Command;
-using Bridge.Models.Control;
+﻿using System.Threading.Channels;
+using Bridge.Models.Command;
 using Bridge.Models.Message;
 using Bridge.State;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.Conversion;
+using RLBotCS.ManagerTools;
 using PlayerInput = rlbot.flat.PlayerInput;
 
 namespace RLBotCS.Server;
@@ -18,18 +19,23 @@ internal record Input(PlayerInputT PlayerInput) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
-        CarInput carInput = FlatToModel.ToCarInput(PlayerInput.ControllerState);
         ushort? actorId = context.GameState.PlayerMapping.ActorIdFromPlayerIndex(
             PlayerInput.PlayerIndex
         );
 
-        if (actorId.HasValue)
+        if (actorId is ushort actorIdValue)
         {
             Bridge.Models.Control.PlayerInput playerInput =
-                new() { ActorId = actorId.Value, CarInput = carInput };
+                new()
+                {
+                    ActorId = actorIdValue,
+                    CarInput = FlatToModel.ToCarInput(PlayerInput.ControllerState)
+                };
             context.PlayerInputSender.SendPlayerInput(playerInput);
         }
-        else
+        else if (
+            !context.GameState.PlayerMapping.IsPlayerIndexPending(PlayerInput.PlayerIndex)
+        )
             context.Logger.LogError(
                 $"Got input from unknown player index {PlayerInput.PlayerIndex}"
             );
@@ -343,5 +349,81 @@ internal record AddPerfSample(uint Index, bool GotInput) : IBridgeMessage
     {
         if (context.GameState.GameCars.TryGetValue(Index, out var car))
             context.PerfMonitor.AddSample(car.Name, GotInput);
+    }
+}
+
+internal record ClearProcessPlayerReservation(MatchSettingsT MatchSettings) : IBridgeMessage
+{
+    public void HandleMessage(BridgeContext context) =>
+        context.ProcPlayerPair.SetPlayers(MatchSettings);
+}
+
+internal record PlayerInfoRequest(
+    ChannelWriter<SessionMessage> SessionWriter,
+    MatchSettingsT MatchSettings,
+    string AgentId
+) : IBridgeMessage
+{
+    public void HandleMessage(BridgeContext context)
+    {
+        bool isHivemind = false;
+        bool isScript = true;
+
+        foreach (var player in MatchSettings.PlayerConfigurations)
+        {
+            if (player.AgentId == AgentId)
+            {
+                isScript = false;
+                isHivemind = player.Hivemind;
+                break;
+            }
+        }
+
+        if (isHivemind)
+        {
+            if (
+                context.ProcPlayerPair.ReservePlayers(AgentId) is
+
+                (List<PlayerIdPair>, uint) players
+            )
+            {
+                SessionWriter.TryWrite(
+                    new SessionMessage.PlayerIdPairs(players.Item2, players.Item1)
+                );
+            }
+            else
+            {
+                context.Logger.LogError(
+                    $"Failed to reserve players for hivemind with agent id {AgentId}"
+                );
+            }
+        }
+        else if (isScript)
+        {
+            for (var i = 0; i < MatchSettings.ScriptConfigurations.Count; i++)
+            {
+                var script = MatchSettings.ScriptConfigurations[i];
+                if (script.AgentId == AgentId)
+                {
+                    PlayerIdPair player = new() { Index = (uint)i, SpawnId = script.SpawnId };
+                    SessionWriter.TryWrite(
+                        new SessionMessage.PlayerIdPairs(2, new() { player })
+                    );
+                    return;
+                }
+            }
+
+            context.Logger.LogError($"Failed to find script with agent id {AgentId}");
+        }
+        else if (context.ProcPlayerPair.ReservePlayer(AgentId) is (PlayerIdPair, uint) player)
+        {
+            SessionWriter.TryWrite(
+                new SessionMessage.PlayerIdPairs(player.Item2, new() { player.Item1 })
+            );
+        }
+        else
+        {
+            context.Logger.LogError($"Failed to reserve player for agent id {AgentId}");
+        }
     }
 }

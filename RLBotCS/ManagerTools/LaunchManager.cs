@@ -18,14 +18,16 @@ internal static class LaunchManager
 
     private static readonly ILogger Logger = Logging.GetLogger("LaunchManager");
 
-    public static string? GetGameArgsAndKill()
+    public static string? GetGameArgs(bool kill)
     {
         Process[] candidates = Process.GetProcessesByName("RocketLeague");
 
         foreach (var candidate in candidates)
         {
             string args = GetProcessArgs(candidate);
-            candidate.Kill();
+            if (kill)
+                candidate.Kill();
+
             return args;
         }
 
@@ -134,26 +136,21 @@ internal static class LaunchManager
     }
 
     public static void LaunchBots(
-        Dictionary<string, List<rlbot.flat.PlayerConfigurationT>> processGroups,
+        Dictionary<string, rlbot.flat.PlayerConfigurationT> processGroups,
         int rlbotSocketsPort
     )
     {
-        foreach (var processGroup in processGroups.Values)
+        foreach (var mainPlayer in processGroups.Values)
         {
-            var mainPlayer = processGroup[0];
             if (mainPlayer.RunCommand == "")
                 continue;
 
             Process botProcess = RunCommandInShell(mainPlayer.RunCommand);
 
-            if (mainPlayer.Location != "")
-                botProcess.StartInfo.WorkingDirectory = mainPlayer.Location;
+            if (mainPlayer.RootDir != "")
+                botProcess.StartInfo.WorkingDirectory = mainPlayer.RootDir;
 
-            List<int> spawnIds = processGroup.Select(player => player.SpawnId).ToList();
-            botProcess.StartInfo.EnvironmentVariables["RLBOT_SPAWN_IDS"] = string.Join(
-                ',',
-                spawnIds
-            );
+            botProcess.StartInfo.EnvironmentVariables["RLBOT_AGENT_ID"] = mainPlayer.AgentId;
             botProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
                 rlbotSocketsPort.ToString();
 
@@ -183,8 +180,7 @@ internal static class LaunchManager
             if (script.Location != "")
                 scriptProcess.StartInfo.WorkingDirectory = script.Location;
 
-            scriptProcess.StartInfo.EnvironmentVariables["RLBOT_SPAWN_IDS"] =
-                script.SpawnId.ToString();
+            scriptProcess.StartInfo.EnvironmentVariables["RLBOT_GROUP_ID"] = script.AgentId;
             scriptProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
                 rlbotSocketsPort.ToString();
 
@@ -222,24 +218,33 @@ internal static class LaunchManager
                     rocketLeague.Start();
                     break;
                 case rlbot.flat.Launcher.Epic:
-                    // we need a hack to launch the game properly
+                    bool nonRLBotGameRunning = IsRocketLeagueRunning();
 
-                    // start the game
-                    Process launcher = new();
-                    launcher.StartInfo.FileName = "cmd.exe";
-                    launcher.StartInfo.Arguments =
-                        "/c start \"\" \"com.epicgames.launcher://apps/9773aa1aa54f4f7b80e44bef04986cea%3A530145df28a24424923f5828cc9031a1%3ASugar?action=launch&silent=true\"";
-                    launcher.Start();
+                    // we don't need to start the game because there's another instance of non-rlbot rocket league open
+                    if (!nonRLBotGameRunning)
+                    {
+                        // we need a hack to launch the game properly
+                        // start the game
+                        Process launcher = new();
+                        launcher.StartInfo.FileName = "cmd.exe";
+                        launcher.StartInfo.Arguments =
+                            "/c start \"\" \"com.epicgames.launcher://apps/9773aa1aa54f4f7b80e44bef04986cea%3A530145df28a24424923f5828cc9031a1%3ASugar?action=launch&silent=true\"";
+                        launcher.Start();
+
+                        // wait for it to start
+                        Thread.Sleep(1000);
+                    }
 
                     Console.WriteLine("Waiting for Rocket League path details...");
+                    string? args = null;
 
                     // get the game path & login args, the quickly kill the game
                     // todo: add max number of retries
-                    string? args = null;
                     while (args is null)
                     {
+                        // don't kill the game if it was already running, and not for RLBot
+                        args = GetGameArgs(!nonRLBotGameRunning);
                         Thread.Sleep(1000);
-                        args = GetGameArgsAndKill();
                     }
 
                     if (args is null)
@@ -327,6 +332,26 @@ internal static class LaunchManager
         Process
             .GetProcesses()
             .Any(candidate => candidate.ProcessName.Contains("RocketLeague"));
+
+    public static bool IsRocketLeagueRunningWithArgs()
+    {
+        Process[] candidates = Process.GetProcesses();
+
+        foreach (var candidate in candidates)
+        {
+            if (!candidate.ProcessName.Contains("RocketLeague"))
+                continue;
+
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return true;
+
+            var args = GetProcessArgs(candidate);
+            if (args.Contains("rlbot"))
+                return true;
+        }
+
+        return false;
+    }
 
     private static string GetWindowsSteamPath()
     {
