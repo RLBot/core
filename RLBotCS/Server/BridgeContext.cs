@@ -18,7 +18,7 @@ internal class BridgeContext(
 
     public int ticksSkipped = 0;
     public GameState GameState = new();
-    public AgentReservation ProcPlayerPair = new();
+    public AgentReservation AgentReservation = new();
 
     public ChannelWriter<IServerMessage> Writer { get; } = writer;
     public ChannelReader<IBridgeMessage> Reader { get; } = reader;

@@ -355,7 +355,7 @@ internal record AddPerfSample(uint Index, bool GotInput) : IBridgeMessage
 internal record ClearProcessPlayerReservation(MatchSettingsT MatchSettings) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context) =>
-        context.ProcPlayerPair.SetPlayers(MatchSettings);
+        context.AgentReservation.SetPlayers(MatchSettings);
 }
 
 internal record PlayerInfoRequest(
@@ -382,7 +382,7 @@ internal record PlayerInfoRequest(
         if (isHivemind)
         {
             if (
-                context.ProcPlayerPair.ReservePlayers(AgentId) is
+                context.AgentReservation.ReservePlayers(AgentId) is
 
                 (List<PlayerIdPair>, uint) players
             )
@@ -415,7 +415,9 @@ internal record PlayerInfoRequest(
 
             context.Logger.LogError($"Failed to find script with agent id {AgentId}");
         }
-        else if (context.ProcPlayerPair.ReservePlayer(AgentId) is (PlayerIdPair, uint) player)
+        else if (
+            context.AgentReservation.ReservePlayer(AgentId) is (PlayerIdPair, uint) player
+        )
         {
             SessionWriter.TryWrite(
                 new SessionMessage.PlayerIdPairs(player.Item2, new() { player.Item1 })
@@ -426,4 +428,10 @@ internal record PlayerInfoRequest(
             context.Logger.LogError($"Failed to reserve player for agent id {AgentId}");
         }
     }
+}
+
+internal record UnreservePlayers(uint team, List<PlayerIdPair> players) : IBridgeMessage
+{
+    public void HandleMessage(BridgeContext context) =>
+        context.AgentReservation.UnreservePlayers(team, players);
 }

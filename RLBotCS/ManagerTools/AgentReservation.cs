@@ -107,4 +107,20 @@ public class AgentReservation
 
         return null;
     }
+
+    public void UnreservePlayers(uint team, List<PlayerIdPair> players)
+    {
+        foreach (var player in players)
+        {
+            PlayerMetadata? playerMetadata = _knownPlayers.FirstOrDefault(
+                playerMetadata =>
+                    playerMetadata.Team == team
+                    && playerMetadata.Index == player.Index
+                    && playerMetadata.SpawnId == player.SpawnId
+            );
+
+            if (playerMetadata != null)
+                playerMetadata.IsReserved = false;
+        }
+    }
 }
