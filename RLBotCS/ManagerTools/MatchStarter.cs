@@ -18,6 +18,7 @@ internal class MatchStarter(
 
     private MatchSettingsT? _deferredMatchSettings;
     private MatchSettingsT? _matchSettings;
+    private Dictionary<string, string> _hivemindNameMap = new();
     private int _expectedConnections;
     private int _connectionReadies;
 
@@ -92,6 +93,7 @@ internal class MatchStarter(
     private void PreprocessMatch(MatchSettingsT matchSettings)
     {
         Dictionary<string, int> playerNames = [];
+        _hivemindNameMap.Clear();
 
         foreach (var playerConfig in matchSettings.PlayerConfigurations)
         {
@@ -108,6 +110,9 @@ internal class MatchStarter(
                 playerConfig.Name = playerName;
             }
 
+            if (playerConfig.Hivemind)
+                _hivemindNameMap[playerConfig.Name] = playerName;
+
             if (playerConfig.SpawnId == 0)
                 playerConfig.SpawnId = playerConfig.Name.GetHashCode();
 
@@ -116,18 +121,19 @@ internal class MatchStarter(
             playerConfig.AgentId ??= "";
         }
 
+        Dictionary<string, int> scriptNames = [];
         foreach (var scriptConfig in matchSettings.ScriptConfigurations)
         {
             // De-duplicating similar names, Overwrites original value
             string scriptName = scriptConfig.Name ?? "";
-            if (playerNames.TryGetValue(scriptName, out int value))
+            if (scriptNames.TryGetValue(scriptName, out int value))
             {
-                playerNames[scriptName] = ++value;
+                scriptNames[scriptName] = ++value;
                 scriptConfig.Name = scriptName + $" ({value})";
             }
             else
             {
-                playerNames[scriptName] = 0;
+                scriptNames[scriptName] = 0;
                 scriptConfig.Name = scriptName;
             }
 
@@ -162,7 +168,7 @@ internal class MatchStarter(
                     + "_"
                     + playerConfig.RunCommand
                     + "_"
-                    + playerConfig.Name
+                    + _hivemindNameMap[playerConfig.Name]
                     + "_"
                     + playerConfig.Team;
 
@@ -174,6 +180,8 @@ internal class MatchStarter(
                 processes[playerConfig.Name] = playerConfig;
             }
         }
+
+        _hivemindNameMap.Clear();
 
         _connectionReadies = 0;
         _expectedConnections = matchSettings.ScriptConfigurations.Count + processes.Count;
