@@ -75,8 +75,8 @@ public class PerfMonitor
 
         var renderText = new String2DT()
         {
-            Y = 10f / 1920f,
-            X = 200f / 1080f,
+            X = 10f / Rendering.ResolutionWidthPixels,
+            Y = 200f / Rendering.ResolutionHeightPixels,
             Text = message,
             Foreground = TextColor,
             Background = BackColor,
