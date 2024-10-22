@@ -180,7 +180,7 @@ internal static class LaunchManager
             if (script.Location != "")
                 scriptProcess.StartInfo.WorkingDirectory = script.Location;
 
-            scriptProcess.StartInfo.EnvironmentVariables["RLBOT_GROUP_ID"] = script.AgentId;
+            scriptProcess.StartInfo.EnvironmentVariables["RLBOT_AGENT_ID"] = script.AgentId;
             scriptProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
                 rlbotSocketsPort.ToString();
 
