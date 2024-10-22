@@ -2,7 +2,6 @@ using System.Text;
 using Bridge.Controller;
 using Bridge.State;
 using Bridge.TCP;
-using Microsoft.Extensions.Primitives;
 using rlbot.flat;
 using RLBotCS.Conversion;
 using Color = System.Drawing.Color;
@@ -17,7 +16,7 @@ public class Rendering(TcpMessenger tcpMessenger)
     public const int ResolutionHeightPixels = 1080;
     public const int FontWidthPixels = 10;
     public const int FontHeightPixels = 20;
-    
+
     private readonly RenderingSender _renderingSender = new(tcpMessenger);
     private readonly Dictionary<int, Dictionary<int, List<ushort>>> _clientRenderTracker = [];
 
@@ -85,17 +84,20 @@ public class Rendering(TcpMessenger tcpMessenger)
     private ushort SendRect2D(Rect2DT rect2Dt)
     {
         // Move rect left/up when width/height is negative
-        var adjustedX = !rect2Dt.Centered && rect2Dt.Width < 0 ? rect2Dt.X - rect2Dt.Width : rect2Dt.X;
-        var adjustedY = !rect2Dt.Centered && rect2Dt.Height < 0 ? rect2Dt.Y - rect2Dt.Height : rect2Dt.X;
-        
+        var adjustedX =
+            !rect2Dt.Centered && rect2Dt.Width < 0 ? rect2Dt.X - rect2Dt.Width : rect2Dt.X;
+        var adjustedY =
+            !rect2Dt.Centered && rect2Dt.Height < 0 ? rect2Dt.Y - rect2Dt.Height : rect2Dt.X;
+
         // Fake a filled rectangle using a string with colored background
         var (text, scale) = MakeFakeRectangleString(
-            (int)Math.Abs(rect2Dt.Width * ResolutionWidthPixels), 
-            (int)Math.Abs(rect2Dt.Height * ResolutionHeightPixels));
-        
+            (int)Math.Abs(rect2Dt.Width * ResolutionWidthPixels),
+            (int)Math.Abs(rect2Dt.Height * ResolutionHeightPixels)
+        );
+
         var hAlign = rect2Dt.Centered ? TextHAlign.Center : TextHAlign.Left;
         var vAlign = rect2Dt.Centered ? TextHAlign.Center : TextHAlign.Left;
-        
+
         return _renderingSender.AddText2D(
             text,
             adjustedX,
@@ -112,9 +114,10 @@ public class Rendering(TcpMessenger tcpMessenger)
     {
         // Fake a filled rectangle using a string with colored background
         var (text, scale) = MakeFakeRectangleString(
-            (int)Math.Abs(rect3Dt.Width * ResolutionWidthPixels), 
-            (int)Math.Abs(rect3Dt.Height * ResolutionHeightPixels));
-        
+            (int)Math.Abs(rect3Dt.Width * ResolutionWidthPixels),
+            (int)Math.Abs(rect3Dt.Height * ResolutionHeightPixels)
+        );
+
         return _renderingSender.AddText3D(
             text,
             FlatToModel.ToRenderAnchor(rect3Dt.Anchor, gameState),
@@ -151,7 +154,7 @@ public class Rendering(TcpMessenger tcpMessenger)
         // We use the greatest common divisor to simplify the fraction (width/height)
         // minimizing the characters needed for the rectangle.
         int gcd = Gcd(width, height);
-        int cols = (width / gcd) * (FontHeightPixels / FontWidthPixels); 
+        int cols = (width / gcd) * (FontHeightPixels / FontWidthPixels);
         int rows = height / gcd;
 
         StringBuilder str = new StringBuilder(cols * rows + rows);
