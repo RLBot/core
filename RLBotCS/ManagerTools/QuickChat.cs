@@ -71,7 +71,7 @@ public class QuickChat
             return;
         _hasUpdate = false;
 
-        int xVal = 10;
+        float yVal = 10f;
         List<RenderMessageT> renderMessages = new();
 
         foreach (var chat in _chats)
@@ -82,8 +82,8 @@ public class QuickChat
                 new()
                 {
                     Text = chat.Item2.Display,
-                    Y = 10f / 1920f,
-                    X = xVal / 1080f,
+                    X = 10f / Rendering.ResolutionWidthPixels,
+                    Y = yVal / Rendering.ResolutionHeightPixels,
                     Scale = 1,
                     Foreground = textColor,
                     Background = BackgroundColor,
@@ -95,7 +95,7 @@ public class QuickChat
                 new RenderMessageT() { Variety = RenderTypeUnion.FromString2D(message), }
             );
 
-            xVal += 20;
+            yVal += Rendering.FontHeightPixels;
         }
 
         if (renderMessages.Count > 0)

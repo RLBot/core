@@ -1,21 +1,28 @@
+using System.Text;
 using Bridge.Controller;
 using Bridge.State;
 using Bridge.TCP;
 using rlbot.flat;
 using RLBotCS.Conversion;
+using Color = System.Drawing.Color;
 
 namespace RLBotCS.ManagerTools;
 
 public class Rendering(TcpMessenger tcpMessenger)
 {
-    private static int MaxClearsPerTick = 1024;
+    private const int MaxClearsPerTick = 1024;
+
+    public const int ResolutionWidthPixels = 1920;
+    public const int ResolutionHeightPixels = 1080;
+    public const int FontWidthPixels = 10;
+    public const int FontHeightPixels = 20;
 
     private readonly RenderingSender _renderingSender = new(tcpMessenger);
     private readonly Dictionary<int, Dictionary<int, List<ushort>>> _clientRenderTracker = [];
 
     private readonly Queue<ushort> _RenderClearQueue = new();
 
-    private ushort? RenderItem(RenderTypeUnion renderItem, GameState gameState) =>
+    private ushort RenderItem(RenderTypeUnion renderItem, GameState gameState) =>
         renderItem.Value switch
         {
             Line3DT { Start: var start, End: var end, Color: var color }
@@ -69,8 +76,103 @@ public class Rendering(TcpMessenger tcpMessenger)
                     (byte)vAlign,
                     scale
                 ),
-            _ => null
+            Rect2DT rect2Dt => SendRect2D(rect2Dt),
+            Rect3DT rect3Dt => SendRect3D(rect3Dt, gameState),
+            _ => throw new NotImplementedException("Unknown RenderMessage"),
         };
+
+    private ushort SendRect2D(Rect2DT rect2Dt)
+    {
+        // Move rect left/up when width/height is negative
+        var adjustedX =
+            !rect2Dt.Centered && rect2Dt.Width < 0 ? rect2Dt.X - rect2Dt.Width : rect2Dt.X;
+        var adjustedY =
+            !rect2Dt.Centered && rect2Dt.Height < 0 ? rect2Dt.Y - rect2Dt.Height : rect2Dt.X;
+
+        // Fake a filled rectangle using a string with colored background
+        var (text, scale) = MakeFakeRectangleString(
+            (int)Math.Abs(rect2Dt.Width * ResolutionWidthPixels),
+            (int)Math.Abs(rect2Dt.Height * ResolutionHeightPixels)
+        );
+
+        var hAlign = rect2Dt.Centered ? TextHAlign.Center : TextHAlign.Left;
+        var vAlign = rect2Dt.Centered ? TextHAlign.Center : TextHAlign.Left;
+
+        return _renderingSender.AddText2D(
+            text,
+            adjustedX,
+            adjustedY,
+            Color.Transparent, // Foreground
+            FlatToModel.ToColor(rect2Dt.Color), // Background
+            (byte)hAlign,
+            (byte)vAlign,
+            scale
+        );
+    }
+
+    private ushort SendRect3D(Rect3DT rect3Dt, GameState gameState)
+    {
+        // Fake a filled rectangle using a string with colored background
+        var (text, scale) = MakeFakeRectangleString(
+            (int)Math.Abs(rect3Dt.Width * ResolutionWidthPixels),
+            (int)Math.Abs(rect3Dt.Height * ResolutionHeightPixels)
+        );
+
+        return _renderingSender.AddText3D(
+            text,
+            FlatToModel.ToRenderAnchor(rect3Dt.Anchor, gameState),
+            Color.Transparent,
+            FlatToModel.ToColor(rect3Dt.Color),
+            (byte)TextHAlign.Center,
+            (byte)TextVAlign.Center,
+            scale
+        );
+    }
+
+    /// <summary>
+    /// Computes a string in the shape of a rectangle. The rectangle has the given width and height in pixels when
+    /// scaled the string is scaled with  returned scaling factor. We use this as a hack to created filled rectangles
+    /// for rectangle rendering.
+    /// </summary>
+    /// <returns></returns>
+    private (string, float) MakeFakeRectangleString(int width, int height)
+    {
+        int Gcd(int a, int b)
+        {
+            // Greatest common divisor by Euclidean algorithm https://stackoverflow.com/a/41766138
+            while (a != 0 && b != 0)
+            {
+                if (a > b)
+                    a %= b;
+                else
+                    b %= a;
+            }
+
+            return a | b;
+        }
+
+        // We use the greatest common divisor to simplify the fraction (width/height)
+        // minimizing the characters needed for the rectangle.
+        int gcd = Gcd(width, height);
+        int cols = (width / gcd) * (FontHeightPixels / FontWidthPixels);
+        int rows = height / gcd;
+
+        StringBuilder str = new StringBuilder(cols * rows + rows);
+        for (int r = 0; r < rows; r++)
+        {
+            for (int c = 0; c < cols; c++)
+            {
+                str.Append(' ');
+            }
+
+            if (r + 1 < rows)
+            {
+                str.Append('\n');
+            }
+        }
+
+        return (str.ToString(), gcd / (float)FontHeightPixels);
+    }
 
     public void AddRenderGroup(
         int clientId,
@@ -86,8 +188,9 @@ public class Rendering(TcpMessenger tcpMessenger)
 
         List<ushort> renderGroup = [];
         foreach (RenderMessageT renderItem in renderItems)
-            if (RenderItem(renderItem.Variety, gameState) is { } renderItemId)
-                renderGroup.Add(renderItemId);
+        {
+            renderGroup.Add(RenderItem(renderItem.Variety, gameState));
+        }
 
         _renderingSender.Send();
 
