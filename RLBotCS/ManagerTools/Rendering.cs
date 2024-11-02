@@ -87,7 +87,7 @@ public class Rendering(TcpMessenger tcpMessenger)
         var adjustedX =
             !rect2Dt.Centered && rect2Dt.Width < 0 ? rect2Dt.X - rect2Dt.Width : rect2Dt.X;
         var adjustedY =
-            !rect2Dt.Centered && rect2Dt.Height < 0 ? rect2Dt.Y - rect2Dt.Height : rect2Dt.X;
+            !rect2Dt.Centered && rect2Dt.Height < 0 ? rect2Dt.Y - rect2Dt.Height : rect2Dt.Y;
 
         // Fake a filled rectangle using a string with colored background
         var (text, scale) = MakeFakeRectangleString(
