@@ -208,7 +208,7 @@ internal class MatchStarter(
 
         var shouldSpawnNewMap = matchSettings.ExistingMatchBehavior switch
         {
-            ExistingMatchBehavior.Continue_And_Spawn => !_hasEverLoadedMap,
+            ExistingMatchBehavior.Continue_And_Spawn => false,
             ExistingMatchBehavior.Restart_If_Different
                 => MatchEnded || IsDifferentFromLast(matchSettings),
             _ => true
