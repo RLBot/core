@@ -102,7 +102,7 @@ internal class MatchStarter(
             if (playerNames.TryGetValue(playerName, out int value))
             {
                 playerNames[playerName] = ++value;
-                playerConfig.Name = playerName + $" ({value})";
+                playerConfig.Name = playerName + $" ({value + 1})";
             }
             else
             {
