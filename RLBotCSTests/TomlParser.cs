@@ -59,8 +59,45 @@ public class TomlParser
         Assert.AreEqual(Launcher.Custom, edgeMS.Launcher);
         Assert.AreEqual("legendary", edgeMS.GamePath);
         Assert.AreEqual(MatchLength.Five_Minutes, edgeMS.MutatorSettings.MatchLength);
+
         Assert.AreEqual("Boomer", edgeMS.PlayerConfigurations[0].Name);
         Assert.AreEqual(PlayerClass.Psyonix, edgeMS.PlayerConfigurations[0].Variety.Type);
         Assert.AreEqual(292u, edgeMS.PlayerConfigurations[0].Loadout.DecalId);
+
+        Assert.AreEqual("Test Bot", edgeMS.PlayerConfigurations[1].Name);
+        Assert.AreEqual(PlayerClass.RLBot, edgeMS.PlayerConfigurations[1].Variety.Type);
+        Assert.AreEqual(69u, edgeMS.PlayerConfigurations[1].Loadout.TeamColorId);
+        Assert.AreEqual(0u, edgeMS.PlayerConfigurations[1].Loadout.CustomColorId);
+        Assert.AreEqual(23u, edgeMS.PlayerConfigurations[1].Loadout.CarId);
+        Assert.AreEqual(6083u, edgeMS.PlayerConfigurations[1].Loadout.DecalId);
+        Assert.AreEqual(1580u, edgeMS.PlayerConfigurations[1].Loadout.WheelsId);
+        Assert.AreEqual(35u, edgeMS.PlayerConfigurations[1].Loadout.BoostId);
+        Assert.AreEqual(0u, edgeMS.PlayerConfigurations[1].Loadout.AntennaId);
+        Assert.AreEqual(0u, edgeMS.PlayerConfigurations[1].Loadout.HatId);
+        Assert.AreEqual(1681u, edgeMS.PlayerConfigurations[1].Loadout.PaintFinishId);
+        Assert.AreEqual(1681u, edgeMS.PlayerConfigurations[1].Loadout.CustomFinishId);
+        Assert.AreEqual(5635u, edgeMS.PlayerConfigurations[1].Loadout.EngineAudioId);
+        Assert.AreEqual(3220u, edgeMS.PlayerConfigurations[1].Loadout.TrailsId);
+        Assert.AreEqual(4118u, edgeMS.PlayerConfigurations[1].Loadout.GoalExplosionId);
+        Assert.AreEqual(12u, edgeMS.PlayerConfigurations[1].Loadout.LoadoutPaint.CarPaintId);
+        Assert.AreEqual(12u, edgeMS.PlayerConfigurations[1].Loadout.LoadoutPaint.DecalPaintId);
+        Assert.AreEqual(
+            12u,
+            edgeMS.PlayerConfigurations[1].Loadout.LoadoutPaint.WheelsPaintId
+        );
+        Assert.AreEqual(12u, edgeMS.PlayerConfigurations[1].Loadout.LoadoutPaint.BoostPaintId);
+        Assert.AreEqual(
+            0u,
+            edgeMS.PlayerConfigurations[1].Loadout.LoadoutPaint.AntennaPaintId
+        );
+        Assert.AreEqual(0u, edgeMS.PlayerConfigurations[1].Loadout.LoadoutPaint.HatPaintId);
+        Assert.AreEqual(
+            12u,
+            edgeMS.PlayerConfigurations[1].Loadout.LoadoutPaint.TrailsPaintId
+        );
+        Assert.AreEqual(
+            12u,
+            edgeMS.PlayerConfigurations[1].Loadout.LoadoutPaint.GoalExplosionPaintId
+        );
     }
 }

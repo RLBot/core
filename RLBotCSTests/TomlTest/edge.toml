@@ -13,3 +13,7 @@ match_length = "random stuff"
 name = "Boomer"
 type = "psyonix"
 skill = "allstar"
+
+[[cars]]
+config = "bot.toml"
+team = 1
