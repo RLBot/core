@@ -91,24 +91,6 @@ public static class ConfigParser
         }
     }
 
-    private static int ParseInt(
-        TomlTable table,
-        string key,
-        int fallback,
-        List<string> missingValues
-    )
-    {
-        try
-        {
-            return (int)(long)table[key];
-        }
-        catch (KeyNotFoundException)
-        {
-            missingValues.Add(key);
-            return fallback;
-        }
-    }
-
     private static uint ParseUint(
         TomlTable table,
         string key,
@@ -119,24 +101,6 @@ public static class ConfigParser
         try
         {
             return (uint)(long)table[key];
-        }
-        catch (KeyNotFoundException)
-        {
-            missingValues.Add(key);
-            return fallback;
-        }
-    }
-
-    private static float ParseFloat(
-        TomlTable table,
-        string key,
-        float fallback,
-        List<string> missingValues
-    )
-    {
-        try
-        {
-            return Convert.ToSingle(table[key]);
         }
         catch (KeyNotFoundException)
         {

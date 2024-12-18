@@ -23,7 +23,6 @@ internal class MatchStarter(
     private int _connectionReadies;
 
     private bool _communicationStarted;
-    private bool _hasEverLoadedMap;
     private bool _needsSpawnCars;
 
     public bool HasSpawnedMap;
@@ -71,7 +70,6 @@ internal class MatchStarter(
     public void MapSpawned(string MapName)
     {
         Logger.LogInformation("Got map info for " + MapName);
-        _hasEverLoadedMap = true;
         HasSpawnedMap = true;
 
         if (!_needsSpawnCars)
@@ -217,7 +215,6 @@ internal class MatchStarter(
         _needsSpawnCars = true;
         if (shouldSpawnNewMap)
         {
-            _hasEverLoadedMap = true;
             HasSpawnedMap = false;
             _matchSettings = null;
             _deferredMatchSettings = matchSettings;

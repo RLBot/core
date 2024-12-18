@@ -71,17 +71,8 @@ internal static class FlatToModel
 
     internal static Loadout ToLoadout(rlbot.flat.PlayerLoadoutT l, uint team)
     {
-        Color primaryColor = l.PrimaryColorLookup switch
-        {
-            { } p => Color.FromArgb(p.A, p.R, p.G, p.B),
-            _ => ColorSwatches.GetPrimary(l.TeamColorId, team)
-        };
-
-        Color secondaryColor = l.SecondaryColorLookup switch
-        {
-            { } s => Color.FromArgb(s.A, s.R, s.G, s.B),
-            _ => ColorSwatches.GetSecondary(l.CustomColorId)
-        };
+        Color primaryColor = ColorSwatches.GetPrimary(l.TeamColorId, team);
+        Color secondaryColor = ColorSwatches.GetSecondary(l.CustomColorId);
 
         var lp = l.LoadoutPaint;
 
