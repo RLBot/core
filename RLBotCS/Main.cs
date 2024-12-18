@@ -82,15 +82,17 @@ Thread bridgeHandler =
 bridgeHandler.Start();
 
 // Block until everything properly shuts down
-void WaitForShutdown()
+void WaitForShutdown(bool log = true)
 {
     rlbotServer.Join();
-    logger.LogInformation("RLBot server has shut down successfully.");
+    if (log)
+        logger.LogInformation("TCP handler has shut down successfully.");
 
     bridgeWriter.TryComplete();
 
     bridgeHandler.Join();
-    logger.LogInformation("Bridge handler has shut down successfully.");
+    if (log)
+        logger.LogInformation("Bridge handler has shut down successfully.");
 }
 
 void Terminate()
@@ -108,4 +110,4 @@ AppDomain.CurrentDomain.ProcessExit += (_, _) => Terminate();
 Console.CancelKeyPress += (_, _) => Terminate();
 
 // Wait for a normal shutdown
-WaitForShutdown();
+WaitForShutdown(false);
