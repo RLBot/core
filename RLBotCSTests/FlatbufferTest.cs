@@ -32,7 +32,7 @@ public class FlatbufferTest
                     AgentId = RandomString(64),
                     RootDir = RandomString(64),
                     RunCommand = RandomString(64),
-                    Loadout = new PlayerLoadoutT() { LoadoutPaint = new LoadoutPaintT(), },
+                    Loadout = new PlayerLoadoutT() { LoadoutPaint = new LoadoutPaintT() },
                 }
             );
         }

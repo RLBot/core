@@ -46,39 +46,41 @@ var bridgeWriter = bridgeChannel.Writer;
 var serverChannel = Channel.CreateUnbounded<IServerMessage>();
 var serverWriter = serverChannel.Writer;
 
-Thread rlbotServer =
-    new(() =>
-    {
-        MatchStarter matchStarter = new(bridgeWriter, gamePort, rlbotSocketsPort);
-        FlatBuffersServer flatBuffersServer =
-            new(rlbotSocketsPort, serverChannel, matchStarter, bridgeWriter);
+Thread rlbotServer = new(() =>
+{
+    MatchStarter matchStarter = new(bridgeWriter, gamePort, rlbotSocketsPort);
+    FlatBuffersServer flatBuffersServer = new(
+        rlbotSocketsPort,
+        serverChannel,
+        matchStarter,
+        bridgeWriter
+    );
 
-        try
-        {
-            flatBuffersServer.BlockingRun();
-        }
-        finally
-        {
-            flatBuffersServer.Cleanup();
-        }
-    });
+    try
+    {
+        flatBuffersServer.BlockingRun();
+    }
+    finally
+    {
+        flatBuffersServer.Cleanup();
+    }
+});
 rlbotServer.Start();
 
-Thread bridgeHandler =
-    new(() =>
-    {
-        TcpMessenger tcpMessenger = new(gamePort);
-        BridgeHandler bridgeHandler = new(serverWriter, bridgeChannel.Reader, tcpMessenger);
+Thread bridgeHandler = new(() =>
+{
+    TcpMessenger tcpMessenger = new(gamePort);
+    BridgeHandler bridgeHandler = new(serverWriter, bridgeChannel.Reader, tcpMessenger);
 
-        try
-        {
-            bridgeHandler.BlockingRun();
-        }
-        finally
-        {
-            bridgeHandler.Cleanup();
-        }
-    });
+    try
+    {
+        bridgeHandler.BlockingRun();
+    }
+    finally
+    {
+        bridgeHandler.Cleanup();
+    }
+});
 bridgeHandler.Start();
 
 // Block until everything properly shuts down

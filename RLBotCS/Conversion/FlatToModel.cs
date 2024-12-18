@@ -42,13 +42,12 @@ internal static class FlatToModel
     ) =>
         relative?.Value switch
         {
-            rlbot.flat.CarAnchorT { Index: var index, Local: var local }
-                => new RelativeAnchor(
-                    ToVectorFromT(local),
-                    gameState.PlayerMapping.ActorIdFromPlayerIndex(index) ?? 0
-                ),
-            rlbot.flat.BallAnchorT { Index: var index, Local: var local }
-                => new RelativeAnchor(
+            rlbot.flat.CarAnchorT { Index: var index, Local: var local } => new RelativeAnchor(
+                ToVectorFromT(local),
+                gameState.PlayerMapping.ActorIdFromPlayerIndex(index) ?? 0
+            ),
+            rlbot.flat.BallAnchorT { Index: var index, Local: var local } =>
+                new RelativeAnchor(
                     ToVectorFromT(local),
                     gameState.GetBallActorIdFromIndex(index) ?? 0
                 ),
@@ -76,18 +75,17 @@ internal static class FlatToModel
 
         var lp = l.LoadoutPaint;
 
-        LoadoutPaint loadoutPaint =
-            new()
-            {
-                CarPaintId = (byte)lp.CarPaintId,
-                DecalPaintId = (byte)lp.DecalPaintId,
-                WheelsPaintId = (byte)lp.WheelsPaintId,
-                BoostPaintId = (byte)lp.BoostPaintId,
-                AntennaPaintId = (byte)lp.AntennaPaintId,
-                HatPaintId = (byte)lp.HatPaintId,
-                TrailsPaintId = (byte)lp.TrailsPaintId,
-                GoalExplosionPaintId = (byte)lp.GoalExplosionPaintId
-            };
+        LoadoutPaint loadoutPaint = new()
+        {
+            CarPaintId = (byte)lp.CarPaintId,
+            DecalPaintId = (byte)lp.DecalPaintId,
+            WheelsPaintId = (byte)lp.WheelsPaintId,
+            BoostPaintId = (byte)lp.BoostPaintId,
+            AntennaPaintId = (byte)lp.AntennaPaintId,
+            HatPaintId = (byte)lp.HatPaintId,
+            TrailsPaintId = (byte)lp.TrailsPaintId,
+            GoalExplosionPaintId = (byte)lp.GoalExplosionPaintId,
+        };
 
         return new Loadout
         {
@@ -104,7 +102,7 @@ internal static class FlatToModel
             WheelsId = (ushort)l.WheelsId,
             LoadoutPaint = loadoutPaint,
             PrimaryColorLookup = primaryColor,
-            SecondaryColorLookup = secondaryColor
+            SecondaryColorLookup = secondaryColor,
         };
     }
 
@@ -114,13 +112,12 @@ internal static class FlatToModel
     ) =>
         partVec switch
         {
-            not null
-                => new Vector3(
-                    partVec.X?.Val ?? defaultVec.X,
-                    partVec.Y?.Val ?? defaultVec.Y,
-                    partVec.Z?.Val ?? defaultVec.Z
-                ),
-            _ => defaultVec
+            not null => new Vector3(
+                partVec.X?.Val ?? defaultVec.X,
+                partVec.Y?.Val ?? defaultVec.Y,
+                partVec.Z?.Val ?? defaultVec.Z
+            ),
+            _ => defaultVec,
         };
 
     internal static Rotator DesiredToRotator(
@@ -129,13 +126,12 @@ internal static class FlatToModel
     ) =>
         partRot switch
         {
-            not null
-                => new Rotator(
-                    partRot.Pitch?.Val ?? defaultRot.Pitch,
-                    partRot.Yaw?.Val ?? defaultRot.Yaw,
-                    partRot.Roll?.Val ?? defaultRot.Roll
-                ),
-            _ => defaultRot
+            not null => new Rotator(
+                partRot.Pitch?.Val ?? defaultRot.Pitch,
+                partRot.Yaw?.Val ?? defaultRot.Yaw,
+                partRot.Roll?.Val ?? defaultRot.Roll
+            ),
+            _ => defaultRot,
         };
 
     internal static Physics DesiredToPhysics(rlbot.flat.DesiredPhysicsT p, Physics defaultP) =>

@@ -3,7 +3,7 @@
 internal enum ServerAction
 {
     Continue,
-    Stop
+    Stop,
 }
 
 internal interface IServerMessage

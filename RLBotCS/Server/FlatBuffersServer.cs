@@ -13,11 +13,10 @@ internal class FlatBuffersServer(
     ChannelWriter<IBridgeMessage> bridge
 )
 {
-    private readonly ServerContext _context =
-        new(incomingMessages, matchStarter, bridge)
-        {
-            Server = new TcpListener(new(new byte[] { 0, 0, 0, 0 }), rlbotPort)
-        };
+    private readonly ServerContext _context = new(incomingMessages, matchStarter, bridge)
+    {
+        Server = new TcpListener(new(new byte[] { 0, 0, 0, 0 }), rlbotPort),
+    };
 
     private void AddSession(TcpClient client)
     {
@@ -26,37 +25,35 @@ internal class FlatBuffersServer(
 
         int clientId = client.Client.Handle.ToInt32();
 
-        Thread sessionThread =
-            new(() =>
-            {
-                FlatBuffersSession session =
-                    new(
-                        client,
-                        clientId,
-                        sessionChannel,
-                        _context.IncomingMessagesWriter,
-                        _context.Bridge,
-                        _context.RenderingIsEnabled,
-                        _context.StateSettingIsEnabled
-                    );
+        Thread sessionThread = new(() =>
+        {
+            FlatBuffersSession session = new(
+                client,
+                clientId,
+                sessionChannel,
+                _context.IncomingMessagesWriter,
+                _context.Bridge,
+                _context.RenderingIsEnabled,
+                _context.StateSettingIsEnabled
+            );
 
-                try
-                {
-                    session.BlockingRun();
-                }
-                catch (IOException)
-                {
-                    _context.Logger.LogWarning("Session suddenly terminated the connection?");
-                }
-                catch (Exception e)
-                {
-                    _context.Logger.LogError($"Error in session: {e}");
-                }
-                finally
-                {
-                    session.Cleanup();
-                }
-            });
+            try
+            {
+                session.BlockingRun();
+            }
+            catch (IOException)
+            {
+                _context.Logger.LogWarning("Session suddenly terminated the connection?");
+            }
+            catch (Exception e)
+            {
+                _context.Logger.LogError($"Error in session: {e}");
+            }
+            finally
+            {
+                session.Cleanup();
+            }
+        });
         sessionThread.Start();
 
         _context.Sessions.Add(clientId, (sessionChannel.Writer, sessionThread, 0));

@@ -207,9 +207,9 @@ internal class MatchStarter(
         var shouldSpawnNewMap = matchSettings.ExistingMatchBehavior switch
         {
             ExistingMatchBehavior.Continue_And_Spawn => false,
-            ExistingMatchBehavior.Restart_If_Different
-                => MatchEnded || IsDifferentFromLast(matchSettings),
-            _ => true
+            ExistingMatchBehavior.Restart_If_Different => MatchEnded
+                || IsDifferentFromLast(matchSettings),
+            _ => true,
         };
 
         _needsSpawnCars = true;
@@ -361,7 +361,7 @@ internal class MatchStarter(
                         PsyonixSkill.Beginner => BotSkill.Intro,
                         PsyonixSkill.Rookie => BotSkill.Easy,
                         PsyonixSkill.Pro => BotSkill.Medium,
-                        _ => BotSkill.Hard
+                        _ => BotSkill.Hard,
                     };
 
                     bridge.TryWrite(

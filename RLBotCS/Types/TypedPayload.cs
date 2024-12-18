@@ -15,7 +15,7 @@ public class TypedPayload
             Payload = builder.DataBuffer.ToArraySegment(
                 builder.DataBuffer.Position,
                 builder.DataBuffer.Length - builder.DataBuffer.Position
-            )
+            ),
         };
     }
 }

@@ -29,7 +29,7 @@ public class PlayerMappingTest
             AgentId = agentId,
             CommandId = commandId,
             DesiredPlayerIndex = desiredIndex,
-            IsBot = true
+            IsBot = true,
         };
 
         // add pending spawn

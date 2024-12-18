@@ -55,8 +55,8 @@ public class AgentReservation
 
     public (PlayerIdPair, uint)? ReservePlayer(string agentId)
     {
-        PlayerMetadata? player = _knownPlayers.FirstOrDefault(
-            playerMetadata => !playerMetadata.IsReserved && playerMetadata.AgentId == agentId
+        PlayerMetadata? player = _knownPlayers.FirstOrDefault(playerMetadata =>
+            !playerMetadata.IsReserved && playerMetadata.AgentId == agentId
         );
         if (player != null)
         {
@@ -83,11 +83,10 @@ public class AgentReservation
 
             // find other players in the same group & team
 
-            var otherPlayers = _knownPlayers.Where(
-                playerMetadata =>
-                    !playerMetadata.IsReserved
-                    && playerMetadata.AgentId == agentId
-                    && playerMetadata.Team == team
+            var otherPlayers = _knownPlayers.Where(playerMetadata =>
+                !playerMetadata.IsReserved
+                && playerMetadata.AgentId == agentId
+                && playerMetadata.Team == team
             );
 
             foreach (var playerMetadata in otherPlayers)
@@ -97,7 +96,7 @@ public class AgentReservation
                     new PlayerIdPair
                     {
                         Index = playerMetadata.Index,
-                        SpawnId = playerMetadata.SpawnId
+                        SpawnId = playerMetadata.SpawnId,
                     }
                 );
             }
@@ -112,11 +111,10 @@ public class AgentReservation
     {
         foreach (var player in players)
         {
-            PlayerMetadata? playerMetadata = _knownPlayers.FirstOrDefault(
-                playerMetadata =>
-                    playerMetadata.Team == team
-                    && playerMetadata.Index == player.Index
-                    && playerMetadata.SpawnId == player.SpawnId
+            PlayerMetadata? playerMetadata = _knownPlayers.FirstOrDefault(playerMetadata =>
+                playerMetadata.Team == team
+                && playerMetadata.Index == player.Index
+                && playerMetadata.SpawnId == player.SpawnId
             );
 
             if (playerMetadata != null)

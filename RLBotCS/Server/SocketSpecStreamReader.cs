@@ -42,7 +42,7 @@ class SocketSpecStreamReader
             yield return new()
             {
                 Type = dataType,
-                Payload = new(_payloadReader, 0, payloadSize)
+                Payload = new(_payloadReader, 0, payloadSize),
             };
         }
     }

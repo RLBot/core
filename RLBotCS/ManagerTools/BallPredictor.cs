@@ -68,7 +68,7 @@ public static partial class BallPredictor
         {
             X = vec.X,
             Y = vec.Y,
-            Z = vec.Z
+            Z = vec.Z,
         };
 
     public static void SetMode(PredictionMode mode)
@@ -114,20 +114,21 @@ public static partial class BallPredictor
         (TouchT, uint)? lastTouch
     )
     {
-        BallSlice ball =
-            new()
-            {
-                Time = currentTime,
-                Location = ToVec3(currentBall.Physics.Location),
-                LinearVelocity = ToVec3(currentBall.Physics.Velocity),
-                AngularVelocity = ToVec3(currentBall.Physics.AngularVelocity)
-            };
+        BallSlice ball = new()
+        {
+            Time = currentTime,
+            Location = ToVec3(currentBall.Physics.Location),
+            LinearVelocity = ToVec3(currentBall.Physics.Velocity),
+            AngularVelocity = ToVec3(currentBall.Physics.AngularVelocity),
+        };
 
         const ushort numSeconds = 6;
         const ushort numSlices = numSeconds * 120;
 
-        BallPredictionT ballPrediction =
-            new() { Slices = new List<PredictionSliceT>(numSlices) };
+        BallPredictionT ballPrediction = new()
+        {
+            Slices = new List<PredictionSliceT>(numSlices),
+        };
 
         if (mode == PredictionMode.Heatseeker)
         {
@@ -161,17 +162,16 @@ public static partial class BallPredictor
             {
                 BallSlice rawSlice = ballSlices[i];
 
-                PredictionSliceT slice =
-                    new()
+                PredictionSliceT slice = new()
+                {
+                    GameSeconds = rawSlice.Time,
+                    Physics = new PhysicsT
                     {
-                        GameSeconds = rawSlice.Time,
-                        Physics = new PhysicsT
-                        {
-                            Location = ToVector3T(rawSlice.Location),
-                            Velocity = ToVector3T(rawSlice.LinearVelocity),
-                            AngularVelocity = ToVector3T(rawSlice.AngularVelocity)
-                        }
-                    };
+                        Location = ToVector3T(rawSlice.Location),
+                        Velocity = ToVector3T(rawSlice.LinearVelocity),
+                        AngularVelocity = ToVector3T(rawSlice.AngularVelocity),
+                    },
+                };
 
                 ballPrediction.Slices.Add(slice);
             }

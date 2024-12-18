@@ -11,30 +11,27 @@ public class QuickChat
     private const int MaxDisplayMessages = 8;
     private const int ChatDisplaySeconds = 5;
 
-    private static readonly ColorT OrangeColor =
-        new()
-        {
-            A = 255,
-            R = 255,
-            G = 200,
-            B = 80
-        };
-    private static readonly ColorT BlueColor =
-        new()
-        {
-            A = 255,
-            R = 120,
-            G = 200,
-            B = 255
-        };
-    private static readonly ColorT BackgroundColor =
-        new()
-        {
-            A = 150,
-            R = 0,
-            G = 0,
-            B = 0
-        };
+    private static readonly ColorT OrangeColor = new()
+    {
+        A = 255,
+        R = 255,
+        G = 200,
+        B = 80,
+    };
+    private static readonly ColorT BlueColor = new()
+    {
+        A = 255,
+        R = 120,
+        G = 200,
+        B = 255,
+    };
+    private static readonly ColorT BackgroundColor = new()
+    {
+        A = 150,
+        R = 0,
+        G = 0,
+        B = 0,
+    };
 
     private readonly LinkedList<(float, MatchCommT)> _chats = new();
     private bool _hasUpdate = false;
@@ -78,21 +75,20 @@ public class QuickChat
         {
             var textColor = chat.Item2.Team == 0 ? BlueColor : OrangeColor;
 
-            String2DT message =
-                new()
-                {
-                    Text = chat.Item2.Display,
-                    X = 10f / Rendering.ResolutionWidthPixels,
-                    Y = yVal / Rendering.ResolutionHeightPixels,
-                    Scale = 1,
-                    Foreground = textColor,
-                    Background = BackgroundColor,
-                    HAlign = TextHAlign.Left,
-                    VAlign = TextVAlign.Top,
-                };
+            String2DT message = new()
+            {
+                Text = chat.Item2.Display,
+                X = 10f / Rendering.ResolutionWidthPixels,
+                Y = yVal / Rendering.ResolutionHeightPixels,
+                Scale = 1,
+                Foreground = textColor,
+                Background = BackgroundColor,
+                HAlign = TextHAlign.Left,
+                VAlign = TextVAlign.Top,
+            };
 
             renderMessages.Add(
-                new RenderMessageT() { Variety = RenderTypeUnion.FromString2D(message), }
+                new RenderMessageT() { Variety = RenderTypeUnion.FromString2D(message) }
             );
 
             yVal += Rendering.FontHeightPixels;

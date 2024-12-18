@@ -28,8 +28,8 @@ internal record SendMatchComm(int ClientId, int SpawnId, MatchCommT MatchComm) :
                 // team 0 is blue, and 1 is orange
                 // but team 2 means only scripts (so, not players) should receive the message
 
-                var player = context.LastTickPacket.Players.Find(
-                    player => player.SpawnId == spawnId
+                var player = context.LastTickPacket.Players.Find(player =>
+                    player.SpawnId == spawnId
                 );
                 if (message.Message.Team == 2)
                 {

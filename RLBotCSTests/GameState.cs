@@ -24,7 +24,7 @@ public class TestGameState
             new BoostPadInfo
             {
                 SpawnPosition = new Bridge.Models.Phys.Vector3(1, 1, 0),
-                IsActive = true
+                IsActive = true,
             }
         );
 
@@ -33,7 +33,7 @@ public class TestGameState
             new BoostPadInfo
             {
                 SpawnPosition = new Bridge.Models.Phys.Vector3(0, 0, 0),
-                IsActive = true
+                IsActive = true,
             }
         );
 
@@ -42,7 +42,7 @@ public class TestGameState
             new BoostPadInfo
             {
                 SpawnPosition = new Bridge.Models.Phys.Vector3(0, 1, 0),
-                IsActive = true
+                IsActive = true,
             }
         );
 

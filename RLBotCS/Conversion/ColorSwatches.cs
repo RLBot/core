@@ -96,7 +96,7 @@ internal static class ColorSwatches
         { 6, 44, 127 },
         { 6, 22, 127 },
         { 38, 6, 127 },
-        { 48, 6, 127 }
+        { 48, 6, 127 },
     };
 
     private static readonly int[,] OrangeSwatches =
@@ -170,7 +170,7 @@ internal static class ColorSwatches
         { 127, 30, 6 },
         { 127, 6, 6 },
         { 127, 6, 48 },
-        { 127, 6, 66 }
+        { 127, 6, 66 },
     };
 
     private static readonly int[,] SecondarySwatches =
@@ -279,6 +279,6 @@ internal static class ColorSwatches
         { 18, 0, 51 },
         { 40, 0, 51 },
         { 51, 0, 32 },
-        { 51, 0, 8 }
+        { 51, 0, 8 },
     };
 }

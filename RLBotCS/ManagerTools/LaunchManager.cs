@@ -88,7 +88,7 @@ internal static class LaunchManager
             "-rlbot",
             $"RLBot_ControllerURL=127.0.0.1:{gamePort}",
             "RLBot_PacketSendRate=240",
-            "-nomovie"
+            "-nomovie",
         ];
 
     private static List<string> ParseCommand(string command)

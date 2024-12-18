@@ -20,7 +20,7 @@ internal record DistributeGameState(GameState GameState, GamePacketT? Packet) : 
         context.FieldInfo = new FieldInfoT
         {
             BoostPads = new List<BoostPadT>(gameState.BoostPads.Count),
-            Goals = new List<GoalInfoT>(gameState.Goals.Count)
+            Goals = new List<GoalInfoT>(gameState.Goals.Count),
         };
 
         foreach (GoalInfo goal in gameState.Goals)
@@ -33,13 +33,13 @@ internal record DistributeGameState(GameState GameState, GamePacketT? Packet) : 
                     {
                         X = goal.Location.X,
                         Y = goal.Location.Y,
-                        Z = goal.Location.Z
+                        Z = goal.Location.Z,
                     },
                     Direction = new Vector3T
                     {
                         X = goal.Direction.X,
                         Y = goal.Direction.Y,
-                        Z = goal.Direction.Z
+                        Z = goal.Direction.Z,
                     },
                     Width = goal.Width,
                     Height = goal.Height,
@@ -56,7 +56,7 @@ internal record DistributeGameState(GameState GameState, GamePacketT? Packet) : 
                     {
                         X = boostPad.SpawnPosition.X,
                         Y = boostPad.SpawnPosition.Y,
-                        Z = boostPad.SpawnPosition.Z
+                        Z = boostPad.SpawnPosition.Z,
                     },
                     IsFullBoost = boostPad.IsFullBoost,
                 }

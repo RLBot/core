@@ -19,7 +19,7 @@ internal static class FlatToCommand
             GameMode.Heatseeker => "?game=TAGame.GameInfo_GodBall_TA",
             GameMode.Gridiron => "?game=TAGame.GameInfo_Football_TA",
             GameMode.Knockout => "?game=TAGame.GameInfo_KnockOut_TA",
-            _ => throw new ArgumentOutOfRangeException(nameof(gameMode), gameMode, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(gameMode), gameMode, null),
         };
 
     private static string MapMatchLength(MatchLength matchLength) =>
@@ -29,7 +29,7 @@ internal static class FlatToCommand
             MatchLength.Ten_Minutes => "10Minutes",
             MatchLength.Twenty_Minutes => "20Minutes",
             MatchLength.Unlimited => "UnlimitedTime",
-            _ => throw new ArgumentOutOfRangeException(nameof(matchLength), matchLength, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(matchLength), matchLength, null),
         };
 
     private static string MapMaxScore(MaxScore maxScore) =>
@@ -41,7 +41,7 @@ internal static class FlatToCommand
             MaxScore.Five_Goals => "Max5",
             MaxScore.Seven_Goals => "Max7",
             MaxScore.Unlimited => "UnlimitedScore",
-            _ => throw new ArgumentOutOfRangeException(nameof(maxScore), maxScore, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(maxScore), maxScore, null),
         };
 
     private static string MapMultiBall(MultiBall multiBall) =>
@@ -51,7 +51,7 @@ internal static class FlatToCommand
             MultiBall.Two => "TwoBalls",
             MultiBall.Four => "FourBalls",
             MultiBall.Six => "SixBalls",
-            _ => throw new ArgumentOutOfRangeException(nameof(multiBall), multiBall, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(multiBall), multiBall, null),
         };
 
     private static string MapOvertime(OvertimeOption option) =>
@@ -60,7 +60,7 @@ internal static class FlatToCommand
             OvertimeOption.Unlimited => "",
             OvertimeOption.Five_Max_First_Score => "Overtime5MinutesFirstScore",
             OvertimeOption.Five_Max_Random_Team => "Overtime5MinutesRandom",
-            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
     private static string MapSeriesLength(SeriesLengthOption option) =>
@@ -70,7 +70,7 @@ internal static class FlatToCommand
             SeriesLengthOption.Three_Games => "3Games",
             SeriesLengthOption.Five_Games => "5Games",
             SeriesLengthOption.Seven_Games => "7Games",
-            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
     private static string MapGameSpeed(GameSpeedOption option) =>
@@ -79,7 +79,7 @@ internal static class FlatToCommand
             GameSpeedOption.Default => "",
             GameSpeedOption.Slo_Mo => "SloMoGameSpeed",
             GameSpeedOption.Time_Warp => "SloMoDistanceBall",
-            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
     private static string MapBallMaxSpeed(BallMaxSpeedOption option) =>
@@ -89,7 +89,7 @@ internal static class FlatToCommand
             BallMaxSpeedOption.Slow => "SlowBall",
             BallMaxSpeedOption.Fast => "FastBall",
             BallMaxSpeedOption.Super_Fast => "SuperFastBall",
-            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
     private static string MapBallType(BallTypeOption option) =>
@@ -104,7 +104,7 @@ internal static class FlatToCommand
             BallTypeOption.Haunted => "Ball_Haunted",
             BallTypeOption.Ekin => "Ball_Ekin",
             BallTypeOption.SpookyCube => "Ball_SpookyCube",
-            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
     private static string MapBallWeight(BallWeightOption option) =>
@@ -117,7 +117,7 @@ internal static class FlatToCommand
             BallWeightOption.Curve_Ball => "MagnusBall",
             BallWeightOption.Beach_Ball_Curve => "MagnusBeachBall",
             BallWeightOption.Magnus_FutBall => "MagnusFutBallTest",
-            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
     private static string MapBallSize(BallSizeOption option) =>
@@ -128,7 +128,7 @@ internal static class FlatToCommand
             BallSizeOption.Medium => "MediumBall",
             BallSizeOption.Large => "BigBall",
             BallSizeOption.Gigantic => "GiantBall",
-            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
     private static string MapBallBounciness(BallBouncinessOption option) =>
@@ -139,7 +139,7 @@ internal static class FlatToCommand
             BallBouncinessOption.High => "HighBounciness",
             BallBouncinessOption.Super_High => "SuperBounciness",
             BallBouncinessOption.LowishBounciness => "LowishBounciness",
-            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
     private static string MapBoost(BoostOption option) =>
@@ -150,7 +150,7 @@ internal static class FlatToCommand
             BoostOption.Slow_Recharge => "SlowRecharge",
             BoostOption.Rapid_Recharge => "RapidRecharge",
             BoostOption.No_Boost => "NoBooster",
-            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
     private static string MapRumble(RumbleOption option) =>
@@ -167,7 +167,7 @@ internal static class FlatToCommand
             RumbleOption.Haunted_Ball_Beam => "ItemsModeHauntedBallBeam",
             RumbleOption.Tactical => "ItemsModeSelection",
             RumbleOption.BatmanRumble => "ItemsMode_BM",
-            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
     private static string MapBoostStrength(BoostStrengthOption option) =>
@@ -178,7 +178,7 @@ internal static class FlatToCommand
             BoostStrengthOption.Two => "BoostMultiplier2x",
             BoostStrengthOption.Five => "BoostMultiplier5x",
             BoostStrengthOption.Ten => "BoostMultiplier10x",
-            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
     private static string MapGravity(GravityOption option) =>
@@ -189,7 +189,7 @@ internal static class FlatToCommand
             GravityOption.High => "HighGravity",
             GravityOption.Super_High => "SuperGravity",
             GravityOption.Reverse => "ReverseGravity",
-            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
     private static string MapDemolish(DemolishOption option) =>
@@ -200,7 +200,7 @@ internal static class FlatToCommand
             DemolishOption.Friendly_Fire => "DemolishAll",
             DemolishOption.On_Contact => "AlwaysDemolishOpposing",
             DemolishOption.On_Contact_FF => "AlwaysDemolish",
-            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
     private static string MapRespawnTime(RespawnTimeOption option) =>
@@ -210,7 +210,7 @@ internal static class FlatToCommand
             RespawnTimeOption.Two_Seconds => "TwoSecondsRespawn",
             RespawnTimeOption.One_Second => "OneSecondsRespawn",
             RespawnTimeOption.Disable_Goal_Reset => "DisableGoalDelay",
-            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
     private static string MapMaxTime(MaxTimeOption option) =>
@@ -218,7 +218,7 @@ internal static class FlatToCommand
         {
             MaxTimeOption.Default => "",
             MaxTimeOption.Eleven_Minutes => "MaxTime11Minutes",
-            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
     private static string MapGameEvent(GameEventOption option) =>
@@ -227,7 +227,7 @@ internal static class FlatToCommand
             GameEventOption.Default => "",
             GameEventOption.Rugby => "RugbyGameEventRules",
             GameEventOption.Haunted => "HauntedGameEventRules",
-            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
     private static string MapAudio(AudioOption option) =>
@@ -235,7 +235,7 @@ internal static class FlatToCommand
         {
             AudioOption.Default => "",
             AudioOption.Haunted => "HauntedAudio",
-            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
     private static string GetOption(string option)

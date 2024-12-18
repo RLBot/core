@@ -196,17 +196,16 @@ public static class ConfigParser
         string agentId =
             ParseString(scriptSettings, "agent_id", missingValues) ?? $"script/{name}";
 
-        ScriptConfigurationT scriptConfig =
-            new()
-            {
-                Name = name,
-                Location = CombinePaths(
-                    tomlParent,
-                    ParseString(scriptSettings, "location", missingValues) ?? ""
-                ),
-                RunCommand = GetRunCommand(scriptSettings, missingValues),
-                AgentId = agentId
-            };
+        ScriptConfigurationT scriptConfig = new()
+        {
+            Name = name,
+            Location = CombinePaths(
+                tomlParent,
+                ParseString(scriptSettings, "location", missingValues) ?? ""
+            ),
+            RunCommand = GetRunCommand(scriptSettings, missingValues),
+            AgentId = agentId,
+        };
         return scriptConfig;
     }
 
@@ -217,39 +216,37 @@ public static class ConfigParser
     ) =>
         ParseEnum(table, "type", PlayerClass.RLBot, missingValues) switch
         {
-            PlayerClass.RLBot
-                => GetBotConfig(
-                    table,
-                    PlayerClassUnion.FromRLBot(new RLBotT()),
-                    matchConfigPath,
-                    missingValues
+            PlayerClass.RLBot => GetBotConfig(
+                table,
+                PlayerClassUnion.FromRLBot(new RLBotT()),
+                matchConfigPath,
+                missingValues
+            ),
+            PlayerClass.Human => GetHumanConfig(
+                table,
+                PlayerClassUnion.FromHuman(new HumanT()),
+                missingValues
+            ),
+            PlayerClass.Psyonix => GetPsyonixConfig(
+                table,
+                PlayerClassUnion.FromPsyonix(
+                    new PsyonixT
+                    {
+                        BotSkill = ParseEnum(
+                            table,
+                            "skill",
+                            PsyonixSkill.AllStar,
+                            missingValues
+                        ),
+                    }
                 ),
-            PlayerClass.Human
-                => GetHumanConfig(
-                    table,
-                    PlayerClassUnion.FromHuman(new HumanT()),
-                    missingValues
-                ),
-            PlayerClass.Psyonix
-                => GetPsyonixConfig(
-                    table,
-                    PlayerClassUnion.FromPsyonix(
-                        new PsyonixT
-                        {
-                            BotSkill = ParseEnum(
-                                table,
-                                "skill",
-                                PsyonixSkill.AllStar,
-                                missingValues
-                            )
-                        }
-                    ),
-                    matchConfigPath,
-                    missingValues
-                ),
-            PlayerClass.PartyMember
-                => throw new NotImplementedException("PartyMember not implemented"),
-            _ => throw new NotImplementedException("Unimplemented PlayerClass type")
+                matchConfigPath,
+                missingValues
+            ),
+            PlayerClass.PartyMember => throw new NotImplementedException(
+                "PartyMember not implemented"
+            ),
+            _ => throw new NotImplementedException("Unimplemented PlayerClass type"),
         };
 
     private static PlayerConfigurationT GetHumanConfig(
@@ -264,7 +261,7 @@ public static class ConfigParser
             Name = "Human",
             RootDir = "",
             RunCommand = "",
-            AgentId = ""
+            AgentId = "",
         };
 
     private static PlayerConfigurationT GetPsyonixConfig(
@@ -329,7 +326,7 @@ public static class ConfigParser
             RootDir = rootDir,
             RunCommand = runCommand,
             Loadout = loadout,
-            AgentId = agentId
+            AgentId = agentId,
         };
     }
 
@@ -452,7 +449,7 @@ public static class ConfigParser
                 missingValues
             ),
             Hivemind = ParseBool(playerSettings, "hivemind", false, missingValues),
-            AgentId = agentId
+            AgentId = agentId,
         };
     }
 
@@ -655,7 +652,7 @@ public static class ConfigParser
             Freeplay = ParseBool(matchTable, "freeplay", false, missingValues["match"]),
             MutatorSettings = GetMutatorSettings(mutatorTable, missingValues["mutators"]),
             PlayerConfigurations = playerConfigs,
-            ScriptConfigurations = scriptConfigs
+            ScriptConfigurations = scriptConfigs,
         };
 
         if (missingValues.Count > 0)

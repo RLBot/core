@@ -25,14 +25,14 @@ public class Rendering(TcpMessenger tcpMessenger)
     private ushort RenderItem(RenderTypeUnion renderItem, GameState gameState) =>
         renderItem.Value switch
         {
-            Line3DT { Start: var start, End: var end, Color: var color }
-                => _renderingSender.AddLine3D(
+            Line3DT { Start: var start, End: var end, Color: var color } =>
+                _renderingSender.AddLine3D(
                     FlatToModel.ToRenderAnchor(start, gameState),
                     FlatToModel.ToRenderAnchor(end, gameState),
                     FlatToModel.ToColor(color)
                 ),
-            PolyLine3DT { Points: var points, Color: var color }
-                => _renderingSender.AddLine3DSeries(
+            PolyLine3DT { Points: var points, Color: var color } =>
+                _renderingSender.AddLine3DSeries(
                     points.Select(FlatToModel.ToVectorFromT).ToList(),
                     FlatToModel.ToColor(color)
                 ),
@@ -46,17 +46,16 @@ public class Rendering(TcpMessenger tcpMessenger)
                 HAlign: var hAlign,
                 VAlign: var vAlign,
                 Scale: var scale
-            }
-                => _renderingSender.AddText2D(
-                    text,
-                    x,
-                    y,
-                    FlatToModel.ToColor(foreground),
-                    FlatToModel.ToColor(background),
-                    (byte)hAlign,
-                    (byte)vAlign,
-                    scale
-                ),
+            } => _renderingSender.AddText2D(
+                text,
+                x,
+                y,
+                FlatToModel.ToColor(foreground),
+                FlatToModel.ToColor(background),
+                (byte)hAlign,
+                (byte)vAlign,
+                scale
+            ),
             String3DT
             {
                 Text: var text,
@@ -66,16 +65,15 @@ public class Rendering(TcpMessenger tcpMessenger)
                 HAlign: var hAlign,
                 VAlign: var vAlign,
                 Scale: var scale
-            }
-                => _renderingSender.AddText3D(
-                    text,
-                    FlatToModel.ToRenderAnchor(anchor, gameState),
-                    FlatToModel.ToColor(foreground),
-                    FlatToModel.ToColor(background),
-                    (byte)hAlign,
-                    (byte)vAlign,
-                    scale
-                ),
+            } => _renderingSender.AddText3D(
+                text,
+                FlatToModel.ToRenderAnchor(anchor, gameState),
+                FlatToModel.ToColor(foreground),
+                FlatToModel.ToColor(background),
+                (byte)hAlign,
+                (byte)vAlign,
+                scale
+            ),
             Rect2DT rect2Dt => SendRect2D(rect2Dt),
             Rect3DT rect3Dt => SendRect3D(rect3Dt, gameState),
             _ => throw new NotImplementedException("Unknown RenderMessage"),

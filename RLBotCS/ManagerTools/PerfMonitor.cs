@@ -87,7 +87,7 @@ public class PerfMonitor
 
         var renderMessages = new List<RenderMessageT>()
         {
-            new RenderMessageT() { Variety = RenderTypeUnion.FromString2D(renderText), },
+            new RenderMessageT() { Variety = RenderTypeUnion.FromString2D(renderText) },
         };
 
         if (shouldRender)

@@ -113,8 +113,8 @@ internal class FlatBuffersSession
 
                 // ensure the provided index is a bot we control,
                 // and map the index to the spawn id
-                PlayerIdPair? idPairs = _playerIdPairs.FirstOrDefault(
-                    idPair => idPair.Index == setLoadout.Index
+                PlayerIdPair? idPairs = _playerIdPairs.FirstOrDefault(idPair =>
+                    idPair.Index == setLoadout.Index
                 );
 
                 if (idPairs is PlayerIdPair info && info.SpawnId is int spawnId)
@@ -158,8 +158,8 @@ internal class FlatBuffersSession
 
                 // ensure the provided index is a bot we control
                 if (
-                    !_playerIdPairs.Any(
-                        playerInfo => playerInfo.Index == playerInputMsg.PlayerIndex
+                    !_playerIdPairs.Any(playerInfo =>
+                        playerInfo.Index == playerInputMsg.PlayerIndex
                     )
                 )
                     break;
@@ -176,8 +176,8 @@ internal class FlatBuffersSession
 
                 // ensure the provided index is a bot we control,
                 // and map the index to the spawn id
-                PlayerIdPair? playerIdPair = _playerIdPairs.FirstOrDefault(
-                    idPair => idPair.Index == matchComms.Index
+                PlayerIdPair? playerIdPair = _playerIdPairs.FirstOrDefault(idPair =>
+                    idPair.Index == matchComms.Index
                 );
 
                 if (playerIdPair is PlayerIdPair pInfo && pInfo.SpawnId is int pSpawnId)
@@ -288,20 +288,19 @@ internal class FlatBuffersSession
                     _team = m.Team;
                     _playerIdPairs = m.IdMaps;
 
-                    List<ControllableInfoT> controllables =
-                        new(
-                            _playerIdPairs.Select(
-                                playerInfo =>
-                                    new ControllableInfoT()
-                                    {
-                                        Index = playerInfo.Index,
-                                        SpawnId = playerInfo.SpawnId,
-                                    }
-                            )
-                        );
+                    List<ControllableInfoT> controllables = new(
+                        _playerIdPairs.Select(playerInfo => new ControllableInfoT()
+                        {
+                            Index = playerInfo.Index,
+                            SpawnId = playerInfo.SpawnId,
+                        })
+                    );
 
-                    ControllableTeamInfoT playerMappings =
-                        new() { Team = m.Team, Controllables = controllables, };
+                    ControllableTeamInfoT playerMappings = new()
+                    {
+                        Team = m.Team,
+                        Controllables = controllables,
+                    };
 
                     _messageBuilder.Clear();
                     _messageBuilder.Finish(
@@ -432,8 +431,11 @@ internal class FlatBuffersSession
         // try to politely close the connection
         try
         {
-            TypedPayload msg =
-                new() { Type = DataType.None, Payload = new ArraySegment<byte>([1]), };
+            TypedPayload msg = new()
+            {
+                Type = DataType.None,
+                Payload = new ArraySegment<byte>([1]),
+            };
             SendPayloadToClientAsync(msg).Wait();
         }
         catch (Exception) { }
