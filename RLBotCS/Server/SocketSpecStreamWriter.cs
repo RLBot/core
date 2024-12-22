@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using RLBotCS.ManagerTools;
 using RLBotCS.Types;
 
@@ -28,7 +28,7 @@ internal class SocketSpecStreamWriter(Stream stream)
         buffer[1] = (byte)(value & 0xFF);
     }
 
-    internal async Task WriteAsync(TypedPayload message)
+    internal void Write(TypedPayload message)
     {
         if (message.Payload.Count > ushort.MaxValue)
         {
@@ -57,8 +57,9 @@ internal class SocketSpecStreamWriter(Stream stream)
             4,
             message.Payload.Count
         );
-        await stream.WriteAsync(_messageBuffer.AsMemory(0, 4 + message.Payload.Count));
+
+        stream.Write(_messageBuffer, 0, 4 + message.Payload.Count);
     }
 
-    internal async Task SendAsync() => await stream.FlushAsync();
+    internal void Send() => stream.Flush();
 }

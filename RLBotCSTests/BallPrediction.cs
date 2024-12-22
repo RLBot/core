@@ -10,7 +10,7 @@ namespace RLBotCSTests;
 [TestClass]
 public class BallPrediction
 {
-    private TestContext testContextInstance;
+    private TestContext? testContextInstance;
 
     /// <summary>
     /// Gets or sets the test context which provides
@@ -18,7 +18,7 @@ public class BallPrediction
     /// </summary>
     public TestContext TestContext
     {
-        get { return testContextInstance; }
+        get { return testContextInstance!; }
         set { testContextInstance = value; }
     }
 

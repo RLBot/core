@@ -6,7 +6,7 @@ namespace RLBotCSTests;
 [TestClass]
 public class PlayerMappingTest
 {
-    private PlayerMapping _playerMapping;
+    private PlayerMapping? _playerMapping;
 
     [TestInitialize]
     public void Init()
@@ -33,7 +33,7 @@ public class PlayerMappingTest
         };
 
         // add pending spawn
-        _playerMapping.AddPendingSpawn(spawnTracker);
+        _playerMapping!.AddPendingSpawn(spawnTracker);
 
         // apply car spawn from known player
         var metadata = _playerMapping.ApplyCarSpawn(actorId, commandId);
