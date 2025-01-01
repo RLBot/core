@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.FlatBuffers" Version="24.3.25" />
+    <PackageReference Include="Google.FlatBuffers" Version="24.12.23" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="FlatBuffer\" />
