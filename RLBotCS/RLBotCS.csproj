@@ -12,6 +12,10 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <PublishWmiLightStaticallyLinked>true</PublishWmiLightStaticallyLinked>
+    <SelfContained>true</SelfContained>
+    <StaticExecutable>true</StaticExecutable>
+    <LinkerFlavor>lld</LinkerFlavor>
+    <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
   <ItemGroup>
@@ -41,12 +45,14 @@
     <NativeLibrary Include="./lib/rl_ball_sym/librl_ball_sym.a" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'" />
 
     <!-- Dynamically linked for development -->
-    <ContentWithTargetPath Include=".\lib\rl_ball_sym\rl_ball_sym.dll" Condition="'$(OS)' == 'Windows_NT'">
+    <ContentWithTargetPath Include=".\lib\rl_ball_sym\rl_ball_sym.dll" Condition="'$(OS)' == 'Windows_NT' and '$(Configuration)' == 'Debug'">
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>rl_ball_sym.dll</TargetPath>
     </ContentWithTargetPath>
 
     <ContentWithTargetPath Include="./lib/rl_ball_sym/librl_ball_sym.so" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>rl_ball_sym.so</TargetPath>
     </ContentWithTargetPath>
