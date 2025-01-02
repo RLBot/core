@@ -50,7 +50,7 @@ public class FlatbufferTest
                 {
                     Name = RandomString(64),
                     AgentId = RandomString(64),
-                    Location = RandomString(64),
+                    RootDir = RandomString(64),
                     RunCommand = RandomString(64),
                 }
             );

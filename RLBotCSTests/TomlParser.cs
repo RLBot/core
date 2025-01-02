@@ -65,7 +65,7 @@ public class TomlParser
         Assert.AreEqual(292u, edgeMS.PlayerConfigurations[0].Loadout.DecalId);
 
         Assert.AreEqual("Test Bot", edgeMS.PlayerConfigurations[1].Name);
-        Assert.AreEqual(PlayerClass.RLBot, edgeMS.PlayerConfigurations[1].Variety.Type);
+        Assert.AreEqual(PlayerClass.CustomBot, edgeMS.PlayerConfigurations[1].Variety.Type);
         Assert.AreEqual(69u, edgeMS.PlayerConfigurations[1].Loadout.TeamColorId);
         Assert.AreEqual(0u, edgeMS.PlayerConfigurations[1].Loadout.CustomColorId);
         Assert.AreEqual(23u, edgeMS.PlayerConfigurations[1].Loadout.CarId);
