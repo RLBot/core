@@ -19,9 +19,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Tomlyn" Version="0.17.0" />
-    <PackageReference Include="WmiLight" Version="6.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+    <PackageReference Include="Tomlyn" Version="0.18.0" />
+    <PackageReference Include="WmiLight" Version="6.10.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
   </ItemGroup>
 
   <ItemGroup>
