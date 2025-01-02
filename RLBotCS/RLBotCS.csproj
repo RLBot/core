@@ -14,7 +14,7 @@
     <PublishWmiLightStaticallyLinked>true</PublishWmiLightStaticallyLinked>
     <SelfContained>true</SelfContained>
     <StaticExecutable>true</StaticExecutable>
-    <LinkerFlavor>lld</LinkerFlavor>
+    <LinkerFlavor Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">lld</LinkerFlavor>
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
