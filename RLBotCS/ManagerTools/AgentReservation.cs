@@ -30,7 +30,7 @@ public class AgentReservation
         {
             var playerConfig = matchSettings.PlayerConfigurations[i];
 
-            if (playerConfig.Variety.Type != PlayerClass.RLBot)
+            if (playerConfig.Variety.Type != PlayerClass.CustomBot)
             {
                 if (playerConfig.Variety.Type == PlayerClass.Human)
                     indexOffset++;

@@ -177,8 +177,8 @@ internal static class LaunchManager
 
             Process scriptProcess = RunCommandInShell(script.RunCommand);
 
-            if (script.Location != "")
-                scriptProcess.StartInfo.WorkingDirectory = script.Location;
+            if (script.RootDir != "")
+                scriptProcess.StartInfo.WorkingDirectory = script.RootDir;
 
             scriptProcess.StartInfo.EnvironmentVariables["RLBOT_AGENT_ID"] = script.AgentId;
             scriptProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =

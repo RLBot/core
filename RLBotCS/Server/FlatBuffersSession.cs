@@ -47,7 +47,7 @@ internal class FlatBuffersSession
     private bool _connectionEstablished;
     private bool _wantsBallPredictions;
     private bool _wantsComms;
-    private bool _closeAfterMatch;
+    private bool _closeBetweenMatches;
     private bool _isReady;
     private bool _stateSettingIsEnabled;
     private bool _renderingIsEnabled;
@@ -99,7 +99,7 @@ internal class FlatBuffersSession
                 _agentId = readyMsg.AgentId;
                 _wantsBallPredictions = readyMsg.WantsBallPredictions;
                 _wantsComms = readyMsg.WantsComms;
-                _closeAfterMatch = readyMsg.CloseAfterMatch;
+                _closeBetweenMatches = readyMsg.CloseBetweenMatches;
 
                 await _rlbotServer.WriteAsync(
                     new IntroDataRequest(_incomingMessages.Writer, _agentId)
@@ -128,7 +128,7 @@ internal class FlatBuffersSession
                 // use the first spawn id we have
                 PlayerIdPair? idPair = _playerIdPairs.FirstOrDefault();
                 await _rlbotServer.WriteAsync(
-                    new SessionReady(_closeAfterMatch, _clientId, idPair?.SpawnId ?? 0)
+                    new SessionReady(_closeBetweenMatches, _clientId, idPair?.SpawnId ?? 0)
                 );
 
                 _isReady = true;
@@ -368,7 +368,7 @@ internal class FlatBuffersSession
 
                     break;
                 case SessionMessage.StopMatch m
-                    when m.Force || (_connectionEstablished && _closeAfterMatch):
+                    when m.Force || (_connectionEstablished && _closeBetweenMatches):
                     _sessionForceClosed = m.Force;
                     return;
             }

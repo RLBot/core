@@ -199,9 +199,9 @@ public static class ConfigParser
         ScriptConfigurationT scriptConfig = new()
         {
             Name = name,
-            Location = CombinePaths(
+            RootDir = CombinePaths(
                 tomlParent,
-                ParseString(scriptSettings, "location", missingValues) ?? ""
+                ParseString(scriptSettings, "root_dir", missingValues) ?? ""
             ),
             RunCommand = GetRunCommand(scriptSettings, missingValues),
             AgentId = agentId,
@@ -214,11 +214,11 @@ public static class ConfigParser
         string matchConfigPath,
         List<string> missingValues
     ) =>
-        ParseEnum(table, "type", PlayerClass.RLBot, missingValues) switch
+        ParseEnum(table, "type", PlayerClass.CustomBot, missingValues) switch
         {
-            PlayerClass.RLBot => GetBotConfig(
+            PlayerClass.CustomBot => GetBotConfig(
                 table,
-                PlayerClassUnion.FromRLBot(new RLBotT()),
+                PlayerClassUnion.FromCustomBot(new CustomBotT()),
                 matchConfigPath,
                 missingValues
             ),

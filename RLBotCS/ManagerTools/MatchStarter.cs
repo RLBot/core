@@ -138,7 +138,7 @@ internal class MatchStarter(
             if (scriptConfig.SpawnId == 0)
                 scriptConfig.SpawnId = scriptConfig.Name.GetHashCode();
 
-            scriptConfig.Location ??= "";
+            scriptConfig.RootDir ??= "";
             scriptConfig.RunCommand ??= "";
             scriptConfig.AgentId ??= "";
         }
@@ -153,7 +153,7 @@ internal class MatchStarter(
 
         foreach (var playerConfig in matchSettings.PlayerConfigurations)
         {
-            if (playerConfig.Variety.Type != PlayerClass.RLBot)
+            if (playerConfig.Variety.Type != PlayerClass.CustomBot)
                 continue;
 
             if (playerConfig.Hivemind)
@@ -337,7 +337,7 @@ internal class MatchStarter(
 
             switch (playerConfig.Variety.Type)
             {
-                case PlayerClass.RLBot:
+                case PlayerClass.CustomBot:
                     Logger.LogInformation(
                         "Spawning player "
                             + playerConfig.Name
