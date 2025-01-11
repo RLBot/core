@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotCS.Server.FlatbuffersMessage;
-using GameStatus = Bridge.Models.Message.GameStatus;
+using MatchPhase = Bridge.Models.Message.MatchPhase;
 
 namespace RLBotCS.Server;
 
@@ -74,10 +74,10 @@ internal class BridgeHandler(
                     || (
                         _context.ticksSkipped > MAX_TICK_SKIP
                         && (
-                            _context.GameState.GameStatus == GameStatus.Replay
-                            || _context.GameState.GameStatus == GameStatus.Paused
-                            || _context.GameState.GameStatus == GameStatus.Ended
-                            || _context.GameState.GameStatus == GameStatus.Inactive
+                            _context.GameState.MatchPhase == MatchPhase.Replay
+                            || _context.GameState.MatchPhase == MatchPhase.Paused
+                            || _context.GameState.MatchPhase == MatchPhase.Ended
+                            || _context.GameState.MatchPhase == MatchPhase.Inactive
                         )
                     )
                         ? _context.GameState.ToFlatBuffers()
@@ -100,8 +100,8 @@ internal class BridgeHandler(
                     _context.PerfMonitor.ClearAll();
                 }
                 else if (
-                    _context.GameState.GameStatus != GameStatus.Replay
-                    && _context.GameState.GameStatus != GameStatus.Paused
+                    _context.GameState.MatchPhase != MatchPhase.Replay
+                    && _context.GameState.MatchPhase != MatchPhase.Paused
                     && timeAdvanced
                 )
                 {
@@ -109,7 +109,7 @@ internal class BridgeHandler(
                     _context.QuickChat.RenderChats(_context.RenderingMgmt, _context.GameState);
 
                     // only render if we're not in a goal scored or ended state
-                    if (_context.GameState.GameStatus != GameStatus.GoalScored)
+                    if (_context.GameState.MatchPhase != MatchPhase.GoalScored)
                         _context.PerfMonitor.RenderSummary(
                             _context.RenderingMgmt,
                             _context.GameState,
@@ -126,7 +126,7 @@ internal class BridgeHandler(
                         QueuedMatchCommands: true,
                         QueuingCommandsComplete: true,
                         MatchHasStarted: true,
-                        GameState.GameStatus: GameStatus.Paused
+                        GameState.MatchPhase: MatchPhase.Paused
                     }
                 )
                 {

@@ -22,219 +22,219 @@ internal static class FlatToCommand
             _ => throw new ArgumentOutOfRangeException(nameof(gameMode), gameMode, null),
         };
 
-    private static string MapMatchLength(MatchLength matchLength) =>
+    private static string MapMatchLength(MatchLengthMutator matchLength) =>
         matchLength switch
         {
-            MatchLength.Five_Minutes => "5Minutes",
-            MatchLength.Ten_Minutes => "10Minutes",
-            MatchLength.Twenty_Minutes => "20Minutes",
-            MatchLength.Unlimited => "UnlimitedTime",
+            MatchLengthMutator.FiveMinutes => "5Minutes",
+            MatchLengthMutator.TenMinutes => "10Minutes",
+            MatchLengthMutator.TwentyMinutes => "20Minutes",
+            MatchLengthMutator.Unlimited => "UnlimitedTime",
             _ => throw new ArgumentOutOfRangeException(nameof(matchLength), matchLength, null),
         };
 
-    private static string MapMaxScore(MaxScore maxScore) =>
+    private static string MapMaxScore(MaxScoreMutator maxScore) =>
         maxScore switch
         {
-            MaxScore.Default => "",
-            MaxScore.One_Goal => "Max1",
-            MaxScore.Three_Goals => "Max3",
-            MaxScore.Five_Goals => "Max5",
-            MaxScore.Seven_Goals => "Max7",
-            MaxScore.Unlimited => "UnlimitedScore",
+            MaxScoreMutator.Default => "",
+            MaxScoreMutator.OneGoal => "Max1",
+            MaxScoreMutator.ThreeGoals => "Max3",
+            MaxScoreMutator.FiveGoals => "Max5",
+            MaxScoreMutator.SevenGoals => "Max7",
+            MaxScoreMutator.Unlimited => "UnlimitedScore",
             _ => throw new ArgumentOutOfRangeException(nameof(maxScore), maxScore, null),
         };
 
-    private static string MapMultiBall(MultiBall multiBall) =>
+    private static string MapMultiBall(MultiBallMutator multiBall) =>
         multiBall switch
         {
-            MultiBall.One => "",
-            MultiBall.Two => "TwoBalls",
-            MultiBall.Four => "FourBalls",
-            MultiBall.Six => "SixBalls",
+            MultiBallMutator.One => "",
+            MultiBallMutator.Two => "TwoBalls",
+            MultiBallMutator.Four => "FourBalls",
+            MultiBallMutator.Six => "SixBalls",
             _ => throw new ArgumentOutOfRangeException(nameof(multiBall), multiBall, null),
         };
 
-    private static string MapOvertime(OvertimeOption option) =>
+    private static string MapOvertime(OvertimeMutator option) =>
         option switch
         {
-            OvertimeOption.Unlimited => "",
-            OvertimeOption.Five_Max_First_Score => "Overtime5MinutesFirstScore",
-            OvertimeOption.Five_Max_Random_Team => "Overtime5MinutesRandom",
+            OvertimeMutator.Unlimited => "",
+            OvertimeMutator.FiveMaxFirstScore => "Overtime5MinutesFirstScore",
+            OvertimeMutator.FiveMaxRandomTeam => "Overtime5MinutesRandom",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
-    private static string MapSeriesLength(SeriesLengthOption option) =>
+    private static string MapSeriesLength(SeriesLengthMutator option) =>
         option switch
         {
-            SeriesLengthOption.Unlimited => "",
-            SeriesLengthOption.Three_Games => "3Games",
-            SeriesLengthOption.Five_Games => "5Games",
-            SeriesLengthOption.Seven_Games => "7Games",
+            SeriesLengthMutator.Unlimited => "",
+            SeriesLengthMutator.ThreeGames => "3Games",
+            SeriesLengthMutator.FiveGames => "5Games",
+            SeriesLengthMutator.SevenGames => "7Games",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
-    private static string MapGameSpeed(GameSpeedOption option) =>
+    private static string MapGameSpeed(GameSpeedMutator option) =>
         option switch
         {
-            GameSpeedOption.Default => "",
-            GameSpeedOption.Slo_Mo => "SloMoGameSpeed",
-            GameSpeedOption.Time_Warp => "SloMoDistanceBall",
+            GameSpeedMutator.Default => "",
+            GameSpeedMutator.SloMo => "SloMoGameSpeed",
+            GameSpeedMutator.TimeWarp => "SloMoDistanceBall",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
-    private static string MapBallMaxSpeed(BallMaxSpeedOption option) =>
+    private static string MapBallMaxSpeed(BallMaxSpeedMutator option) =>
         option switch
         {
-            BallMaxSpeedOption.Default => "",
-            BallMaxSpeedOption.Slow => "SlowBall",
-            BallMaxSpeedOption.Fast => "FastBall",
-            BallMaxSpeedOption.Super_Fast => "SuperFastBall",
+            BallMaxSpeedMutator.Default => "",
+            BallMaxSpeedMutator.Slow => "SlowBall",
+            BallMaxSpeedMutator.Fast => "FastBall",
+            BallMaxSpeedMutator.SuperFast => "SuperFastBall",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
-    private static string MapBallType(BallTypeOption option) =>
+    private static string MapBallType(BallTypeMutator option) =>
         option switch
         {
-            BallTypeOption.Default => "",
-            BallTypeOption.Cube => "Ball_CubeBall",
-            BallTypeOption.Puck => "Ball_Puck",
-            BallTypeOption.Basketball => "Ball_BasketBall",
-            BallTypeOption.Beachball => "Ball_BeachBall",
-            BallTypeOption.Anniversary => "Ball_Anniversary",
-            BallTypeOption.Haunted => "Ball_Haunted",
-            BallTypeOption.Ekin => "Ball_Ekin",
-            BallTypeOption.SpookyCube => "Ball_SpookyCube",
+            BallTypeMutator.Default => "",
+            BallTypeMutator.Cube => "Ball_CubeBall",
+            BallTypeMutator.Puck => "Ball_Puck",
+            BallTypeMutator.Basketball => "Ball_BasketBall",
+            BallTypeMutator.Beachball => "Ball_BeachBall",
+            BallTypeMutator.Anniversary => "Ball_Anniversary",
+            BallTypeMutator.Haunted => "Ball_Haunted",
+            BallTypeMutator.Ekin => "Ball_Ekin",
+            BallTypeMutator.SpookyCube => "Ball_SpookyCube",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
-    private static string MapBallWeight(BallWeightOption option) =>
+    private static string MapBallWeight(BallWeightMutator option) =>
         option switch
         {
-            BallWeightOption.Default => "",
-            BallWeightOption.Light => "LightBall",
-            BallWeightOption.Heavy => "HeavyBall",
-            BallWeightOption.Super_Light => "SuperLightBall",
-            BallWeightOption.Curve_Ball => "MagnusBall",
-            BallWeightOption.Beach_Ball_Curve => "MagnusBeachBall",
-            BallWeightOption.Magnus_FutBall => "MagnusFutBallTest",
+            BallWeightMutator.Default => "",
+            BallWeightMutator.Light => "LightBall",
+            BallWeightMutator.Heavy => "HeavyBall",
+            BallWeightMutator.SuperLight => "SuperLightBall",
+            BallWeightMutator.CurveBall => "MagnusBall",
+            BallWeightMutator.BeachBallCurve => "MagnusBeachBall",
+            BallWeightMutator.MagnusFutBall => "MagnusFutBallTest",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
-    private static string MapBallSize(BallSizeOption option) =>
+    private static string MapBallSize(BallSizeMutator option) =>
         option switch
         {
-            BallSizeOption.Default => "",
-            BallSizeOption.Small => "SmallBall",
-            BallSizeOption.Medium => "MediumBall",
-            BallSizeOption.Large => "BigBall",
-            BallSizeOption.Gigantic => "GiantBall",
+            BallSizeMutator.Default => "",
+            BallSizeMutator.Small => "SmallBall",
+            BallSizeMutator.Medium => "MediumBall",
+            BallSizeMutator.Large => "BigBall",
+            BallSizeMutator.Gigantic => "GiantBall",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
-    private static string MapBallBounciness(BallBouncinessOption option) =>
+    private static string MapBallBounciness(BallBouncinessMutator option) =>
         option switch
         {
-            BallBouncinessOption.Default => "",
-            BallBouncinessOption.Low => "LowBounciness",
-            BallBouncinessOption.High => "HighBounciness",
-            BallBouncinessOption.Super_High => "SuperBounciness",
-            BallBouncinessOption.LowishBounciness => "LowishBounciness",
+            BallBouncinessMutator.Default => "",
+            BallBouncinessMutator.Low => "LowBounciness",
+            BallBouncinessMutator.High => "HighBounciness",
+            BallBouncinessMutator.SuperHigh => "SuperBounciness",
+            BallBouncinessMutator.LowishBounciness => "LowishBounciness",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
-    private static string MapBoost(BoostOption option) =>
+    private static string MapBoost(BoostMutator option) =>
         option switch
         {
-            BoostOption.Normal_Boost => "",
-            BoostOption.Unlimited_Boost => "UnlimitedBooster",
-            BoostOption.Slow_Recharge => "SlowRecharge",
-            BoostOption.Rapid_Recharge => "RapidRecharge",
-            BoostOption.No_Boost => "NoBooster",
+            BoostMutator.NormalBoost => "",
+            BoostMutator.UnlimitedBoost => "UnlimitedBooster",
+            BoostMutator.SlowRecharge => "SlowRecharge",
+            BoostMutator.RapidRecharge => "RapidRecharge",
+            BoostMutator.NoBoost => "NoBooster",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
-    private static string MapRumble(RumbleOption option) =>
+    private static string MapRumble(RumbleMutator option) =>
         option switch
         {
-            RumbleOption.No_Rumble => "",
-            RumbleOption.Default => "ItemsMode",
-            RumbleOption.Slow => "ItemsModeSlow",
-            RumbleOption.Civilized => "ItemsModeBallManipulators",
-            RumbleOption.Destruction_Derby => "ItemsModeCarManipulators",
-            RumbleOption.Spring_Loaded => "ItemsModeSprings",
-            RumbleOption.Spikes_Only => "ItemsModeSpikes",
-            RumbleOption.Spike_Rush => "ItemsModeRugby",
-            RumbleOption.Haunted_Ball_Beam => "ItemsModeHauntedBallBeam",
-            RumbleOption.Tactical => "ItemsModeSelection",
-            RumbleOption.BatmanRumble => "ItemsMode_BM",
+            RumbleMutator.NoRumble => "",
+            RumbleMutator.DefaultRumble => "ItemsMode",
+            RumbleMutator.Slow => "ItemsModeSlow",
+            RumbleMutator.Civilized => "ItemsModeBallManipulators",
+            RumbleMutator.DestructionDerby => "ItemsModeCarManipulators",
+            RumbleMutator.SpringLoaded => "ItemsModeSprings",
+            RumbleMutator.SpikesOnly => "ItemsModeSpikes",
+            RumbleMutator.SpikeRush => "ItemsModeRugby",
+            RumbleMutator.HauntedBallBeam => "ItemsModeHauntedBallBeam",
+            RumbleMutator.Tactical => "ItemsModeSelection",
+            RumbleMutator.BatmanRumble => "ItemsMode_BM",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
-    private static string MapBoostStrength(BoostStrengthOption option) =>
+    private static string MapBoostStrength(BoostStrengthMutator option) =>
         option switch
         {
-            BoostStrengthOption.One => "",
-            BoostStrengthOption.OneAndAHalf => "BoostMultiplier1_5x",
-            BoostStrengthOption.Two => "BoostMultiplier2x",
-            BoostStrengthOption.Five => "BoostMultiplier5x",
-            BoostStrengthOption.Ten => "BoostMultiplier10x",
+            BoostStrengthMutator.One => "",
+            BoostStrengthMutator.OneAndAHalf => "BoostMultiplier1_5x",
+            BoostStrengthMutator.Two => "BoostMultiplier2x",
+            BoostStrengthMutator.Five => "BoostMultiplier5x",
+            BoostStrengthMutator.Ten => "BoostMultiplier10x",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
-    private static string MapGravity(GravityOption option) =>
+    private static string MapGravity(GravityMutator option) =>
         option switch
         {
-            GravityOption.Default => "",
-            GravityOption.Low => "LowGravity",
-            GravityOption.High => "HighGravity",
-            GravityOption.Super_High => "SuperGravity",
-            GravityOption.Reverse => "ReverseGravity",
+            GravityMutator.Default => "",
+            GravityMutator.Low => "LowGravity",
+            GravityMutator.High => "HighGravity",
+            GravityMutator.SuperHigh => "SuperGravity",
+            GravityMutator.Reverse => "ReverseGravity",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
-    private static string MapDemolish(DemolishOption option) =>
+    private static string MapDemolish(DemolishMutator option) =>
         option switch
         {
-            DemolishOption.Default => "",
-            DemolishOption.Disabled => "NoDemolish",
-            DemolishOption.Friendly_Fire => "DemolishAll",
-            DemolishOption.On_Contact => "AlwaysDemolishOpposing",
-            DemolishOption.On_Contact_FF => "AlwaysDemolish",
+            DemolishMutator.Default => "",
+            DemolishMutator.Disabled => "NoDemolish",
+            DemolishMutator.FriendlyFire => "DemolishAll",
+            DemolishMutator.OnContact => "AlwaysDemolishOpposing",
+            DemolishMutator.OnContactFF => "AlwaysDemolish",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
-    private static string MapRespawnTime(RespawnTimeOption option) =>
+    private static string MapRespawnTime(RespawnTimeMutator option) =>
         option switch
         {
-            RespawnTimeOption.Three_Seconds => "",
-            RespawnTimeOption.Two_Seconds => "TwoSecondsRespawn",
-            RespawnTimeOption.One_Second => "OneSecondsRespawn",
-            RespawnTimeOption.Disable_Goal_Reset => "DisableGoalDelay",
+            RespawnTimeMutator.ThreeSeconds => "",
+            RespawnTimeMutator.TwoSeconds => "TwoSecondsRespawn",
+            RespawnTimeMutator.OneSecond => "OneSecondsRespawn",
+            RespawnTimeMutator.DisableGoalReset => "DisableGoalDelay",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
-    private static string MapMaxTime(MaxTimeOption option) =>
+    private static string MapMaxTime(MaxTimeMutator option) =>
         option switch
         {
-            MaxTimeOption.Default => "",
-            MaxTimeOption.Eleven_Minutes => "MaxTime11Minutes",
+            MaxTimeMutator.Default => "",
+            MaxTimeMutator.ElevenMinutes => "MaxTime11Minutes",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
-    private static string MapGameEvent(GameEventOption option) =>
+    private static string MapGameEvent(GameEventMutator option) =>
         option switch
         {
-            GameEventOption.Default => "",
-            GameEventOption.Rugby => "RugbyGameEventRules",
-            GameEventOption.Haunted => "HauntedGameEventRules",
+            GameEventMutator.Default => "",
+            GameEventMutator.Rugby => "RugbyGameEventRules",
+            GameEventMutator.Haunted => "HauntedGameEventRules",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
-    private static string MapAudio(AudioOption option) =>
+    private static string MapAudio(AudioMutator option) =>
         option switch
         {
-            AudioOption.Default => "",
-            AudioOption.Haunted => "HauntedAudio",
+            AudioMutator.Default => "",
+            AudioMutator.Haunted => "HauntedAudio",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
@@ -245,7 +245,7 @@ internal static class FlatToCommand
         return "";
     }
 
-    public static string MakeOpenCommand(MatchSettingsT matchSettings)
+    public static string MakeOpenCommand(MatchConfigurationT matchConfig)
     {
         var command = "Open ";
 
@@ -254,8 +254,8 @@ internal static class FlatToCommand
         // You MUST use GameMapUpk instead
         // This is the name of the map file without the extension
         // And can also be used to tell the game to load custom maps
-        if (matchSettings.GameMapUpk != "")
-            command += matchSettings.GameMapUpk;
+        if (matchConfig.GameMapUpk != "")
+            command += matchConfig.GameMapUpk;
         else
         {
             command += "Stadium_P";
@@ -263,44 +263,44 @@ internal static class FlatToCommand
         }
 
         // Parse game mode
-        command += MapGameMode(matchSettings.GameMode);
+        command += MapGameMode(matchConfig.GameMode);
 
-        if (matchSettings.SkipReplays)
+        if (matchConfig.SkipReplays)
             command += "?noreplay";
 
         // Whether to or not to skip the kickoff countdown
-        if (!matchSettings.InstantStart)
+        if (!matchConfig.InstantStart)
             command += "?Playtest";
 
         command += "?GameTags=PlayerCount8";
 
-        if (matchSettings.Freeplay)
+        if (matchConfig.Freeplay)
             command += ",Freeplay";
 
-        if (matchSettings.MutatorSettings is not { } mutatorSettings)
+        if (matchConfig.Mutators is not { } mutatorSettings)
             return command;
 
         // Parse mutator settings
         command += GetOption(MapMatchLength(mutatorSettings.MatchLength));
         command += GetOption(MapMaxScore(mutatorSettings.MaxScore));
         command += GetOption(MapMultiBall(mutatorSettings.MultiBall));
-        command += GetOption(MapOvertime(mutatorSettings.OvertimeOption));
-        command += GetOption(MapSeriesLength(mutatorSettings.SeriesLengthOption));
-        command += GetOption(MapGameSpeed(mutatorSettings.GameSpeedOption));
-        command += GetOption(MapBallMaxSpeed(mutatorSettings.BallMaxSpeedOption));
-        command += GetOption(MapBallType(mutatorSettings.BallTypeOption));
-        command += GetOption(MapBallWeight(mutatorSettings.BallWeightOption));
-        command += GetOption(MapBallSize(mutatorSettings.BallSizeOption));
-        command += GetOption(MapBallBounciness(mutatorSettings.BallBouncinessOption));
-        command += GetOption(MapBoost(mutatorSettings.BoostOption));
-        command += GetOption(MapRumble(mutatorSettings.RumbleOption));
-        command += GetOption(MapBoostStrength(mutatorSettings.BoostStrengthOption));
-        command += GetOption(MapGravity(mutatorSettings.GravityOption));
-        command += GetOption(MapDemolish(mutatorSettings.DemolishOption));
-        command += GetOption(MapRespawnTime(mutatorSettings.RespawnTimeOption));
-        command += GetOption(MapMaxTime(mutatorSettings.MaxTimeOption));
-        command += GetOption(MapGameEvent(mutatorSettings.GameEventOption));
-        command += GetOption(MapAudio(mutatorSettings.AudioOption));
+        command += GetOption(MapOvertime(mutatorSettings.Overtime));
+        command += GetOption(MapSeriesLength(mutatorSettings.SeriesLength));
+        command += GetOption(MapGameSpeed(mutatorSettings.GameSpeed));
+        command += GetOption(MapBallMaxSpeed(mutatorSettings.BallMaxSpeed));
+        command += GetOption(MapBallType(mutatorSettings.BallType));
+        command += GetOption(MapBallWeight(mutatorSettings.BallWeight));
+        command += GetOption(MapBallSize(mutatorSettings.BallSize));
+        command += GetOption(MapBallBounciness(mutatorSettings.BallBounciness));
+        command += GetOption(MapBoost(mutatorSettings.Boost));
+        command += GetOption(MapRumble(mutatorSettings.Rumble));
+        command += GetOption(MapBoostStrength(mutatorSettings.BoostStrength));
+        command += GetOption(MapGravity(mutatorSettings.Gravity));
+        command += GetOption(MapDemolish(mutatorSettings.Demolish));
+        command += GetOption(MapRespawnTime(mutatorSettings.RespawnTime));
+        command += GetOption(MapMaxTime(mutatorSettings.MaxTime));
+        command += GetOption(MapGameEvent(mutatorSettings.GameEvent));
+        command += GetOption(MapAudio(mutatorSettings.Audio));
 
         return command;
     }

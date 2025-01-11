@@ -3,7 +3,7 @@ using Bridge.Packet;
 using Bridge.State;
 using rlbot.flat;
 using CollisionShapeUnion = rlbot.flat.CollisionShapeUnion;
-using GameStatus = Bridge.Models.Message.GameStatus;
+using MatchPhase = Bridge.Models.Message.MatchPhase;
 
 namespace RLBotCS.Conversion;
 
@@ -83,28 +83,29 @@ internal static class GameStateToFlat
             balls.Add(new() { Physics = ballPhysics, Shape = collisionShape });
         }
 
-        rlbot.flat.GameStatus gameStatus = gameState.GameStatus switch
+        rlbot.flat.MatchPhase matchPhase = gameState.MatchPhase switch
         {
-            GameStatus.Inactive => rlbot.flat.GameStatus.Inactive,
-            GameStatus.Countdown => rlbot.flat.GameStatus.Countdown,
-            GameStatus.Kickoff => rlbot.flat.GameStatus.Kickoff,
-            GameStatus.Active => rlbot.flat.GameStatus.Active,
-            GameStatus.GoalScored => rlbot.flat.GameStatus.GoalScored,
-            GameStatus.Replay => rlbot.flat.GameStatus.Replay,
-            GameStatus.Paused => rlbot.flat.GameStatus.Paused,
-            GameStatus.Ended => rlbot.flat.GameStatus.Ended,
-            _ => rlbot.flat.GameStatus.Inactive,
+            MatchPhase.Inactive => rlbot.flat.MatchPhase.Inactive,
+            MatchPhase.Countdown => rlbot.flat.MatchPhase.Countdown,
+            MatchPhase.Kickoff => rlbot.flat.MatchPhase.Kickoff,
+            MatchPhase.Active => rlbot.flat.MatchPhase.Active,
+            MatchPhase.GoalScored => rlbot.flat.MatchPhase.GoalScored,
+            MatchPhase.Replay => rlbot.flat.MatchPhase.Replay,
+            MatchPhase.Paused => rlbot.flat.MatchPhase.Paused,
+            MatchPhase.Ended => rlbot.flat.MatchPhase.Ended,
+            _ => rlbot.flat.MatchPhase.Inactive,
         };
 
-        GameInfoT gameInfo = new()
+        MatchInfoT matchInfo = new()
         {
             SecondsElapsed = gameState.SecondsElapsed,
             GameTimeRemaining = gameState.GameTimeRemaining,
             IsOvertime = gameState.IsOvertime,
-            IsUnlimitedTime = gameState.MatchLength == Bridge.Packet.MatchLength.Unlimited,
-            GameStatus = gameStatus,
+            IsUnlimitedTime = gameState.MatchLength == MatchLength.Unlimited,
+            MatchPhase = matchPhase,
             WorldGravityZ = gameState.WorldGravityZ,
             GameSpeed = gameState.GameSpeed,
+            LastSpectated = gameState.LastSpectated,
             FrameNum = gameState.FrameNum,
         };
 
@@ -196,7 +197,6 @@ internal static class GameStateToFlat
                         Boost = car.LastInput.Boost,
                         Handbrake = car.LastInput.Handbrake,
                     },
-                    LastSpectated = car.LastSpectated,
                     HasJumped = car.HasJumped,
                     HasDoubleJumped = car.HasDoubleJumped,
                     HasDodged = car.HasDodged,
@@ -209,7 +209,7 @@ internal static class GameStateToFlat
         return new GamePacketT
         {
             Balls = balls,
-            GameInfo = gameInfo,
+            MatchInfo = matchInfo,
             Teams = teams,
             BoostPads = boostStates,
             Players = players,

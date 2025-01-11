@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.Conversion;
@@ -462,105 +462,110 @@ public static class ConfigParser
             MatchLength = ParseEnum(
                 mutatorTable,
                 "match_length",
-                MatchLength.Five_Minutes,
+                MatchLengthMutator.FiveMinutes,
                 missingValues
             ),
-            MaxScore = ParseEnum(mutatorTable, "max_score", MaxScore.Default, missingValues),
-            MultiBall = ParseEnum(mutatorTable, "multi_ball", MultiBall.One, missingValues),
-            OvertimeOption = ParseEnum(
+            MaxScore = ParseEnum(
+                mutatorTable,
+                "max_score",
+                MaxScoreMutator.Default,
+                missingValues
+            ),
+            MultiBall = ParseEnum(
+                mutatorTable,
+                "multi_ball",
+                MultiBallMutator.One,
+                missingValues
+            ),
+            Overtime = ParseEnum(
                 mutatorTable,
                 "overtime",
-                OvertimeOption.Unlimited,
+                OvertimeMutator.Unlimited,
                 missingValues
             ),
-            GameSpeedOption = ParseEnum(
+            GameSpeed = ParseEnum(
                 mutatorTable,
                 "game_speed",
-                GameSpeedOption.Default,
+                GameSpeedMutator.Default,
                 missingValues
             ),
-            BallMaxSpeedOption = ParseEnum(
+            BallMaxSpeed = ParseEnum(
                 mutatorTable,
                 "ball_max_speed",
-                BallMaxSpeedOption.Default,
+                BallMaxSpeedMutator.Default,
                 missingValues
             ),
-            BallTypeOption = ParseEnum(
+            BallType = ParseEnum(
                 mutatorTable,
                 "ball_type",
-                BallTypeOption.Default,
+                BallTypeMutator.Default,
                 missingValues
             ),
-            BallWeightOption = ParseEnum(
+            BallWeight = ParseEnum(
                 mutatorTable,
                 "ball_weight",
-                BallWeightOption.Default,
+                BallWeightMutator.Default,
                 missingValues
             ),
-            BallSizeOption = ParseEnum(
+            BallSize = ParseEnum(
                 mutatorTable,
                 "ball_size",
-                BallSizeOption.Default,
+                BallSizeMutator.Default,
                 missingValues
             ),
-            BallBouncinessOption = ParseEnum(
+            BallBounciness = ParseEnum(
                 mutatorTable,
                 "ball_bounciness",
-                BallBouncinessOption.Default,
+                BallBouncinessMutator.Default,
                 missingValues
             ),
-            BoostOption = ParseEnum(
+            Boost = ParseEnum(
                 mutatorTable,
                 "boost_amount",
-                BoostOption.Normal_Boost,
+                BoostMutator.NormalBoost,
                 missingValues
             ),
-            RumbleOption = ParseEnum(
-                mutatorTable,
-                "rumble",
-                RumbleOption.No_Rumble,
-                missingValues
-            ),
-            BoostStrengthOption = ParseEnum(
+            Rumble = ParseEnum(mutatorTable, "rumble", RumbleMutator.NoRumble, missingValues),
+            BoostStrength = ParseEnum(
                 mutatorTable,
                 "boost_strength",
-                BoostStrengthOption.One,
+                BoostStrengthMutator.One,
                 missingValues
             ),
-            GravityOption = ParseEnum(
+            Gravity = ParseEnum(
                 mutatorTable,
                 "gravity",
-                GravityOption.Default,
+                GravityMutator.Default,
                 missingValues
             ),
-            DemolishOption = ParseEnum(
+            Demolish = ParseEnum(
                 mutatorTable,
                 "demolish",
-                DemolishOption.Default,
+                DemolishMutator.Default,
                 missingValues
             ),
-            RespawnTimeOption = ParseEnum(
+            RespawnTime = ParseEnum(
                 mutatorTable,
                 "respawn_time",
-                RespawnTimeOption.Three_Seconds,
+                RespawnTimeMutator.ThreeSeconds,
                 missingValues
             ),
-            MaxTimeOption = ParseEnum(
+            MaxTime = ParseEnum(
                 mutatorTable,
                 "max_time",
-                MaxTimeOption.Default,
+                MaxTimeMutator.Default,
                 missingValues
             ),
-            GameEventOption = ParseEnum(
+            GameEvent = ParseEnum(
                 mutatorTable,
                 "game_event",
-                GameEventOption.Default,
+                GameEventMutator.Default,
                 missingValues
             ),
-            AudioOption = ParseEnum(mutatorTable, "audio", AudioOption.Default, missingValues),
+            Audio = ParseEnum(mutatorTable, "audio", AudioMutator.Default, missingValues),
         };
 
-    public static MatchSettingsT GetMatchSettings(string path)
+    public static MatchConfigurationT GetMatchConfig(string path)
     {
         /*
          * "rlbotToml" is the entire rlbot.toml file
@@ -595,7 +600,7 @@ public static class ConfigParser
         foreach (var script in scripts)
             scriptConfigs.Add(GetScriptConfig(script, path, missingValues["scripts"]));
 
-        var matchSettings = new MatchSettingsT
+        var matchConfig = new MatchConfigurationT
         {
             Launcher = ParseEnum(
                 rlbotTable,
@@ -609,7 +614,8 @@ public static class ConfigParser
                 true,
                 missingValues["rlbot"]
             ),
-            GamePath = ParseString(rlbotTable, "game_path", missingValues["rlbot"]) ?? "",
+            LauncherArg =
+                ParseString(rlbotTable, "launcher_arg", missingValues["rlbot"]) ?? "",
             GameMode = ParseEnum(
                 matchTable,
                 "game_mode",
@@ -650,7 +656,7 @@ public static class ConfigParser
                 missingValues["match"]
             ),
             Freeplay = ParseBool(matchTable, "freeplay", false, missingValues["match"]),
-            MutatorSettings = GetMutatorSettings(mutatorTable, missingValues["mutators"]),
+            Mutators = GetMutatorSettings(mutatorTable, missingValues["mutators"]),
             PlayerConfigurations = playerConfigs,
             ScriptConfigurations = scriptConfigs,
         };
@@ -661,9 +667,9 @@ public static class ConfigParser
                 ", ",
                 missingValues.SelectMany(kvp => kvp.Value.Select(v => $"{kvp.Key}.{v}"))
             );
-            Logger.LogWarning($"Missing values in toml: {missingValuesString}");
+            Logger.LogDebug($"Missing values in toml: {missingValuesString}");
         }
 
-        return matchSettings;
+        return matchConfig;
     }
 }

@@ -22,7 +22,7 @@ public enum DataType : ushort
     /// Sent once when a match starts, or when you first connect.
     /// </summary>
     StartCommand,
-    MatchSettings,
+    MatchConfig,
     PlayerInput,
     DesiredGameState,
     RenderGroup,

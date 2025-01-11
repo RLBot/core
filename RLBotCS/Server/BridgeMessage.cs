@@ -23,7 +23,7 @@ internal record Input(PlayerInputT PlayerInput) : IBridgeMessage
             PlayerInput.PlayerIndex
         );
 
-        if (actorId is ushort actorIdValue)
+        if (actorId is { } actorIdValue)
         {
             Bridge.Models.Control.PlayerInput playerInput = new()
             {
@@ -50,9 +50,9 @@ internal record SpawnHuman(PlayerConfigurationT Config, uint DesiredIndex) : IBr
         PlayerMetadata? alreadySpawnedPlayer = context
             .GameState.PlayerMapping.GetKnownPlayers()
             .FirstOrDefault(kp => Config.SpawnId == kp.SpawnId);
-        if (alreadySpawnedPlayer is PlayerMetadata metadata)
+        if (alreadySpawnedPlayer != null)
         {
-            metadata.PlayerIndex = DesiredIndex;
+            alreadySpawnedPlayer.PlayerIndex = DesiredIndex;
             return;
         }
 
@@ -142,14 +142,14 @@ internal record ConsoleCommand(string Command) : IBridgeMessage
     public void HandleMessage(BridgeContext context) => context.QueueConsoleCommand(Command);
 }
 
-internal record SpawnMap(MatchSettingsT MatchSettings) : IBridgeMessage
+internal record SpawnMap(MatchConfigurationT matchConfig) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
         context.MatchHasStarted = false;
         context.DelayMatchCommandSend = true;
 
-        string loadMapCommand = FlatToCommand.MakeOpenCommand(MatchSettings);
+        string loadMapCommand = FlatToCommand.MakeOpenCommand(matchConfig);
         context.Logger.LogInformation($"Starting match with command: {loadMapCommand}");
 
         context.MatchCommandSender.AddConsoleCommand(loadMapCommand);
@@ -203,10 +203,10 @@ internal record SetMutators(MutatorSettingsT MutatorSettings) : IBridgeMessage
     {
         context.GameState.GameTimeRemaining = MutatorSettings.MatchLength switch
         {
-            MatchLength.Five_Minutes => 5 * 60,
-            MatchLength.Ten_Minutes => 10 * 60,
-            MatchLength.Twenty_Minutes => 20 * 60,
-            MatchLength.Unlimited => 0,
+            MatchLengthMutator.FiveMinutes => 5 * 60,
+            MatchLengthMutator.TenMinutes => 10 * 60,
+            MatchLengthMutator.TwentyMinutes => 20 * 60,
+            MatchLengthMutator.Unlimited => 0,
             _ => throw new ArgumentOutOfRangeException(
                 nameof(MutatorSettings.MatchLength),
                 MutatorSettings.MatchLength,
@@ -216,10 +216,10 @@ internal record SetMutators(MutatorSettingsT MutatorSettings) : IBridgeMessage
 
         context.GameState.MatchLength = MutatorSettings.MatchLength switch
         {
-            MatchLength.Five_Minutes => Bridge.Packet.MatchLength.FiveMinutes,
-            MatchLength.Ten_Minutes => Bridge.Packet.MatchLength.TenMinutes,
-            MatchLength.Twenty_Minutes => Bridge.Packet.MatchLength.TwentyMinutes,
-            MatchLength.Unlimited => Bridge.Packet.MatchLength.Unlimited,
+            MatchLengthMutator.FiveMinutes => Bridge.Packet.MatchLength.FiveMinutes,
+            MatchLengthMutator.TenMinutes => Bridge.Packet.MatchLength.TenMinutes,
+            MatchLengthMutator.TwentyMinutes => Bridge.Packet.MatchLength.TwentyMinutes,
+            MatchLengthMutator.Unlimited => Bridge.Packet.MatchLength.Unlimited,
             _ => throw new ArgumentOutOfRangeException(
                 nameof(MutatorSettings.MatchLength),
                 MutatorSettings.MatchLength,
@@ -227,15 +227,15 @@ internal record SetMutators(MutatorSettingsT MutatorSettings) : IBridgeMessage
             ),
         };
 
-        context.GameState.RespawnTime = MutatorSettings.RespawnTimeOption switch
+        context.GameState.RespawnTime = MutatorSettings.RespawnTime switch
         {
-            RespawnTimeOption.Three_Seconds => 3,
-            RespawnTimeOption.Two_Seconds => 2,
-            RespawnTimeOption.One_Second => 1,
-            RespawnTimeOption.Disable_Goal_Reset => 3,
+            RespawnTimeMutator.ThreeSeconds => 3,
+            RespawnTimeMutator.TwoSeconds => 2,
+            RespawnTimeMutator.OneSecond => 1,
+            RespawnTimeMutator.DisableGoalReset => 3,
             _ => throw new ArgumentOutOfRangeException(
-                nameof(MutatorSettings.RespawnTimeOption),
-                MutatorSettings.RespawnTimeOption,
+                nameof(MutatorSettings.RespawnTime),
+                MutatorSettings.RespawnTime,
                 null
             ),
         };
@@ -249,22 +249,22 @@ internal record SetGameState(DesiredGameStateT GameState) : IBridgeMessage
         foreach (var command in GameState.ConsoleCommands)
             context.MatchCommandSender.AddConsoleCommand(command.Command);
 
-        if (GameState.GameInfoState is DesiredGameInfoStateT gameInfo)
+        if (GameState.GameInfoState is { } gameInfo)
         {
-            if (gameInfo.WorldGravityZ is FloatT gravity)
+            if (gameInfo.WorldGravityZ is { } gravity)
                 context.MatchCommandSender.AddConsoleCommand(
                     FlatToCommand.MakeGravityCommand(gravity.Val)
                 );
 
-            if (gameInfo.GameSpeed is FloatT speed)
+            if (gameInfo.GameSpeed is { } speed)
                 context.MatchCommandSender.AddConsoleCommand(
                     FlatToCommand.MakeGameSpeedCommand(speed.Val)
                 );
 
-            if (gameInfo.Paused is BoolT paused)
+            if (gameInfo.Paused is { } paused)
                 context.MatchCommandSender.AddSetPausedCommand(paused.Val);
 
-            if (gameInfo.EndMatch is BoolT endMatch && endMatch.Val)
+            if (gameInfo.EndMatch is { } endMatch && endMatch.Val)
                 context.MatchCommandSender.AddMatchEndCommand();
         }
 
@@ -276,7 +276,7 @@ internal record SetGameState(DesiredGameStateT GameState) : IBridgeMessage
             if (id == null)
                 continue;
 
-            if (ball.Physics is DesiredPhysicsT physics)
+            if (ball.Physics is { } physics)
             {
                 var currentPhysics = context.GameState.Balls[(ushort)id].Physics;
                 var fullState = FlatToModel.DesiredToPhysics(physics, currentPhysics);
@@ -293,7 +293,7 @@ internal record SetGameState(DesiredGameStateT GameState) : IBridgeMessage
             if (id == null)
                 continue;
 
-            if (car.Physics is DesiredPhysicsT physics)
+            if (car.Physics is { } physics)
             {
                 var currentPhysics = context.GameState.GameCars[(uint)i].Physics;
                 var fullState = FlatToModel.DesiredToPhysics(physics, currentPhysics);
@@ -301,7 +301,7 @@ internal record SetGameState(DesiredGameStateT GameState) : IBridgeMessage
                 context.MatchCommandSender.AddSetPhysicsCommand((ushort)id, fullState);
             }
 
-            if (car.BoostAmount is FloatT boostAmount)
+            if (car.BoostAmount is { } boostAmount)
             {
                 context.MatchCommandSender.AddSetBoostCommand(
                     (ushort)id,
@@ -348,15 +348,15 @@ internal record AddPerfSample(uint Index, bool GotInput) : IBridgeMessage
     }
 }
 
-internal record ClearProcessPlayerReservation(MatchSettingsT MatchSettings) : IBridgeMessage
+internal record ClearProcessPlayerReservation(MatchConfigurationT MatchConfig) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context) =>
-        context.AgentReservation.SetPlayers(MatchSettings);
+        context.AgentReservation.SetPlayers(MatchConfig);
 }
 
 internal record PlayerInfoRequest(
     ChannelWriter<SessionMessage> SessionWriter,
-    MatchSettingsT MatchSettings,
+    MatchConfigurationT MatchConfig,
     string AgentId
 ) : IBridgeMessage
 {
@@ -365,7 +365,7 @@ internal record PlayerInfoRequest(
         bool isHivemind = false;
         bool isScript = true;
 
-        foreach (var player in MatchSettings.PlayerConfigurations)
+        foreach (var player in MatchConfig.PlayerConfigurations)
         {
             if (player.AgentId == AgentId)
             {
@@ -377,11 +377,7 @@ internal record PlayerInfoRequest(
 
         if (isHivemind)
         {
-            if (
-                context.AgentReservation.ReservePlayers(AgentId) is
-
-                (List<PlayerIdPair>, uint) players
-            )
+            if (context.AgentReservation.ReservePlayers(AgentId) is { } players)
             {
                 SessionWriter.TryWrite(
                     new SessionMessage.PlayerIdPairs(players.Item2, players.Item1)
@@ -396,9 +392,9 @@ internal record PlayerInfoRequest(
         }
         else if (isScript)
         {
-            for (var i = 0; i < MatchSettings.ScriptConfigurations.Count; i++)
+            for (var i = 0; i < MatchConfig.ScriptConfigurations.Count; i++)
             {
-                var script = MatchSettings.ScriptConfigurations[i];
+                var script = MatchConfig.ScriptConfigurations[i];
                 if (script.AgentId == AgentId)
                 {
                     PlayerIdPair player = new() { Index = (uint)i, SpawnId = script.SpawnId };
@@ -411,9 +407,7 @@ internal record PlayerInfoRequest(
 
             context.Logger.LogError($"Failed to find script with agent id {AgentId}");
         }
-        else if (
-            context.AgentReservation.ReservePlayer(AgentId) is (PlayerIdPair, uint) player
-        )
+        else if (context.AgentReservation.ReservePlayer(AgentId) is { } player)
         {
             SessionWriter.TryWrite(
                 new SessionMessage.PlayerIdPairs(player.Item2, new() { player.Item1 })

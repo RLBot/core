@@ -11,7 +11,7 @@ namespace RLBotCS.Server;
 
 internal record SessionMessage
 {
-    public record MatchSettings(MatchSettingsT Settings) : SessionMessage;
+    public record MatchConfig(MatchConfigurationT Config) : SessionMessage;
 
     public record FieldInfo(FieldInfoT Info) : SessionMessage;
 
@@ -141,16 +141,18 @@ internal class FlatBuffersSession
 
             case DataType.StartCommand:
                 var startCommand = StartCommand.GetRootAsStartCommand(byteBuffer);
-                MatchSettingsT tomlMatchSettings = ConfigParser.GetMatchSettings(
+                MatchConfigurationT tomlMatchConfig = ConfigParser.GetMatchConfig(
                     startCommand.ConfigPath
                 );
 
-                await _rlbotServer.WriteAsync(new StartMatch(tomlMatchSettings));
+                await _rlbotServer.WriteAsync(new StartMatch(tomlMatchConfig));
                 break;
 
-            case DataType.MatchSettings:
-                var matchSettingsT = MatchSettings.GetRootAsMatchSettings(byteBuffer).UnPack();
-                await _rlbotServer.WriteAsync(new StartMatch(matchSettingsT));
+            case DataType.MatchConfig:
+                var matchConfig = MatchConfiguration
+                    .GetRootAsMatchConfiguration(byteBuffer)
+                    .UnPack();
+                await _rlbotServer.WriteAsync(new StartMatch(matchConfig));
                 break;
 
             case DataType.PlayerInput:
@@ -271,15 +273,15 @@ internal class FlatBuffersSession
                         TypedPayload.FromFlatBufferBuilder(DataType.FieldInfo, _messageBuilder)
                     );
                     break;
-                case SessionMessage.MatchSettings m:
+                case SessionMessage.MatchConfig m:
                     _messageBuilder.Clear();
                     _messageBuilder.Finish(
-                        MatchSettings.Pack(_messageBuilder, m.Settings).Value
+                        MatchConfiguration.Pack(_messageBuilder, m.Config).Value
                     );
 
                     SendPayloadToClient(
                         TypedPayload.FromFlatBufferBuilder(
-                            DataType.MatchSettings,
+                            DataType.MatchConfig,
                             _messageBuilder
                         )
                     );
