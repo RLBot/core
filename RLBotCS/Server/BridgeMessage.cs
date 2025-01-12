@@ -249,23 +249,17 @@ internal record SetGameState(DesiredGameStateT GameState) : IBridgeMessage
         foreach (var command in GameState.ConsoleCommands)
             context.MatchCommandSender.AddConsoleCommand(command.Command);
 
-        if (GameState.GameInfoState is { } gameInfo)
+        if (GameState.MatchInfo is { } matchInfo)
         {
-            if (gameInfo.WorldGravityZ is { } gravity)
+            if (matchInfo.WorldGravityZ is { } gravity)
                 context.MatchCommandSender.AddConsoleCommand(
                     FlatToCommand.MakeGravityCommand(gravity.Val)
                 );
 
-            if (gameInfo.GameSpeed is { } speed)
+            if (matchInfo.GameSpeed is { } speed)
                 context.MatchCommandSender.AddConsoleCommand(
                     FlatToCommand.MakeGameSpeedCommand(speed.Val)
                 );
-
-            if (gameInfo.Paused is { } paused)
-                context.MatchCommandSender.AddSetPausedCommand(paused.Val);
-
-            if (gameInfo.EndMatch is { } endMatch && endMatch.Val)
-                context.MatchCommandSender.AddMatchEndCommand();
         }
 
         for (int i = 0; i < GameState.BallStates.Count; i++)
