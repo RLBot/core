@@ -51,6 +51,9 @@ internal class BridgeHandler(
                 }
 
                 // reset the counter that lets us know if we're sending too many bytes
+                // technically this resets every time Rocket League renders a frame,
+                // but we don't know when that is. Since every message from the game
+                // means _at least_ one frame was rendered, this works good enough.
                 messenger.ResetByteCount();
 
                 float prevTime = _context.GameState.SecondsElapsed;
