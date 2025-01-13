@@ -8,34 +8,44 @@ using RLBotCS.Server.FlatbuffersMessage;
 var logger = Logging.GetLogger("Main");
 
 int rlbotSocketsPort;
+int gamePort;
+
 try
 {
+    // Parse RLBot sockets port
     rlbotSocketsPort = args.Length > 0 ? int.Parse(args[0]) : LaunchManager.RlbotSocketsPort;
 
-    // additional validation to ensure it's a valid port number
-    if (rlbotSocketsPort < 0)
+    // Validate RLBot sockets port
+    if (rlbotSocketsPort < 0 || rlbotSocketsPort > 65535)
     {
-        throw new FormatException();
+        throw new ArgumentOutOfRangeException(
+            nameof(rlbotSocketsPort),
+            "Port number must be between 0 and 65535."
+        );
     }
-    else if (rlbotSocketsPort > 65535)
+
+    // Parse game port
+    gamePort =
+        args.Length > 1
+            ? int.Parse(args[1])
+            : LaunchManager.FindUsableGamePort(rlbotSocketsPort);
+
+    // Validate game port
+    if (gamePort < 0 || gamePort > 65535)
     {
-        throw new OverflowException();
+        throw new ArgumentOutOfRangeException(
+            nameof(gamePort),
+            "Port number must be between 0 and 65535."
+        );
     }
 }
-catch (FormatException)
+catch (ArgumentOutOfRangeException ex)
 {
-    logger.LogError("Invalid port number provided. Please provide a valid port number.");
-    return;
-}
-catch (OverflowException)
-{
-    logger.LogError("Port number provided is too large. Please provide a valid port number.");
+    logger.LogError(ex.Message);
     return;
 }
 
 logger.LogInformation("Server will start on port " + rlbotSocketsPort);
-
-int gamePort = LaunchManager.FindUsableGamePort(rlbotSocketsPort);
 logger.LogInformation("Waiting for Rocket League to connect on port " + gamePort);
 
 // Set up the handler to use bridge to talk with the game
