@@ -1,10 +1,10 @@
-# About
+# RLBot Core
 
 The RLBot Core Project builds a `RLBotServer.exe` binary that allows custom bots and scripts
 to interface with Rocket League.
 
-This is a rewrite a C++ version that had lived at
-[https://github.com/RLBot/RLBot/tree/00720d1efc447e5495d3952a03e10b5b762421ee/src/main/cpp/RLBotInterface]
+This is a C++ rewrite of the old backend that lived at
+[RLBot/src/main/cpp/RLBotInterface](https://github.com/RLBot/RLBot/tree/00720d1efc447e5495d3952a03e10b5b762421ee/src/main/cpp/RLBotInterface) in v4.
 
 ## Developer Setup
 
@@ -28,7 +28,7 @@ compiled binaries at `RLBotCS\bin\Release\net8.0`.
 1. Create a new tag with the next version number - e.x. `git tag v0.1.0 -m "Core v0.1.0"`
    - Preferably sign the tag too - `git tag -s v0.1.0 -m "Core v0.1.0"`
 1. Push the tag - `git push --tags`
-1. Wait for the Github Actions to build the release and upload it to the release page!
+1. Wait for the GitHub Actions to build the release and upload it to the release page!
 
 Further deployment steps for automatic updates are still in progress.
 
@@ -47,7 +47,6 @@ The [flatbuffers-schema](https://github.com/RLBot/flatbuffers-schema) submodule 
 
 - `cd flatbuffers-schema`
 - `git checkout main`
-- `git fetch`
 - `git pull`
 
 The needed Flatbuffers code is automatically generated upon compilation of the project.

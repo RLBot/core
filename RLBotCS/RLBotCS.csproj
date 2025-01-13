@@ -32,12 +32,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Bridge">
-      <HintPath>Bridge.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
     <DirectPInvoke Include="rl_ball_sym" />
 
     <!-- Statically linked for publishing -->
@@ -68,6 +62,12 @@
 
   <ItemGroup>
     <Compile Include="..\FlatBuffer\rlbot.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Bridge">
+      <HintPath>lib\Bridge.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

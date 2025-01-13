@@ -91,7 +91,7 @@ internal record DistributeGameState(GameState GameState, GamePacketT? Packet) : 
 
         foreach (var car in packet.Players)
         {
-            if (car.LatestTouch is TouchT touch && touch.BallIndex == 0)
+            if (car.LatestTouch is { } touch && touch.BallIndex == 0)
             {
                 lastTouch = (touch, car.Team);
                 break;
@@ -100,7 +100,7 @@ internal record DistributeGameState(GameState GameState, GamePacketT? Packet) : 
 
         BallPredictionT prediction = BallPredictor.Generate(
             context.PredictionMode,
-            packet.GameInfo.SecondsElapsed,
+            packet.MatchInfo.SecondsElapsed,
             firstBall,
             lastTouch
         );
@@ -129,7 +129,7 @@ internal record DistributeGameState(GameState GameState, GamePacketT? Packet) : 
         UpdateFieldInfo(context, GameState);
         context.MatchStarter.MatchEnded = GameState.MatchEnded;
 
-        if (Packet is GamePacketT packet)
+        if (Packet is { } packet)
         {
             DistributeBallPrediction(context, packet);
             DistributeState(context, packet);

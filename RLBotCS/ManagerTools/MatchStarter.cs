@@ -16,8 +16,8 @@ internal class MatchStarter(
 {
     private static readonly ILogger Logger = Logging.GetLogger("MatchStarter");
 
-    private MatchSettingsT? _deferredMatchSettings;
-    private MatchSettingsT? _matchSettings;
+    private MatchConfigurationT? _deferredMatchConfig;
+    private MatchConfigurationT? _matchConfig;
     private Dictionary<string, string> _hivemindNameMap = new();
     private int _expectedConnections;
     private int _connectionReadies;
@@ -28,43 +28,43 @@ internal class MatchStarter(
     public bool HasSpawnedMap;
     public bool MatchEnded;
 
-    public MatchSettingsT? GetMatchSettings() => _deferredMatchSettings ?? _matchSettings;
+    public MatchConfigurationT? GetMatchConfig() => _deferredMatchConfig ?? _matchConfig;
 
-    public void SetNullMatchSettings()
+    public void SetMatchConfigNull()
     {
         if (!_needsSpawnCars)
-            _matchSettings = null;
+            _matchConfig = null;
     }
 
     public void StartCommunication()
     {
         _communicationStarted = true;
-        if (_deferredMatchSettings is MatchSettingsT matchSettings)
-            LoadMatch(matchSettings);
+        if (_deferredMatchConfig is { } matchConfig)
+            LoadMatch(matchConfig);
     }
 
-    public void StartMatch(MatchSettingsT matchSettings)
+    public void StartMatch(MatchConfigurationT matchConfig)
     {
         if (!LaunchManager.IsRocketLeagueRunningWithArgs())
         {
             _communicationStarted = false;
             LaunchManager.LaunchRocketLeague(
-                matchSettings.Launcher,
-                matchSettings.GamePath,
+                matchConfig.Launcher,
+                matchConfig.LauncherArg,
                 gamePort
             );
         }
 
-        PreprocessMatch(matchSettings);
+        PreprocessMatch(matchConfig);
 
         if (!_communicationStarted)
         {
             // Defer the message
-            _deferredMatchSettings = matchSettings;
+            _deferredMatchConfig = matchConfig;
             return;
         }
 
-        LoadMatch(matchSettings);
+        LoadMatch(matchConfig);
     }
 
     public void MapSpawned(string MapName)
@@ -75,25 +75,25 @@ internal class MatchStarter(
         if (!_needsSpawnCars)
             return;
 
-        if (_deferredMatchSettings is MatchSettingsT matchSettings)
+        if (_deferredMatchConfig is { } matchConfig)
         {
-            bridge.TryWrite(new SetMutators(matchSettings.MutatorSettings));
+            bridge.TryWrite(new SetMutators(matchConfig.Mutators));
 
-            bool spawned = SpawnCars(matchSettings);
+            bool spawned = SpawnCars(matchConfig);
             if (!spawned)
                 return;
 
-            _matchSettings = matchSettings;
-            _deferredMatchSettings = null;
+            _matchConfig = matchConfig;
+            _deferredMatchConfig = null;
         }
     }
 
-    private void PreprocessMatch(MatchSettingsT matchSettings)
+    private void PreprocessMatch(MatchConfigurationT matchConfig)
     {
         Dictionary<string, int> playerNames = [];
         _hivemindNameMap.Clear();
 
-        foreach (var playerConfig in matchSettings.PlayerConfigurations)
+        foreach (var playerConfig in matchConfig.PlayerConfigurations)
         {
             // De-duplicating similar names, Overwrites original value
             string playerName = playerConfig.Name ?? "";
@@ -120,7 +120,7 @@ internal class MatchStarter(
         }
 
         Dictionary<string, int> scriptNames = [];
-        foreach (var scriptConfig in matchSettings.ScriptConfigurations)
+        foreach (var scriptConfig in matchConfig.ScriptConfigurations)
         {
             // De-duplicating similar names, Overwrites original value
             string scriptName = scriptConfig.Name ?? "";
@@ -143,15 +143,15 @@ internal class MatchStarter(
             scriptConfig.AgentId ??= "";
         }
 
-        matchSettings.GamePath ??= "";
-        matchSettings.GameMapUpk ??= "";
+        matchConfig.LauncherArg ??= "";
+        matchConfig.GameMapUpk ??= "";
     }
 
-    private void StartBots(MatchSettingsT matchSettings)
+    private void StartBots(MatchConfigurationT matchConfig)
     {
         Dictionary<string, PlayerConfigurationT> processes = new();
 
-        foreach (var playerConfig in matchSettings.PlayerConfigurations)
+        foreach (var playerConfig in matchConfig.PlayerConfigurations)
         {
             if (playerConfig.Variety.Type != PlayerClass.CustomBot)
                 continue;
@@ -182,12 +182,12 @@ internal class MatchStarter(
         _hivemindNameMap.Clear();
 
         _connectionReadies = 0;
-        _expectedConnections = matchSettings.ScriptConfigurations.Count + processes.Count;
+        _expectedConnections = matchConfig.ScriptConfigurations.Count + processes.Count;
 
-        if (matchSettings.AutoStartBots)
+        if (matchConfig.AutoStartBots)
         {
             LaunchManager.LaunchBots(processes, rlbotSocketsPort);
-            LaunchManager.LaunchScripts(matchSettings.ScriptConfigurations, rlbotSocketsPort);
+            LaunchManager.LaunchScripts(matchConfig.ScriptConfigurations, rlbotSocketsPort);
         }
         else
         {
@@ -197,18 +197,18 @@ internal class MatchStarter(
         }
     }
 
-    private void LoadMatch(MatchSettingsT matchSettings)
+    private void LoadMatch(MatchConfigurationT matchConfig)
     {
-        StartBots(matchSettings);
+        StartBots(matchConfig);
 
-        if (matchSettings.AutoSaveReplay)
+        if (matchConfig.AutoSaveReplay)
             bridge.TryWrite(new ConsoleCommand(FlatToCommand.MakeAutoSaveReplayCommand()));
 
-        var shouldSpawnNewMap = matchSettings.ExistingMatchBehavior switch
+        var shouldSpawnNewMap = matchConfig.ExistingMatchBehavior switch
         {
-            ExistingMatchBehavior.Continue_And_Spawn => false,
-            ExistingMatchBehavior.Restart_If_Different => MatchEnded
-                || IsDifferentFromLast(matchSettings),
+            ExistingMatchBehavior.ContinueAndSpawn => false,
+            ExistingMatchBehavior.RestartIfDifferent => MatchEnded
+                || IsDifferentFromLast(matchConfig),
             _ => true,
         };
 
@@ -216,20 +216,20 @@ internal class MatchStarter(
         if (shouldSpawnNewMap)
         {
             HasSpawnedMap = false;
-            _matchSettings = null;
-            _deferredMatchSettings = matchSettings;
+            _matchConfig = null;
+            _deferredMatchConfig = matchConfig;
 
-            bridge.TryWrite(new SpawnMap(matchSettings));
+            bridge.TryWrite(new SpawnMap(matchConfig));
         }
         else
         {
             // despawn old bots that aren't in the new match
-            if (_matchSettings is MatchSettingsT lastMatchSettings)
+            if (_matchConfig is { } lastMatchConfig)
             {
-                var lastSpawnIds = lastMatchSettings
+                var lastSpawnIds = lastMatchConfig
                     .PlayerConfigurations.Select(p => p.SpawnId)
                     .ToList();
-                var currentSpawnIds = matchSettings
+                var currentSpawnIds = matchConfig
                     .PlayerConfigurations.Select(p => p.SpawnId)
                     .ToList();
                 var toDespawn = lastSpawnIds.Except(currentSpawnIds).ToList();
@@ -244,32 +244,32 @@ internal class MatchStarter(
             }
 
             // No need to load a new map, just spawn the players.
-            SpawnCars(matchSettings, true);
+            SpawnCars(matchConfig, true);
             bridge.TryWrite(new FlushMatchCommands());
 
-            _matchSettings = matchSettings;
-            _deferredMatchSettings = null;
+            _matchConfig = matchConfig;
+            _deferredMatchConfig = null;
         }
     }
 
-    private bool IsDifferentFromLast(MatchSettingsT matchSettings)
+    private bool IsDifferentFromLast(MatchConfigurationT matchConfig)
     {
         // Don't consider rendering/state setting because that can be enabled/disabled without restarting the match
 
-        var lastMatchSettings = _matchSettings;
-        if (lastMatchSettings == null)
+        var lastMatchConfig = _matchConfig;
+        if (lastMatchConfig == null)
             return true;
 
         if (
-            lastMatchSettings.PlayerConfigurations.Count
-            != matchSettings.PlayerConfigurations.Count
+            lastMatchConfig.PlayerConfigurations.Count
+            != matchConfig.PlayerConfigurations.Count
         )
             return true;
 
-        for (var i = 0; i < matchSettings.PlayerConfigurations.Count; i++)
+        for (var i = 0; i < matchConfig.PlayerConfigurations.Count; i++)
         {
-            var lastPlayerConfig = lastMatchSettings.PlayerConfigurations[i];
-            var playerConfig = matchSettings.PlayerConfigurations[i];
+            var lastPlayerConfig = lastMatchConfig.PlayerConfigurations[i];
+            var playerConfig = matchConfig.PlayerConfigurations[i];
 
             if (
                 lastPlayerConfig.SpawnId != playerConfig.SpawnId
@@ -278,31 +278,31 @@ internal class MatchStarter(
                 return true;
         }
 
-        var lastMutators = lastMatchSettings.MutatorSettings;
-        var mutators = matchSettings.MutatorSettings;
+        var lastMutators = lastMatchConfig.Mutators;
+        var mutators = matchConfig.Mutators;
 
-        return lastMatchSettings.Freeplay != matchSettings.Freeplay
-            || lastMatchSettings.GameMode != matchSettings.GameMode
-            || lastMatchSettings.GameMapUpk != matchSettings.GameMapUpk
-            || lastMatchSettings.InstantStart != matchSettings.InstantStart
+        return lastMatchConfig.Freeplay != matchConfig.Freeplay
+            || lastMatchConfig.GameMode != matchConfig.GameMode
+            || lastMatchConfig.GameMapUpk != matchConfig.GameMapUpk
+            || lastMatchConfig.InstantStart != matchConfig.InstantStart
             || lastMutators.MatchLength != mutators.MatchLength
             || lastMutators.MaxScore != mutators.MaxScore
             || lastMutators.MultiBall != mutators.MultiBall
-            || lastMutators.OvertimeOption != mutators.OvertimeOption
-            || lastMutators.SeriesLengthOption != mutators.SeriesLengthOption
-            || lastMutators.BallMaxSpeedOption != mutators.BallMaxSpeedOption
-            || lastMutators.BallTypeOption != mutators.BallTypeOption
-            || lastMutators.BallWeightOption != mutators.BallWeightOption
-            || lastMutators.BallSizeOption != mutators.BallSizeOption
-            || lastMutators.BallBouncinessOption != mutators.BallBouncinessOption
-            || lastMutators.BoostOption != mutators.BoostOption
-            || lastMutators.RumbleOption != mutators.RumbleOption
-            || lastMutators.BoostStrengthOption != mutators.BoostStrengthOption
-            || lastMutators.DemolishOption != mutators.DemolishOption
-            || lastMutators.RespawnTimeOption != mutators.RespawnTimeOption;
+            || lastMutators.Overtime != mutators.Overtime
+            || lastMutators.SeriesLength != mutators.SeriesLength
+            || lastMutators.BallMaxSpeed != mutators.BallMaxSpeed
+            || lastMutators.BallType != mutators.BallType
+            || lastMutators.BallWeight != mutators.BallWeight
+            || lastMutators.BallSize != mutators.BallSize
+            || lastMutators.BallBounciness != mutators.BallBounciness
+            || lastMutators.Boost != mutators.Boost
+            || lastMutators.Rumble != mutators.Rumble
+            || lastMutators.BoostStrength != mutators.BoostStrength
+            || lastMutators.Demolish != mutators.Demolish
+            || lastMutators.RespawnTime != mutators.RespawnTime;
     }
 
-    private bool SpawnCars(MatchSettingsT matchSettings, bool force = false)
+    private bool SpawnCars(MatchConfigurationT matchConfig, bool force = false)
     {
         // ensure this function is only called once
         // and only if the map has been spawned
@@ -310,9 +310,7 @@ internal class MatchStarter(
             return false;
 
         bool doSpawning =
-            force
-            || !matchSettings.AutoStartBots
-            || _expectedConnections <= _connectionReadies;
+            force || !matchConfig.AutoStartBots || _expectedConnections <= _connectionReadies;
         Logger.LogInformation(
             "Spawning cars: "
                 + _expectedConnections
@@ -328,12 +326,12 @@ internal class MatchStarter(
         _needsSpawnCars = false;
 
         PlayerConfigurationT? humanConfig = null;
-        int numPlayers = matchSettings.PlayerConfigurations.Count;
+        int numPlayers = matchConfig.PlayerConfigurations.Count;
         int indexOffset = 0;
 
         for (int i = 0; i < numPlayers; i++)
         {
-            var playerConfig = matchSettings.PlayerConfigurations[i];
+            var playerConfig = matchConfig.PlayerConfigurations[i];
 
             switch (playerConfig.Variety.Type)
             {
@@ -405,7 +403,7 @@ internal class MatchStarter(
 
     public void AddLoadout(PlayerLoadoutT loadout, int spawnId)
     {
-        if (_matchSettings is null)
+        if (_matchConfig is null)
         {
             Logger.LogError("Match settings not loaded yet.");
             return;
@@ -421,7 +419,7 @@ internal class MatchStarter(
             return;
         }
 
-        var player = _matchSettings.PlayerConfigurations.Find(p => p.SpawnId == spawnId);
+        var player = _matchConfig.PlayerConfigurations.Find(p => p.SpawnId == spawnId);
         if (player is null)
         {
             Logger.LogError($"Player with spawn id {spawnId} not found to add loadout to.");
@@ -453,17 +451,17 @@ internal class MatchStarter(
         );
 
         if (
-            _deferredMatchSettings is MatchSettingsT matchSettings
+            _deferredMatchConfig is { } matchConfig
             && _connectionReadies >= _expectedConnections
             && _needsSpawnCars
         )
         {
-            bool spawned = SpawnCars(matchSettings);
+            bool spawned = SpawnCars(matchConfig);
             if (!spawned)
                 return;
 
-            _matchSettings = matchSettings;
-            _deferredMatchSettings = null;
+            _matchConfig = matchConfig;
+            _deferredMatchConfig = null;
         }
     }
 }

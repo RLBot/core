@@ -21,14 +21,14 @@ public class AgentReservation
 
     private readonly List<PlayerMetadata> _knownPlayers = new();
 
-    public void SetPlayers(MatchSettingsT matchSettings)
+    public void SetPlayers(MatchConfigurationT matchConfig)
     {
         _knownPlayers.Clear();
 
         uint indexOffset = 0;
-        for (int i = 0; i < matchSettings.PlayerConfigurations.Count; i++)
+        for (int i = 0; i < matchConfig.PlayerConfigurations.Count; i++)
         {
-            var playerConfig = matchSettings.PlayerConfigurations[i];
+            var playerConfig = matchConfig.PlayerConfigurations[i];
 
             if (playerConfig.Variety.Type != PlayerClass.CustomBot)
             {

@@ -93,12 +93,12 @@ public static partial class BallPredictor
         }
     }
 
-    public static PredictionMode GetMode(MatchSettingsT matchSettings)
+    public static PredictionMode GetMode(MatchConfigurationT matchConfig)
     {
-        if (matchSettings.GameMapUpk.Contains("Throwback"))
+        if (matchConfig.GameMapUpk.Contains("Throwback"))
             return PredictionMode.StandardThrowback;
 
-        return matchSettings.GameMode switch
+        return matchConfig.GameMode switch
         {
             GameMode.Dropshot => PredictionMode.Dropshot,
             GameMode.Hoops => PredictionMode.Hoops,

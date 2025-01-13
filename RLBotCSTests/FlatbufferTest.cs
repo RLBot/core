@@ -62,18 +62,18 @@ public class FlatbufferTest
     [TestMethod]
     public void TestBufferGrow()
     {
-        MatchSettingsT matchSettings = new MatchSettingsT()
+        MatchConfigurationT matchConfig = new MatchConfigurationT()
         {
-            GamePath = RandomString(64),
+            LauncherArg = RandomString(64),
             GameMapUpk = RandomString(64),
-            MutatorSettings = new MutatorSettingsT(),
+            Mutators = new MutatorSettingsT(),
             PlayerConfigurations = RandomPlayerConfigurations(),
             ScriptConfigurations = RandomScriptConfigurations(),
         };
 
         // only allocate 1 byte
         FlatBufferBuilder builderSerialize = new(1);
-        var offset = MatchSettings.Pack(builderSerialize, matchSettings);
+        var offset = MatchConfiguration.Pack(builderSerialize, matchConfig);
         builderSerialize.Finish(offset.Value);
         // if we got here, the buffer grew successfully
     }
