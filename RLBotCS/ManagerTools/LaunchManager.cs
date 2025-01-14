@@ -292,15 +292,10 @@ internal static class LaunchManager
                         LaunchGameViaLegendary();
                         return;
                     }
-                    else if (extraArg.ToLower() == "")
-                    {
-                        Logger.LogInformation(
-                            "Custom launcher specified without any extra arguments. Not launching Rocket League."
-                        );
-                        return;
-                    }
 
                     throw new NotSupportedException($"Unexpected launcher, \"{extraArg}\"");
+                case rlbot.flat.Launcher.NoLaunch:
+                    break;
             }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             switch (launcherPref)
@@ -328,15 +323,10 @@ internal static class LaunchManager
                         LaunchGameViaLegendary();
                         return;
                     }
-                    else if (extraArg.ToLower() == "")
-                    {
-                        Logger.LogInformation(
-                            "Custom launcher specified without any extra arguments. Not launching Rocket League."
-                        );
-                        return;
-                    }
 
                     throw new NotSupportedException($"Unexpected launcher, \"{extraArg}\"");
+                case rlbot.flat.Launcher.NoLaunch:
+                    break;
             }
         else
             throw new PlatformNotSupportedException(
