@@ -140,19 +140,32 @@ internal static class LaunchManager
         int rlbotSocketsPort
     )
     {
-        foreach (var mainPlayer in processGroups.Values)
+        foreach (var bot in processGroups.Values)
         {
-            if (mainPlayer.RunCommand == "")
+            if (bot.RunCommand == "")
                 continue;
 
-            Process botProcess = RunCommandInShell(mainPlayer.RunCommand);
+            Process botProcess = RunCommandInShell(bot.RunCommand);
 
-            if (mainPlayer.RootDir != "")
-                botProcess.StartInfo.WorkingDirectory = mainPlayer.RootDir;
+            if (bot.RootDir != "")
+                botProcess.StartInfo.WorkingDirectory = bot.RootDir;
 
-            botProcess.StartInfo.EnvironmentVariables["RLBOT_AGENT_ID"] = mainPlayer.AgentId;
+            botProcess.StartInfo.EnvironmentVariables["RLBOT_AGENT_ID"] = bot.AgentId;
             botProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
                 rlbotSocketsPort.ToString();
+            botProcess.EnableRaisingEvents = true;
+
+            botProcess.Exited += (_, _) =>
+            {
+                if (botProcess.ExitCode != 0)
+                {
+                    Logger.LogError(
+                        "Bot {0} exited with error code {1}. See previous logs for more information.",
+                        bot.Name,
+                        botProcess.ExitCode
+                    );
+                }
+            };
 
             try
             {
@@ -160,7 +173,7 @@ internal static class LaunchManager
             }
             catch (Exception e)
             {
-                Logger.LogError($"Failed to launch bot {mainPlayer.Name}: {e.Message}");
+                Logger.LogError($"Failed to launch bot {bot.Name}: {e.Message}");
             }
         }
     }
@@ -183,6 +196,19 @@ internal static class LaunchManager
             scriptProcess.StartInfo.EnvironmentVariables["RLBOT_AGENT_ID"] = script.AgentId;
             scriptProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
                 rlbotSocketsPort.ToString();
+            scriptProcess.EnableRaisingEvents = true;
+
+            scriptProcess.Exited += (_, _) =>
+            {
+                if (scriptProcess.ExitCode != 0)
+                {
+                    Logger.LogError(
+                        "Script {0} exited with error code {1}. See previous logs for more information.",
+                        script.Name,
+                        scriptProcess.ExitCode
+                    );
+                }
+            };
 
             try
             {
