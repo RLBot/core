@@ -13,7 +13,9 @@ public class Logging : ILogger
     private const string BoldRen = "\x1b[31;1m";
     private const string Reset = "\x1b[0m";
 
-    private static readonly LogLevel LoggingLevel = Environment.GetEnvironmentVariable("RLBOT_LOG_LEVEL") switch
+    private static readonly LogLevel LoggingLevel = Environment.GetEnvironmentVariable(
+        "RLBOT_LOG_LEVEL"
+    ) switch
     {
         "debug" => LogLevel.Debug,
         "info" => LogLevel.Information,
