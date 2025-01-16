@@ -5,6 +5,12 @@ using RLBotCS.ManagerTools;
 using RLBotCS.Server;
 using RLBotCS.Server.FlatbuffersMessage;
 
+if (args.Length > 0 && args[0] == "--version")
+{
+    Console.WriteLine("RLBotServer v5.beta.4.1");
+    Environment.Exit(0);
+}
+
 var logger = Logging.GetLogger("Main");
 
 int rlbotSocketsPort;
