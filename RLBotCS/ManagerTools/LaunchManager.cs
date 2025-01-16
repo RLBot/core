@@ -155,7 +155,7 @@ internal static class LaunchManager
                 rlbotSocketsPort.ToString();
             botProcess.EnableRaisingEvents = true;
 
-            botProcess.Exited += (sender, eventArgs) =>
+            botProcess.Exited += (_, _) =>
             {
                 if (botProcess.ExitCode != 0)
                 {
@@ -198,7 +198,7 @@ internal static class LaunchManager
                 rlbotSocketsPort.ToString();
             scriptProcess.EnableRaisingEvents = true;
 
-            scriptProcess.Exited += (sender, eventArgs) =>
+            scriptProcess.Exited += (_, _) =>
             {
                 if (scriptProcess.ExitCode != 0)
                 {
