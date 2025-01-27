@@ -7,7 +7,7 @@ using MatchPhase = Bridge.Models.Message.MatchPhase;
 
 namespace RLBotCS.Conversion;
 
-internal static class GameStateToFlat
+static class GameStateToFlat
 {
     private static Vector2T ToVector2T(this Bridge.Models.Phys.Vector2 vec) =>
         new() { X = vec.X, Y = vec.Y };

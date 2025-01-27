@@ -7,7 +7,7 @@ using RLBotCS.Server.BridgeMessage;
 
 namespace RLBotCS.Server.FlatbuffersMessage;
 
-internal class ServerContext(
+class ServerContext(
     Channel<IServerMessage, IServerMessage> incomingMessages,
     MatchStarter matchStarter,
     ChannelWriter<IBridgeMessage> bridge

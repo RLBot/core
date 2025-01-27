@@ -9,7 +9,7 @@ using RLBotCS.Server.FlatbuffersMessage;
 
 namespace RLBotCS.Server;
 
-internal class BridgeContext(
+class BridgeContext(
     ChannelWriter<IServerMessage> writer,
     ChannelReader<IBridgeMessage> reader,
     TcpMessenger messenger

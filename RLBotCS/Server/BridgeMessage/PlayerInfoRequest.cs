@@ -5,7 +5,7 @@ using RLBotCS.ManagerTools;
 
 namespace RLBotCS.Server.BridgeMessage;
 
-internal record PlayerInfoRequest(
+record PlayerInfoRequest(
     ChannelWriter<SessionMessage> SessionWriter,
     MatchConfigurationT MatchConfig,
     string AgentId

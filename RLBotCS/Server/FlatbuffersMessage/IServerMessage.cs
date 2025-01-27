@@ -1,12 +1,12 @@
 ﻿namespace RLBotCS.Server.FlatbuffersMessage;
 
-internal enum ServerAction
+enum ServerAction
 {
     Continue,
     Stop,
 }
 
-internal interface IServerMessage
+interface IServerMessage
 {
     public ServerAction Execute(ServerContext context);
 }

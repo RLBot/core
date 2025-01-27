@@ -2,7 +2,7 @@
 
 namespace RLBotCS.Server.FlatbuffersMessage;
 
-internal record StopMatch(bool ShutdownServer) : IServerMessage
+record StopMatch(bool ShutdownServer) : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {

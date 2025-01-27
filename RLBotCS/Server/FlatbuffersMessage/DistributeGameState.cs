@@ -5,7 +5,7 @@ using GoalInfo = Bridge.Packet.GoalInfo;
 
 namespace RLBotCS.Server.FlatbuffersMessage;
 
-internal record DistributeGameState(GameState GameState, GamePacketT? Packet) : IServerMessage
+record DistributeGameState(GameState GameState, GamePacketT? Packet) : IServerMessage
 {
     private static void UpdateFieldInfo(ServerContext context, GameState gameState)
     {

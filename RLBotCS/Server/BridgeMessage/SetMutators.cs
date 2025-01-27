@@ -2,7 +2,7 @@
 
 namespace RLBotCS.Server.BridgeMessage;
 
-internal record SetMutators(MutatorSettingsT MutatorSettings) : IBridgeMessage
+record SetMutators(MutatorSettingsT MutatorSettings) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {

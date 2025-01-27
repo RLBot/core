@@ -4,7 +4,7 @@ using RLBotCS.Conversion;
 
 namespace RLBotCS.Server.BridgeMessage;
 
-internal record SpawnMap(MatchConfigurationT matchConfig) : IBridgeMessage
+record SpawnMap(MatchConfigurationT matchConfig) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {

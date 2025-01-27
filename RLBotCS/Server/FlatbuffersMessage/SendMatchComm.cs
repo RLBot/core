@@ -3,7 +3,7 @@ using rlbot.flat;
 
 namespace RLBotCS.Server.FlatbuffersMessage;
 
-internal record SendMatchComm(int ClientId, int SpawnId, MatchCommT MatchComm) : IServerMessage
+record SendMatchComm(int ClientId, int SpawnId, MatchCommT MatchComm) : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {

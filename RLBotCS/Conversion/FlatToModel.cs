@@ -7,7 +7,7 @@ using Bridge.State;
 
 namespace RLBotCS.Conversion;
 
-internal static class FlatToModel
+static class FlatToModel
 {
     internal static CarInput ToCarInput(rlbot.flat.ControllerStateT state)
     {

@@ -8,7 +8,7 @@ namespace RLBotCS.Server;
  * Communicates with bots and scripts over TCP according to the spec
  * defined at https://wiki.rlbot.org/framework/sockets-specification/
  */
-internal class SocketSpecStreamWriter(Stream stream)
+class SocketSpecStreamWriter(Stream stream)
 {
     private static readonly ILogger Logger = Logging.GetLogger("SocketSpecStreamWriter");
 

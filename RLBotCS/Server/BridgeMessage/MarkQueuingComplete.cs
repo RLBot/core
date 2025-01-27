@@ -1,6 +1,6 @@
 ﻿namespace RLBotCS.Server.BridgeMessage;
 
-internal record MarkQueuingComplete() : IBridgeMessage
+record MarkQueuingComplete() : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {

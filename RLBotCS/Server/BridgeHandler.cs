@@ -10,7 +10,7 @@ using MatchPhase = Bridge.Models.Message.MatchPhase;
 
 namespace RLBotCS.Server;
 
-internal class BridgeHandler(
+class BridgeHandler(
     ChannelWriter<IServerMessage> writer,
     ChannelReader<IBridgeMessage> reader,
     TcpMessenger messenger

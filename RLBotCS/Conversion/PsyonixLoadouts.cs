@@ -3,7 +3,7 @@ using rlbot.flat;
 
 namespace RLBotCS.Conversion;
 
-internal static class PsyonixLoadouts
+static class PsyonixLoadouts
 {
     private static Random _random = new();
 

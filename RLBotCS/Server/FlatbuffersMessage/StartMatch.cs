@@ -4,7 +4,7 @@ using RLBotCS.Server.BridgeMessage;
 
 namespace RLBotCS.Server.FlatbuffersMessage;
 
-internal record StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
+record StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {

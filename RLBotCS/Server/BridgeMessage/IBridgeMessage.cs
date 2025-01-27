@@ -1,6 +1,6 @@
 ﻿namespace RLBotCS.Server.BridgeMessage;
 
-internal interface IBridgeMessage
+interface IBridgeMessage
 {
     public void HandleMessage(BridgeContext context);
 }

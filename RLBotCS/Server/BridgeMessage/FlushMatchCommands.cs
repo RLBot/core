@@ -1,6 +1,6 @@
 ﻿namespace RLBotCS.Server.BridgeMessage;
 
-internal record FlushMatchCommands() : IBridgeMessage
+record FlushMatchCommands() : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {

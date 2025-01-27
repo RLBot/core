@@ -6,7 +6,7 @@ using RLBotCS.Conversion;
 
 namespace RLBotCS.Server.BridgeMessage;
 
-internal record SpawnBot(
+record SpawnBot(
     PlayerConfigurationT Config,
     BotSkill Skill,
     uint DesiredIndex,

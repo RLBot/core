@@ -2,7 +2,7 @@
 
 namespace RLBotCS.Server.BridgeMessage;
 
-internal record AddRenders(int ClientId, int RenderId, List<RenderMessageT> RenderItems)
+record AddRenders(int ClientId, int RenderId, List<RenderMessageT> RenderItems)
     : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)

@@ -2,7 +2,7 @@
 
 namespace RLBotCS.Conversion;
 
-internal static class ColorSwatches
+static class ColorSwatches
 {
     internal static Color GetPrimary(uint colorId, uint team)
     {

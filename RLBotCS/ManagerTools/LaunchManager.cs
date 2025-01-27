@@ -9,7 +9,7 @@ using WmiLight;
 
 namespace RLBotCS.ManagerTools;
 
-internal static class LaunchManager
+static class LaunchManager
 {
     private const string SteamGameId = "252950";
     public const int RlbotSocketsPort = 23234;

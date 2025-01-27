@@ -10,7 +10,7 @@ using RLBotCS.Types;
 
 namespace RLBotCS.Server;
 
-internal record SessionMessage
+record SessionMessage
 {
     public record MatchConfig(MatchConfigurationT Config) : SessionMessage;
 
@@ -31,7 +31,7 @@ internal record SessionMessage
     public record StopMatch(bool Force) : SessionMessage;
 }
 
-internal class FlatBuffersSession
+class FlatBuffersSession
 {
     private static readonly ILogger Logger = Logging.GetLogger("FlatBuffersSession");
 

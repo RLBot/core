@@ -3,7 +3,7 @@ using rlbot.flat;
 
 namespace RLBotCS.Server.BridgeMessage;
 
-internal record SpawnHuman(PlayerConfigurationT Config, uint DesiredIndex) : IBridgeMessage
+record SpawnHuman(PlayerConfigurationT Config, uint DesiredIndex) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {

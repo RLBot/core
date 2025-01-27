@@ -4,7 +4,7 @@ using RLBotCS.ManagerTools;
 
 namespace RLBotCS.Conversion;
 
-internal static class FlatToCommand
+static class FlatToCommand
 {
     private static readonly ILogger Logger = Logging.GetLogger("FlatToCommand");
 

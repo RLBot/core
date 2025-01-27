@@ -3,7 +3,7 @@ using RLBotCS.Server.BridgeMessage;
 
 namespace RLBotCS.Server.FlatbuffersMessage;
 
-internal record IntroDataRequest(ChannelWriter<SessionMessage> SessionWriter, string AgentId)
+record IntroDataRequest(ChannelWriter<SessionMessage> SessionWriter, string AgentId)
     : IServerMessage
 {
     public ServerAction Execute(ServerContext context)

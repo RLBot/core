@@ -7,7 +7,7 @@ using RLBotCS.Server.FlatbuffersMessage;
 
 namespace RLBotCS.Server;
 
-internal class FlatBuffersServer(
+class FlatBuffersServer(
     int rlbotPort,
     Channel<IServerMessage, IServerMessage> incomingMessages,
     MatchStarter matchStarter,

@@ -1,6 +1,6 @@
 ﻿namespace RLBotCS.Server.FlatbuffersMessage;
 
-internal record StartCommunication : IServerMessage
+record StartCommunication : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {

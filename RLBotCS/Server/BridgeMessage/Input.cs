@@ -4,7 +4,7 @@ using RLBotCS.Conversion;
 
 namespace RLBotCS.Server.BridgeMessage;
 
-internal record Input(PlayerInputT PlayerInput) : IBridgeMessage
+record Input(PlayerInputT PlayerInput) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {

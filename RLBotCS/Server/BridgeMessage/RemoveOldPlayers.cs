@@ -2,7 +2,7 @@
 
 namespace RLBotCS.Server.BridgeMessage;
 
-internal record RemoveOldPlayers(List<int> spawnIds) : IBridgeMessage
+record RemoveOldPlayers(List<int> spawnIds) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
