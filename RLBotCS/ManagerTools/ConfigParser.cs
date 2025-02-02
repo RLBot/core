@@ -297,11 +297,12 @@ public static class ConfigParser
 
         if (name == null)
         {
-            (name, loadout) = PsyonixLoadouts.GetNext((int)team);
+            (name, var presetLoadout) = PsyonixLoadouts.GetNext((int)team);
+            loadout ??= presetLoadout;
         }
-        else if (PsyonixLoadouts.GetFromName(name, (int)team) is PlayerLoadoutT newLoadout)
+        else if (loadout == null && PsyonixLoadouts.GetFromName(name, (int)team) is { } presetLoadout)
         {
-            loadout = newLoadout;
+            loadout = presetLoadout;
         }
 
         string agentId =
