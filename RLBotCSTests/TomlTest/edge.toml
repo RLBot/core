@@ -1,13 +1,13 @@
 [rlbot]
 launcher = "custom"
-game_path = "legendary"
+launcher_arg = "legendary"
 
 [match]
 game_mode = "Soccer"
 game_map_upk = "Stadium_P"
 
 [mutators]
-match_length = "random stuff"
+match_length = "TenMinutes"
 
 [[cars]]
 name = "Boomer"
@@ -17,3 +17,8 @@ skill = "allstar"
 [[cars]]
 config = "bot.toml"
 team = 1
+
+[[cars]]
+config = "phantom/../bot.toml"
+team = "blue"
+loadout_file = "phantom/../loadout.toml"

@@ -142,7 +142,7 @@ class FlatBuffersSession
 
             case DataType.StartCommand:
                 var startCommand = StartCommand.GetRootAsStartCommand(byteBuffer);
-                MatchConfigurationT tomlMatchConfig = ConfigParser.GetMatchConfig(
+                MatchConfigurationT tomlMatchConfig = ConfigParser.LoadMatchConfig(
                     startCommand.ConfigPath
                 );
 

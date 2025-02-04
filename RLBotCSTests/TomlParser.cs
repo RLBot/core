@@ -10,9 +10,9 @@ public class TomlParser
     [TestMethod]
     public void TestParse()
     {
-        MatchConfigurationT defaultMC = ConfigParser.GetMatchConfig("TomlTest/default.toml");
-        MatchConfigurationT emptyMC = ConfigParser.GetMatchConfig("TomlTest/empty.toml");
-        MatchConfigurationT edgeMC = ConfigParser.GetMatchConfig("TomlTest/edge.toml");
+        MatchConfigurationT defaultMC = ConfigParser.LoadMatchConfig("TomlTest/default.toml");
+        MatchConfigurationT emptyMC = ConfigParser.LoadMatchConfig("TomlTest/empty.toml");
+        MatchConfigurationT edgeMC = ConfigParser.LoadMatchConfig("TomlTest/edge.toml");
 
         Assert.AreEqual(emptyMC.Launcher, defaultMC.Launcher);
         Assert.AreEqual(emptyMC.LauncherArg, defaultMC.LauncherArg);
@@ -58,7 +58,7 @@ public class TomlParser
 
         Assert.AreEqual(Launcher.Custom, edgeMC.Launcher);
         Assert.AreEqual("legendary", edgeMC.LauncherArg);
-        Assert.AreEqual(MatchLengthMutator.FiveMinutes, edgeMC.Mutators.MatchLength);
+        Assert.AreEqual(MatchLengthMutator.TenMinutes, edgeMC.Mutators.MatchLength);
 
         Assert.AreEqual("Boomer", edgeMC.PlayerConfigurations[0].Name);
         Assert.AreEqual(PlayerClass.Psyonix, edgeMC.PlayerConfigurations[0].Variety.Type);
