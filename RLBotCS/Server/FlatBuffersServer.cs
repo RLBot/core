@@ -80,16 +80,23 @@ class FlatBuffersServer(
 
     private async Task HandleServer()
     {
-        if (_context.Server == null)
-            throw new InvalidOperationException("Server not initialized");
-        _context.Server.Start();
-
-        BallPredictor.SetMode(PredictionMode.Standard);
-
-        while (true)
+        try
         {
-            TcpClient client = await _context.Server.AcceptTcpClientAsync();
-            AddSession(client);
+            if (_context.Server == null)
+                throw new InvalidOperationException("Server not initialized");
+            _context.Server.Start();
+
+            BallPredictor.SetMode(PredictionMode.Standard);
+
+            while (true)
+            {
+                TcpClient client = await _context.Server.AcceptTcpClientAsync();
+                AddSession(client);
+            }
+        }
+        catch (Exception e)
+        {
+            _context.Logger.LogError($"Error while handling server: {e}");
         }
     }
 
