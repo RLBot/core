@@ -300,7 +300,10 @@ public static class ConfigParser
             (name, var presetLoadout) = PsyonixLoadouts.GetNext((int)team);
             loadout ??= presetLoadout;
         }
-        else if (loadout == null && PsyonixLoadouts.GetFromName(name, (int)team) is { } presetLoadout)
+        else if (
+            loadout == null
+            && PsyonixLoadouts.GetFromName(name, (int)team) is { } presetLoadout
+        )
         {
             loadout = presetLoadout;
         }
