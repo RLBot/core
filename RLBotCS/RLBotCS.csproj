@@ -39,7 +39,7 @@
     <NativeLibrary Include="./lib/rl_ball_sym/librl_ball_sym.a" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'" />
 
     <!-- Dynamically linked for development -->
-    <ContentWithTargetPath Include=".\lib\rl_ball_sym\rl_ball_sym.dll" Condition="'$(OS)' == 'Windows_NT' and '$(Configuration)' == 'Debug'">
+    <ContentWithTargetPath Include=".\lib\rl_ball_sym\rl_ball_sym.dll" Condition="'$(OS)' == 'Windows_NT'">
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>rl_ball_sym.dll</TargetPath>

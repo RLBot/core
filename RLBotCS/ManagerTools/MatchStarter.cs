@@ -8,11 +8,7 @@ using ConsoleCommand = RLBotCS.Server.BridgeMessage.ConsoleCommand;
 
 namespace RLBotCS.ManagerTools;
 
-class MatchStarter(
-    ChannelWriter<IBridgeMessage> bridge,
-    int gamePort,
-    int rlbotSocketsPort
-)
+class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbotSocketsPort)
 {
     private static readonly ILogger Logger = Logging.GetLogger("MatchStarter");
 
