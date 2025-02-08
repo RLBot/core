@@ -1,0 +1,159 @@
+using System.IO;
+using Bridge.Models.Message;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using rlbot.flat;
+using RLBotCS.ManagerTools;
+
+namespace RLBotCSTests;
+
+[TestClass]
+public class ConfigParserTest
+{
+    [TestMethod]
+    public void EmptyVsDefaultMatchConfig()
+    {
+        MatchConfigurationT defaultMC = ConfigParser.LoadMatchConfig("TomlTest/default.toml");
+        MatchConfigurationT emptyMC = ConfigParser.LoadMatchConfig("TomlTest/empty.toml");
+
+        Assert.AreEqual(emptyMC.Launcher, defaultMC.Launcher);
+        Assert.AreEqual(emptyMC.LauncherArg, defaultMC.LauncherArg);
+        Assert.AreEqual(emptyMC.AutoStartBots, defaultMC.AutoStartBots);
+        Assert.AreEqual(emptyMC.GameMapUpk, defaultMC.GameMapUpk);
+        Assert.AreEqual(
+            emptyMC.PlayerConfigurations.Count,
+            defaultMC.PlayerConfigurations.Count
+        );
+        Assert.AreEqual(
+            emptyMC.ScriptConfigurations.Count,
+            defaultMC.ScriptConfigurations.Count
+        );
+        Assert.AreEqual(emptyMC.GameMode, defaultMC.GameMode);
+        Assert.AreEqual(emptyMC.SkipReplays, defaultMC.SkipReplays);
+        Assert.AreEqual(emptyMC.InstantStart, defaultMC.InstantStart);
+        Assert.AreEqual(emptyMC.ExistingMatchBehavior, defaultMC.ExistingMatchBehavior);
+        Assert.AreEqual(emptyMC.EnableRendering, defaultMC.EnableRendering);
+        Assert.AreEqual(emptyMC.EnableStateSetting, defaultMC.EnableStateSetting);
+        Assert.AreEqual(emptyMC.AutoSaveReplay, defaultMC.AutoSaveReplay);
+        Assert.AreEqual(emptyMC.Freeplay, defaultMC.Freeplay);
+
+        MutatorSettingsT defaultMutS = defaultMC.Mutators;
+        MutatorSettingsT emptyMutS = emptyMC.Mutators;
+
+        Assert.AreEqual(emptyMutS.MatchLength, defaultMutS.MatchLength);
+        Assert.AreEqual(emptyMutS.MaxScore, defaultMutS.MaxScore);
+        Assert.AreEqual(emptyMutS.MultiBall, defaultMutS.MultiBall);
+        Assert.AreEqual(emptyMutS.Overtime, defaultMutS.Overtime);
+        Assert.AreEqual(emptyMutS.SeriesLength, defaultMutS.SeriesLength);
+        Assert.AreEqual(emptyMutS.GameSpeed, defaultMutS.GameSpeed);
+        Assert.AreEqual(emptyMutS.BallMaxSpeed, defaultMutS.BallMaxSpeed);
+        Assert.AreEqual(emptyMutS.BallType, defaultMutS.BallType);
+        Assert.AreEqual(emptyMutS.BallWeight, defaultMutS.BallWeight);
+        Assert.AreEqual(emptyMutS.BallSize, defaultMutS.BallSize);
+        Assert.AreEqual(emptyMutS.BallBounciness, defaultMutS.BallBounciness);
+        Assert.AreEqual(emptyMutS.Boost, defaultMutS.Boost);
+        Assert.AreEqual(emptyMutS.Rumble, defaultMutS.Rumble);
+        Assert.AreEqual(emptyMutS.BoostStrength, defaultMutS.BoostStrength);
+        Assert.AreEqual(emptyMutS.Gravity, defaultMutS.Gravity);
+        Assert.AreEqual(emptyMutS.Demolish, defaultMutS.Demolish);
+        Assert.AreEqual(emptyMutS.RespawnTime, defaultMutS.RespawnTime);
+    }
+    
+    [TestMethod]
+    public void EdgeCases()
+    {
+        MatchConfigurationT edgeMC = ConfigParser.LoadMatchConfig("TestTomls/edge.toml");
+
+        Assert.AreEqual(Launcher.Custom, edgeMC.Launcher);
+        Assert.AreEqual("legendary", edgeMC.LauncherArg);
+        
+        Assert.AreEqual(MatchLengthMutator.TenMinutes, edgeMC.Mutators.MatchLength);
+        Assert.AreEqual(GravityMutator.Reverse, edgeMC.Mutators.Gravity);
+
+        Assert.AreEqual("Boomer", edgeMC.PlayerConfigurations[0].Name);
+        Assert.AreEqual(PlayerClass.Psyonix, edgeMC.PlayerConfigurations[0].Variety.Type);
+        Assert.AreEqual(PsyonixSkill.Pro, edgeMC.PlayerConfigurations[0].Variety.AsPsyonix().BotSkill);
+        Assert.AreEqual(292u, edgeMC.PlayerConfigurations[0].Loadout.DecalId);  // From Psyonix presets
+
+        Assert.AreEqual("Edgy Test Bot", edgeMC.PlayerConfigurations[1].Name);
+        Assert.AreEqual(PlayerClass.CustomBot, edgeMC.PlayerConfigurations[1].Variety.Type);
+        Assert.AreEqual(0u, edgeMC.PlayerConfigurations[1].Team);
+        
+        Assert.AreEqual("Edgy Test Bot", edgeMC.PlayerConfigurations[2].Name);
+        Assert.AreEqual(1u, edgeMC.PlayerConfigurations[2].Team);
+        
+        PlayerLoadoutT loadoutP2 = edgeMC.PlayerConfigurations[2].Loadout;
+        Assert.AreEqual(69u, loadoutP2.TeamColorId);
+        Assert.AreEqual(0u, loadoutP2.CustomColorId);
+        Assert.AreEqual(23u, loadoutP2.CarId);
+        Assert.AreEqual(6083u, loadoutP2.DecalId);
+        Assert.AreEqual(1580u, loadoutP2.WheelsId);
+        Assert.AreEqual(35u, loadoutP2.BoostId);
+        Assert.AreEqual(0u, loadoutP2.AntennaId);
+        Assert.AreEqual(0u, loadoutP2.HatId);
+        Assert.AreEqual(1681u, loadoutP2.PaintFinishId);
+        Assert.AreEqual(1681u, loadoutP2.CustomFinishId);
+        Assert.AreEqual(5635u, loadoutP2.EngineAudioId);
+        Assert.AreEqual(3220u, loadoutP2.TrailsId);
+        Assert.AreEqual(4118u, loadoutP2.GoalExplosionId);
+        Assert.AreEqual(12u, loadoutP2.LoadoutPaint.CarPaintId);
+        Assert.AreEqual(12u, loadoutP2.LoadoutPaint.DecalPaintId);
+        Assert.AreEqual(12u, loadoutP2.LoadoutPaint.WheelsPaintId);
+        Assert.AreEqual(12u, loadoutP2.LoadoutPaint.BoostPaintId);
+        Assert.AreEqual(0u, loadoutP2.LoadoutPaint.AntennaPaintId);
+        Assert.AreEqual(0u, loadoutP2.LoadoutPaint.HatPaintId);
+        Assert.AreEqual(12u, loadoutP2.LoadoutPaint.TrailsPaintId);
+        Assert.AreEqual(12u, loadoutP2.LoadoutPaint.GoalExplosionPaintId);
+    }
+
+    [TestMethod]
+    public void EmptyVsDefaultBotAndScriptToml()
+    {
+        MatchConfigurationT mc = ConfigParser.LoadMatchConfig("TestTomls/empty_agents.toml");
+        
+        PlayerConfigurationT player = mc.PlayerConfigurations[0];
+        Assert.AreEqual("", player.Name);
+        Assert.AreEqual("", player.AgentId);
+        Assert.AreEqual(0u, player.Team);
+        Assert.AreEqual(PlayerClass.CustomBot, player.Variety.Type);
+        Assert.AreEqual(Path.GetFullPath("TestTomls"), player.RootDir);
+        Assert.AreEqual("", player.RunCommand);
+        Assert.AreEqual(null, player.Loadout);
+        Assert.AreEqual(false, player.Hivemind);
+        
+        ScriptConfigurationT script = mc.ScriptConfigurations[0];
+        Assert.AreEqual("", script.Name);
+        Assert.AreEqual("", script.AgentId);
+        Assert.AreEqual(Path.GetFullPath("TestTomls"), script.RootDir);
+        Assert.AreEqual("", script.RunCommand);
+    }
+    
+    [TestMethod]
+    public void MissingBotConfig()
+    {
+        // TODO
+    }
+    
+    [TestMethod]
+    public void MissingLoadoutConfig()
+    {
+        // TODO
+    }
+    
+    [TestMethod]
+    public void MissingScriptConfig()
+    {
+        // TODO
+    }
+    
+    [TestMethod]
+    public void InvalidTomlConfig()
+    {
+        // TODO
+    }
+    
+    [TestMethod]
+    public void InvalidValues()
+    {
+        // TODO
+    }
+}

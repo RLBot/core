@@ -355,7 +355,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
                         PsyonixSkill.Beginner => BotSkill.Intro,
                         PsyonixSkill.Rookie => BotSkill.Easy,
                         PsyonixSkill.Pro => BotSkill.Medium,
-                        _ => BotSkill.Hard,
+                        PsyonixSkill.AllStar => BotSkill.Hard,
                     };
 
                     bridge.TryWrite(

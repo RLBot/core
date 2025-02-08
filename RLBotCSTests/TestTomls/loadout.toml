@@ -1,29 +1,16 @@
 [blue_loadout]
-# Primary Color selection
 team_color_id = 29
-# Secondary Color selection
 custom_color_id = 0
-# Car type (Octane, Merc, etc)
 car_id = 23
-# Type of decal
 decal_id = 6083
-# Wheel selection
 wheels_id = 1580
-# Boost selection
 boost_id = 35
-# Antenna Selection
 antenna_id = 0
-# Hat Selection
 hat_id = 0
-# Paint Type (for first color)
 paint_finish_id = 0
-# Paint Type (for secondary color)
 custom_finish_id = 0
-# Engine Audio Selection
 engine_audio_id = 6919
-# Car trail Selection
 trails_id = 3220
-# Goal Explosion Selection
 goal_explosion_id = 4118
 
 [orange_loadout]

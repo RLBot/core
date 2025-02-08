@@ -1,0 +1,28 @@
+# Valid, but unusual match.toml
+
+[rlbot]
+launcher = "custom"
+launcher_arg = "legendary"
+
+[match]
+game_mode = "Soccer"
+game_map_upk = "Stadium_P"
+
+[mutators]
+match_length = "TenMinutes"
+gravity = "rEvErsE"
+
+[[cars]]
+# No config
+name = "Boomer"
+type = "pSyOniX"
+skill = "pro"
+
+[[cars]]
+config = "edge.bot.toml"
+team = "blue"
+skill = "mega pro"  # Ignored
+
+[[cars]]
+config = "phantom/../edge.bot.toml"
+team = "orange"

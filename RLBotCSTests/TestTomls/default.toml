@@ -19,10 +19,13 @@ start_without_countdown = false
 # What should we do if you click run while a match is already in progress?
 # "RestartIfDifferent", "Restart", "ContinueAndSpawn"
 existing_match_behavior = "Restart"
+# Whether debug rendering is enabled
 enable_rendering = false
-enable_state_setting = true
+# Whether game state manipulation is enabled
+enable_state_setting = false
+# Whether replays should be automatically saved
 auto_save_replay = false
-# Whether or not to use freeplay instead of an exhibition match
+# Whether to use freeplay instead of an exhibition match
 freeplay = false
 
 [mutators]
