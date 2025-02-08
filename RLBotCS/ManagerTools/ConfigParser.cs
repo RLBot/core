@@ -15,6 +15,11 @@ public static class ConfigParser
 
     private static TomlTable LoadTable(string path)
     {
+        FileAttributes attr = File.GetAttributes(path);
+        if (attr.HasFlag(FileAttributes.Directory))
+        {
+            throw new ArgumentException("The specified path is a directory, not a config file: " + path);
+        }
         path = Path.GetFullPath(path);
         return Toml.ToModel(File.ReadAllText(path), path);
     }
@@ -124,7 +129,7 @@ public static class ConfigParser
         uint team = GetTeam(table, missingValues);
         string? nameOverride = table.GetValue<string?>("name", null, missingValues);
         string? loadoutFileOverride = table.GetValue<string?>("loadout_file", null, missingValues);
-        if (loadoutFileOverride != null) loadoutFileOverride = Path.Combine(matchConfigDir, loadoutFileOverride);
+        if (!string.IsNullOrEmpty(loadoutFileOverride)) loadoutFileOverride = Path.Combine(matchConfigDir, loadoutFileOverride);
         
         PlayerClass playerClass = table.GetEnum("type", PlayerClass.CustomBot, missingValues);
 
@@ -206,13 +211,15 @@ public static class ConfigParser
         string configDir = Path.GetDirectoryName(configPath)!;
         string rootDir = Path.Combine(configDir, settings.GetValue<string>("root_dir", "", missingValues));
 
-        string? loadoutPath = loadoutFileOverride;
-        if (loadoutPath is null && settings.TryGetValue("loadout_file", out var loadoutPathRel))
+        // Override is null, "", or an absolute path.
+        // Null implies no override and "" implies we should not load the loadout.
+        string? loadoutPath = loadoutFileOverride; 
+        if (loadoutFileOverride is null && settings.TryGetValue("loadout_file", out var loadoutPathRel))
         {
             loadoutPath = Path.Combine(configDir, (string)loadoutPathRel);
         }
 
-        PlayerLoadoutT? loadout = loadoutPath is not null ? LoadPlayerLoadout(loadoutPath, team, missingValues) : null;
+        PlayerLoadoutT? loadout = (loadoutPath ?? "") != "" ? LoadPlayerLoadout(loadoutPath, team, missingValues) : null;
 
         return new PlayerConfigurationT
         {

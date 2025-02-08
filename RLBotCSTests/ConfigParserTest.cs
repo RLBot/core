@@ -140,6 +140,19 @@ public class ConfigParserTest
     }
 
     [TestMethod]
+    public void Overrides()
+    {
+        MatchConfigurationT mc = ConfigParser.LoadMatchConfig("TestTomls/overrides.toml");
+
+        PlayerConfigurationT player = mc.PlayerConfigurations[0];
+        Assert.AreEqual("New Bot Name", player.Name);
+        Assert.AreEqual(null, player.Loadout);
+        
+        ScriptConfigurationT script = mc.ScriptConfigurations[0];
+        Assert.AreEqual("Normal Test Script", script.Name);  // Not overriden
+    }
+
+    [TestMethod]
     public void ConfigNotFound()
     {
         AssertThrowsInnerException<ArgumentNullException>(() => ConfigParser.LoadMatchConfig(null));

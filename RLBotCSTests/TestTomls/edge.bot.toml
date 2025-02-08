@@ -3,6 +3,6 @@
 [settings]
 # No agent_id
 name = "Edgy Test Bot"
-loadout_file = "phantom/../loadout.toml"
+loadout_file = "./phantom/../loadout.toml"
 
 some_unused_field = "Ignore me please"
