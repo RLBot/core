@@ -1,2 +1,2 @@
 [match]
-enable_rendering = "not a bool"
+enable_rendering = "false"

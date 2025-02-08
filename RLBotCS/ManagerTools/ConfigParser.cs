@@ -29,7 +29,9 @@ public static class ConfigParser
         }
         catch (InvalidCastException e)
         {
-            throw new InvalidCastException($"Field '{key}' has value '{table[key]}', but a value of type {typeof(T).Name} was expected", e);
+            var v = table[key];
+            if (v is string s) v = $"\"{s}\"";
+            throw new InvalidCastException($"Field '{key}' has value {v}, but a value of type {typeof(T).Name} was expected", e);
         }
     }
 
@@ -334,7 +336,8 @@ public static class ConfigParser
         };
 
     /// <summary>
-    /// Loads the match configuration at the given path.
+    /// Loads the match configuration at the given path. Empty fields are given default values.
+    /// However, default values are not necessarily valid (e.g. empty agent_id).
     /// </summary>
     /// <param name="path">Path to match configuration file.</param>
     /// <returns>The parsed MatchConfigurationT</returns>
@@ -396,6 +399,8 @@ public static class ConfigParser
                 PlayerConfigurations = playerConfigs,
                 ScriptConfigurations = scriptConfigs,
             };
+            
+            // TODO: Report missing values again
 
             return matchConfig;
         }
