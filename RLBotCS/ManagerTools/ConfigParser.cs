@@ -9,35 +9,28 @@ namespace RLBotCS.ManagerTools;
 
 public static class ConfigParser
 {
+    public class ConfigParserException(string? message, Exception? innerException) : Exception(message, innerException);
+    
     private static readonly ILogger Logger = Logging.GetLogger("ConfigParser");
 
-    private static TomlTable LoadTable(string? path)
+    private static TomlTable LoadTable(string path)
     {
-        if (path == null)
-        {
-            Logger.LogError("Could not read Toml file, path is null");
-            return [];
-        }
-        
         path = Path.GetFullPath(path);
-
-        try
-        {
-            // TODO - catch any exceptions thrown by ToModel
-            return Toml.ToModel(File.ReadAllText(path));
-        }
-        catch (FileNotFoundException)
-        {
-            Logger.LogError($"Could not find Toml file at '{path}'");
-            return [];
-        }
+        return Toml.ToModel(File.ReadAllText(path), path);
     }
 
     private static T GetValue<T>(this TomlTable table, string key, T fallback, List<string> missingValues)
     {
-        if (table.TryGetValue(key, out var res)) return (T)res;
-        missingValues.Add(key);
-        return fallback;
+        try
+        {
+            if (table.TryGetValue(key, out var res)) return (T)res;
+            missingValues.Add(key);
+            return fallback;
+        }
+        catch (InvalidCastException e)
+        {
+            throw new InvalidCastException($"Field '{key}' has value '{table[key]}', but a value of type {typeof(T).Name} was expected", e);
+        }
     }
 
     private static T GetEnum<T>(this TomlTable table, string key, T fallback, List<string> missingValues)
@@ -46,8 +39,7 @@ public static class ConfigParser
         if (table.TryGetValue(key, out var val))
         {
             if (Enum.TryParse((string)val, true, out T res)) return res;
-            Logger.LogError($"Invalid value '{val}' for key '{key}'. Using default instead: {fallback}.");
-            return fallback;
+            throw new InvalidCastException($"{val} is not a valid value for field '{key}'. Find valid values on https:/wiki.rlbot.org");
         }
 
         missingValues.Add(key);
@@ -115,8 +107,7 @@ public static class ConfigParser
             case string s when s.Equals("orange", StringComparison.OrdinalIgnoreCase):
                 return 1;
             default:
-                Logger.LogError($"'team' has invalid value '{raw}'. Using team blue (0) instead.");
-                return 0;
+                throw new InvalidCastException($"{raw} is not a valid value for field 'team'. Use 0, 1, \"blue\", or \"orange\".");
         }
     }
 
@@ -159,8 +150,10 @@ public static class ConfigParser
         PlayerConfigurationT player;
         if (useConfig && configPath == "" && variety.Type == PlayerClass.CustomBot)
         {
-            Logger.LogError(
-                $"A car with type 'rlbot' is missing the 'config' field in {Path.GetFileName(matchConfigPath)}.");
+            throw new FileNotFoundException(
+                $"Found a car with type 'rlbot' with empty 'config' field in {Path.GetFileName(matchConfigPath)}." +
+                $"RLBot bots must have a config file."
+            );
         }
         
         if (useConfig && configPath != "")
@@ -340,59 +333,75 @@ public static class ConfigParser
             ),
         };
 
+    /// <summary>
+    /// Loads the match configuration at the given path.
+    /// </summary>
+    /// <param name="path">Path to match configuration file.</param>
+    /// <returns>The parsed MatchConfigurationT</returns>
+    /// <exception cref="ConfigParserException">Thrown if something went wrong. See inner exception.</exception>
     public static MatchConfigurationT LoadMatchConfig(string path)
     {
-        PsyonixLoadouts.Reset();
-        path = Path.GetFullPath(path);
-        TomlTable rlbotToml = LoadTable(path);
-
-        List<string> missingValues = [];
-
-        TomlTable rlbotTable = rlbotToml.GetValue<TomlTable>("rlbot", [], missingValues);
-        TomlTable matchTable = rlbotToml.GetValue<TomlTable>("match", [], missingValues);
-        TomlTable mutatorTable = rlbotToml.GetValue<TomlTable>("mutators", [], missingValues);
-
-        TomlTableArray players = rlbotToml.GetValue<TomlTableArray>("cars", [], missingValues);
-        List<PlayerConfigurationT> playerConfigs = [];
-        foreach (var playerTable in players)
-            playerConfigs.Add(ParseCarTable(playerTable, path, missingValues));
-
-        TomlTableArray scripts = rlbotToml.GetValue<TomlTableArray>("scripts", [], missingValues);
-        List<ScriptConfigurationT> scriptConfigs = [];
-        foreach (var scriptTable in scripts)
+        try
         {
-            string configPath = scriptTable.GetValue("config", "", missingValues);
-            if (configPath != "")
+            PsyonixLoadouts.Reset();
+            path = Path.GetFullPath(path);
+            TomlTable rlbotToml = LoadTable(path);
+
+            List<string> missingValues = [];
+
+            TomlTable rlbotTable = rlbotToml.GetValue<TomlTable>("rlbot", [], missingValues);
+            TomlTable matchTable = rlbotToml.GetValue<TomlTable>("match", [], missingValues);
+            TomlTable mutatorTable = rlbotToml.GetValue<TomlTable>("mutators", [], missingValues);
+
+            TomlTableArray players = rlbotToml.GetValue<TomlTableArray>("cars", [], missingValues);
+            List<PlayerConfigurationT> playerConfigs = [];
+            foreach (var playerTable in players)
+                playerConfigs.Add(ParseCarTable(playerTable, path, missingValues));
+
+            TomlTableArray scripts = rlbotToml.GetValue<TomlTableArray>("scripts", [], missingValues);
+            List<ScriptConfigurationT> scriptConfigs = [];
+            foreach (var scriptTable in scripts)
             {
-                scriptConfigs.Add(LoadScriptConfig(path, missingValues));
+                string configPath = scriptTable.GetValue("config", "", missingValues);
+                if (configPath != "")
+                {
+                    string absoluteConfigPath = Path.Combine(Path.GetDirectoryName(path), configPath);
+                    scriptConfigs.Add(LoadScriptConfig(absoluteConfigPath, missingValues));
+                }
+                else
+                {
+                    throw new FileNotFoundException(
+                        $"Found a script with empty 'config' field in {Path.GetFileName(path)}." +
+                        $"Scripts must have a config file.");
+                }
             }
-            else
+
+            var matchConfig = new MatchConfigurationT
             {
-                Logger.LogError($"A script is missing the 'config' field in {Path.GetFileName(path)}.");
-            }
+                Launcher = rlbotTable.GetEnum("launcher", Launcher.Steam, missingValues),
+                AutoStartBots = rlbotTable.GetValue("auto_start_bots", true, missingValues),
+                LauncherArg = rlbotTable.GetValue("launcher_arg", "", missingValues),
+                GameMode = matchTable.GetEnum("game_mode", GameMode.Soccer, missingValues),
+                GameMapUpk = matchTable.GetValue("game_map_upk", "Stadium_P", missingValues),
+                SkipReplays = matchTable.GetValue("skip_replays", false, missingValues),
+                InstantStart = matchTable.GetValue("start_without_countdown", false, missingValues),
+                EnableRendering = matchTable.GetValue("enable_rendering", false, missingValues),
+                EnableStateSetting = matchTable.GetValue("enable_state_setting", false, missingValues),
+                ExistingMatchBehavior = matchTable.GetEnum(
+                    "existing_match_behavior", ExistingMatchBehavior.Restart, missingValues
+                ),
+                AutoSaveReplay = matchTable.GetValue("auto_save_replay", false, missingValues),
+                Freeplay = matchTable.GetValue("freeplay", false, missingValues),
+                Mutators = GetMutatorSettings(mutatorTable, missingValues),
+                PlayerConfigurations = playerConfigs,
+                ScriptConfigurations = scriptConfigs,
+            };
+
+            return matchConfig;
         }
-
-        var matchConfig = new MatchConfigurationT
+        catch (Exception e)
         {
-            Launcher = rlbotTable.GetEnum("launcher", Launcher.Steam, missingValues),
-            AutoStartBots = rlbotTable.GetValue("auto_start_bots", true, missingValues),
-            LauncherArg = rlbotTable.GetValue("launcher_arg", "", missingValues),
-            GameMode = matchTable.GetEnum("game_mode", GameMode.Soccer, missingValues),
-            GameMapUpk = matchTable.GetValue("game_map_upk", "Stadium_P", missingValues),
-            SkipReplays = matchTable.GetValue("skip_replays", false, missingValues),
-            InstantStart = matchTable.GetValue("start_without_countdown", false, missingValues),
-            EnableRendering = matchTable.GetValue("enable_rendering", false, missingValues),
-            EnableStateSetting = matchTable.GetValue("enable_state_setting", true, missingValues),
-            ExistingMatchBehavior = matchTable.GetEnum(
-                "existing_match_behavior", ExistingMatchBehavior.Restart, missingValues
-            ),
-            AutoSaveReplay = matchTable.GetValue("auto_save_replay", false, missingValues),
-            Freeplay = matchTable.GetValue("freeplay", false, missingValues),
-            Mutators = GetMutatorSettings(mutatorTable, missingValues),
-            PlayerConfigurations = playerConfigs,
-            ScriptConfigurations = scriptConfigs,
-        };
-
-        return matchConfig;
+            throw new ConfigParserException("Failed to load match config. " + e, e);
+        }
     }
 }

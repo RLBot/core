@@ -1,0 +1,4 @@
+[match]
+
+[[scripts]]
+config = "non-existent.toml"

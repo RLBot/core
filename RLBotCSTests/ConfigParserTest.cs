@@ -1,5 +1,5 @@
+using System;
 using System.IO;
-using Bridge.Models.Message;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using rlbot.flat;
 using RLBotCS.ManagerTools;
@@ -9,11 +9,23 @@ namespace RLBotCSTests;
 [TestClass]
 public class ConfigParserTest
 {
+    public static void AssertThrowsInnerException<T>(Action action) where T : Exception
+    {
+        try
+        {
+            action();
+        }
+        catch (Exception e)
+        {
+            Assert.IsInstanceOfType(e.InnerException, typeof(T));
+        }
+    }
+    
     [TestMethod]
     public void EmptyVsDefaultMatchConfig()
     {
-        MatchConfigurationT defaultMC = ConfigParser.LoadMatchConfig("TomlTest/default.toml");
-        MatchConfigurationT emptyMC = ConfigParser.LoadMatchConfig("TomlTest/empty.toml");
+        MatchConfigurationT defaultMC = ConfigParser.LoadMatchConfig("TestTomls/default.toml");
+        MatchConfigurationT emptyMC = ConfigParser.LoadMatchConfig("TestTomls/empty.toml");
 
         Assert.AreEqual(emptyMC.Launcher, defaultMC.Launcher);
         Assert.AreEqual(emptyMC.LauncherArg, defaultMC.LauncherArg);
@@ -57,7 +69,7 @@ public class ConfigParserTest
         Assert.AreEqual(emptyMutS.Demolish, defaultMutS.Demolish);
         Assert.AreEqual(emptyMutS.RespawnTime, defaultMutS.RespawnTime);
     }
-    
+
     [TestMethod]
     public void EdgeCases()
     {
@@ -65,22 +77,22 @@ public class ConfigParserTest
 
         Assert.AreEqual(Launcher.Custom, edgeMC.Launcher);
         Assert.AreEqual("legendary", edgeMC.LauncherArg);
-        
+
         Assert.AreEqual(MatchLengthMutator.TenMinutes, edgeMC.Mutators.MatchLength);
         Assert.AreEqual(GravityMutator.Reverse, edgeMC.Mutators.Gravity);
 
         Assert.AreEqual("Boomer", edgeMC.PlayerConfigurations[0].Name);
         Assert.AreEqual(PlayerClass.Psyonix, edgeMC.PlayerConfigurations[0].Variety.Type);
         Assert.AreEqual(PsyonixSkill.Pro, edgeMC.PlayerConfigurations[0].Variety.AsPsyonix().BotSkill);
-        Assert.AreEqual(292u, edgeMC.PlayerConfigurations[0].Loadout.DecalId);  // From Psyonix presets
+        Assert.AreEqual(292u, edgeMC.PlayerConfigurations[0].Loadout.DecalId); // From Psyonix presets
 
         Assert.AreEqual("Edgy Test Bot", edgeMC.PlayerConfigurations[1].Name);
         Assert.AreEqual(PlayerClass.CustomBot, edgeMC.PlayerConfigurations[1].Variety.Type);
         Assert.AreEqual(0u, edgeMC.PlayerConfigurations[1].Team);
-        
+
         Assert.AreEqual("Edgy Test Bot", edgeMC.PlayerConfigurations[2].Name);
         Assert.AreEqual(1u, edgeMC.PlayerConfigurations[2].Team);
-        
+
         PlayerLoadoutT loadoutP2 = edgeMC.PlayerConfigurations[2].Loadout;
         Assert.AreEqual(69u, loadoutP2.TeamColorId);
         Assert.AreEqual(0u, loadoutP2.CustomColorId);
@@ -109,7 +121,7 @@ public class ConfigParserTest
     public void EmptyVsDefaultBotAndScriptToml()
     {
         MatchConfigurationT mc = ConfigParser.LoadMatchConfig("TestTomls/empty_agents.toml");
-        
+
         PlayerConfigurationT player = mc.PlayerConfigurations[0];
         Assert.AreEqual("", player.Name);
         Assert.AreEqual("", player.AgentId);
@@ -119,41 +131,41 @@ public class ConfigParserTest
         Assert.AreEqual("", player.RunCommand);
         Assert.AreEqual(null, player.Loadout);
         Assert.AreEqual(false, player.Hivemind);
-        
+
         ScriptConfigurationT script = mc.ScriptConfigurations[0];
         Assert.AreEqual("", script.Name);
         Assert.AreEqual("", script.AgentId);
         Assert.AreEqual(Path.GetFullPath("TestTomls"), script.RootDir);
         Assert.AreEqual("", script.RunCommand);
     }
-    
+
     [TestMethod]
-    public void MissingBotConfig()
+    public void ConfigNotFound()
     {
-        // TODO
+        AssertThrowsInnerException<ArgumentNullException>(() => ConfigParser.LoadMatchConfig(null));
+        
+        AssertThrowsInnerException<FileNotFoundException>(() => ConfigParser.LoadMatchConfig("TestTomls/non-existent.toml"));
+        
+        // Match toml exists, but refers to bot that does not exist
+        Assert.IsTrue(Path.Exists("TestTomls/non-existent_bot.toml"));
+        AssertThrowsInnerException<FileNotFoundException>(() => ConfigParser.LoadMatchConfig("TestTomls/non-existent_bot.toml"));
+        
+        // Match toml exists, but refers to script that does not exist
+        Assert.IsTrue(Path.Exists("TestTomls/non-existent_script.toml"));
+        AssertThrowsInnerException<FileNotFoundException>(() => ConfigParser.LoadMatchConfig("TestTomls/non-existent_script.toml"));
     }
-    
-    [TestMethod]
-    public void MissingLoadoutConfig()
-    {
-        // TODO
-    }
-    
-    [TestMethod]
-    public void MissingScriptConfig()
-    {
-        // TODO
-    }
-    
+
     [TestMethod]
     public void InvalidTomlConfig()
     {
-        // TODO
+        AssertThrowsInnerException<Tomlyn.TomlException>(() => ConfigParser.LoadMatchConfig("TestTomls/not_a_toml.json"));
     }
-    
+
     [TestMethod]
-    public void InvalidValues()
+    public void BadValues()
     {
-        // TODO
+        AssertThrowsInnerException<InvalidCastException>(() => ConfigParser.LoadMatchConfig("TestTomls/bad_boolean.toml"));
+        AssertThrowsInnerException<InvalidCastException>(() => ConfigParser.LoadMatchConfig("TestTomls/bad_enum.toml"));
+        AssertThrowsInnerException<InvalidCastException>(() => ConfigParser.LoadMatchConfig("TestTomls/bad_team.toml"));
     }
 }
