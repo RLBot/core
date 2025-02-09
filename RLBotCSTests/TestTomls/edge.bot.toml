@@ -1,7 +1,7 @@
 # Valid, but unusual bot.toml
 
 [settings]
-# No agent_id
+# no agend_id
 name = "Edgy Test Bot"
 loadout_file = "./phantom/../loadout.toml"
 

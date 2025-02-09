@@ -136,20 +136,21 @@ static class LaunchManager
     }
 
     public static void LaunchBots(
-        Dictionary<string, rlbot.flat.PlayerConfigurationT> processGroups,
+        List<rlbot.flat.PlayerConfigurationT> bots,
         int rlbotSocketsPort
     )
     {
-        foreach (var bot in processGroups.Values)
+        foreach (var bot in bots)
         {
             if (bot.RunCommand == "")
+            {
+                Logger.LogWarning("Bot {} must be started manually since 'run_command' is empty.", bot.Name);
                 continue;
+            }
 
             Process botProcess = RunCommandInShell(bot.RunCommand);
 
-            if (bot.RootDir != "")
-                botProcess.StartInfo.WorkingDirectory = bot.RootDir;
-
+            botProcess.StartInfo.WorkingDirectory = bot.RootDir;
             botProcess.StartInfo.EnvironmentVariables["RLBOT_AGENT_ID"] = bot.AgentId;
             botProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
                 rlbotSocketsPort.ToString();
@@ -170,6 +171,7 @@ static class LaunchManager
             try
             {
                 botProcess.Start();
+                Logger.LogInformation("Launched bot: {}", bot.Name);
             }
             catch (Exception e)
             {
@@ -186,7 +188,10 @@ static class LaunchManager
         foreach (var script in scripts)
         {
             if (script.RunCommand == "")
+            {
+                Logger.LogWarning("Script {} must be started manually since 'run_command' is empty.", script.Name);
                 continue;
+            }
 
             Process scriptProcess = RunCommandInShell(script.RunCommand);
 
@@ -213,6 +218,7 @@ static class LaunchManager
             try
             {
                 scriptProcess.Start();
+                Logger.LogInformation("Launched bot: {}", script.Name);
             }
             catch (Exception e)
             {
@@ -277,7 +283,7 @@ static class LaunchManager
                         throw new Exception("Failed to get Rocket League args");
 
                     string directGamePath = ParseCommand(args)[0];
-                    Logger.LogInformation($"Found Rocket League @ \"{directGamePath}\"");
+                    Logger.LogInformation($"Found Rocket League at \"{directGamePath}\"");
 
                     // append RLBot args
                     args = args.Replace(directGamePath, "");

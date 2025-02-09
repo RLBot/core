@@ -152,7 +152,7 @@ class FlatBuffersSession
                 }
                 catch (ConfigParser.ConfigParserException e)
                 {
-                    Logger.LogError(e.Message);
+                    ConfigParser.Logger.LogError(e.Message);
                 }
                 break;
 

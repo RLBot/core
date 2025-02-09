@@ -1,5 +1,3 @@
-[match]
-
 [[cars]]
 config = "empty.toml"
 

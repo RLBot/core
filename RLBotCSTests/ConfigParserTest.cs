@@ -87,6 +87,7 @@ public class ConfigParserTest
         Assert.AreEqual(292u, edgeMC.PlayerConfigurations[0].Loadout.DecalId); // From Psyonix presets
 
         Assert.AreEqual("Edgy Test Bot", edgeMC.PlayerConfigurations[1].Name);
+        Assert.AreEqual("", edgeMC.PlayerConfigurations[1].AgentId);
         Assert.AreEqual(PlayerClass.CustomBot, edgeMC.PlayerConfigurations[1].Variety.Type);
         Assert.AreEqual(0u, edgeMC.PlayerConfigurations[1].Team);
 

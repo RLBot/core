@@ -1,4 +1,5 @@
-﻿using System.Threading.Channels;
+﻿using System.Diagnostics;
+using System.Threading.Channels;
 using Bridge.Models.Message;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
@@ -41,6 +42,8 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
 
     public void StartMatch(MatchConfigurationT matchConfig)
     {
+        PreprocessMatch(matchConfig);
+        
         if (!LaunchManager.IsRocketLeagueRunningWithArgs())
         {
             _communicationStarted = false;
@@ -50,8 +53,6 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
                 gamePort
             );
         }
-
-        PreprocessMatch(matchConfig);
 
         if (!_communicationStarted)
         {
@@ -110,9 +111,9 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
             if (playerConfig.SpawnId == 0)
                 playerConfig.SpawnId = playerConfig.Name.GetHashCode();
 
-            playerConfig.RootDir ??= "";
             playerConfig.RunCommand ??= "";
-            playerConfig.AgentId ??= "";
+            Debug.Assert((playerConfig.RootDir ??= "") != "", "Root directory must be non-empty at this point.");
+            Debug.Assert((playerConfig.AgentId ??= "") != "", "Agent ids may not be empty.");
         }
 
         Dictionary<string, int> scriptNames = [];
@@ -143,7 +144,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         matchConfig.GameMapUpk ??= "";
     }
 
-    private void StartBots(MatchConfigurationT matchConfig)
+    private void StartBotsAndScripts(MatchConfigurationT matchConfig)
     {
         Dictionary<string, PlayerConfigurationT> processes = new();
 
@@ -182,7 +183,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
 
         if (matchConfig.AutoStartBots)
         {
-            LaunchManager.LaunchBots(processes, rlbotSocketsPort);
+            LaunchManager.LaunchBots(processes.Values.ToList(), rlbotSocketsPort);
             LaunchManager.LaunchScripts(matchConfig.ScriptConfigurations, rlbotSocketsPort);
         }
         else
@@ -195,7 +196,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
 
     private void LoadMatch(MatchConfigurationT matchConfig)
     {
-        StartBots(matchConfig);
+        StartBotsAndScripts(matchConfig);
 
         if (matchConfig.AutoSaveReplay)
             bridge.TryWrite(new ConsoleCommand(FlatToCommand.MakeAutoSaveReplayCommand()));

@@ -10,8 +10,8 @@ namespace RLBotCS.ManagerTools;
 public static class ConfigParser
 {
     public class ConfigParserException(string? message, Exception? innerException) : Exception(message, innerException);
-    
-    private static readonly ILogger Logger = Logging.GetLogger("ConfigParser");
+
+    public static readonly ILogger Logger = Logging.GetLogger("ConfigParser");
 
     private static TomlTable LoadTable(string path)
     {
@@ -397,7 +397,7 @@ public static class ConfigParser
                 SkipReplays = matchTable.GetValue("skip_replays", false, missingValues),
                 InstantStart = matchTable.GetValue("start_without_countdown", false, missingValues),
                 EnableRendering = matchTable.GetValue("enable_rendering", false, missingValues),
-                EnableStateSetting = matchTable.GetValue("enable_state_setting", false, missingValues),
+                EnableStateSetting = matchTable.GetValue("enable_state_setting", true, missingValues),
                 ExistingMatchBehavior = matchTable.GetEnum(
                     "existing_match_behavior", ExistingMatchBehavior.Restart, missingValues
                 ),
