@@ -92,7 +92,10 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
 
         foreach (var playerConfig in matchConfig.PlayerConfigurations)
         {
-            // De-duplicating similar names, Overwrites original value
+            // De-duplicating similar names. Overwrites original value.
+            if (playerConfig.Variety.Type == PlayerClass.Human)
+                continue;
+            
             string playerName = playerConfig.Name ?? "";
             if (playerNames.TryGetValue(playerName, out int value))
             {

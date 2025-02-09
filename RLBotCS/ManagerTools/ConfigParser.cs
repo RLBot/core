@@ -178,25 +178,16 @@ public static class ConfigParser
             }
             player = new PlayerConfigurationT
             {
+                AgentId = "",
                 Variety = variety,
                 Name = nameOverride,
                 Team = team,
                 Loadout = loadout,
+                Hivemind = false,
+                RootDir = "",
+                RunCommand = "",
+                SpawnId = 0,
             };
-        }
-
-        if (variety.Type == PlayerClass.Psyonix)
-        {
-            // Apply Psyonix preset loadouts
-            if (player.Name == null)
-            {
-                (player.Name, var presetLoadout) = PsyonixLoadouts.GetNext((int)team);
-                player.Loadout ??= presetLoadout;
-            }
-            else if (player.Loadout == null)
-            {
-                player.Loadout = PsyonixLoadouts.GetFromName(player.Name, (int)team);
-            }
         }
 
         return player;
@@ -345,6 +336,7 @@ public static class ConfigParser
     /// <summary>
     /// Loads the match configuration at the given path. Empty fields are given default values.
     /// However, default values are not necessarily valid (e.g. empty agent_id).
+    /// Use <see cref="ConfigValidator"/> to validate the match config.
     /// </summary>
     /// <param name="path">Path to match configuration file.</param>
     /// <returns>The parsed MatchConfigurationT</returns>
@@ -353,7 +345,6 @@ public static class ConfigParser
     {
         try
         {
-            PsyonixLoadouts.Reset();
             path = Path.GetFullPath(path);
             TomlTable rlbotToml = LoadTable(path);
 
