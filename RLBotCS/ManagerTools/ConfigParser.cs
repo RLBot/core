@@ -36,7 +36,7 @@ public static class ConfigParser
         {
             var v = table[key];
             if (v is string s) v = $"\"{s}\"";
-            throw new InvalidCastException($"Field '{key}' has value {v}, but a value of type {typeof(T).Name} was expected", e);
+            throw new InvalidCastException($"Field '{key}' has value {v}, but a value of type {typeof(T).Name} was expected.", e);
         }
     }
 
@@ -46,7 +46,7 @@ public static class ConfigParser
         if (table.TryGetValue(key, out var val))
         {
             if (Enum.TryParse((string)val, true, out T res)) return res;
-            throw new InvalidCastException($"{val} is not a valid value for field '{key}'. Find valid values on https:/wiki.rlbot.org");
+            throw new InvalidCastException($"{val} is not a valid value for field '{key}'. Find valid values on https:/wiki.rlbot.org.");
         }
 
         missingValues.Add(key);
@@ -158,8 +158,8 @@ public static class ConfigParser
         if (useConfig && configPath == "" && variety.Type == PlayerClass.CustomBot)
         {
             throw new FileNotFoundException(
-                $"Found a car with type 'rlbot' with empty 'config' field in {Path.GetFileName(matchConfigPath)}." +
-                $"RLBot bots must have a config file."
+                $"Found a car with type 'rlbot' with empty 'config' field in {matchConfigPath}. " +
+                $"RLBot bots must specify a config file."
             );
         }
         
@@ -381,8 +381,9 @@ public static class ConfigParser
                 else
                 {
                     throw new FileNotFoundException(
-                        $"Found a script with empty 'config' field in {Path.GetFileName(path)}." +
-                        $"Scripts must have a config file.");
+                        $"Found a script with empty 'config' field in {path}. " +
+                        $"Scripts must specify a config file."
+                    );
                 }
             }
 
@@ -413,7 +414,7 @@ public static class ConfigParser
         }
         catch (Exception e)
         {
-            throw new ConfigParserException("Failed to load match config. " + e, e);
+            throw new ConfigParserException("Failed to load match config. " + e.Message.Trim(), e);
         }
     }
 }
