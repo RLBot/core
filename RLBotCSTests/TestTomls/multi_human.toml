@@ -1,0 +1,9 @@
+[match]
+
+[[cars]]
+type = "Human"
+team = 1
+
+[[cars]]
+type = "Human"
+team = 0

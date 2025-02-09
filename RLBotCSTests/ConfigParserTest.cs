@@ -77,7 +77,8 @@ public class ConfigParserTest
         MatchConfigurationT edgeMC = ConfigParser.LoadMatchConfig("TestTomls/edge.toml");
 
         Assert.AreEqual(Launcher.Custom, edgeMC.Launcher);
-        Assert.AreEqual("legendary", edgeMC.LauncherArg);
+        // Ok for parsing, but wil not go through ConfigValidator
+        Assert.AreEqual("something invalid", edgeMC.LauncherArg);
 
         Assert.AreEqual(MatchLengthMutator.TenMinutes, edgeMC.Mutators.MatchLength);
         Assert.AreEqual(GravityMutator.Reverse, edgeMC.Mutators.Gravity);

@@ -2,7 +2,7 @@
 
 [rlbot]
 launcher = "custom"
-launcher_arg = "legendary"
+launcher_arg = "something invalid"
 
 [match]
 game_mode = "Soccer"
