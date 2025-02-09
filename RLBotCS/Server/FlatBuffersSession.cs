@@ -142,8 +142,12 @@ class FlatBuffersSession
 
             case DataType.StartCommand:
                 var startCommand = StartCommand.GetRootAsStartCommand(byteBuffer);
-                if (ConfigParser.TryLoadMatchConfig(startCommand.ConfigPath, out var tomlMatchConfig)
-                    && ConfigValidator.Validate(tomlMatchConfig))
+                if (
+                    ConfigParser.TryLoadMatchConfig(
+                        startCommand.ConfigPath,
+                        out var tomlMatchConfig
+                    ) && ConfigValidator.Validate(tomlMatchConfig)
+                )
                 {
                     await _rlbotServer.WriteAsync(new StartMatch(tomlMatchConfig));
                 }

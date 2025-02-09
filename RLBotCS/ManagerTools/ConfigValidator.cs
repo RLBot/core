@@ -25,9 +25,10 @@ public class ConfigValidator
             config.LauncherArg = (config.LauncherArg ?? "").ToLower();
             if (config.LauncherArg != "legendary")
             {
-                Logger.LogError($"Invalid custom launcher argument '{config.LauncherArg}'. Only 'legendary' is supported currently.");
+                Logger.LogError(
+                    $"Invalid custom launcher argument '{config.LauncherArg}'. Only 'legendary' is supported currently."
+                );
                 valid = false;
-
             }
         }
         else
@@ -37,7 +38,7 @@ public class ConfigValidator
 
         valid = ValidatePlayers(config.PlayerConfigurations) && valid;
         valid = ValidateScripts(config.ScriptConfigurations) && valid;
-        
+
         return valid;
     }
 
@@ -45,27 +46,31 @@ public class ConfigValidator
     {
         bool valid = true;
         int humanCount = 0;
-        
+
         for (int i = 0; i < players.Count; i++)
         {
             var player = players[i];
-            
+
             if (player.Team != 0 && player.Team != 1)
             {
-                Logger.LogError($"Car with index {i} has invalid team '{player.Team}'. " +
-                                $"Must be 0 (blue) or 1 (orange).");
+                Logger.LogError(
+                    $"Car with index {i} has invalid team '{player.Team}'. "
+                        + $"Must be 0 (blue) or 1 (orange)."
+                );
                 valid = false;
             }
-            
+
             switch (player.Variety.Type)
             {
                 case PlayerClass.CustomBot:
                     player.AgentId ??= "";
                     if (player.AgentId == "")
                     {
-                        Logger.LogError($"Car with index {i} has type 'rlbot' but an empty agent ID. " +
-                                        $"RLBot bots must have an agent ID. " +
-                                        $"We recommend the format \"<developer>/<botname>/<version>\"");
+                        Logger.LogError(
+                            $"Car with index {i} has type 'rlbot' but an empty agent ID. "
+                                + $"RLBot bots must have an agent ID. "
+                                + $"We recommend the format \"<developer>/<botname>/<version>\""
+                        );
                         valid = false;
                     }
                     player.Name ??= "";
@@ -80,26 +85,29 @@ public class ConfigValidator
                         PsyonixSkill.Pro => "pro",
                         PsyonixSkill.AllStar => "allstar",
                     };
-                    player.AgentId ??= "psyonix/" + skill;  // Not that it really matters
-                    
+                    player.AgentId ??= "psyonix/" + skill; // Not that it really matters
+
                     // Apply Psyonix preset loadouts
                     if (player.Name == null)
                     {
-                        (player.Name, var presetLoadout) = PsyonixLoadouts.GetNext((int)player.Team);
-                        player.Loadout ??= presetLoadout;
+                        (player.Name, var preset) = PsyonixLoadouts.GetNext((int)player.Team);
+                        player.Loadout ??= preset;
                     }
                     else if (player.Loadout == null)
                     {
-                        player.Loadout = PsyonixLoadouts.GetFromName(player.Name, (int)player.Team);
+                        player.Loadout = PsyonixLoadouts.GetFromName(
+                            player.Name,
+                            (int)player.Team
+                        );
                     }
-                    
+
                     player.RunCommand = "";
                     player.RootDir = "";
-                    
+
                     break;
                 case PlayerClass.Human:
                     humanCount++;
-                    player.AgentId = "human";  // Not that it really matters
+                    player.AgentId = "human"; // Not that it really matters
                     player.Name = "";
                     player.Loadout = null;
                     player.RunCommand = "";
@@ -124,7 +132,7 @@ public class ConfigValidator
     private static bool ValidateScripts(List<ScriptConfigurationT> scripts)
     {
         bool valid = true;
-        
+
         for (int i = 0; i < scripts.Count; i++)
         {
             var script = scripts[i];
@@ -132,9 +140,11 @@ public class ConfigValidator
             script.AgentId ??= "";
             if (script.AgentId == "")
             {
-                Logger.LogError($"Script with index {i} has an empty agent ID. " +
-                                $"Scripts must have an agent ID. " +
-                                $"We recommend the format \"<developer>/<scriptname>/<version>\"");
+                Logger.LogError(
+                    $"Script with index {i} has an empty agent ID. "
+                        + $"Scripts must have an agent ID. "
+                        + $"We recommend the format \"<developer>/<scriptname>/<version>\""
+                );
                 valid = false;
             }
             script.Name ??= "";

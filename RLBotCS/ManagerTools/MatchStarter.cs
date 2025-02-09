@@ -43,7 +43,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
     public void StartMatch(MatchConfigurationT matchConfig)
     {
         PreprocessMatch(matchConfig);
-        
+
         if (!LaunchManager.IsRocketLeagueRunningWithArgs())
         {
             _communicationStarted = false;
@@ -95,7 +95,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
             // De-duplicating similar names. Overwrites original value.
             if (playerConfig.Variety.Type == PlayerClass.Human)
                 continue;
-            
+
             string playerName = playerConfig.Name ?? "";
             if (playerNames.TryGetValue(playerName, out int value))
             {
@@ -115,7 +115,10 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
                 playerConfig.SpawnId = playerConfig.Name.GetHashCode();
 
             playerConfig.RunCommand ??= "";
-            Debug.Assert((playerConfig.RootDir ??= "") != "", "Root directory must be non-empty at this point.");
+            Debug.Assert(
+                (playerConfig.RootDir ??= "") != "",
+                "Root directory must be non-empty at this point."
+            );
             Debug.Assert((playerConfig.AgentId ??= "") != "", "Agent ids may not be empty.");
         }
 
