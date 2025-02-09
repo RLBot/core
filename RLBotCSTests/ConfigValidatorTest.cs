@@ -13,14 +13,14 @@ public class ConfigValidatorTest
         MatchConfigurationT mc = ConfigParser.LoadMatchConfig("TestTomls/default.toml");
         Assert.IsTrue(ConfigValidator.Validate(mc));
     }
-    
+
     [TestMethod]
     public void OverridesAreValid()
     {
         MatchConfigurationT mc = ConfigParser.LoadMatchConfig("TestTomls/overrides.toml");
         Assert.IsTrue(ConfigValidator.Validate(mc));
-    } 
-    
+    }
+
     [TestMethod]
     public void UnknownLauncherArg()
     {
@@ -33,7 +33,7 @@ public class ConfigValidatorTest
         mc.LauncherArg = "legendary";
         Assert.IsTrue(ConfigValidator.Validate(mc));
     }
-    
+
     [TestMethod]
     public void EmptyAgentIds()
     {
@@ -41,13 +41,12 @@ public class ConfigValidatorTest
         Assert.IsFalse(ConfigValidator.Validate(mc));
     }
 
-
     [TestMethod]
     public void MultipleHumans()
     {
         MatchConfigurationT mc = ConfigParser.LoadMatchConfig("TestTomls/multi_human.toml");
         Assert.IsFalse(ConfigValidator.Validate(mc));
-        
+
         // Otherwise ok
         MatchConfigurationT mc2 = ConfigParser.LoadMatchConfig("TestTomls/multi_human.toml");
         mc2.PlayerConfigurations[0].Variety = PlayerClassUnion.FromPsyonix(new PsyonixT());
