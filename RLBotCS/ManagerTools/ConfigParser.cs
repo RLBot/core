@@ -339,6 +339,28 @@ public static class ConfigParser
     /// Use <see cref="ConfigValidator"/> to validate the match config.
     /// </summary>
     /// <param name="path">Path to match configuration file.</param>
+    /// <returns>Whether the match config was successfully loaded. Potential errors are logged.</returns>
+    public static bool TryLoadMatchConfig(string path, out MatchConfigurationT config)
+    {
+        config = null;
+        try
+        {
+            config = LoadMatchConfig(path);
+            return true;
+        }
+        catch (ConfigParserException e)
+        {
+            Logger.LogError(e.Message);
+        }
+        return false;
+    }
+    
+    /// <summary>
+    /// Loads the match configuration at the given path. Empty fields are given default values.
+    /// However, default values are not necessarily valid (e.g. empty agent_id).
+    /// Use <see cref="ConfigValidator"/> to validate the match config.
+    /// </summary>
+    /// <param name="path">Path to match configuration file.</param>
     /// <returns>The parsed MatchConfigurationT</returns>
     /// <exception cref="ConfigParserException">Thrown if something went wrong. See inner exception.</exception>
     public static MatchConfigurationT LoadMatchConfig(string path)
