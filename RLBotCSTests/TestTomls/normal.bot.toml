@@ -1,0 +1,15 @@
+[settings]
+agent_id = "test/bot"
+name = "Normal Test Bot"
+run_command = "python bot.py"
+run_command_linux = "python bot.py"
+loadout_file = "loadout.toml"
+logo_file = "normal_logo.png"
+
+[details]
+description = "This is a normal test bot"
+fun_fact = "knock knock ..."
+source_link = "https://github.com/RLBot/core"
+developer = "RLBot Community"
+language = "Python"
+tags = ["1v1", "teamplay"]

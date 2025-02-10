@@ -1,0 +1,4 @@
+[match]
+
+[[cars]]
+config = "non-existent.toml"

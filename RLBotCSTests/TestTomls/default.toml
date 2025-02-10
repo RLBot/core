@@ -17,48 +17,51 @@ skip_replays = false
 # Skip the kickoff countdown
 start_without_countdown = false
 # What should we do if you click run while a match is already in progress?
-# "Restart_If_Different", "Restart", "Continue_And_Spawn"
+# "RestartIfDifferent", "Restart", "ContinueAndSpawn"
 existing_match_behavior = "Restart"
+# Whether debug rendering is enabled
 enable_rendering = false
+# Whether game state manipulation is enabled
 enable_state_setting = true
+# Whether replays should be automatically saved
 auto_save_replay = false
-# Whether or not to use freeplay instead of an exhibition match
+# Whether to use freeplay instead of an exhibition match
 freeplay = false
 
 [mutators]
-# "Five_Minutes", "Ten_Minutes", "Twenty_Minutes", "Unlimited"
-match_length = "Five_Minutes"
-# "Default", "One_Goal", "Three_Goals", "Five_Goals", "Seven Goals", "Unlimited"
+# "FiveMinutes", "TenMinutes", "TwentyMinutes", "Unlimited"
+match_length = "FiveMinutes"
+# "Default", "OneGoal", "ThreeGoals", "FiveGoals", "Seven Goals", "Unlimited"
 max_score = "Default"
 # "One", "Two", "Four", "Six"
 multi_ball = "One"
-# "Unlimited", "Five_Max_First_Score", "Five_Max_Random_Team"
+# "Unlimited", "FiveMaxFirstScore", "FiveMaxRandomTeam"
 overtime = "Unlimited"
-# "Default", "Slo_Mo", "Time_Warp"
+# "Default", "SloMo", "TimeWarp"
 game_speed = "Default"
-# "Default", "Slow", "Fast", "Super_Fast"
+# "Default", "Slow", "Fast", "SuperFast"
 ball_max_speed = "Default"
 # "Default", "Cube", "Puck", "Basketball", "Beachball", "Anniversary", "Haunted", "Ekin", "SpookyCube"
 ball_type = "Default"
-# "Default", "Light", "Heavy", "Super_Light", "Curve_Ball", "Beach_Ball_Curve", "Magnus_FutBall"
+# "Default", "Light", "Heavy", "SuperLight", "CurveBall", "BeachBallCurve", "MagnusFutBall"
 ball_weight = "Default"
 # "Default", "Small", "Medium", "Large", "Gigantic"
 ball_size = "Default"
-# "Default", "Low", "LowishBounciness", "High", "Super_High"
+# "Default", "Low", "LowishBounciness", "High", "SuperHigh"
 ball_bounciness = "Default"
-# "Normal_Boost", "Unlimited_Boost", "Slow_Recharge", "Rapid_Recharge", "No_Boost"
-boost_amount = "Normal_Boost"
-# "No_Rumble", "Default", "Slow", "Civilized", "Destruction_Derby", "Spring_Loaded", "Spikes_Only", "Spike_Rush", "Haunted_Ball_Beam", "Tactical", "BatmanRumble"
-rumble = "No_Rumble"
+# "NormalBoost", "UnlimitedBoost", "SlowRecharge", "RapidRecharge", "NoBoost"
+boost_amount = "NormalBoost"
+# "NoRumble", "Default", "Slow", "Civilized", "DestructionDerby", "SpringLoaded", "SpikesOnly", "SpikeRush", "HauntedBallBeam", "Tactical", "BatmanRumble"
+rumble = "NoRumble"
 # "One", "OneAndAHalf", "Two", "Five", "Ten"
 boost_strength = "One"
-# "Default", "Low", "High", "Super_High", "Reverse"
+# "Default", "Low", "High", "SuperHigh", "Reverse"
 gravity = "Default"
-# "Default", "Disabled", "Friendly_Fire", "On_Contact", "On_Contact_FF"
+# "Default", "Disabled", "FriendlyFire", "OnContact", "OnContactFF"
 demolish = "Default"
-# "Three_Seconds", "Two_Seconds", "One_Second", "Disable_Goal_Reset"
-respawn_time = "Three_Seconds"
-# "Default", "Eleven_Minutes"
+# "ThreeSeconds", "TwoSeconds", "OneSecond", "DisableGoalReset"
+respawn_time = "ThreeSeconds"
+# "Default", "ElevenMinutes"
 max_time = "Default"
 # "Default", "Haunted", "Rugby"
 game_event = "Default"

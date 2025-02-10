@@ -1,0 +1,15 @@
+[settings]
+agent_id = "test/script"
+name = "Normal Test Script"
+run_command = "python script.py"
+run_command_linux = "python script.py"
+loadout_file = "loadout.toml"
+logo_file = "normal_logo.png"
+
+[details]
+description = "This is a normal test script"
+fun_fact = "knock knock ..."
+source_link = "https://github.com/RLBot/core"
+developer = "RLBot Community"
+language = "Python"
+tags = ["memebot"]
