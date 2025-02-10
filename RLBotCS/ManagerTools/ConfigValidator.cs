@@ -4,9 +4,9 @@ using RLBotCS.Conversion;
 
 namespace RLBotCS.ManagerTools;
 
-public class ConfigValidator
+public static class ConfigValidator
 {
-    public static readonly ILogger Logger = Logging.GetLogger("ConfigValidator");
+    private static readonly ILogger Logger = Logging.GetLogger("ConfigValidator");
 
     /// <summary>
     /// Validates the given match config.
@@ -84,6 +84,7 @@ public class ConfigValidator
                         PsyonixSkill.Rookie => "rookie",
                         PsyonixSkill.Pro => "pro",
                         PsyonixSkill.AllStar => "allstar",
+                        _ => HandleOutOfRange(out valid, "", $"Car with index {i} has skill level out of range."),
                     };
                     player.AgentId ??= "psyonix/" + skill; // Not that it really matters
 
@@ -153,5 +154,13 @@ public class ConfigValidator
         }
 
         return valid;
+    }
+
+    /// <summary>Helder function to handle enums out of range inline</summary>
+    private static T HandleOutOfRange<T>(out bool valid, T fallback, string message)
+    {
+        valid = false;
+        Logger.LogError(message);
+        return fallback;
     }
 }

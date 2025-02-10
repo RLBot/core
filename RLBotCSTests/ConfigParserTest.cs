@@ -162,7 +162,7 @@ public class ConfigParserTest
     public void ConfigNotFound()
     {
         AssertThrowsInnerException<ArgumentNullException>(
-            () => ConfigParser.LoadMatchConfig(null)
+            () => ConfigParser.LoadMatchConfig(null!)
         );
 
         AssertThrowsInnerException<FileNotFoundException>(

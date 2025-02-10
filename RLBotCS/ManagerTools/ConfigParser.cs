@@ -1,7 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
-using RLBotCS.Conversion;
 using Tomlyn;
 using Tomlyn.Model;
 
@@ -9,10 +8,10 @@ namespace RLBotCS.ManagerTools;
 
 public static class ConfigParser
 {
-    public class ConfigParserException(string? message, Exception? innerException)
+    public class ConfigParserException(string? message, Exception? innerException = null)
         : Exception(message, innerException);
 
-    public static readonly ILogger Logger = Logging.GetLogger("ConfigParser");
+    private static readonly ILogger Logger = Logging.GetLogger("ConfigParser");
 
     private static TomlTable LoadTable(string path)
     {
@@ -66,7 +65,7 @@ public static class ConfigParser
             if (Enum.TryParse((string)val, true, out T res))
                 return res;
             throw new InvalidCastException(
-                $"{val} is not a valid value for field '{key}'. Find valid values on https:/wiki.rlbot.org."
+                $"Invalid value '{val}' for field '{key}'. Find valid values on https:/wiki.rlbot.org."
             );
         }
 
@@ -187,6 +186,10 @@ public static class ConfigParser
             PlayerClass.PartyMember => throw new NotImplementedException(
                 "PartyMember not implemented"
             ),
+            PlayerClass.NONE => throw new InvalidCastException(
+                "'NONE' is not a valid value for field 'type'. Find valid values on https:/wiki.rlbot.org."
+            ),
+            _ => throw new ConfigParserException($"Player type {playerClass} is out of range.")
         };
 
         string configPath = useConfig ? table.GetValue("config", "", missingValues) : "";
@@ -267,7 +270,7 @@ public static class ConfigParser
 
         PlayerLoadoutT? loadout =
             (loadoutPath ?? "") != ""
-                ? LoadPlayerLoadout(loadoutPath, team, missingValues)
+                ? LoadPlayerLoadout(loadoutPath!, team, missingValues)
                 : null;
 
         return new PlayerConfigurationT
@@ -434,10 +437,11 @@ public static class ConfigParser
     /// Use <see cref="ConfigValidator"/> to validate the match config.
     /// </summary>
     /// <param name="path">Path to match configuration file.</param>
+    /// <param name="config">The loaded match config.</param>
     /// <returns>Whether the match config was successfully loaded. Potential errors are logged.</returns>
     public static bool TryLoadMatchConfig(string path, out MatchConfigurationT config)
     {
-        config = null;
+        config = null!;
         try
         {
             config = LoadMatchConfig(path);
@@ -496,7 +500,7 @@ public static class ConfigParser
                 if (configPath != "")
                 {
                     string absoluteConfigPath = Path.Combine(
-                        Path.GetDirectoryName(path),
+                        Path.GetDirectoryName(path)!,
                         configPath
                     );
                     scriptConfigs.Add(LoadScriptConfig(absoluteConfigPath, missingValues));
