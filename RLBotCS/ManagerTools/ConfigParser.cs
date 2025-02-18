@@ -9,6 +9,86 @@ namespace RLBotCS.ManagerTools;
 
 public class ConfigParser
 {
+    public static class Fields
+    {
+        public const string RlBotTable = "rlbot";
+        public const string RlBotLauncher = "launcher";
+        public const string RlBotLauncherArg = "launcher_arg";
+        public const string RlBotAutoStartBots = "auto_start_bots";
+        
+        public const string MatchTable = "match";
+        public const string MatchGameMode = "game_mode";
+        public const string MatchMapUpk = "game_map_upk";
+        public const string MatchSkipReplays = "skip_replays";
+        public const string MatchStartWithoutCountdown = "start_without_countdown";
+        public const string MatchExistingMatchBehavior = "existing_match_behaviour";
+        public const string MatchRendering = "enable_rendering";
+        public const string MatchStateSetting = "enable_state_setting";
+        public const string MatchAutoSaveReplays = "auto_save_replays";
+        public const string MatchFreePlay = "freeplay";
+        
+        public const string MutatorsTable = "mutators";
+        public const string MutatorsMatchLength = "match_length";
+        public const string MutatorsMaxScore = "max_score";
+        public const string MutatorsMultiBall = "multi_ball";
+        public const string MutatorsOvertime = "overtime";
+        public const string MutatorsGameSpeed = "game_speed";
+        public const string MutatorsBallMaxSpeed = "ball_max_speed";
+        public const string MutatorsBallType = "ball_type";
+        public const string MutatorsBallWeight = "ball_weight";
+        public const string MutatorsBallSize = "ball_size";
+        public const string MutatorsBallBounciness = "ball_bounciness";
+        public const string MutatorsBoost = "boost_amount";
+        public const string MutatorsRumble = "rumble";
+        public const string MutatorsBoostStrength = "boost_strength";
+        public const string MutatorsGravity = "gravity";
+        public const string MutatorsDemolish = "demolish";
+        public const string MutatorsRespawnTime = "respawn_time";
+        public const string MutatorsMaxTime = "max_time";
+        public const string MutatorsGameEvent = "game_event";
+        public const string MutatorsAudio = "audio";
+        
+        public const string CarsList = "cars";
+        public const string ScriptsList = "scripts";
+        public const string AgentTeam = "team";
+        public const string AgentType = "type";
+        public const string AgentSkill = "skill";
+        public const string AgentName = "name";
+        public const string AgentLoadoutFile = "loadout_file";
+        public const string AgentConfigFile = "config";
+        public const string AgentSettingsTable = "settings";
+        public const string AgentAgentId = "agent_id";
+        public const string AgentRootDir = "root_dir";
+        public const string AgentRunCommand = "run_command";
+        public const string AgentRunCommandLinux = "run_command_linux";
+        public const string AgentHivemind = "hivemind";
+        
+        public const string LoadoutBlueTable = "blue_loadout";
+        public const string LoadoutOrangeTable = "orange_loadout";
+        public const string LoadoutTeamColorId = "team_color_id";
+        public const string LoadoutCustomColorId = "custom_color_id";
+        public const string LoadoutCarId = "car_id";
+        public const string LoadoutDecalId = "decal_id";
+        public const string LoadoutWheelsId = "wheels_id";
+        public const string LoadoutBoostId = "boost_id";
+        public const string LoadoutAntennaId = "antenna_id";
+        public const string LoadoutHatId = "hat_id";
+        public const string LoadoutPaintFinishId = "paint_finish_id";
+        public const string LoadoutCustomFinishId = "custom_finish_id";
+        public const string LoadoutEngineAudioId = "engine_audio_id";
+        public const string LoadoutTrailsId = "trails_id";
+        public const string LoadoutGoalExplosionId = "goal_explosion_id";
+        public const string LoadoutPaintTable = "paint";
+        public const string LoadoutPaintCarPaintId = "car_paint_id";
+        public const string LoadoutPaintDecalPaintId = "decal_paint_id";
+        public const string LoadoutPaintWheelsPaintId = "wheels_paint_id";
+        public const string LoadoutPaintBoostPaintId = "boost_paint_id";
+        public const string LoadoutPaintAntennaPaintId = "antenna_paint_id";
+        public const string LoadoutPaintHatPaintId = "hat_paint_id";
+        public const string LoadoutPaintTrailsPaintId = "trails_paint_id";
+        public const string LoadoutPaintGoalExplosionPaintId = "goal_explosion_paint_id";
+    }
+    
     public class ConfigParserException(string? message, Exception? innerException = null)
         : Exception(message, innerException);
 
@@ -105,12 +185,12 @@ public class ConfigParser
 
     private string GetRunCommand(TomlTable runnableSettings)
     {
-        string runCommandWindows = GetValue<string>(runnableSettings, "run_command", "");
+        string runCommandWindows = GetValue<string>(runnableSettings, Fields.AgentRunCommand, "");
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             return runCommandWindows;
 
-        return GetValue(runnableSettings, "run_command_linux", runCommandWindows);
+        return GetValue(runnableSettings, Fields.AgentRunCommandLinux, runCommandWindows);
     }
 
     private ScriptConfigurationT LoadScriptConfig(string scriptConfigPath)
@@ -118,25 +198,24 @@ public class ConfigParser
         TomlTable scriptToml = LoadTomlFile(scriptConfigPath);
         string tomlParent = Path.GetDirectoryName(scriptConfigPath) ?? "";
 
-        TomlTable settings = GetValue<TomlTable>(scriptToml, "settings", []);
-        using (_context.Begin("settings"))
+        TomlTable settings = GetValue<TomlTable>(scriptToml, Fields.AgentSettingsTable, []);
+        using (_context.Begin(Fields.AgentSettingsTable))
         {
-            ScriptConfigurationT scriptConfig = new()
+            return new ScriptConfigurationT
             {
-                Name = GetValue(settings, "name", ""),
-                RootDir = CombinePaths(tomlParent, GetValue(settings, "root_dir", "")),
+                Name = GetValue(settings, Fields.AgentName, ""),
+                RootDir = CombinePaths(tomlParent, GetValue(settings, Fields.AgentRootDir, "")),
                 RunCommand = GetRunCommand(settings),
-                AgentId = GetValue(settings, "agent_id", ""),
+                AgentId = GetValue(settings, Fields.AgentAgentId, ""),
             };
-            return scriptConfig;
         }
     }
 
     private uint GetTeam(TomlTable table, List<string> missingValues)
     {
-        if (!table.TryGetValue("team", out var raw))
+        if (!table.TryGetValue(Fields.AgentTeam, out var raw))
         {
-            missingValues.Add(_context.ToStringWithEnd("team"));
+            missingValues.Add(_context.ToStringWithEnd(Fields.AgentTeam));
             return 0;
         }
 
@@ -155,7 +234,7 @@ public class ConfigParser
                 if (raw is string str)
                     raw = $"\"{str}\"";
                 throw new InvalidCastException(
-                    $"{_context.ToStringWithEnd("team")} has invalid value {raw}. " +
+                    $"{_context.ToStringWithEnd(Fields.AgentTeam)} has invalid value {raw}. " +
                     $"Use 0, 1, \"blue\", or \"orange\"."
                 );
         }
@@ -166,14 +245,14 @@ public class ConfigParser
         var matchConfigDir = Path.GetDirectoryName(matchConfigPath)!;
 
         uint team = GetTeam(table, _missingValues);
-        string? nameOverride = GetValue<string?>(table, "name", null);
-        string? loadoutFileOverride = GetValue<string?>(table, "loadout_file", null);
+        string? nameOverride = GetValue<string?>(table, Fields.AgentName, null);
+        string? loadoutFileOverride = GetValue<string?>(table, Fields.AgentLoadoutFile, null);
         if (!string.IsNullOrEmpty(loadoutFileOverride))
         {
             loadoutFileOverride = Path.Combine(matchConfigDir, loadoutFileOverride);
         }
 
-        PlayerClass playerClass = GetEnum(table, "type", PlayerClass.CustomBot);
+        PlayerClass playerClass = GetEnum(table, Fields.AgentType, PlayerClass.CustomBot);
 
         (PlayerClassUnion variety, bool useConfig) = playerClass switch
         {
@@ -182,7 +261,7 @@ public class ConfigParser
                 PlayerClassUnion.FromPsyonix(
                     new PsyonixT
                     {
-                        BotSkill = GetEnum(table, "skill", PsyonixSkill.AllStar),
+                        BotSkill = GetEnum(table, Fields.AgentSkill, PsyonixSkill.AllStar),
                     }
                 ),
                 true
@@ -192,17 +271,17 @@ public class ConfigParser
                 "PartyMember not implemented"
             ),
             _ => throw new ConfigParserException(
-                $"{_context.ToStringWithEnd("type")} is out of range."
+                $"{_context.ToStringWithEnd(Fields.AgentType)} is out of range."
             ),
         };
 
-        string configPath = useConfig ? GetValue(table, "config", "") : "";
+        string configPath = useConfig ? GetValue(table, Fields.AgentConfigFile, "") : "";
 
         PlayerConfigurationT player;
         if (useConfig && configPath == "" && variety.Type == PlayerClass.CustomBot)
         {
             throw new FileNotFoundException(
-                $"{_context} has type 'rlbot' but {_context.ToStringWithEnd("config")} is empty. "
+                $"{_context} has type \"rlbot\" but {_context.ToStringWithEnd(Fields.AgentConfigFile)} is empty. "
                 + $"RLBot bots must specify a config file."
             );
         }
@@ -210,7 +289,7 @@ public class ConfigParser
         if (useConfig && configPath != "")
         {
             string absoluteConfigPath = Path.Combine(matchConfigDir, configPath);
-            using (_context.Begin("config", ConfigContextTracker.Type.Link))
+            using (_context.Begin(Fields.AgentConfigFile, ConfigContextTracker.Type.Link))
             {
                 player = LoadPlayerConfig(
                     absoluteConfigPath,
@@ -226,7 +305,7 @@ public class ConfigParser
             PlayerLoadoutT? loadout = null;
             if (loadoutFileOverride is not null)
             {
-                using (_context.Begin("loadout_file", ConfigContextTracker.Type.Link))
+                using (_context.Begin(Fields.AgentLoadoutFile, ConfigContextTracker.Type.Link))
                 {
                     loadout = LoadPlayerLoadout(loadoutFileOverride, team);
                 }
@@ -260,13 +339,13 @@ public class ConfigParser
         TomlTable table = LoadTomlFile(configPath);
         string configDir = Path.GetDirectoryName(configPath)!;
 
-        TomlTable settings = GetValue<TomlTable>(table, "settings", []);
-        using (_context.Begin("settings"))
+        TomlTable settings = GetValue<TomlTable>(table, Fields.AgentSettingsTable, []);
+        using (_context.Begin(Fields.AgentSettingsTable))
         {
 
             string rootDir = Path.Combine(
                 configDir,
-                GetValue<string>(settings, "root_dir", "")
+                GetValue<string>(settings, Fields.AgentRootDir, "")
             );
 
             // Override is null, "", or an absolute path.
@@ -274,18 +353,18 @@ public class ConfigParser
             string? loadoutPath = loadoutFileOverride;
             if (loadoutFileOverride is null)
             {
-                if (settings.TryGetValue("loadout_file", out var loadoutPathRel))
+                if (settings.TryGetValue(Fields.AgentLoadoutFile, out var loadoutPathRel))
                 {
                     loadoutPath = Path.Combine(configDir, (string)loadoutPathRel);
                 }
                 else
                 {
-                    _missingValues.Add(_context.ToStringWithEnd("loadout_file"));
+                    _missingValues.Add(_context.ToStringWithEnd(Fields.AgentLoadoutFile));
                 }
             }
 
             PlayerLoadoutT? loadout;
-            using (_context.Begin("loadout_file", ConfigContextTracker.Type.Link))
+            using (_context.Begin(Fields.AgentLoadoutFile, ConfigContextTracker.Type.Link))
             {
                  loadout = (loadoutPath ?? "") != ""
                         ? LoadPlayerLoadout(loadoutPath!, team)
@@ -294,12 +373,12 @@ public class ConfigParser
 
             return new PlayerConfigurationT
             {
-                AgentId = GetValue<string>(settings, "agent_id", ""),
-                Name = nameOverride ?? GetValue<string>(settings, "name", ""),
+                AgentId = GetValue<string>(settings, Fields.AgentAgentId, ""),
+                Name = nameOverride ?? GetValue<string>(settings, Fields.AgentName, ""),
                 Team = team,
                 Loadout = loadout,
                 RunCommand = GetRunCommand(settings),
-                Hivemind = GetValue(settings, "hivemind", false),
+                Hivemind = GetValue(settings, Fields.AgentHivemind, false),
                 RootDir = rootDir,
                 SpawnId = 0,
                 Variety = variety,
@@ -311,7 +390,7 @@ public class ConfigParser
     {
         TomlTable loadoutToml = LoadTomlFile(loadoutPath);
 
-        string teamLoadoutString = team == 0 ? "blue_loadout" : "orange_loadout";
+        string teamLoadoutString = team == 0 ? Fields.LoadoutBlueTable : Fields.LoadoutOrangeTable;
         TomlTable teamLoadout = GetValue<TomlTable>(loadoutToml,
             teamLoadoutString,
             []
@@ -319,39 +398,39 @@ public class ConfigParser
         using (_context.Begin(teamLoadoutString, ConfigContextTracker.Type.Link))
         {
 
-            TomlTable teamPaint = GetValue<TomlTable>(teamLoadout, "paint", []);
+            TomlTable teamPaint = GetValue<TomlTable>(teamLoadout, Fields.LoadoutPaintTable, []);
             LoadoutPaintT loadoutPaint;
-            using (_context.Begin("paint"))
+            using (_context.Begin(Fields.LoadoutPaintTable))
             {
                 loadoutPaint = new LoadoutPaintT
                 {
                     // TODO - GetPrimary/Secondary color? Do any bots use this?
-                    CarPaintId = (uint)GetValue<long>(teamPaint, "car_paint_id", 0),
-                    DecalPaintId = (uint)GetValue<long>(teamPaint, "decal_paint_id", 0),
-                    WheelsPaintId = (uint)GetValue<long>(teamPaint, "wheels_paint_id", 0),
-                    BoostPaintId = (uint)GetValue<long>(teamPaint, "boost_paint_id", 0),
-                    AntennaPaintId = (uint)GetValue<long>(teamPaint, "antenna_paint_id", 0),
-                    HatPaintId = (uint)GetValue<long>(teamPaint, "hat_paint_id", 0),
-                    TrailsPaintId = (uint)GetValue<long>(teamPaint, "trails_paint_id", 0),
-                    GoalExplosionPaintId = (uint)GetValue<long>(teamPaint, "goal_explosion_paint_id", 0),
+                    CarPaintId = (uint)GetValue<long>(teamPaint, Fields.LoadoutPaintCarPaintId, 0),
+                    DecalPaintId = (uint)GetValue<long>(teamPaint, Fields.LoadoutPaintDecalPaintId, 0),
+                    WheelsPaintId = (uint)GetValue<long>(teamPaint, Fields.LoadoutPaintWheelsPaintId, 0),
+                    BoostPaintId = (uint)GetValue<long>(teamPaint, Fields.LoadoutPaintBoostPaintId, 0),
+                    AntennaPaintId = (uint)GetValue<long>(teamPaint, Fields.LoadoutPaintAntennaPaintId, 0),
+                    HatPaintId = (uint)GetValue<long>(teamPaint, Fields.LoadoutPaintHatPaintId, 0),
+                    TrailsPaintId = (uint)GetValue<long>(teamPaint, Fields.LoadoutPaintTrailsPaintId, 0),
+                    GoalExplosionPaintId = (uint)GetValue<long>(teamPaint, Fields.LoadoutPaintGoalExplosionPaintId, 0),
                 };
             }
 
             return new PlayerLoadoutT()
             {
-                TeamColorId = (uint)GetValue<long>(teamLoadout, "team_color_id", 0),
-                CustomColorId = (uint)GetValue<long>(teamLoadout, "custom_color_id", 0),
-                CarId = (uint)GetValue<long>(teamLoadout, "car_id", 0),
-                DecalId = (uint)GetValue<long>(teamLoadout, "decal_id", 0),
-                WheelsId = (uint)GetValue<long>(teamLoadout, "wheels_id", 0),
-                BoostId = (uint)GetValue<long>(teamLoadout, "boost_id", 0),
-                AntennaId = (uint)GetValue<long>(teamLoadout, "antenna_id", 0),
-                HatId = (uint)GetValue<long>(teamLoadout, "hat_id", 0),
-                PaintFinishId = (uint)GetValue<long>(teamLoadout, "paint_finish_id", 0),
-                CustomFinishId = (uint)GetValue<long>(teamLoadout, "custom_finish_id", 0),
-                EngineAudioId = (uint)GetValue<long>(teamLoadout, "engine_audio_id", 0),
-                TrailsId = (uint)GetValue<long>(teamLoadout, "trails_id", 0),
-                GoalExplosionId = (uint)GetValue<long>(teamLoadout, "goal_explosion_id", 0),
+                TeamColorId = (uint)GetValue<long>(teamLoadout, Fields.LoadoutTeamColorId, 0),
+                CustomColorId = (uint)GetValue<long>(teamLoadout, Fields.LoadoutCustomColorId, 0),
+                CarId = (uint)GetValue<long>(teamLoadout, Fields.LoadoutCarId, 0),
+                DecalId = (uint)GetValue<long>(teamLoadout, Fields.LoadoutDecalId, 0),
+                WheelsId = (uint)GetValue<long>(teamLoadout, Fields.LoadoutWheelsId, 0),
+                BoostId = (uint)GetValue<long>(teamLoadout, Fields.LoadoutBoostId, 0),
+                AntennaId = (uint)GetValue<long>(teamLoadout, Fields.LoadoutAntennaId, 0),
+                HatId = (uint)GetValue<long>(teamLoadout, Fields.LoadoutHatId, 0),
+                PaintFinishId = (uint)GetValue<long>(teamLoadout, Fields.LoadoutPaintFinishId, 0),
+                CustomFinishId = (uint)GetValue<long>(teamLoadout, Fields.LoadoutCustomFinishId, 0),
+                EngineAudioId = (uint)GetValue<long>(teamLoadout, Fields.LoadoutEngineAudioId, 0),
+                TrailsId = (uint)GetValue<long>(teamLoadout, Fields.LoadoutTrailsId, 0),
+                GoalExplosionId = (uint)GetValue<long>(teamLoadout, Fields.LoadoutGoalExplosionId, 0),
                 LoadoutPaint = loadoutPaint,
             };
         }
@@ -359,25 +438,25 @@ public class ConfigParser
 
     private MutatorSettingsT GetMutatorSettings(TomlTable mutatorTable) => new MutatorSettingsT
         {
-            MatchLength = GetEnum(mutatorTable,"match_length",MatchLengthMutator.FiveMinutes),
-            MaxScore = GetEnum(mutatorTable,"max_score",MaxScoreMutator.Default),
-            MultiBall = GetEnum(mutatorTable,"multi_ball",MultiBallMutator.One),
-            Overtime = GetEnum(mutatorTable,"overtime",OvertimeMutator.Unlimited),
-            GameSpeed = GetEnum(mutatorTable,"game_speed",GameSpeedMutator.Default),
-            BallMaxSpeed = GetEnum(mutatorTable,"ball_max_speed",BallMaxSpeedMutator.Default),
-            BallType = GetEnum(mutatorTable,"ball_type",BallTypeMutator.Default),
-            BallWeight = GetEnum(mutatorTable,"ball_weight",BallWeightMutator.Default),
-            BallSize = GetEnum(mutatorTable,"ball_size",BallSizeMutator.Default),
-            BallBounciness = GetEnum(mutatorTable,"ball_bounciness",BallBouncinessMutator.Default),
-            Boost = GetEnum(mutatorTable,"boost_amount",BoostMutator.NormalBoost),
-            Rumble = GetEnum(mutatorTable, "rumble", RumbleMutator.NoRumble),
-            BoostStrength = GetEnum(mutatorTable, "boost_strength", BoostStrengthMutator.One),
-            Gravity = GetEnum(mutatorTable, "gravity", GravityMutator.Default),
-            Demolish = GetEnum(mutatorTable, "demolish", DemolishMutator.Default),
-            RespawnTime = GetEnum(mutatorTable, "respawn_time", RespawnTimeMutator.ThreeSeconds),
-            MaxTime = GetEnum(mutatorTable, "max_time", MaxTimeMutator.Default),
-            GameEvent = GetEnum(mutatorTable, "game_event", GameEventMutator.Default),
-            Audio = GetEnum(mutatorTable, "audio", AudioMutator.Default),
+            MatchLength = GetEnum(mutatorTable, Fields.MutatorsMatchLength,MatchLengthMutator.FiveMinutes),
+            MaxScore = GetEnum(mutatorTable, Fields.MutatorsMaxScore,MaxScoreMutator.Default),
+            MultiBall = GetEnum(mutatorTable, Fields.MutatorsMultiBall,MultiBallMutator.One),
+            Overtime = GetEnum(mutatorTable, Fields.MutatorsOvertime,OvertimeMutator.Unlimited),
+            GameSpeed = GetEnum(mutatorTable, Fields.MutatorsGameSpeed,GameSpeedMutator.Default),
+            BallMaxSpeed = GetEnum(mutatorTable, Fields.MutatorsBallMaxSpeed,BallMaxSpeedMutator.Default),
+            BallType = GetEnum(mutatorTable, Fields.MutatorsBallType,BallTypeMutator.Default),
+            BallWeight = GetEnum(mutatorTable, Fields.MutatorsBallWeight,BallWeightMutator.Default),
+            BallSize = GetEnum(mutatorTable, Fields.MutatorsBallSize,BallSizeMutator.Default),
+            BallBounciness = GetEnum(mutatorTable, Fields.MutatorsBallBounciness,BallBouncinessMutator.Default),
+            Boost = GetEnum(mutatorTable, Fields.MutatorsBoost,BoostMutator.NormalBoost),
+            Rumble = GetEnum(mutatorTable,  Fields.MutatorsRumble, RumbleMutator.NoRumble),
+            BoostStrength = GetEnum(mutatorTable,  Fields.MutatorsBoostStrength, BoostStrengthMutator.One),
+            Gravity = GetEnum(mutatorTable,  Fields.MutatorsGravity, GravityMutator.Default),
+            Demolish = GetEnum(mutatorTable,  Fields.MutatorsDemolish, DemolishMutator.Default),
+            RespawnTime = GetEnum(mutatorTable,  Fields.MutatorsRespawnTime, RespawnTimeMutator.ThreeSeconds),
+            MaxTime = GetEnum(mutatorTable,  Fields.MutatorsMaxTime, MaxTimeMutator.Default),
+            GameEvent = GetEnum(mutatorTable,  Fields.MutatorsGameEvent, GameEventMutator.Default),
+            Audio = GetEnum(mutatorTable,  Fields.MutatorsAudio, AudioMutator.Default),
         };
 
     /// <summary>
@@ -424,38 +503,38 @@ public class ConfigParser
 
             MatchConfigurationT matchConfig = new MatchConfigurationT();
 
-            TomlTable rlbotTable = GetValue<TomlTable>(outerTable, "rlbot", []);
-            using (_context.Begin("rlbot"))
+            TomlTable rlbotTable = GetValue<TomlTable>(outerTable, Fields.RlBotTable, []);
+            using (_context.Begin(Fields.RlBotTable))
             {
-                matchConfig.Launcher = GetEnum(rlbotTable, "launcher", Launcher.Steam);
-                matchConfig.LauncherArg = GetValue(rlbotTable, "launcher_arg", "");
-                matchConfig.AutoStartBots = GetValue(rlbotTable, "auto_start_bots", true);
+                matchConfig.Launcher = GetEnum(rlbotTable, Fields.RlBotLauncher, Launcher.Steam);
+                matchConfig.LauncherArg = GetValue(rlbotTable, Fields.RlBotLauncherArg, "");
+                matchConfig.AutoStartBots = GetValue(rlbotTable, Fields.RlBotAutoStartBots, true);
             }
             
-            TomlTableArray players = GetValue<TomlTableArray>(outerTable, "cars", []);
+            TomlTableArray players = GetValue<TomlTableArray>(outerTable, Fields.CarsList, []);
             matchConfig.PlayerConfigurations = [];
             for (var i = 0; i < players.Count; i++)
             {
-                using (_context.Begin($"cars[{i}]"))
+                using (_context.Begin($"{Fields.CarsList}[{i}]"))
                 {
                     matchConfig.PlayerConfigurations.Add(ParseCarTable(players[i], path));
                 }
             }
 
-            TomlTableArray scripts = GetValue<TomlTableArray>(outerTable, "scripts", []);
+            TomlTableArray scripts = GetValue<TomlTableArray>(outerTable, Fields.ScriptsList, []);
             matchConfig.ScriptConfigurations = [];
             for (var i = 0; i < scripts.Count; i++)
             {
-                using (_context.Begin($"scripts[{i}]"))
+                using (_context.Begin($"{Fields.ScriptsList}[{i}]"))
                 {
-                    string configPath = GetValue(scripts[i], "config", "");
+                    string configPath = GetValue(scripts[i], Fields.AgentConfigFile, "");
                     if (configPath != "")
                     {
                         string absoluteConfigPath = Path.Combine(
                             Path.GetDirectoryName(path)!,
                             configPath
                         );
-                        using (_context.Begin("config", ConfigContextTracker.Type.Link))
+                        using (_context.Begin(Fields.AgentConfigFile, ConfigContextTracker.Type.Link))
                         {
                             matchConfig.ScriptConfigurations.Add(LoadScriptConfig(absoluteConfigPath));
                         }
@@ -463,31 +542,31 @@ public class ConfigParser
                     else
                     {
                         throw new FileNotFoundException(
-                            $"{_context.ToStringWithEnd("config")} is empty. "
+                            $"{_context.ToStringWithEnd(Fields.AgentConfigFile)} is empty. "
                             + $"Scripts must specify a config file."
                         );
                     }
                 }
             }
 
-            TomlTable mutatorTable = GetValue<TomlTable>(outerTable, "mutators", []);
-            using (_context.Begin("mutators"))
+            TomlTable mutatorTable = GetValue<TomlTable>(outerTable, Fields.MutatorsTable, []);
+            using (_context.Begin(Fields.MutatorsTable))
             {
                 matchConfig.Mutators = GetMutatorSettings(mutatorTable);
             }
             
-            TomlTable matchTable = GetValue<TomlTable>(outerTable, "match", []);
-            using (_context.Begin("match"))
+            TomlTable matchTable = GetValue<TomlTable>(outerTable, Fields.MatchTable, []);
+            using (_context.Begin(Fields.MatchTable))
             {
-                matchConfig.GameMode = GetEnum(matchTable, "game_mode", GameMode.Soccer);
-                matchConfig.GameMapUpk = GetValue(matchTable, "game_map_upk", "Stadium_P");
-                matchConfig.SkipReplays = GetValue(matchTable, "skip_replays", false);
-                matchConfig.InstantStart = GetValue(matchTable,"start_without_countdown",false);
-                matchConfig.EnableRendering = GetValue(matchTable,"enable_rendering",false);
-                matchConfig.EnableStateSetting = GetValue(matchTable,"enable_state_setting",true);
-                matchConfig.ExistingMatchBehavior = GetEnum(matchTable,"existing_match_behavior",ExistingMatchBehavior.Restart);
-                matchConfig.AutoSaveReplay = GetValue(matchTable, "auto_save_replay", false);
-                matchConfig.Freeplay = GetValue(matchTable, "freeplay", false);
+                matchConfig.GameMode = GetEnum(matchTable, Fields.MatchGameMode, GameMode.Soccer);
+                matchConfig.GameMapUpk = GetValue(matchTable, Fields.MatchMapUpk, "Stadium_P");
+                matchConfig.SkipReplays = GetValue(matchTable, Fields.MatchSkipReplays, false);
+                matchConfig.InstantStart = GetValue(matchTable,Fields.MatchStartWithoutCountdown,false);
+                matchConfig.EnableRendering = GetValue(matchTable,Fields.MatchRendering,false);
+                matchConfig.EnableStateSetting = GetValue(matchTable,Fields.MatchStateSetting,true);
+                matchConfig.ExistingMatchBehavior = GetEnum(matchTable,Fields.MatchExistingMatchBehavior,ExistingMatchBehavior.Restart);
+                matchConfig.AutoSaveReplay = GetValue(matchTable, Fields.MatchAutoSaveReplays, false);
+                matchConfig.Freeplay = GetValue(matchTable, Fields.MatchFreePlay, false);
             }
 
             string mv = string.Join(",", _missingValues);

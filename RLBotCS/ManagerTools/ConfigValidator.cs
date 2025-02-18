@@ -4,8 +4,11 @@ using RLBotCS.Conversion;
 
 namespace RLBotCS.ManagerTools;
 
+using Fields = ConfigParser.Fields;
+
 public static class ConfigValidator
 {
+    
     private static readonly ILogger Logger = Logging.GetLogger("ConfigValidator");
 
     /// <summary>
@@ -21,15 +24,15 @@ public static class ConfigValidator
         PsyonixLoadouts.Reset();
         ConfigContextTracker ctx = new();
 
-        using (ctx.Begin("rlbot")) {
+        using (ctx.Begin(Fields.RlBotTable)) {
             if (config.Launcher == Launcher.Custom)
             {
                 config.LauncherArg = (config.LauncherArg ?? "").ToLower();
                 if (config.LauncherArg != "legendary")
                 {
                     Logger.LogError(
-                        $"Invalid {ctx.ToStringWithEnd("launcher_arg")} value \"{config.LauncherArg}\". " +
-                        $"\"legendary\" is the only Custom launcher supported currently."
+                        $"Invalid {ctx.ToStringWithEnd(Fields.RlBotLauncherArg)} value " +
+                        $"\"{config.LauncherArg}\". \"legendary\" is the only Custom launcher supported currently."
                     );
                     valid = false;
                 }
@@ -54,13 +57,13 @@ public static class ConfigValidator
 
         for (int i = 0; i < players.Count; i++)
         {
-            using var _ = ctx.Begin($"cars[{i}]");
+            using var _ = ctx.Begin($"{Fields.CarsList}[{i}]");
             var player = players[i];
 
             if (player.Team != 0 && player.Team != 1)
             {
                 Logger.LogError(
-                    $"Invalid {ctx.ToStringWithEnd("team")} of '{player.Team}'. "
+                    $"Invalid {ctx.ToStringWithEnd(Fields.AgentTeam)} of '{player.Team}'. "
                         + $"Must be 0 (blue) or 1 (orange)."
                 );
                 valid = false;
@@ -73,8 +76,8 @@ public static class ConfigValidator
                     if (player.AgentId == "")
                     {
                         Logger.LogError(
-                            $"{ctx.ToStringWithEnd("type")} is \"rlbot\" "
-                                + $"but {ctx.ToStringWithEnd("agent_id")} is empty. "
+                            $"{ctx.ToStringWithEnd(Fields.AgentType)} is \"rlbot\" "
+                                + $"but {ctx.ToStringWithEnd(Fields.AgentAgentId)} is empty. "
                                 + $"RLBot bots must have an agent ID. "
                                 + $"We recommend the format \"<developer>/<botname>/<version>\"."
                         );
@@ -91,7 +94,7 @@ public static class ConfigValidator
                         PsyonixSkill.Rookie => "rookie",
                         PsyonixSkill.Pro => "pro",
                         PsyonixSkill.AllStar => "allstar",
-                        _ => HandleOutOfRange(out valid, "", $"{ctx.ToStringWithEnd("skill")} is out of range."),
+                        _ => HandleOutOfRange(out valid, "", $"{ctx.ToStringWithEnd(Fields.AgentSkill)} is out of range."),
                     };
                     player.AgentId ??= "psyonix/" + skill; // Not that it really matters
 
@@ -127,7 +130,7 @@ public static class ConfigValidator
                     player.RootDir = "";
                     break;
                 case PlayerClass.PartyMember:
-                    Logger.LogError($"{ctx.ToStringWithEnd("type")} is \"PartyMember\" which is not supported yet.");
+                    Logger.LogError($"{ctx.ToStringWithEnd(Fields.AgentType)} is \"PartyMember\" which is not supported yet.");
                     valid = false;
                     break;
             }
@@ -135,7 +138,7 @@ public static class ConfigValidator
 
         if (humanCount > 1)
         {
-            Logger.LogError("Only one player can be of type 'Human'.");
+            Logger.LogError("Only one player can be of type \"Human\".");
             valid = false;
         }
 
@@ -148,14 +151,14 @@ public static class ConfigValidator
 
         for (int i = 0; i < scripts.Count; i++)
         {
-            using var _ = ctx.Begin($"scripts[{i}]");
+            using var _ = ctx.Begin($"{Fields.ScriptsList}[{i}]");
             var script = scripts[i];
 
             script.AgentId ??= "";
             if (script.AgentId == "")
             {
                 Logger.LogError(
-                    $"{ctx.ToStringWithEnd("agent_id")} is empty. "
+                    $"{ctx.ToStringWithEnd(Fields.AgentAgentId)} is empty. "
                         + $"Scripts must have an agent ID. "
                         + $"We recommend the format \"<developer>/<scriptname>/<version>\"."
                 );
