@@ -12,20 +12,24 @@ namespace RLBotCS.ManagerTools;
 /// </summary>
 public class ConfigContextTracker
 {
-    public enum Type { Normal, Link }
-    
+    public enum Type
+    {
+        Normal,
+        Link,
+    }
+
     private record ContextPart(string text, Type type);
-    
+
     private List<ContextPart> parts = new();
-    
+
     public void Push(string context, Type type = Type.Normal) => parts.Add(new(context, type));
-    
+
     public void Pop() => parts.RemoveAt(parts.Count - 1);
 
     public int Count => parts.Count;
-    
+
     public bool IsEmpty => parts.Count == 0;
-    
+
     public void Clear() => parts.Clear();
 
     public IDisposable Begin(string context, Type type = Type.Normal)
@@ -41,12 +45,14 @@ public class ConfigContextTracker
         sb.Append(parts[0].text);
         for (var i = 1; i < parts.Count; i++)
         {
-            sb.Append(parts[i - 1].type switch
-            {
-                Type.Normal => ".",
-                Type.Link => "->",
-                _ => throw new ArgumentOutOfRangeException()
-            });
+            sb.Append(
+                parts[i - 1].type switch
+                {
+                    Type.Normal => ".",
+                    Type.Link => "->",
+                    _ => throw new ArgumentOutOfRangeException(),
+                }
+            );
             sb.Append(parts[i].text);
         }
         return sb.ToString();
@@ -63,7 +69,7 @@ public class ConfigContextTracker
         Pop();
         return str;
     }
-    
+
     private class DisposableContext(ConfigContextTracker ctx) : IDisposable
     {
         public void Dispose()

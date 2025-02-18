@@ -6,7 +6,6 @@ namespace RLBotCSTests.ManagerTools;
 [TestClass]
 public class ConfigContextTrackerTest
 {
-
     [TestMethod]
     public void BasicNestedContextTest()
     {

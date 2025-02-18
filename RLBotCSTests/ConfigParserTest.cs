@@ -180,9 +180,7 @@ public class ConfigParserTest
     public void ConfigNotFound()
     {
         ConfigParser parser = new ConfigParser();
-        AssertThrowsInnerException<ArgumentNullException>(
-            () => parser.LoadMatchConfig(null!)
-        );
+        AssertThrowsInnerException<ArgumentNullException>(() => parser.LoadMatchConfig(null!));
 
         AssertThrowsInnerException<FileNotFoundException>(
             () => parser.LoadMatchConfig("TestTomls/non-existent.toml")

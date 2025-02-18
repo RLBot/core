@@ -8,7 +8,6 @@ using Fields = ConfigParser.Fields;
 
 public static class ConfigValidator
 {
-    
     private static readonly ILogger Logger = Logging.GetLogger("ConfigValidator");
 
     /// <summary>
@@ -24,15 +23,16 @@ public static class ConfigValidator
         PsyonixLoadouts.Reset();
         ConfigContextTracker ctx = new();
 
-        using (ctx.Begin(Fields.RlBotTable)) {
+        using (ctx.Begin(Fields.RlBotTable))
+        {
             if (config.Launcher == Launcher.Custom)
             {
                 config.LauncherArg = (config.LauncherArg ?? "").ToLower();
                 if (config.LauncherArg != "legendary")
                 {
                     Logger.LogError(
-                        $"Invalid {ctx.ToStringWithEnd(Fields.RlBotLauncherArg)} value " +
-                        $"\"{config.LauncherArg}\". \"legendary\" is the only Custom launcher supported currently."
+                        $"Invalid {ctx.ToStringWithEnd(Fields.RlBotLauncherArg)} value \"{config.LauncherArg}\". "
+                            + $"\"legendary\" is the only Custom launcher supported currently."
                     );
                     valid = false;
                 }
@@ -50,7 +50,10 @@ public static class ConfigValidator
         return valid;
     }
 
-    private static bool ValidatePlayers(ConfigContextTracker ctx, List<PlayerConfigurationT> players)
+    private static bool ValidatePlayers(
+        ConfigContextTracker ctx,
+        List<PlayerConfigurationT> players
+    )
     {
         bool valid = true;
         int humanCount = 0;
@@ -94,7 +97,11 @@ public static class ConfigValidator
                         PsyonixSkill.Rookie => "rookie",
                         PsyonixSkill.Pro => "pro",
                         PsyonixSkill.AllStar => "allstar",
-                        _ => HandleOutOfRange(out valid, "", $"{ctx.ToStringWithEnd(Fields.AgentSkill)} is out of range."),
+                        _ => HandleOutOfRange(
+                            out valid,
+                            "",
+                            $"{ctx.ToStringWithEnd(Fields.AgentSkill)} is out of range."
+                        ),
                     };
                     player.AgentId ??= "psyonix/" + skill; // Not that it really matters
 
@@ -104,7 +111,9 @@ public static class ConfigValidator
                         (player.Name, var preset) = PsyonixLoadouts.GetNext((int)player.Team);
                         string andPreset = player.Loadout == null ? " and preset" : "";
                         player.Loadout ??= preset;
-                        Logger.LogDebug($"Gave unnamed Psyonix bot {ctx} a name{andPreset} ({player.Name})");
+                        Logger.LogDebug(
+                            $"Gave unnamed Psyonix bot {ctx} a name{andPreset} ({player.Name})"
+                        );
                     }
                     else if (player.Loadout == null)
                     {
@@ -112,9 +121,11 @@ public static class ConfigValidator
                             player.Name,
                             (int)player.Team
                         );
-                        Logger.LogDebug(player.Loadout == null
-                            ? $"Failed to find a preset loadout for Psyonix bot {ctx} named \"{player.Name}\"."
-                            : $"Found preset loadout for Psyonix bot {ctx} named \"{player.Name}\".");
+                        Logger.LogDebug(
+                            player.Loadout == null
+                                ? $"Failed to find a preset loadout for Psyonix bot {ctx} named \"{player.Name}\"."
+                                : $"Found preset loadout for Psyonix bot {ctx} named \"{player.Name}\"."
+                        );
                     }
 
                     player.RunCommand = "";
@@ -130,7 +141,9 @@ public static class ConfigValidator
                     player.RootDir = "";
                     break;
                 case PlayerClass.PartyMember:
-                    Logger.LogError($"{ctx.ToStringWithEnd(Fields.AgentType)} is \"PartyMember\" which is not supported yet.");
+                    Logger.LogError(
+                        $"{ctx.ToStringWithEnd(Fields.AgentType)} is \"PartyMember\" which is not supported yet."
+                    );
                     valid = false;
                     break;
             }
@@ -145,7 +158,10 @@ public static class ConfigValidator
         return valid;
     }
 
-    private static bool ValidateScripts(ConfigContextTracker ctx, List<ScriptConfigurationT> scripts)
+    private static bool ValidateScripts(
+        ConfigContextTracker ctx,
+        List<ScriptConfigurationT> scripts
+    )
     {
         bool valid = true;
 

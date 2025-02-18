@@ -363,7 +363,10 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
                         PsyonixSkill.Rookie => BotSkill.Easy,
                         PsyonixSkill.Pro => BotSkill.Medium,
                         PsyonixSkill.AllStar => BotSkill.Hard,
-                        _ => throw new ArgumentOutOfRangeException($"cars[{i}].skill", "Psyonix skill level is out of range.")
+                        _ => throw new ArgumentOutOfRangeException(
+                            $"{ConfigParser.Fields.CarsList}[{i}].{ConfigParser.Fields.AgentSkill}",
+                            "Psyonix skill level is out of range."
+                        ),
                     };
 
                     bridge.TryWrite(
