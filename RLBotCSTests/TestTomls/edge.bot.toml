@@ -1,0 +1,8 @@
+# Valid, but unusual bot.toml
+
+[settings]
+# no agend_id
+name = "Edgy Test Bot"
+loadout_file = "./phantom/../loadout.toml"
+
+some_unused_field = "Ignore me please"

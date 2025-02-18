@@ -1,0 +1,5 @@
+[[cars]]
+config = "empty.toml"
+
+[[scripts]]
+config = "empty.toml"

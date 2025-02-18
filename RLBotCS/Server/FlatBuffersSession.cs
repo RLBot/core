@@ -142,18 +142,24 @@ class FlatBuffersSession
 
             case DataType.StartCommand:
                 var startCommand = StartCommand.GetRootAsStartCommand(byteBuffer);
-                MatchConfigurationT tomlMatchConfig = ConfigParser.GetMatchConfig(
-                    startCommand.ConfigPath
-                );
-
-                await _rlbotServer.WriteAsync(new StartMatch(tomlMatchConfig));
+                var parser = new ConfigParser();
+                if (
+                    parser.TryLoadMatchConfig(startCommand.ConfigPath, out var tomlMatchConfig)
+                    && ConfigValidator.Validate(tomlMatchConfig)
+                )
+                {
+                    await _rlbotServer.WriteAsync(new StartMatch(tomlMatchConfig));
+                }
                 break;
 
             case DataType.MatchConfig:
                 var matchConfig = MatchConfiguration
                     .GetRootAsMatchConfiguration(byteBuffer)
                     .UnPack();
-                await _rlbotServer.WriteAsync(new StartMatch(matchConfig));
+                if (ConfigValidator.Validate(matchConfig))
+                {
+                    await _rlbotServer.WriteAsync(new StartMatch(matchConfig));
+                }
                 break;
 
             case DataType.PlayerInput:

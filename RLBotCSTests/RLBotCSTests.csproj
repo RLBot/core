@@ -42,23 +42,7 @@
       <TargetPath>rl_ball_sym.so</TargetPath>
     </ContentWithTargetPath>
 
-    <Content Include="TomlTest/default.toml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-
-    <Content Include="TomlTest/empty.toml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-
-    <Content Include="TomlTest/edge.toml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-
-    <Content Include="TomlTest/bot.toml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-
-    <Content Include="TomlTest/loadout.toml">
+    <Content Include="TestTomls\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
