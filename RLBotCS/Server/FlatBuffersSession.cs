@@ -142,8 +142,9 @@ class FlatBuffersSession
 
             case DataType.StartCommand:
                 var startCommand = StartCommand.GetRootAsStartCommand(byteBuffer);
+                var parser = new ConfigParser();
                 if (
-                    ConfigParser.TryLoadMatchConfig(
+                    parser.TryLoadMatchConfig(
                         startCommand.ConfigPath,
                         out var tomlMatchConfig
                     ) && ConfigValidator.Validate(tomlMatchConfig)

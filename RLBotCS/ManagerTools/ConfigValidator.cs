@@ -19,42 +19,48 @@ public static class ConfigValidator
     {
         bool valid = true;
         PsyonixLoadouts.Reset();
+        ConfigContextTracker ctx = new();
 
-        if (config.Launcher == Launcher.Custom)
-        {
-            config.LauncherArg = (config.LauncherArg ?? "").ToLower();
-            if (config.LauncherArg != "legendary")
+        using (ctx.Begin("rlbot")) {
+            if (config.Launcher == Launcher.Custom)
             {
-                Logger.LogError(
-                    $"Invalid custom launcher argument '{config.LauncherArg}'. Only 'legendary' is supported currently."
-                );
-                valid = false;
+                config.LauncherArg = (config.LauncherArg ?? "").ToLower();
+                if (config.LauncherArg != "legendary")
+                {
+                    Logger.LogError(
+                        $"Invalid {ctx.ToStringWithEnd("launcher_arg")} value \"{config.LauncherArg}\". " +
+                        $"\"legendary\" is the only Custom launcher supported currently."
+                    );
+                    valid = false;
+                }
+            }
+            else
+            {
+                config.LauncherArg = "";
             }
         }
-        else
-        {
-            config.LauncherArg = "";
-        }
 
-        valid = ValidatePlayers(config.PlayerConfigurations) && valid;
-        valid = ValidateScripts(config.ScriptConfigurations) && valid;
+        valid = ValidatePlayers(ctx, config.PlayerConfigurations) && valid;
+        valid = ValidateScripts(ctx, config.ScriptConfigurations) && valid;
 
+        Logger.LogDebug(valid ? "Match config is valid." : "Match config is invalid!");
         return valid;
     }
 
-    private static bool ValidatePlayers(List<PlayerConfigurationT> players)
+    private static bool ValidatePlayers(ConfigContextTracker ctx, List<PlayerConfigurationT> players)
     {
         bool valid = true;
         int humanCount = 0;
 
         for (int i = 0; i < players.Count; i++)
         {
+            using var _ = ctx.Begin($"cars[{i}]");
             var player = players[i];
 
             if (player.Team != 0 && player.Team != 1)
             {
                 Logger.LogError(
-                    $"Car with index {i} has invalid team '{player.Team}'. "
+                    $"Invalid {ctx.ToStringWithEnd("team")} of '{player.Team}'. "
                         + $"Must be 0 (blue) or 1 (orange)."
                 );
                 valid = false;
@@ -67,9 +73,10 @@ public static class ConfigValidator
                     if (player.AgentId == "")
                     {
                         Logger.LogError(
-                            $"Car with index {i} has type 'rlbot' but an empty agent ID. "
+                            $"{ctx.ToStringWithEnd("type")} is \"rlbot\" "
+                                + $"but {ctx.ToStringWithEnd("agent_id")} is empty. "
                                 + $"RLBot bots must have an agent ID. "
-                                + $"We recommend the format \"<developer>/<botname>/<version>\""
+                                + $"We recommend the format \"<developer>/<botname>/<version>\"."
                         );
                         valid = false;
                     }
@@ -84,7 +91,7 @@ public static class ConfigValidator
                         PsyonixSkill.Rookie => "rookie",
                         PsyonixSkill.Pro => "pro",
                         PsyonixSkill.AllStar => "allstar",
-                        _ => HandleOutOfRange(out valid, "", $"Car with index {i} has skill level out of range."),
+                        _ => HandleOutOfRange(out valid, "", $"{ctx.ToStringWithEnd("skill")} is out of range."),
                     };
                     player.AgentId ??= "psyonix/" + skill; // Not that it really matters
 
@@ -92,7 +99,9 @@ public static class ConfigValidator
                     if (player.Name == null)
                     {
                         (player.Name, var preset) = PsyonixLoadouts.GetNext((int)player.Team);
+                        string andPreset = player.Loadout == null ? " and preset" : "";
                         player.Loadout ??= preset;
+                        Logger.LogDebug($"Gave unnamed Psyonix bot {ctx} a name{andPreset} ({player.Name})");
                     }
                     else if (player.Loadout == null)
                     {
@@ -100,6 +109,9 @@ public static class ConfigValidator
                             player.Name,
                             (int)player.Team
                         );
+                        Logger.LogDebug(player.Loadout == null
+                            ? $"Failed to find a preset loadout for Psyonix bot {ctx} named \"{player.Name}\"."
+                            : $"Found preset loadout for Psyonix bot {ctx} named \"{player.Name}\".");
                     }
 
                     player.RunCommand = "";
@@ -115,7 +127,7 @@ public static class ConfigValidator
                     player.RootDir = "";
                     break;
                 case PlayerClass.PartyMember:
-                    Logger.LogError("PartyMember bot type not supported yet.");
+                    Logger.LogError($"{ctx.ToStringWithEnd("type")} is \"PartyMember\" which is not supported yet.");
                     valid = false;
                     break;
             }
@@ -130,21 +142,22 @@ public static class ConfigValidator
         return valid;
     }
 
-    private static bool ValidateScripts(List<ScriptConfigurationT> scripts)
+    private static bool ValidateScripts(ConfigContextTracker ctx, List<ScriptConfigurationT> scripts)
     {
         bool valid = true;
 
         for (int i = 0; i < scripts.Count; i++)
         {
+            using var _ = ctx.Begin($"scripts[{i}]");
             var script = scripts[i];
 
             script.AgentId ??= "";
             if (script.AgentId == "")
             {
                 Logger.LogError(
-                    $"Script with index {i} has an empty agent ID. "
+                    $"{ctx.ToStringWithEnd("agent_id")} is empty. "
                         + $"Scripts must have an agent ID. "
-                        + $"We recommend the format \"<developer>/<scriptname>/<version>\""
+                        + $"We recommend the format \"<developer>/<scriptname>/<version>\"."
                 );
                 valid = false;
             }

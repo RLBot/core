@@ -25,8 +25,9 @@ public class ConfigParserTest
     [TestMethod]
     public void EmptyVsDefaultMatchConfig()
     {
-        MatchConfigurationT defaultMC = ConfigParser.LoadMatchConfig("TestTomls/default.toml");
-        MatchConfigurationT emptyMC = ConfigParser.LoadMatchConfig("TestTomls/empty.toml");
+        ConfigParser parser = new();
+        MatchConfigurationT defaultMC = parser.LoadMatchConfig("TestTomls/default.toml");
+        MatchConfigurationT emptyMC = parser.LoadMatchConfig("TestTomls/empty.toml");
 
         Assert.AreEqual(emptyMC.Launcher, defaultMC.Launcher);
         Assert.AreEqual(emptyMC.LauncherArg, defaultMC.LauncherArg);
@@ -74,7 +75,8 @@ public class ConfigParserTest
     [TestMethod]
     public void EdgeCases()
     {
-        MatchConfigurationT edgeMC = ConfigParser.LoadMatchConfig("TestTomls/edge.toml");
+        ConfigParser parser = new();
+        MatchConfigurationT edgeMC = parser.LoadMatchConfig("TestTomls/edge.toml");
 
         Assert.AreEqual(Launcher.Custom, edgeMC.Launcher);
         // Ok for parsing, but wil not go through ConfigValidator
@@ -126,7 +128,8 @@ public class ConfigParserTest
     [TestMethod]
     public void EmptyVsDefaultBotAndScriptToml()
     {
-        MatchConfigurationT mc = ConfigParser.LoadMatchConfig("TestTomls/empty_agents.toml");
+        ConfigParser parser = new();
+        MatchConfigurationT mc = parser.LoadMatchConfig("TestTomls/empty_agents.toml");
 
         PlayerConfigurationT player = mc.PlayerConfigurations[0];
         Assert.AreEqual("", player.Name);
@@ -148,7 +151,8 @@ public class ConfigParserTest
     [TestMethod]
     public void Overrides()
     {
-        MatchConfigurationT mc = ConfigParser.LoadMatchConfig("TestTomls/overrides.toml");
+        ConfigParser parser = new();
+        MatchConfigurationT mc = parser.LoadMatchConfig("TestTomls/overrides.toml");
 
         PlayerConfigurationT player = mc.PlayerConfigurations[0];
         Assert.AreEqual("New Bot Name", player.Name);
@@ -161,46 +165,49 @@ public class ConfigParserTest
     [TestMethod]
     public void ConfigNotFound()
     {
+        ConfigParser parser = new ConfigParser();
         AssertThrowsInnerException<ArgumentNullException>(
-            () => ConfigParser.LoadMatchConfig(null!)
+            () => parser.LoadMatchConfig(null!)
         );
 
         AssertThrowsInnerException<FileNotFoundException>(
-            () => ConfigParser.LoadMatchConfig("TestTomls/non-existent.toml")
+            () => parser.LoadMatchConfig("TestTomls/non-existent.toml")
         );
 
         // Match toml exists, but refers to bot that does not exist
         Assert.IsTrue(Path.Exists("TestTomls/non-existent_bot.toml"));
         AssertThrowsInnerException<FileNotFoundException>(
-            () => ConfigParser.LoadMatchConfig("TestTomls/non-existent_bot.toml")
+            () => parser.LoadMatchConfig("TestTomls/non-existent_bot.toml")
         );
 
         // Match toml exists, but refers to script that does not exist
         Assert.IsTrue(Path.Exists("TestTomls/non-existent_script.toml"));
         AssertThrowsInnerException<FileNotFoundException>(
-            () => ConfigParser.LoadMatchConfig("TestTomls/non-existent_script.toml")
+            () => parser.LoadMatchConfig("TestTomls/non-existent_script.toml")
         );
     }
 
     [TestMethod]
     public void InvalidTomlConfig()
     {
+        ConfigParser parser = new();
         AssertThrowsInnerException<Tomlyn.TomlException>(
-            () => ConfigParser.LoadMatchConfig("TestTomls/not_a_toml.json")
+            () => parser.LoadMatchConfig("TestTomls/not_a_toml.json")
         );
     }
 
     [TestMethod]
     public void BadValues()
     {
+        ConfigParser parser = new();
         AssertThrowsInnerException<InvalidCastException>(
-            () => ConfigParser.LoadMatchConfig("TestTomls/bad_boolean.toml")
+            () => parser.LoadMatchConfig("TestTomls/bad_boolean.toml")
         );
         AssertThrowsInnerException<InvalidCastException>(
-            () => ConfigParser.LoadMatchConfig("TestTomls/bad_enum.toml")
+            () => parser.LoadMatchConfig("TestTomls/bad_enum.toml")
         );
         AssertThrowsInnerException<InvalidCastException>(
-            () => ConfigParser.LoadMatchConfig("TestTomls/bad_team.toml")
+            () => parser.LoadMatchConfig("TestTomls/bad_team.toml")
         );
     }
 }
