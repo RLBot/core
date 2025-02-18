@@ -9,6 +9,10 @@ namespace RLBotCSTests;
 [TestClass]
 public class ConfigParserTest
 {
+    /// <summary>
+    /// Fails if the action does not throw an exception which is of type T
+    /// possibly wrapped in zero or more <see cref="ConfigParser.ConfigParserException"/>s.
+    /// </summary>
     public static void AssertThrowsInnerException<T>(Action action)
         where T : Exception
     {
@@ -18,8 +22,18 @@ public class ConfigParserTest
         }
         catch (Exception e)
         {
-            Assert.IsInstanceOfType(e.InnerException, typeof(T));
+            while (e.GetType() == typeof(ConfigParser.ConfigParserException))
+            {
+                if (e.InnerException == null)
+                {
+                    Assert.Fail();
+                }
+                e = e.InnerException!;
+            }
+            Assert.IsInstanceOfType(e, typeof(T));
+            return;
         }
+        Assert.Fail();
     }
 
     [TestMethod]
