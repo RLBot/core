@@ -298,7 +298,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
             || lastMutators.BallWeight != mutators.BallWeight
             || lastMutators.BallSize != mutators.BallSize
             || lastMutators.BallBounciness != mutators.BallBounciness
-            || lastMutators.Boost != mutators.Boost
+            || lastMutators.BoostAmount != mutators.BoostAmount
             || lastMutators.Rumble != mutators.Rumble
             || lastMutators.BoostStrength != mutators.BoostStrength
             || lastMutators.Demolish != mutators.Demolish

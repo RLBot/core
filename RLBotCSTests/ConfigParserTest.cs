@@ -78,7 +78,7 @@ public class ConfigParserTest
         Assert.AreEqual(emptyMutS.BallWeight, defaultMutS.BallWeight);
         Assert.AreEqual(emptyMutS.BallSize, defaultMutS.BallSize);
         Assert.AreEqual(emptyMutS.BallBounciness, defaultMutS.BallBounciness);
-        Assert.AreEqual(emptyMutS.Boost, defaultMutS.Boost);
+        Assert.AreEqual(emptyMutS.BoostAmount, defaultMutS.BoostAmount);
         Assert.AreEqual(emptyMutS.Rumble, defaultMutS.Rumble);
         Assert.AreEqual(emptyMutS.BoostStrength, defaultMutS.BoostStrength);
         Assert.AreEqual(emptyMutS.Gravity, defaultMutS.Gravity);

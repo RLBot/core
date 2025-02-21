@@ -38,7 +38,7 @@ public class ConfigParser
         public const string MutatorsBallWeight = "ball_weight";
         public const string MutatorsBallSize = "ball_size";
         public const string MutatorsBallBounciness = "ball_bounciness";
-        public const string MutatorsBoost = "boost_amount";
+        public const string MutatorsBoostAmount = "boost_amount";
         public const string MutatorsRumble = "rumble";
         public const string MutatorsBoostStrength = "boost_strength";
         public const string MutatorsGravity = "gravity";
@@ -55,7 +55,8 @@ public class ConfigParser
         public const string AgentSkill = "skill";
         public const string AgentName = "name";
         public const string AgentLoadoutFile = "loadout_file";
-        public const string AgentConfigFile = "config";
+        public const string AgentConfigFile = "config_file";
+        public const string AgentConfigFileOld = "config";
         public const string AgentSettingsTable = "settings";
         public const string AgentAgentId = "agent_id";
         public const string AgentRootDir = "root_dir";
@@ -277,6 +278,12 @@ public class ConfigParser
         };
 
         string configPath = useConfig ? GetValue(table, Fields.AgentConfigFile, "") : "";
+        // FIXME: Remove in v5.beta.5.0+
+        if (configPath == "" && table.ContainsKey(Fields.AgentConfigFileOld))
+        {
+            Logger.LogWarning($"In {_context}: '{Fields.AgentConfigFileOld}' is deprecated. Use '{Fields.AgentConfigFile}' instead.");
+            configPath = GetValue(table, Fields.AgentConfigFileOld, "");
+        }
 
         PlayerConfigurationT player;
         if (useConfig && configPath == "" && variety.Type == PlayerClass.CustomBot)
@@ -486,7 +493,7 @@ public class ConfigParser
                 Fields.MutatorsBallBounciness,
                 BallBouncinessMutator.Default
             ),
-            Boost = GetEnum(mutatorTable, Fields.MutatorsBoost, BoostMutator.NormalBoost),
+            BoostAmount = GetEnum(mutatorTable, Fields.MutatorsBoostAmount, BoostAmountMutator.NormalBoost),
             Rumble = GetEnum(mutatorTable, Fields.MutatorsRumble, RumbleMutator.NoRumble),
             BoostStrength = GetEnum(
                 mutatorTable,
