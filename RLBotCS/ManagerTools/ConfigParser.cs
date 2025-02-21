@@ -38,7 +38,7 @@ public class ConfigParser
         public const string MutatorsBallWeight = "ball_weight";
         public const string MutatorsBallSize = "ball_size";
         public const string MutatorsBallBounciness = "ball_bounciness";
-        public const string MutatorsBoost = "boost_amount";
+        public const string MutatorsBoostAmount = "boost_amount";
         public const string MutatorsRumble = "rumble";
         public const string MutatorsBoostStrength = "boost_strength";
         public const string MutatorsGravity = "gravity";
@@ -486,7 +486,7 @@ public class ConfigParser
                 Fields.MutatorsBallBounciness,
                 BallBouncinessMutator.Default
             ),
-            Boost = GetEnum(mutatorTable, Fields.MutatorsBoost, BoostMutator.NormalBoost),
+            BoostAmount = GetEnum(mutatorTable, Fields.MutatorsBoostAmount, BoostAmountMutator.NormalBoost),
             Rumble = GetEnum(mutatorTable, Fields.MutatorsRumble, RumbleMutator.NoRumble),
             BoostStrength = GetEnum(
                 mutatorTable,

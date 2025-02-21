@@ -142,14 +142,14 @@ static class FlatToCommand
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
-    private static string MapBoost(BoostMutator option) =>
+    private static string MapBoostAmount(BoostAmountMutator option) =>
         option switch
         {
-            BoostMutator.NormalBoost => "",
-            BoostMutator.UnlimitedBoost => "UnlimitedBooster",
-            BoostMutator.SlowRecharge => "SlowRecharge",
-            BoostMutator.RapidRecharge => "RapidRecharge",
-            BoostMutator.NoBoost => "NoBooster",
+            BoostAmountMutator.NormalBoost => "",
+            BoostAmountMutator.UnlimitedBoost => "UnlimitedBooster",
+            BoostAmountMutator.SlowRecharge => "SlowRecharge",
+            BoostAmountMutator.RapidRecharge => "RapidRecharge",
+            BoostAmountMutator.NoBoost => "NoBooster",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
@@ -292,7 +292,7 @@ static class FlatToCommand
         command += GetOption(MapBallWeight(mutatorSettings.BallWeight));
         command += GetOption(MapBallSize(mutatorSettings.BallSize));
         command += GetOption(MapBallBounciness(mutatorSettings.BallBounciness));
-        command += GetOption(MapBoost(mutatorSettings.Boost));
+        command += GetOption(MapBoostAmount(mutatorSettings.BoostAmount));
         command += GetOption(MapRumble(mutatorSettings.Rumble));
         command += GetOption(MapBoostStrength(mutatorSettings.BoostStrength));
         command += GetOption(MapGravity(mutatorSettings.Gravity));
