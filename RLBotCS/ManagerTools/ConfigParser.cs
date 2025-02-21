@@ -56,6 +56,7 @@ public class ConfigParser
         public const string AgentName = "name";
         public const string AgentLoadoutFile = "loadout_file";
         public const string AgentConfigFile = "config_file";
+        public const string AgentConfigFileOld = "config";
         public const string AgentSettingsTable = "settings";
         public const string AgentAgentId = "agent_id";
         public const string AgentRootDir = "root_dir";
@@ -277,6 +278,12 @@ public class ConfigParser
         };
 
         string configPath = useConfig ? GetValue(table, Fields.AgentConfigFile, "") : "";
+        // FIXME: Remove in v5.beta.5.0+
+        if (configPath == "" && table.ContainsKey(Fields.AgentConfigFileOld))
+        {
+            Logger.LogWarning($"In {_context}: '{Fields.AgentConfigFileOld}' is deprecated. Use '{Fields.AgentConfigFile}' instead.");
+            configPath = GetValue(table, Fields.AgentConfigFileOld, "");
+        }
 
         PlayerConfigurationT player;
         if (useConfig && configPath == "" && variety.Type == PlayerClass.CustomBot)
