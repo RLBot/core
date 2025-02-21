@@ -55,7 +55,7 @@ public class ConfigParser
         public const string AgentSkill = "skill";
         public const string AgentName = "name";
         public const string AgentLoadoutFile = "loadout_file";
-        public const string AgentConfigFile = "config";
+        public const string AgentConfigFile = "config_file";
         public const string AgentSettingsTable = "settings";
         public const string AgentAgentId = "agent_id";
         public const string AgentRootDir = "root_dir";
