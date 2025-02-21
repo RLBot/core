@@ -281,7 +281,9 @@ public class ConfigParser
         // FIXME: Remove in v5.beta.5.0+
         if (configPath == "" && table.ContainsKey(Fields.AgentConfigFileOld))
         {
-            Logger.LogWarning($"In {_context}: '{Fields.AgentConfigFileOld}' is deprecated. Use '{Fields.AgentConfigFile}' instead.");
+            Logger.LogWarning(
+                $"In {_context}: '{Fields.AgentConfigFileOld}' is deprecated. Use '{Fields.AgentConfigFile}' instead."
+            );
             configPath = GetValue(table, Fields.AgentConfigFileOld, "");
         }
 
@@ -493,7 +495,11 @@ public class ConfigParser
                 Fields.MutatorsBallBounciness,
                 BallBouncinessMutator.Default
             ),
-            BoostAmount = GetEnum(mutatorTable, Fields.MutatorsBoostAmount, BoostAmountMutator.NormalBoost),
+            BoostAmount = GetEnum(
+                mutatorTable,
+                Fields.MutatorsBoostAmount,
+                BoostAmountMutator.NormalBoost
+            ),
             Rumble = GetEnum(mutatorTable, Fields.MutatorsRumble, RumbleMutator.NoRumble),
             BoostStrength = GetEnum(
                 mutatorTable,
