@@ -33,15 +33,15 @@ public class QuickChat
         B = 0,
     };
 
-    private readonly LinkedList<(float, MatchCommT)> _chats = new();
+    private readonly LinkedList<(float, string, MatchCommT)> _chats = new();
     private bool _hasUpdate = false;
 
-    public void AddChat(MatchCommT matchComm, float gameTime)
+    public void AddChat(MatchCommT matchComm, string name, float gameTime)
     {
         if (matchComm.Display == null)
             return;
 
-        _chats.AddLast((gameTime, matchComm));
+        _chats.AddLast((gameTime, name, matchComm));
         _hasUpdate = true;
 
         if (_chats.Count > MaxDisplayMessages)
@@ -71,13 +71,13 @@ public class QuickChat
         float yVal = 10f;
         List<RenderMessageT> renderMessages = new();
 
-        foreach (var chat in _chats)
+        foreach (var (_, name, chat) in _chats)
         {
-            var textColor = chat.Item2.Team == 0 ? BlueColor : OrangeColor;
+            var textColor = chat.Team == 0 ? BlueColor : OrangeColor;
 
             String2DT message = new()
             {
-                Text = chat.Item2.Display,
+                Text = name + ": " + chat.Display,
                 X = 10f / Rendering.ResolutionWidthPixels,
                 Y = yVal / Rendering.ResolutionHeightPixels,
                 Scale = 1,
