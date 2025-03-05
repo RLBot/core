@@ -275,12 +275,6 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
                     // despawn all old bots
                     bridge.TryWrite(new RemoveOldPlayers(toDespawn));
                     bridge.TryWrite(new FlushMatchCommands());
-
-                    // _matchConfig = matchConfig;
-                    // _deferredMatchConfig = null;
-                    // return;
-
-                    Thread.Sleep(1000);
                 }
             }
 
