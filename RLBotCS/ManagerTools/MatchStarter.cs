@@ -239,7 +239,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
                     var lastPlayerConfig = lastMatchConfig.PlayerConfigurations[i];
                     if (lastPlayerConfig.Variety.Type == PlayerClass.Human)
                     {
-                        despawnHuman = matchConfig.PlayerConfigurations.Any(
+                        despawnHuman = !matchConfig.PlayerConfigurations.Any(
                             p => p.Variety.Type == PlayerClass.Human
                         );
                         continue;
