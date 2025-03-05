@@ -115,7 +115,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
 
             if (playerConfig.SpawnId == 0)
             {
-                playerConfig.SpawnId = $"${playerConfig.Name}/${playerConfig.Team}/${i}".GetHashCode();
+                playerConfig.SpawnId = $"${playerConfig.AgentId}/${playerConfig.Team}/${i}".GetHashCode();
             }
 
             playerConfig.RunCommand ??= "";
@@ -143,7 +143,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
             }
 
             if (scriptConfig.SpawnId == 0)
-                scriptConfig.SpawnId = scriptConfig.Name.GetHashCode();
+                scriptConfig.SpawnId = scriptConfig.AgentId.GetHashCode();
 
             scriptConfig.RootDir ??= "";
             scriptConfig.RunCommand ??= "";
