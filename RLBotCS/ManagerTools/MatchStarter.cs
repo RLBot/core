@@ -90,8 +90,10 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         Dictionary<string, int> playerNames = [];
         _hivemindNameMap.Clear();
 
-        foreach (var playerConfig in matchConfig.PlayerConfigurations)
+        for (int i = 0; i < matchConfig.PlayerConfigurations.Count; i++)
         {
+            var playerConfig = matchConfig.PlayerConfigurations[i];
+
             // De-duplicating similar names. Overwrites original value.
             if (playerConfig.Variety.Type == PlayerClass.Human)
                 continue;
@@ -112,7 +114,9 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
                 _hivemindNameMap[playerConfig.Name] = playerName;
 
             if (playerConfig.SpawnId == 0)
-                playerConfig.SpawnId = playerConfig.Name.GetHashCode();
+            {
+                playerConfig.SpawnId = $"${playerConfig.Name}/${playerConfig.Team}/${i}".GetHashCode();
+            }
 
             playerConfig.RunCommand ??= "";
             Debug.Assert(
@@ -226,23 +230,57 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         }
         else
         {
-            // despawn old bots that aren't in the new match
             if (_matchConfig is { } lastMatchConfig)
             {
-                var lastSpawnIds = lastMatchConfig
-                    .PlayerConfigurations.Select(p => p.SpawnId)
-                    .ToList();
-                var currentSpawnIds = matchConfig
-                    .PlayerConfigurations.Select(p => p.SpawnId)
-                    .ToList();
-                var toDespawn = lastSpawnIds.Except(currentSpawnIds).ToList();
+                bool despawnHuman = false;
+                List<int> toDespawn = new(lastMatchConfig.PlayerConfigurations.Count);
+                for (var i = 0; i < lastMatchConfig.PlayerConfigurations.Count; i++)
+                {
+                    var lastPlayerConfig = lastMatchConfig.PlayerConfigurations[i];
+                    if (lastPlayerConfig.Variety.Type == PlayerClass.Human)
+                    {
+                        despawnHuman = matchConfig.PlayerConfigurations.Any(
+                            p => p.Variety.Type == PlayerClass.Human
+                        );
+                        continue;
+                    }
+
+                    if (matchConfig.PlayerConfigurations.Count <= i)
+                    {
+                        toDespawn.Add(lastPlayerConfig.SpawnId);
+                        continue;
+                    }
+
+                    var playerConfig = matchConfig.PlayerConfigurations[i];
+                    if (
+                        lastPlayerConfig.AgentId != playerConfig.AgentId
+                        || lastPlayerConfig.Team != playerConfig.Team
+                    )
+                        toDespawn.Add(lastPlayerConfig.SpawnId);
+                }
+
+                if (despawnHuman)
+                {
+                    Logger.LogInformation("Despawning human player");
+                    bridge.TryWrite(new ConsoleCommand("spectate"));
+                    bridge.TryWrite(new FlushMatchCommands());
+                }
 
                 if (toDespawn.Count > 0)
                 {
                     Logger.LogInformation(
-                        "Despawning old players: " + string.Join(", ", toDespawn)
+                        "Despawning old player(s): " + string.Join(", ", toDespawn)
                     );
+
+                    // despawn all old bots
                     bridge.TryWrite(new RemoveOldPlayers(toDespawn));
+                    bridge.TryWrite(new FlushMatchCommands());
+
+                    // _matchConfig = matchConfig;
+                    // _deferredMatchConfig = null;
+                    // return;
+
+                    Thread.Sleep(1000);
                 }
             }
 
@@ -269,13 +307,13 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         )
             return true;
 
-        for (var i = 0; i < matchConfig.PlayerConfigurations.Count; i++)
+        for (var i = 0; i < lastMatchConfig.PlayerConfigurations.Count; i++)
         {
             var lastPlayerConfig = lastMatchConfig.PlayerConfigurations[i];
             var playerConfig = matchConfig.PlayerConfigurations[i];
 
             if (
-                lastPlayerConfig.SpawnId != playerConfig.SpawnId
+                lastPlayerConfig.AgentId != playerConfig.AgentId
                 || lastPlayerConfig.Team != playerConfig.Team
             )
                 return true;
@@ -309,7 +347,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
     {
         // ensure this function is only called once
         // and only if the map has been spawned
-        if (!_needsSpawnCars || !HasSpawnedMap)
+        if (!force && (!_needsSpawnCars || !HasSpawnedMap))
             return false;
 
         bool doSpawning =
