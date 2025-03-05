@@ -25,6 +25,10 @@ class FlatBuffersServer(
         client.NoDelay = true;
 
         int clientId = client.Client.Handle.ToInt32();
+        while (_context.Sessions.ContainsKey(clientId))
+        {
+            clientId++;
+        }
 
         Thread sessionThread = new(() =>
         {
