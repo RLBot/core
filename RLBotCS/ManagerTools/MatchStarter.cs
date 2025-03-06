@@ -442,7 +442,8 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
 
     public void AddLoadout(PlayerLoadoutT loadout, int spawnId)
     {
-        if (_matchConfig is null)
+        var matchConfig = _deferredMatchConfig ?? _matchConfig;
+        if (matchConfig is null)
         {
             Logger.LogError("Match settings not loaded yet.");
             return;
@@ -458,7 +459,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
             return;
         }
 
-        var player = _matchConfig.PlayerConfigurations.Find(p => p.SpawnId == spawnId);
+        var player = matchConfig.PlayerConfigurations.Find(p => p.SpawnId == spawnId);
         if (player is null)
         {
             Logger.LogError($"Player with spawn id {spawnId} not found to add loadout to.");
