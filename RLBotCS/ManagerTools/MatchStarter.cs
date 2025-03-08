@@ -233,7 +233,8 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
             if (_matchConfig is { } lastMatchConfig)
             {
                 bool despawnHuman = false;
-                List<int> toDespawn = new(lastMatchConfig.PlayerConfigurations.Count);
+                List<int> toDespawnIds = new(lastMatchConfig.PlayerConfigurations.Count);
+                List<string> toDespawnNames = new(lastMatchConfig.PlayerConfigurations.Count);
                 for (var i = 0; i < lastMatchConfig.PlayerConfigurations.Count; i++)
                 {
                     var lastPlayerConfig = lastMatchConfig.PlayerConfigurations[i];
@@ -242,12 +243,14 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
                         despawnHuman = !matchConfig.PlayerConfigurations.Any(
                             p => p.Variety.Type == PlayerClass.Human
                         );
+                        toDespawnNames.Add($"human (index {i}, team {lastPlayerConfig.Team})");
                         continue;
                     }
 
                     if (matchConfig.PlayerConfigurations.Count <= i)
                     {
-                        toDespawn.Add(lastPlayerConfig.SpawnId);
+                        toDespawnIds.Add(lastPlayerConfig.SpawnId);
+                        toDespawnNames.Add($"{lastPlayerConfig.AgentId} (index {i}, team {lastPlayerConfig.Team})");
                         continue;
                     }
 
@@ -256,24 +259,25 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
                         lastPlayerConfig.AgentId != playerConfig.AgentId
                         || lastPlayerConfig.Team != playerConfig.Team
                     )
-                        toDespawn.Add(lastPlayerConfig.SpawnId);
+                    {
+                        toDespawnIds.Add(lastPlayerConfig.SpawnId);
+                        toDespawnNames.Add($"{lastPlayerConfig.AgentId} (index {i}, team {lastPlayerConfig.Team})");
+                    }
                 }
 
-                if (despawnHuman)
+                if (despawnHuman || toDespawnIds.Count > 0)
                 {
-                    Logger.LogInformation("Despawning human player");
-                    bridge.TryWrite(new ConsoleCommand("spectate"));
-                    bridge.TryWrite(new FlushMatchCommands());
-                }
+                    Logger.LogInformation("Despawning old player(s): " + string.Join(", ", toDespawnNames));
 
-                if (toDespawn.Count > 0)
-                {
-                    Logger.LogInformation(
-                        "Despawning old player(s): " + string.Join(", ", toDespawn)
-                    );
-
-                    // despawn all old bots
-                    bridge.TryWrite(new RemoveOldPlayers(toDespawn));
+                    if (despawnHuman)
+                    {
+                        bridge.TryWrite(new ConsoleCommand("spectate"));
+                    }
+                    if (toDespawnIds.Count > 0)
+                    {
+                        bridge.TryWrite(new RemoveOldPlayers(toDespawnIds));
+                    }
+                    
                     bridge.TryWrite(new FlushMatchCommands());
                 }
             }
