@@ -61,6 +61,13 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
                 matchConfig.LauncherArg,
                 gamePort
             );
+
+            if (matchConfig.ExistingMatchBehavior == ExistingMatchBehavior.ContinueAndSpawn)
+            {
+                Logger.LogWarning("ContinueAndSpawn failed since no match is running. " +
+                                  "Starting a match instead.");
+                matchConfig.ExistingMatchBehavior = ExistingMatchBehavior.Restart;
+            }
         }
 
         if (!_communicationStarted)

@@ -11,12 +11,12 @@ record StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
     {
         if (MatchConfig.ExistingMatchBehavior == ExistingMatchBehavior.ContinueAndSpawn)
         {
-            var phase = context.LastTickPacket?.MatchInfo?.MatchPhase;
+            var phase = context.LastTickPacket?.MatchInfo?.MatchPhase ?? MatchPhase.Inactive;
             if (phase == MatchPhase.Inactive || phase == MatchPhase.Ended)
             {
-                context.Logger.LogError("ContinueAndSpawn failed since no match is running. " +
-                                        "Use different existing match behaviour.");
-                return ServerAction.Continue;
+                context.Logger.LogWarning("ContinueAndSpawn failed since no match is running. " +
+                                          "Starting a match instead.");
+                MatchConfig.ExistingMatchBehavior = ExistingMatchBehavior.Restart;
             }
         }
         
