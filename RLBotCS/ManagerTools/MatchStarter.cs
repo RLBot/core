@@ -359,7 +359,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         if (!doSpawning)
         {
             Logger.LogInformation(
-                "Spawning deferred due to missing connections: " + _connectionsReady + " /  " + _expectedConnections
+                "Spawning deferred due to missing connections: " + _connectionsReady + " / " + _expectedConnections
             );
             return false;
         }
@@ -484,27 +484,25 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
     {
         _connectionsReady++;
 
-        Logger.LogInformation(
-            "Connections ready: "
-                + _connectionsReady
-                + " / "
-                + _expectedConnections
-                + "; needs car spawning: "
-                + _needsCarSpawning
-        );
-
-        if (
-            _deferredMatchConfig is { } matchConfig
-            && _connectionsReady >= _expectedConnections
-            && _needsCarSpawning
-        )
+        // Announce if match starting is deferred due to missing connections.
+        // LogDebug if match is not deferred; We just got a reconnection/extra connection.
+        if (_deferredMatchConfig is { } matchConfig && _needsCarSpawning)
         {
-            bool spawned = SpawnCars(matchConfig);
-            if (!spawned)
-                return;
+            Logger.LogInformation("Connections ready: " + _connectionsReady + " / " + _expectedConnections);
 
-            _matchConfig = matchConfig;
-            _deferredMatchConfig = null;
+            if (_connectionsReady >= _expectedConnections)
+            {
+                bool spawned = SpawnCars(matchConfig);
+                if (!spawned)
+                    return;
+
+                _matchConfig = matchConfig;
+                _deferredMatchConfig = null;
+            }
+        }
+        else
+        {
+            Logger.LogDebug("Connections ready: " + _connectionsReady + " / " + _expectedConnections);
         }
     }
 }
