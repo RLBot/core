@@ -72,11 +72,11 @@ public static partial class BallPredictor
         };
 
     public static PredictionMode CurrentMode { get; private set; } = PredictionMode.Standard;
-    
+
     public static void SetMode(PredictionMode mode)
     {
         CurrentMode = mode;
-        
+
         switch (mode)
         {
             case PredictionMode.Standard:

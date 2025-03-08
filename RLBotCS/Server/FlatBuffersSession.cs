@@ -52,15 +52,15 @@ class FlatBuffersSession
     /// we now know its agent id (if any) and whether it is interested in ball prediction, match comms,
     /// and closing between matches.</summary>
     private bool _connectionEstablished;
-    
+
     private bool _wantsBallPredictions;
     private bool _wantsComms;
     private bool _closeBetweenMatches;
-    
+
     /// <summary>Indicates that the client have responded with InitComplete after we sent a ControllableTeamInfo.
     /// I.e. it is ready to receive live data. Match runners (with no agent id) never becomes ready.</summary>
     private bool _isReady;
-    
+
     private bool _stateSettingIsEnabled;
     private bool _renderingIsEnabled;
 
@@ -112,7 +112,7 @@ class FlatBuffersSession
                 _wantsBallPredictions = readyMsg.WantsBallPredictions;
                 _wantsComms = readyMsg.WantsComms;
                 _closeBetweenMatches = readyMsg.CloseBetweenMatches;
-                
+
                 await _rlbotServer.WriteAsync(
                     new IntroDataRequest(_incomingMessages.Writer, _agentId)
                 );
@@ -123,7 +123,7 @@ class FlatBuffersSession
             case DataType.SetLoadout when _connectionEstablished:
                 if (_isReady && !_stateSettingIsEnabled)
                     break;
-                
+
                 var setLoadout = SetLoadout.GetRootAsSetLoadout(byteBuffer).UnPack();
 
                 // ensure the provided index is a bot we control,
@@ -141,9 +141,11 @@ class FlatBuffersSession
                 else
                 {
                     var owned = string.Join(", ", _playerIdPairs.Select(p => p.Index));
-                    Logger.LogWarning($"Client sent loadout unowned player" +
-                                      $"(index(es) owned: {owned}," +
-                                      $"index got: {setLoadout.Index})");
+                    Logger.LogWarning(
+                        $"Client sent loadout unowned player"
+                            + $"(index(es) owned: {owned},"
+                            + $"index got: {setLoadout.Index})"
+                    );
                 }
 
                 break;
@@ -196,9 +198,11 @@ class FlatBuffersSession
                 )
                 {
                     var owned = string.Join(", ", _playerIdPairs.Select(p => p.Index));
-                    Logger.LogWarning($"Client sent player input unowned player" +
-                                      $"(index(es) owned: {owned}," +
-                                      $"index got: {playerInputMsg.PlayerIndex})");
+                    Logger.LogWarning(
+                        $"Client sent player input unowned player"
+                            + $"(index(es) owned: {owned},"
+                            + $"index got: {playerInputMsg.PlayerIndex})"
+                    );
                     break;
                 }
 
@@ -267,7 +271,7 @@ class FlatBuffersSession
             default:
                 Logger.LogError(
                     $"Core got unexpected message type {message.Type} from client. "
-                    + $"Got ConnectionSettings: {_connectionEstablished}."
+                        + $"Got ConnectionSettings: {_connectionEstablished}."
                 );
                 break;
         }
@@ -457,9 +461,10 @@ class FlatBuffersSession
 
     public void Cleanup()
     {
-        var clientName = _agentId != ""
-            ? $"{_agentId} (index {string.Join(",", _playerIdPairs.Select(p => p.Index))})"
-            : "Client w/o agent id";
+        var clientName =
+            _agentId != ""
+                ? $"{_agentId} (index {string.Join(",", _playerIdPairs.Select(p => p.Index))})"
+                : "Client w/o agent id";
         Logger.LogInformation($"Closing session {_clientId} :: {clientName}");
 
         _connectionEstablished = false;

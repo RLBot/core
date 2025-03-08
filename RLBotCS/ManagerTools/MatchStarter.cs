@@ -18,12 +18,12 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
     /// Once loaded, we will do car spawning, etc.
     /// </summary>
     private MatchConfigurationT? _deferredMatchConfig;
-    
+
     /// <summary>
     /// The most recently loaded match.
     /// </summary>
     private MatchConfigurationT? _matchConfig;
-    
+
     private Dictionary<string, string> _hivemindNameMap = new();
     private int _expectedConnections;
     private int _connectionsReady;
@@ -64,8 +64,10 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
 
             if (matchConfig.ExistingMatchBehavior == ExistingMatchBehavior.ContinueAndSpawn)
             {
-                Logger.LogWarning("ContinueAndSpawn failed since no match is running. " +
-                                  "Starting a match instead.");
+                Logger.LogWarning(
+                    "ContinueAndSpawn failed since no match is running. "
+                        + "Starting a match instead."
+                );
                 matchConfig.ExistingMatchBehavior = ExistingMatchBehavior.Restart;
             }
         }
@@ -133,7 +135,8 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
 
             if (playerConfig.SpawnId == 0)
             {
-                playerConfig.SpawnId = $"${playerConfig.AgentId}/${playerConfig.Team}/${i}".GetHashCode();
+                playerConfig.SpawnId =
+                    $"${playerConfig.AgentId}/${playerConfig.Team}/${i}".GetHashCode();
             }
         }
 
@@ -245,8 +248,8 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
                     var lastPlayerConfig = lastMatchConfig.PlayerConfigurations[i];
                     if (lastPlayerConfig.Variety.Type == PlayerClass.Human)
                     {
-                        despawnHuman = !matchConfig.PlayerConfigurations.Any(
-                            p => p.Variety.Type == PlayerClass.Human
+                        despawnHuman = !matchConfig.PlayerConfigurations.Any(p =>
+                            p.Variety.Type == PlayerClass.Human
                         );
                         toDespawnNames.Add($"human (index {i}, team {lastPlayerConfig.Team})");
                         continue;
@@ -255,7 +258,9 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
                     if (matchConfig.PlayerConfigurations.Count <= i)
                     {
                         toDespawnIds.Add(lastPlayerConfig.SpawnId);
-                        toDespawnNames.Add($"{lastPlayerConfig.AgentId} (index {i}, team {lastPlayerConfig.Team})");
+                        toDespawnNames.Add(
+                            $"{lastPlayerConfig.AgentId} (index {i}, team {lastPlayerConfig.Team})"
+                        );
                         continue;
                     }
 
@@ -266,13 +271,17 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
                     )
                     {
                         toDespawnIds.Add(lastPlayerConfig.SpawnId);
-                        toDespawnNames.Add($"{lastPlayerConfig.AgentId} (index {i}, team {lastPlayerConfig.Team})");
+                        toDespawnNames.Add(
+                            $"{lastPlayerConfig.AgentId} (index {i}, team {lastPlayerConfig.Team})"
+                        );
                     }
                 }
 
                 if (despawnHuman || toDespawnIds.Count > 0)
                 {
-                    Logger.LogInformation("Despawning old player(s): " + string.Join(", ", toDespawnNames));
+                    Logger.LogInformation(
+                        "Despawning old player(s): " + string.Join(", ", toDespawnNames)
+                    );
 
                     if (despawnHuman)
                     {
@@ -282,12 +291,12 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
                     {
                         bridge.TryWrite(new RemoveOldPlayers(toDespawnIds));
                     }
-                    
+
                     bridge.TryWrite(new FlushMatchCommands());
                 }
             }
-            
-            // Spawning (existing players will not be spawned again) 
+
+            // Spawning (existing players will not be spawned again)
             SpawnCars(matchConfig, true);
             bridge.TryWrite(new FlushMatchCommands());
 
@@ -359,7 +368,10 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         if (!doSpawning)
         {
             Logger.LogInformation(
-                "Spawning deferred due to missing connections: " + _connectionsReady + " / " + _expectedConnections
+                "Spawning deferred due to missing connections: "
+                    + _connectionsReady
+                    + " / "
+                    + _expectedConnections
             );
             return false;
         }
@@ -373,7 +385,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         for (int i = 0; i < numPlayers; i++)
         {
             var playerConfig = matchConfig.PlayerConfigurations[i];
-            
+
             Logger.LogInformation(
                 $"Spawning {playerConfig.Name} (index {i}, team {playerConfig.Team}, aid {playerConfig.AgentId})"
             );
@@ -488,7 +500,9 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         // LogDebug if match is not deferred; We just got a reconnection/extra connection.
         if (_deferredMatchConfig is { } matchConfig && _needsCarSpawning)
         {
-            Logger.LogInformation("Connections ready: " + _connectionsReady + " / " + _expectedConnections);
+            Logger.LogInformation(
+                "Connections ready: " + _connectionsReady + " / " + _expectedConnections
+            );
 
             if (_connectionsReady >= _expectedConnections)
             {
@@ -502,7 +516,9 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         }
         else
         {
-            Logger.LogDebug("Connections ready: " + _connectionsReady + " / " + _expectedConnections);
+            Logger.LogDebug(
+                "Connections ready: " + _connectionsReady + " / " + _expectedConnections
+            );
         }
     }
 }

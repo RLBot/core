@@ -40,7 +40,7 @@ class BridgeHandler(
     private async Task HandleServer()
     {
         await _context.Messenger.WaitForConnectionAsync();
-        
+
         _context.Logger.LogInformation("Connected to Rocket League");
 
         await foreach (var messageClump in _context.Messenger.ReadAllAsync())

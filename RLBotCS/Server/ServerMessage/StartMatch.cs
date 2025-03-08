@@ -14,12 +14,14 @@ record StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
             var phase = context.LastTickPacket?.MatchInfo?.MatchPhase ?? MatchPhase.Inactive;
             if (phase == MatchPhase.Inactive || phase == MatchPhase.Ended)
             {
-                context.Logger.LogWarning("ContinueAndSpawn failed since no match is running. " +
-                                          "Starting a match instead.");
+                context.Logger.LogWarning(
+                    "ContinueAndSpawn failed since no match is running. "
+                        + "Starting a match instead."
+                );
                 MatchConfig.ExistingMatchBehavior = ExistingMatchBehavior.Restart;
             }
         }
-        
+
         context.LastTickPacket = null;
         context.Bridge.TryWrite(new ClearRenders());
 
@@ -32,7 +34,7 @@ record StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
         context.RenderingIsEnabled = MatchConfig.EnableRendering;
         context.StateSettingIsEnabled = MatchConfig.EnableStateSetting;
 
-        context.MatchStarter.StartMatch(MatchConfig);  // May modify the match config
+        context.MatchStarter.StartMatch(MatchConfig); // May modify the match config
         context.Bridge.TryWrite(new ClearProcessPlayerReservation(MatchConfig));
 
         BallPredictor.UpdateMode(MatchConfig);
@@ -57,9 +59,7 @@ record StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
             writer.TryWrite(new SessionMessage.MatchConfig(MatchConfig));
 
             if (agentId != string.Empty)
-                context.Bridge.TryWrite(
-                    new PlayerInfoRequest(writer, MatchConfig, agentId)
-                );
+                context.Bridge.TryWrite(new PlayerInfoRequest(writer, MatchConfig, agentId));
         }
 
         context.MatchConfigWriters.Clear();

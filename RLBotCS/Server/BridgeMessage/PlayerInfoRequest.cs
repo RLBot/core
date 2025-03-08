@@ -42,16 +42,18 @@ record PlayerInfoRequest(
             }
             return;
         }
-        
+
         if (foundAsBot)
         {
             if (context.AgentReservation.ReservePlayer(AgentId) is { } player)
             {
-                SessionWriter.TryWrite(new SessionMessage.PlayerIdPairs(player.Item2, new() { player.Item1 }));
+                SessionWriter.TryWrite(
+                    new SessionMessage.PlayerIdPairs(player.Item2, new() { player.Item1 })
+                );
             }
             return;
         }
-        
+
         // Must be a script then
         for (var i = 0; i < MatchConfig.ScriptConfigurations.Count; i++)
         {
@@ -59,13 +61,11 @@ record PlayerInfoRequest(
             if (script.AgentId == AgentId)
             {
                 PlayerIdPair player = new() { Index = (uint)i, SpawnId = script.SpawnId };
-                SessionWriter.TryWrite(
-                    new SessionMessage.PlayerIdPairs(2, new() { player })
-                );
+                SessionWriter.TryWrite(new SessionMessage.PlayerIdPairs(2, new() { player }));
                 return;
             }
         }
-        
+
         context.Logger.LogError($"Failed to reserve bot/script with agent id {AgentId}");
     }
 }
