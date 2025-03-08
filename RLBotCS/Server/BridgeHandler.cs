@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotCS.Server.BridgeMessage;
-using RLBotCS.Server.FlatbuffersMessage;
+using RLBotCS.Server.ServerMessage;
 using MatchPhase = Bridge.Models.Message.MatchPhase;
 
 namespace RLBotCS.Server;
@@ -40,6 +40,8 @@ class BridgeHandler(
     private async Task HandleServer()
     {
         await _context.Messenger.WaitForConnectionAsync();
+        
+        _context.Logger.LogInformation("Connected to Rocket League");
 
         await foreach (var messageClump in _context.Messenger.ReadAllAsync())
         {
@@ -91,7 +93,6 @@ class BridgeHandler(
                 var matchStarted = MessageHandler.ReceivedMatchInfo(messageClump);
                 if (matchStarted)
                 {
-                    // _context.Logger.LogInformation("Map name: " + _context.GameState.MapName);
                     _context.RenderingMgmt.ClearAllRenders(_context.MatchCommandSender);
                     _context.MatchHasStarted = true;
                     _context.Writer.TryWrite(new MapSpawned(_context.GameState.MapName));

@@ -5,7 +5,7 @@ using Bridge.TCP;
 using Microsoft.Extensions.Logging;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.BridgeMessage;
-using RLBotCS.Server.FlatbuffersMessage;
+using RLBotCS.Server.ServerMessage;
 
 namespace RLBotCS.Server;
 

@@ -1,4 +1,4 @@
-﻿namespace RLBotCS.Server.FlatbuffersMessage;
+﻿namespace RLBotCS.Server.ServerMessage;
 
 record StartCommunication : IServerMessage
 {

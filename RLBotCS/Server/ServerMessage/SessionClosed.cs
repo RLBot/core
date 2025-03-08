@@ -1,6 +1,6 @@
 ﻿using RLBotCS.Server.BridgeMessage;
 
-namespace RLBotCS.Server.FlatbuffersMessage;
+namespace RLBotCS.Server.ServerMessage;
 
 record SessionClosed(int ClientId) : IServerMessage
 {

@@ -5,7 +5,7 @@ using rlbot.flat;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.BridgeMessage;
 
-namespace RLBotCS.Server.FlatbuffersMessage;
+namespace RLBotCS.Server.ServerMessage;
 
 class ServerContext(
     Channel<IServerMessage, IServerMessage> incomingMessages,
@@ -32,7 +32,6 @@ class ServerContext(
     public MatchStarter MatchStarter { get; } = matchStarter;
     public ChannelWriter<IBridgeMessage> Bridge { get; } = bridge;
 
-    public PredictionMode PredictionMode { get; set; }
     public bool StateSettingIsEnabled = false;
     public bool RenderingIsEnabled = false;
 

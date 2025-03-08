@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
 
-namespace RLBotCS.Server.FlatbuffersMessage;
+namespace RLBotCS.Server.ServerMessage;
 
 record SendMatchComm(int ClientId, int SpawnId, MatchCommT MatchComm) : IServerMessage
 {

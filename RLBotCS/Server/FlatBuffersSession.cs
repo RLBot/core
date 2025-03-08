@@ -5,11 +5,14 @@ using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.BridgeMessage;
-using RLBotCS.Server.FlatbuffersMessage;
+using RLBotCS.Server.ServerMessage;
 using RLBotCS.Types;
 
 namespace RLBotCS.Server;
 
+/// <summary>
+/// A message sent to <see cref="FlatBuffersSession"/> from <see cref="FlatBuffersServer"/>.
+/// </summary>
 record SessionMessage
 {
     public record MatchConfig(MatchConfigurationT Config) : SessionMessage;
