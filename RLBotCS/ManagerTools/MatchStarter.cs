@@ -237,7 +237,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         var matchInactive = _currentMatchPhase is null or MatchPhase.Inactive or MatchPhase.Ended;
         var shouldSpawnNewMap = matchConfig.ExistingMatchBehavior switch
         {
-            ExistingMatchBehavior.ContinueAndSpawn => matchInactive,
+            ExistingMatchBehavior.ContinueAndSpawn => false,
             ExistingMatchBehavior.RestartIfDifferent => matchInactive
                 || IsDifferentFromLast(matchConfig),
             _ => true,
