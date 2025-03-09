@@ -224,7 +224,7 @@ static class LaunchManager
             try
             {
                 scriptProcess.Start();
-                Logger.LogInformation("Launched bot: {}", script.Name);
+                Logger.LogInformation("Launched script: {}", script.Name);
             }
             catch (Exception e)
             {

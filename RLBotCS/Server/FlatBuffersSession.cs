@@ -5,11 +5,14 @@ using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.BridgeMessage;
-using RLBotCS.Server.FlatbuffersMessage;
+using RLBotCS.Server.ServerMessage;
 using RLBotCS.Types;
 
 namespace RLBotCS.Server;
 
+/// <summary>
+/// A message sent to <see cref="FlatBuffersSession"/> from <see cref="FlatBuffersServer"/>.
+/// </summary>
 record SessionMessage
 {
     public record MatchConfig(MatchConfigurationT Config) : SessionMessage;
@@ -45,11 +48,19 @@ class FlatBuffersSession
     private readonly ChannelWriter<IBridgeMessage> _bridge;
     private readonly Dictionary<uint, bool> _gotInput = new();
 
+    /// <summary>Indicates that we received a ConnectionSettings message from the client, and that
+    /// we now know its agent id (if any) and whether it is interested in ball prediction, match comms,
+    /// and closing between matches.</summary>
     private bool _connectionEstablished;
+
     private bool _wantsBallPredictions;
     private bool _wantsComms;
     private bool _closeBetweenMatches;
+
+    /// <summary>Indicates that the client have responded with InitComplete after we sent a ControllableTeamInfo.
+    /// I.e. it is ready to receive live data. Match runners (with no agent id) never becomes ready.</summary>
     private bool _isReady;
+
     private bool _stateSettingIsEnabled;
     private bool _renderingIsEnabled;
 
@@ -109,19 +120,33 @@ class FlatBuffersSession
                 _connectionEstablished = true;
                 break;
 
-            case DataType.SetLoadout when !_isReady || _stateSettingIsEnabled:
+            case DataType.SetLoadout when _connectionEstablished:
+                if (_isReady && !_stateSettingIsEnabled)
+                    break;
+
                 var setLoadout = SetLoadout.GetRootAsSetLoadout(byteBuffer).UnPack();
 
                 // ensure the provided index is a bot we control,
                 // and map the index to the spawn id
-                PlayerIdPair? idPairs = _playerIdPairs.FirstOrDefault(idPair =>
+                PlayerIdPair? maybeIdPair = _playerIdPairs.FirstOrDefault(idPair =>
                     idPair.Index == setLoadout.Index
                 );
 
-                if (idPairs is PlayerIdPair info && info.SpawnId is int spawnId)
+                if (maybeIdPair is { } pair)
+                {
                     await _rlbotServer.WriteAsync(
-                        new SpawnLoadout(setLoadout.Loadout, spawnId)
+                        new SpawnLoadout(setLoadout.Loadout, pair.SpawnId)
                     );
+                }
+                else
+                {
+                    var owned = string.Join(", ", _playerIdPairs.Select(p => p.Index));
+                    Logger.LogWarning(
+                        $"Client sent loadout unowned player"
+                            + $"(index(es) owned: {owned},"
+                            + $"index got: {setLoadout.Index})"
+                    );
+                }
 
                 break;
 
@@ -162,7 +187,7 @@ class FlatBuffersSession
                 }
                 break;
 
-            case DataType.PlayerInput:
+            case DataType.PlayerInput when _connectionEstablished:
                 var playerInputMsg = PlayerInput.GetRootAsPlayerInput(byteBuffer).UnPack();
 
                 // ensure the provided index is a bot we control
@@ -171,7 +196,15 @@ class FlatBuffersSession
                         playerInfo.Index == playerInputMsg.PlayerIndex
                     )
                 )
+                {
+                    var owned = string.Join(", ", _playerIdPairs.Select(p => p.Index));
+                    Logger.LogWarning(
+                        $"Client sent player input unowned player"
+                            + $"(index(es) owned: {owned},"
+                            + $"index got: {playerInputMsg.PlayerIndex})"
+                    );
                     break;
+                }
 
                 _gotInput[playerInputMsg.PlayerIndex] = true;
                 await _bridge.WriteAsync(new Input(playerInputMsg));
@@ -233,14 +266,12 @@ class FlatBuffersSession
                 break;
 
             case DataType.GamePacket:
-                break;
             case DataType.FieldInfo:
-                break;
             case DataType.BallPrediction:
-                break;
             default:
                 Logger.LogError(
-                    $"Core got unexpected message type {message.Type} from client."
+                    $"Core got unexpected message type {message.Type} from client. "
+                        + $"Got ConnectionSettings: {_connectionEstablished}."
                 );
                 break;
         }
@@ -430,7 +461,11 @@ class FlatBuffersSession
 
     public void Cleanup()
     {
-        Logger.LogInformation($"Closing session {_clientId}.");
+        var clientName =
+            _agentId != ""
+                ? $"{_agentId} (index {string.Join(",", _playerIdPairs.Select(p => p.Index))})"
+                : "Client w/o agent id";
+        Logger.LogInformation($"Closing session {_clientId} :: {clientName}");
 
         _connectionEstablished = false;
         _isReady = false;
@@ -454,7 +489,7 @@ class FlatBuffersSession
             // remove this session from the server
             _rlbotServer.TryWrite(new SessionClosed(_clientId));
 
-            // if we're trying to shutdown cleanly,
+            // if we're trying to shut down cleanly,
             // let the bot finish sending messages and close the connection itself
             _closed = true;
             if (!_sessionForceClosed)

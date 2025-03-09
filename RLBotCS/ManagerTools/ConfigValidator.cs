@@ -135,7 +135,7 @@ public static class ConfigValidator
                 case PlayerClass.Human:
                     humanCount++;
                     player.AgentId = "human"; // Not that it really matters
-                    player.Name = "";
+                    player.Name = "human";
                     player.Loadout = null;
                     player.RunCommand = "";
                     player.RootDir = "";

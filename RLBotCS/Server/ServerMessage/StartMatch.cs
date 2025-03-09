@@ -1,8 +1,9 @@
-﻿using rlbot.flat;
+﻿using Microsoft.Extensions.Logging;
+using rlbot.flat;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.BridgeMessage;
 
-namespace RLBotCS.Server.FlatbuffersMessage;
+namespace RLBotCS.Server.ServerMessage;
 
 record StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
 {
@@ -20,16 +21,10 @@ record StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
         context.RenderingIsEnabled = MatchConfig.EnableRendering;
         context.StateSettingIsEnabled = MatchConfig.EnableStateSetting;
 
-        context.MatchStarter.StartMatch(MatchConfig);
-        var realMatchConfig = context.MatchStarter.GetMatchConfig() ?? MatchConfig;
-        context.Bridge.TryWrite(new ClearProcessPlayerReservation(realMatchConfig));
+        context.MatchStarter.StartMatch(MatchConfig); // May modify the match config
+        context.Bridge.TryWrite(new ClearProcessPlayerReservation(MatchConfig));
 
-        var newMode = BallPredictor.GetMode(realMatchConfig);
-        if (newMode != context.PredictionMode)
-        {
-            BallPredictor.SetMode(newMode);
-            context.PredictionMode = newMode;
-        }
+        BallPredictor.UpdateMode(MatchConfig);
 
         // update all sessions with the new rendering and state setting settings
         foreach (var (writer, _, _) in context.Sessions.Values)
@@ -48,12 +43,10 @@ record StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
         // Distribute the match settings to all waiting sessions
         foreach (var (writer, agentId) in context.MatchConfigWriters)
         {
-            writer.TryWrite(new SessionMessage.MatchConfig(realMatchConfig));
+            writer.TryWrite(new SessionMessage.MatchConfig(MatchConfig));
 
             if (agentId != string.Empty)
-                context.Bridge.TryWrite(
-                    new PlayerInfoRequest(writer, realMatchConfig, agentId)
-                );
+                context.Bridge.TryWrite(new PlayerInfoRequest(writer, MatchConfig, agentId));
         }
 
         context.MatchConfigWriters.Clear();

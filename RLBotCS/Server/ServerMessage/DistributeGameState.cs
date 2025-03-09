@@ -1,9 +1,10 @@
 ﻿using Bridge.State;
+using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.ManagerTools;
 using GoalInfo = Bridge.Packet.GoalInfo;
 
-namespace RLBotCS.Server.FlatbuffersMessage;
+namespace RLBotCS.Server.ServerMessage;
 
 record DistributeGameState(GameState GameState, GamePacketT? Packet) : IServerMessage
 {
@@ -99,7 +100,6 @@ record DistributeGameState(GameState GameState, GamePacketT? Packet) : IServerMe
         }
 
         BallPredictionT prediction = BallPredictor.Generate(
-            context.PredictionMode,
             packet.MatchInfo.SecondsElapsed,
             firstBall,
             lastTouch
@@ -127,7 +127,7 @@ record DistributeGameState(GameState GameState, GamePacketT? Packet) : IServerMe
     public ServerAction Execute(ServerContext context)
     {
         UpdateFieldInfo(context, GameState);
-        context.MatchStarter.MatchEnded = GameState.MatchEnded;
+        context.MatchStarter.SetCurrentMatchPhase(GameState.MatchPhase);
 
         if (Packet is { } packet)
         {

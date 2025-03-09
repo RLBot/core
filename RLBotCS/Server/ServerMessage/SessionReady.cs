@@ -1,4 +1,4 @@
-namespace RLBotCS.Server.FlatbuffersMessage;
+namespace RLBotCS.Server.ServerMessage;
 
 record SessionReady(bool incrConnections, int ClientId, int SpawnId) : IServerMessage
 {

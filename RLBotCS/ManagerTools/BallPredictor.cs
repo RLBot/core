@@ -71,8 +71,12 @@ public static partial class BallPredictor
             Z = vec.Z,
         };
 
+    public static PredictionMode CurrentMode { get; private set; } = PredictionMode.Standard;
+
     public static void SetMode(PredictionMode mode)
     {
+        CurrentMode = mode;
+
         switch (mode)
         {
             case PredictionMode.Standard:
@@ -93,7 +97,7 @@ public static partial class BallPredictor
         }
     }
 
-    public static PredictionMode GetMode(MatchConfigurationT matchConfig)
+    public static PredictionMode GetModeOf(MatchConfigurationT matchConfig)
     {
         if (matchConfig.GameMapUpk.Contains("Throwback"))
             return PredictionMode.StandardThrowback;
@@ -107,8 +111,14 @@ public static partial class BallPredictor
         };
     }
 
+    public static PredictionMode UpdateMode(MatchConfigurationT matchConfig)
+    {
+        var mode = GetModeOf(matchConfig);
+        SetMode(mode);
+        return mode;
+    }
+
     public static BallPredictionT Generate(
-        PredictionMode mode,
         float currentTime,
         BallInfoT currentBall,
         (TouchT, uint)? lastTouch
@@ -130,14 +140,14 @@ public static partial class BallPredictor
             Slices = new List<PredictionSliceT>(numSlices),
         };
 
-        if (mode == PredictionMode.Heatseeker)
+        if (CurrentMode == PredictionMode.Heatseeker)
         {
-            if (lastTouch is (TouchT, uint) latestTouch)
+            if (lastTouch is (TouchT latestTouch, uint touchingTeam))
             {
-                if (currentTime - latestTouch.Item1.GameSeconds < 0.1)
+                if (currentTime - latestTouch.GameSeconds < 0.1)
                 {
                     // Target goal is the opposite of the last touch
-                    SetHeatseekerTarget(latestTouch.Item2 == 1 ? (byte)0 : (byte)1);
+                    SetHeatseekerTarget(touchingTeam == 1 ? (byte)0 : (byte)1);
                 }
                 else if (GetHeatseekerTargetY() == 0 || MathF.Abs(ball.Location.Y) >= 4820)
                 {

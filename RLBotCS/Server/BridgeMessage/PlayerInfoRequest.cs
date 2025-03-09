@@ -13,20 +13,20 @@ record PlayerInfoRequest(
 {
     public void HandleMessage(BridgeContext context)
     {
+        bool foundAsBot = false;
         bool isHivemind = false;
-        bool isScript = true;
 
         foreach (var player in MatchConfig.PlayerConfigurations)
         {
             if (player.AgentId == AgentId)
             {
-                isScript = false;
+                foundAsBot = true;
                 isHivemind = player.Hivemind;
                 break;
             }
         }
 
-        if (isHivemind)
+        if (foundAsBot && isHivemind)
         {
             if (context.AgentReservation.ReservePlayers(AgentId) is { } players)
             {
@@ -40,33 +40,32 @@ record PlayerInfoRequest(
                     $"Failed to reserve players for hivemind with agent id {AgentId}"
                 );
             }
+            return;
         }
-        else if (isScript)
-        {
-            for (var i = 0; i < MatchConfig.ScriptConfigurations.Count; i++)
-            {
-                var script = MatchConfig.ScriptConfigurations[i];
-                if (script.AgentId == AgentId)
-                {
-                    PlayerIdPair player = new() { Index = (uint)i, SpawnId = script.SpawnId };
-                    SessionWriter.TryWrite(
-                        new SessionMessage.PlayerIdPairs(2, new() { player })
-                    );
-                    return;
-                }
-            }
 
-            context.Logger.LogError($"Failed to find script with agent id {AgentId}");
-        }
-        else if (context.AgentReservation.ReservePlayer(AgentId) is { } player)
+        if (foundAsBot)
         {
-            SessionWriter.TryWrite(
-                new SessionMessage.PlayerIdPairs(player.Item2, new() { player.Item1 })
-            );
+            if (context.AgentReservation.ReservePlayer(AgentId) is { } player)
+            {
+                SessionWriter.TryWrite(
+                    new SessionMessage.PlayerIdPairs(player.Item2, new() { player.Item1 })
+                );
+            }
+            return;
         }
-        else
+
+        // Must be a script then
+        for (var i = 0; i < MatchConfig.ScriptConfigurations.Count; i++)
         {
-            context.Logger.LogError($"Failed to reserve player for agent id {AgentId}");
+            var script = MatchConfig.ScriptConfigurations[i];
+            if (script.AgentId == AgentId)
+            {
+                PlayerIdPair player = new() { Index = (uint)i, SpawnId = script.SpawnId };
+                SessionWriter.TryWrite(new SessionMessage.PlayerIdPairs(2, new() { player }));
+                return;
+            }
         }
+
+        context.Logger.LogError($"Failed to reserve bot/script with agent id {AgentId}");
     }
 }

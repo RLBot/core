@@ -4,11 +4,11 @@ using Microsoft.Extensions.Logging;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server;
 using RLBotCS.Server.BridgeMessage;
-using RLBotCS.Server.FlatbuffersMessage;
+using RLBotCS.Server.ServerMessage;
 
 if (args.Length > 0 && args[0] == "--version")
 {
-    Console.WriteLine("RLBotServer v5.beta.4.5");
+    Console.WriteLine("RLBotServer v5.beta.4.6");
     Environment.Exit(0);
 }
 
@@ -52,8 +52,13 @@ catch (ArgumentOutOfRangeException ex)
     return;
 }
 
-logger.LogInformation("Server will start on port " + rlbotSocketsPort);
-logger.LogInformation("Waiting for Rocket League to connect on port " + gamePort);
+logger.LogInformation(
+    "Server will use port "
+        + rlbotSocketsPort
+        + ", expecting Rocket League on port "
+        + gamePort
+);
+logger.LogInformation("Waiting for connections...");
 
 // Set up the handler to use bridge to talk with the game
 var bridgeChannel = Channel.CreateUnbounded<IBridgeMessage>();

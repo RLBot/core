@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotCS.Server.BridgeMessage;
-using RLBotCS.Server.FlatbuffersMessage;
+using RLBotCS.Server.ServerMessage;
 using MatchPhase = Bridge.Models.Message.MatchPhase;
 
 namespace RLBotCS.Server;
@@ -22,6 +22,7 @@ class BridgeHandler(
     private async Task HandleIncomingMessages()
     {
         await foreach (IBridgeMessage message in _context.Reader.ReadAllAsync())
+        {
             lock (_context)
             {
                 try
@@ -35,22 +36,19 @@ class BridgeHandler(
                     );
                 }
             }
+        }
     }
 
     private async Task HandleServer()
     {
         await _context.Messenger.WaitForConnectionAsync();
 
+        _context.Logger.LogInformation("Connected to Rocket League");
+
         await foreach (var messageClump in _context.Messenger.ReadAllAsync())
         {
             lock (_context)
             {
-                if (!_context.GotFirstMessage)
-                {
-                    _context.GotFirstMessage = true;
-                    _context.Writer.TryWrite(new StartCommunication());
-                }
-
                 // reset the counter that lets us know if we're sending too many bytes
                 // technically this resets every time Rocket League renders a frame,
                 // but we don't know when that is. Since every message from the game
@@ -91,7 +89,6 @@ class BridgeHandler(
                 var matchStarted = MessageHandler.ReceivedMatchInfo(messageClump);
                 if (matchStarted)
                 {
-                    // _context.Logger.LogInformation("Map name: " + _context.GameState.MapName);
                     _context.RenderingMgmt.ClearAllRenders(_context.MatchCommandSender);
                     _context.MatchHasStarted = true;
                     _context.Writer.TryWrite(new MapSpawned(_context.GameState.MapName));
@@ -154,6 +151,7 @@ class BridgeHandler(
     {
         lock (_context)
         {
+            _context.Logger.LogDebug("Shutting down BridgeHandler");
             _context.Writer.TryComplete();
 
             try

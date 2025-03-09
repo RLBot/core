@@ -1,6 +1,6 @@
 using rlbot.flat;
 
-namespace RLBotCS.Server.FlatbuffersMessage;
+namespace RLBotCS.Server.ServerMessage;
 
 record SpawnLoadout(PlayerLoadoutT Loadout, int SpawnId) : IServerMessage
 {

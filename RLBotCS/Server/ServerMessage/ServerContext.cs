@@ -5,7 +5,7 @@ using rlbot.flat;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.BridgeMessage;
 
-namespace RLBotCS.Server.FlatbuffersMessage;
+namespace RLBotCS.Server.ServerMessage;
 
 class ServerContext(
     Channel<IServerMessage, IServerMessage> incomingMessages,
@@ -26,13 +26,18 @@ class ServerContext(
 
     public FieldInfoT? FieldInfo { get; set; }
     public bool ShouldUpdateFieldInfo { get; set; }
+
+    /// <summary>List of sessions that have yet to receive the match config (and their indexes).
+    /// We clear the list once they have been notified.</summary>
     public List<(ChannelWriter<SessionMessage>, string)> MatchConfigWriters { get; } = [];
+
+    /// <summary>List of sessions that have yet to receive the field info.
+    /// We clear the list once they have been notified.</summary>
     public List<ChannelWriter<SessionMessage>> FieldInfoWriters { get; } = [];
 
     public MatchStarter MatchStarter { get; } = matchStarter;
     public ChannelWriter<IBridgeMessage> Bridge { get; } = bridge;
 
-    public PredictionMode PredictionMode { get; set; }
     public bool StateSettingIsEnabled = false;
     public bool RenderingIsEnabled = false;
 
