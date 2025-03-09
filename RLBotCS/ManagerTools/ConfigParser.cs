@@ -21,7 +21,7 @@ public class ConfigParser
         public const string MatchMapUpk = "game_map_upk";
         public const string MatchSkipReplays = "skip_replays";
         public const string MatchStartWithoutCountdown = "start_without_countdown";
-        public const string MatchExistingMatchBehavior = "existing_match_behaviour";
+        public const string MatchExistingMatchBehavior = "existing_match_behavior";
         public const string MatchRendering = "enable_rendering";
         public const string MatchStateSetting = "enable_state_setting";
         public const string MatchAutoSaveReplays = "auto_save_replays";
