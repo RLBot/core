@@ -113,6 +113,15 @@ class FlatBuffersSession
                 _wantsComms = readyMsg.WantsComms;
                 _closeBetweenMatches = readyMsg.CloseBetweenMatches;
 
+                if (_agentId != "" && !_closeBetweenMatches)
+                {
+                    Logger.LogError(
+                        $"Detected a client with close_between_matches=False AND a non-empty agent id '{_agentId}'. " +
+                        $"These settings are incompatible. Disconnecting."
+                    );
+                    return false;
+                }
+
                 await _rlbotServer.WriteAsync(
                     new IntroDataRequest(_incomingMessages.Writer, _agentId)
                 );
