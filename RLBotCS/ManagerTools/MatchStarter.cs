@@ -53,17 +53,21 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
             _currentMatchPhase = phase;
             Logger.LogDebug($"Match Phase: {_currentMatchPhase}");
         }
-        
+
         // If phase was null, then connection was just established.
         if (phaseWasNull && _deferredMatchConfig is { } matchConfig)
         {
-            if (matchConfig.ExistingMatchBehavior == ExistingMatchBehavior.ContinueAndSpawn &&
-                phase is MatchPhase.Inactive or MatchPhase.Ended)
+            if (
+                matchConfig.ExistingMatchBehavior == ExistingMatchBehavior.ContinueAndSpawn
+                && phase is MatchPhase.Inactive or MatchPhase.Ended
+            )
             {
-                Logger.LogWarning("ContinueAndSpawn failed because no match is active. Starting a match instead.");
+                Logger.LogWarning(
+                    "ContinueAndSpawn failed because no match is active. Starting a match instead."
+                );
                 matchConfig.ExistingMatchBehavior = ExistingMatchBehavior.Restart;
             }
-            
+
             LoadMatch(matchConfig);
         }
     }
@@ -83,7 +87,9 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
 
             if (matchConfig.ExistingMatchBehavior == ExistingMatchBehavior.ContinueAndSpawn)
             {
-                Logger.LogWarning("ContinueAndSpawn failed since RL is not running. Starting a match instead.");
+                Logger.LogWarning(
+                    "ContinueAndSpawn failed since RL is not running. Starting a match instead."
+                );
                 matchConfig.ExistingMatchBehavior = ExistingMatchBehavior.Restart;
             }
         }
@@ -234,18 +240,23 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         if (matchConfig.AutoSaveReplay)
             bridge.TryWrite(new ConsoleCommand(FlatToCommand.MakeAutoSaveReplayCommand()));
 
-        var matchInactive = _currentMatchPhase is null or MatchPhase.Inactive or MatchPhase.Ended;
+        var matchInactive = _currentMatchPhase is null or MatchPhase.Ended || !HasSpawnedMap;
         var shouldSpawnNewMap = matchConfig.ExistingMatchBehavior switch
         {
-            ExistingMatchBehavior.ContinueAndSpawn => false,
+            ExistingMatchBehavior.ContinueAndSpawn => matchInactive,
             ExistingMatchBehavior.RestartIfDifferent => matchInactive
                 || IsDifferentFromLast(matchConfig),
             _ => true,
         };
 
-        if (matchConfig.ExistingMatchBehavior == ExistingMatchBehavior.ContinueAndSpawn && matchInactive)
+        if (
+            matchConfig.ExistingMatchBehavior == ExistingMatchBehavior.ContinueAndSpawn
+            && matchInactive
+        )
         {
-            Logger.LogWarning("ContinueAndSpawn failed since no match is running. Starting a match instead.");
+            Logger.LogWarning(
+                "ContinueAndSpawn failed since no match is running. Starting a match instead."
+            );
         }
 
         _needsCarSpawning = true;

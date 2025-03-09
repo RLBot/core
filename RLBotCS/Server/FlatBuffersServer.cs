@@ -115,7 +115,7 @@ class FlatBuffersServer(
     public void Cleanup()
     {
         _context.Logger.LogDebug("Shutting down FlatBuffersServer");
-        
+
         // Send stop message to all sessions
         foreach (var (writer, _, _) in _context.Sessions.Values)
             writer.TryComplete();
