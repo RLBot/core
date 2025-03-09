@@ -30,7 +30,6 @@ class BridgeContext(
     public QuickChat QuickChat { get; } = new();
     public PerfMonitor PerfMonitor { get; } = new();
 
-    public bool GotFirstMessage { get; set; }
     public bool MatchHasStarted { get; set; }
     public bool QueuedMatchCommands { get; set; }
     public bool DelayMatchCommandSend { get; set; }

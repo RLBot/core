@@ -22,6 +22,7 @@ class BridgeHandler(
     private async Task HandleIncomingMessages()
     {
         await foreach (IBridgeMessage message in _context.Reader.ReadAllAsync())
+        {
             lock (_context)
             {
                 try
@@ -35,6 +36,7 @@ class BridgeHandler(
                     );
                 }
             }
+        }
     }
 
     private async Task HandleServer()
@@ -47,12 +49,6 @@ class BridgeHandler(
         {
             lock (_context)
             {
-                if (!_context.GotFirstMessage)
-                {
-                    _context.GotFirstMessage = true;
-                    _context.Writer.TryWrite(new StartCommunication());
-                }
-
                 // reset the counter that lets us know if we're sending too many bytes
                 // technically this resets every time Rocket League renders a frame,
                 // but we don't know when that is. Since every message from the game
@@ -155,6 +151,7 @@ class BridgeHandler(
     {
         lock (_context)
         {
+            _context.Logger.LogDebug("Shutting down BridgeHandler");
             _context.Writer.TryComplete();
 
             try

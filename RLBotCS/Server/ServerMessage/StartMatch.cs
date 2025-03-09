@@ -9,19 +9,6 @@ record StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {
-        if (MatchConfig.ExistingMatchBehavior == ExistingMatchBehavior.ContinueAndSpawn)
-        {
-            var phase = context.LastTickPacket?.MatchInfo?.MatchPhase ?? MatchPhase.Inactive;
-            if (phase == MatchPhase.Inactive || phase == MatchPhase.Ended)
-            {
-                context.Logger.LogWarning(
-                    "ContinueAndSpawn failed since no match is running. "
-                        + "Starting a match instead."
-                );
-                MatchConfig.ExistingMatchBehavior = ExistingMatchBehavior.Restart;
-            }
-        }
-
         context.LastTickPacket = null;
         context.Bridge.TryWrite(new ClearRenders());
 

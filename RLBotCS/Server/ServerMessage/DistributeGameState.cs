@@ -127,7 +127,7 @@ record DistributeGameState(GameState GameState, GamePacketT? Packet) : IServerMe
     public ServerAction Execute(ServerContext context)
     {
         UpdateFieldInfo(context, GameState);
-        context.MatchStarter.MatchEnded = GameState.MatchEnded;
+        context.MatchStarter.SetCurrentMatchPhase(GameState.MatchPhase);
 
         if (Packet is { } packet)
         {
