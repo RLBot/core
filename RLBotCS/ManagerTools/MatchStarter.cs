@@ -240,7 +240,8 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         if (matchConfig.AutoSaveReplay)
             bridge.TryWrite(new ConsoleCommand(FlatToCommand.MakeAutoSaveReplayCommand()));
 
-        var matchInactive = _currentMatchPhase is null or MatchPhase.Ended || !HasSpawnedMap;
+        var matchInactive =
+            _currentMatchPhase is null or MatchPhase.Inactive or MatchPhase.Ended;
         var shouldSpawnNewMap = matchConfig.ExistingMatchBehavior switch
         {
             ExistingMatchBehavior.ContinueAndSpawn => matchInactive,
@@ -251,7 +252,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
 
         if (
             matchConfig.ExistingMatchBehavior == ExistingMatchBehavior.ContinueAndSpawn
-            && matchInactive
+            && shouldSpawnNewMap
         )
         {
             Logger.LogWarning(

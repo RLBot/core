@@ -89,6 +89,7 @@ class BridgeHandler(
                 var matchStarted = MessageHandler.ReceivedMatchInfo(messageClump);
                 if (matchStarted)
                 {
+                    _context.GameState.MatchPhase = MatchPhase.Paused;
                     _context.RenderingMgmt.ClearAllRenders(_context.MatchCommandSender);
                     _context.MatchHasStarted = true;
                     _context.Writer.TryWrite(new MapSpawned(_context.GameState.MapName));
