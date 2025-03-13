@@ -6,12 +6,8 @@ using RLBotCS.Conversion;
 
 namespace RLBotCS.Server.BridgeMessage;
 
-record SpawnBot(
-    PlayerConfigurationT Config,
-    BotSkill Skill,
-    uint DesiredIndex,
-    bool IsCustomBot
-) : IBridgeMessage
+record SpawnBot(PlayerConfigurationT Config, BotSkill Skill, uint DesiredIndex)
+    : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
@@ -41,7 +37,7 @@ record SpawnBot(
                 CommandId = commandId,
                 SpawnId = Config.SpawnId,
                 DesiredPlayerIndex = DesiredIndex,
-                IsCustomBot = IsCustomBot,
+                IsCustomBot = Skill == BotSkill.Custom,
                 IsBot = true,
             }
         );

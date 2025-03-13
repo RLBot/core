@@ -135,26 +135,37 @@ class FlatBuffersSession
 
                 var setLoadout = SetLoadout.GetRootAsSetLoadout(byteBuffer).UnPack();
 
-                // ensure the provided index is a bot we control,
-                // and map the index to the spawn id
-                PlayerIdPair? maybeIdPair = _playerIdPairs.FirstOrDefault(idPair =>
-                    idPair.Index == setLoadout.Index
-                );
-
-                if (maybeIdPair is { } pair)
+                if (_isReady)
                 {
-                    await _rlbotServer.WriteAsync(
-                        new SpawnLoadout(setLoadout.Loadout, pair.SpawnId)
+                    // state setting is enabled,
+                    // allow setting the loadout of any bots post-init
+                    await _bridge.WriteAsync(
+                        new StateSetLoadout(setLoadout.Loadout, setLoadout.Index)
                     );
                 }
                 else
                 {
-                    var owned = string.Join(", ", _playerIdPairs.Select(p => p.Index));
-                    Logger.LogWarning(
-                        $"Client sent loadout unowned player"
-                            + $"(index(es) owned: {owned},"
-                            + $"index got: {setLoadout.Index})"
+                    // ensure the provided index is a bot we control,
+                    // and map the index to the spawn id
+                    PlayerIdPair? maybeIdPair = _playerIdPairs.FirstOrDefault(idPair =>
+                        idPair.Index == setLoadout.Index
                     );
+
+                    if (maybeIdPair is { } pair)
+                    {
+                        await _rlbotServer.WriteAsync(
+                            new SpawnLoadout(setLoadout.Loadout, pair.SpawnId)
+                        );
+                    }
+                    else
+                    {
+                        var owned = string.Join(", ", _playerIdPairs.Select(p => p.Index));
+                        Logger.LogWarning(
+                            $"Client sent loadout unowned player"
+                                + $"(index(es) owned: {owned},"
+                                + $"index got: {setLoadout.Index})"
+                        );
+                    }
                 }
 
                 break;
