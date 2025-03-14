@@ -104,6 +104,7 @@ static class FlatToCommand
             BallTypeMutator.Haunted => "Ball_Haunted",
             BallTypeMutator.Ekin => "Ball_Ekin",
             BallTypeMutator.SpookyCube => "Ball_SpookyCube",
+            BallTypeMutator.Egg => "Ball_Egg",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
@@ -138,7 +139,7 @@ static class FlatToCommand
             BallBouncinessMutator.Low => "LowBounciness",
             BallBouncinessMutator.High => "HighBounciness",
             BallBouncinessMutator.SuperHigh => "SuperBounciness",
-            BallBouncinessMutator.LowishBounciness => "LowishBounciness",
+            BallBouncinessMutator.Lowish => "LowishBounciness",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
@@ -238,6 +239,32 @@ static class FlatToCommand
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
+    private static string MapBallGravity(BallGravityMutator option) =>
+        option switch
+        {
+            BallGravityMutator.Default => "",
+            BallGravityMutator.Low => "LowGravityBall",
+            BallGravityMutator.High => "HighGravityBall",
+            BallGravityMutator.SuperHigh => "SuperGravityBall",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
+        };
+
+    private static string MapTerritory(TerritoryMutator option) =>
+        option switch
+        {
+            TerritoryMutator.Default => "",
+            TerritoryMutator.Territory => "Territory",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
+        };
+
+    private static string MapStaleBallMutator(StaleBallMutator option) =>
+        option switch
+        {
+            StaleBallMutator.Default => "",
+            StaleBallMutator.ThirtySeconds => "ThirtySeconds",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
+        };
+
     private static string GetOption(string option)
     {
         if (option != "")
@@ -301,7 +328,11 @@ static class FlatToCommand
         command += GetOption(MapMaxTime(mutatorSettings.MaxTime));
         command += GetOption(MapGameEvent(mutatorSettings.GameEvent));
         command += GetOption(MapAudio(mutatorSettings.Audio));
+        command += GetOption(MapBallGravity(mutatorSettings.BallGravity));
+        command += GetOption(MapTerritory(mutatorSettings.Territory));
+        command += GetOption(MapStaleBallMutator(mutatorSettings.StaleBall));
 
+        // BoostAutoRefill - ?
         return command;
     }
 
