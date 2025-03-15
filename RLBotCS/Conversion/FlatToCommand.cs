@@ -40,6 +40,16 @@ static class FlatToCommand
             MaxScoreMutator.ThreeGoals => "Max3",
             MaxScoreMutator.FiveGoals => "Max5",
             MaxScoreMutator.SevenGoals => "Max7",
+            MaxScoreMutator.TenGoals => "Max10",
+            MaxScoreMutator.TwentyGoals => "Max20",
+            MaxScoreMutator.ThirtyGoals => "Max30",
+            MaxScoreMutator.FortyGoals => "Max40",
+            MaxScoreMutator.FiftyGoals => "Max50",
+            MaxScoreMutator.SixtyGoals => "Max60",
+            MaxScoreMutator.SeventyGoals => "Max70",
+            MaxScoreMutator.EightyGoals => "Max80",
+            MaxScoreMutator.NinetyGoals => "Max90",
+            MaxScoreMutator.HundredGoals => "Max100",
             MaxScoreMutator.Unlimited => "UnlimitedScore",
             _ => throw new ArgumentOutOfRangeException(nameof(maxScore), maxScore, null),
         };
@@ -105,6 +115,9 @@ static class FlatToCommand
             BallTypeMutator.Ekin => "Ball_Ekin",
             BallTypeMutator.SpookyCube => "Ball_SpookyCube",
             BallTypeMutator.Egg => "Ball_Egg",
+            BallTypeMutator.PlayerSeeking => "Ball_Fire",
+            BallTypeMutator.Dropshot => "Ball_Breakout",
+            BallTypeMutator.ScoreAbsorb => "Ball_Score",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
@@ -168,6 +181,8 @@ static class FlatToCommand
             RumbleMutator.HauntedBallBeam => "ItemsModeHauntedBallBeam",
             RumbleMutator.Tactical => "ItemsModeSelection",
             RumbleMutator.BatmanRumble => "ItemsMode_BM",
+            RumbleMutator.GrapplingOnly => "ItemsModeGrapplingHooks",
+            RumbleMutator.HaymakerOnly => "ItemsModeBoxingGloves",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
@@ -201,6 +216,8 @@ static class FlatToCommand
             DemolishMutator.FriendlyFire => "DemolishAll",
             DemolishMutator.OnContact => "AlwaysDemolishOpposing",
             DemolishMutator.OnContactFF => "AlwaysDemolish",
+            DemolishMutator.OnBallContact => "TeamDemoBall",
+            DemolishMutator.OnBallContactFF => "FFADemoBall",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
@@ -257,11 +274,88 @@ static class FlatToCommand
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
-    private static string MapStaleBallMutator(StaleBallMutator option) =>
+    private static string MapStaleBall(StaleBallMutator option) =>
         option switch
         {
             StaleBallMutator.Default => "",
             StaleBallMutator.ThirtySeconds => "ThirtySeconds",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
+        };
+
+    private static string MapJump(JumpMutator option) =>
+        option switch
+        {
+            JumpMutator.Default => "",
+            JumpMutator.Grounded => "Grounded",
+            JumpMutator.Two => "2DoubleJumps",
+            JumpMutator.Three => "3DoubleJumps",
+            JumpMutator.Four => "4DoubleJumps",
+            JumpMutator.Unlimited => "UnlimitedJumps",
+            JumpMutator.NoJumps => "NoJumps",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
+        };
+
+    private static string MapDodgeTimer(DodgeTimerMutator option) =>
+        option switch
+        {
+            DodgeTimerMutator.Default => "",
+            DodgeTimerMutator.TwoSeconds => "DodgeTwoSeconds",
+            DodgeTimerMutator.ThreeSeconds => "DodgeThreeSeconds",
+            DodgeTimerMutator.Unlimited => "DodgeUnlimitedSeconds",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
+        };
+
+    private static string MapPossessionScore(PossessionScoreMutator option) =>
+        option switch
+        {
+            PossessionScoreMutator.Default => "",
+            PossessionScoreMutator.OneSecond => "Possession1Second",
+            PossessionScoreMutator.TwoSeconds => "Possession2Seconds",
+            PossessionScoreMutator.ThreeSeconds => "Possession3Seconds",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
+        };
+
+    private static string MapDemolishScore(DemolishScoreMutator option) =>
+        option switch
+        {
+            DemolishScoreMutator.Default => "",
+            DemolishScoreMutator.One => "DemolishScore1",
+            DemolishScoreMutator.Two => "DemolishScore2",
+            DemolishScoreMutator.Three => "DemolishScore3",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
+        };
+
+    private static string MapNormalGoalScore(NormalGoalScoreMutator option) =>
+        option switch
+        {
+            NormalGoalScoreMutator.Default => "",
+            NormalGoalScoreMutator.Zero => "GoalScore0",
+            NormalGoalScoreMutator.Two => "GoalScore2",
+            NormalGoalScoreMutator.Three => "GoalScore3",
+            NormalGoalScoreMutator.Five => "GoalScore5",
+            NormalGoalScoreMutator.Ten => "GoalScore10",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
+        };
+
+    private static string MapAerialGoalScore(AerialGoalScoreMutator option) =>
+        option switch
+        {
+            AerialGoalScoreMutator.Default => "",
+            AerialGoalScoreMutator.Zero => "AerialGoalScore0",
+            AerialGoalScoreMutator.Two => "AerialGoalScore2",
+            AerialGoalScoreMutator.Three => "AerialGoalScore3",
+            AerialGoalScoreMutator.Five => "AerialGoalScore5",
+            AerialGoalScoreMutator.Ten => "AerialGoalScore10",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
+        };
+
+    private static string MapAssistGoalScore(AssistGoalScoreMutator option) =>
+        option switch
+        {
+            AssistGoalScoreMutator.Default => "",
+            AssistGoalScoreMutator.One => "AssistScore1",
+            AssistGoalScoreMutator.Two => "AssistScore2",
+            AssistGoalScoreMutator.Three => "AssistScore3",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
@@ -330,9 +424,15 @@ static class FlatToCommand
         command += GetOption(MapAudio(mutatorSettings.Audio));
         command += GetOption(MapBallGravity(mutatorSettings.BallGravity));
         command += GetOption(MapTerritory(mutatorSettings.Territory));
-        command += GetOption(MapStaleBallMutator(mutatorSettings.StaleBall));
+        command += GetOption(MapStaleBall(mutatorSettings.StaleBall));
+        command += GetOption(MapJump(mutatorSettings.Jump));
+        command += GetOption(MapDodgeTimer(mutatorSettings.DodgeTimer));
+        command += GetOption(MapPossessionScore(mutatorSettings.PossessionScore));
+        command += GetOption(MapDemolishScore(mutatorSettings.DemolishScore));
+        command += GetOption(MapNormalGoalScore(mutatorSettings.NormalGoalScore));
+        command += GetOption(MapAerialGoalScore(mutatorSettings.AerialGoalScore));
+        command += GetOption(MapAssistGoalScore(mutatorSettings.AssistGoalScore));
 
-        // BoostAutoRefill - ?
         return command;
     }
 
