@@ -108,7 +108,7 @@ class FlatBuffersSession
             case DataType.ConnectionSettings when !_connectionEstablished:
                 var readyMsg = ConnectionSettings.GetRootAsConnectionSettings(byteBuffer);
 
-                _agentId = readyMsg.AgentId;
+                _agentId = readyMsg.AgentId ?? "";
                 _wantsBallPredictions = readyMsg.WantsBallPredictions;
                 _wantsComms = readyMsg.WantsComms;
                 _closeBetweenMatches = readyMsg.CloseBetweenMatches;
