@@ -212,7 +212,8 @@ class FlatBuffersSession
 
                 // ensure the provided index is a bot we control
                 if (
-                    !_playerIdPairs.Any(playerInfo =>
+                    !_stateSettingIsEnabled
+                    && !_playerIdPairs.Any(playerInfo =>
                         playerInfo.Index == playerInputMsg.PlayerIndex
                     )
                 )
@@ -220,8 +221,8 @@ class FlatBuffersSession
                     var owned = string.Join(", ", _playerIdPairs.Select(p => p.Index));
                     Logger.LogWarning(
                         $"Client sent player input unowned player"
-                            + $"(index(es) owned: {owned},"
-                            + $"index got: {playerInputMsg.PlayerIndex})"
+                            + $" (index(es) owned: {owned},"
+                            + $" index got: {playerInputMsg.PlayerIndex})"
                     );
                     break;
                 }
