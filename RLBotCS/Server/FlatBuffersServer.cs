@@ -59,9 +59,9 @@ class FlatBuffersServer(
                 session.Cleanup();
             }
         });
-        sessionThread.Start();
 
         _context.Sessions.Add(clientId, (sessionChannel.Writer, sessionThread, 0));
+        sessionThread.Start();
     }
 
     private async Task HandleIncomingMessages()
