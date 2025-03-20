@@ -108,7 +108,7 @@ class FlatBuffersSession
             case DataType.ConnectionSettings when !_connectionEstablished:
                 var readyMsg = ConnectionSettings.GetRootAsConnectionSettings(byteBuffer);
 
-                _agentId = readyMsg.AgentId;
+                _agentId = readyMsg.AgentId ?? "";
                 _wantsBallPredictions = readyMsg.WantsBallPredictions;
                 _wantsComms = readyMsg.WantsComms;
                 _closeBetweenMatches = readyMsg.CloseBetweenMatches;
@@ -135,26 +135,37 @@ class FlatBuffersSession
 
                 var setLoadout = SetLoadout.GetRootAsSetLoadout(byteBuffer).UnPack();
 
-                // ensure the provided index is a bot we control,
-                // and map the index to the spawn id
-                PlayerIdPair? maybeIdPair = _playerIdPairs.FirstOrDefault(idPair =>
-                    idPair.Index == setLoadout.Index
-                );
-
-                if (maybeIdPair is { } pair)
+                if (_isReady)
                 {
-                    await _rlbotServer.WriteAsync(
-                        new SpawnLoadout(setLoadout.Loadout, pair.SpawnId)
+                    // state setting is enabled,
+                    // allow setting the loadout of any bots post-init
+                    await _bridge.WriteAsync(
+                        new StateSetLoadout(setLoadout.Loadout, setLoadout.Index)
                     );
                 }
                 else
                 {
-                    var owned = string.Join(", ", _playerIdPairs.Select(p => p.Index));
-                    Logger.LogWarning(
-                        $"Client sent loadout unowned player"
-                            + $"(index(es) owned: {owned},"
-                            + $"index got: {setLoadout.Index})"
+                    // ensure the provided index is a bot we control,
+                    // and map the index to the spawn id
+                    PlayerIdPair? maybeIdPair = _playerIdPairs.FirstOrDefault(idPair =>
+                        idPair.Index == setLoadout.Index
                     );
+
+                    if (maybeIdPair is { } pair)
+                    {
+                        await _rlbotServer.WriteAsync(
+                            new SpawnLoadout(setLoadout.Loadout, pair.SpawnId)
+                        );
+                    }
+                    else
+                    {
+                        var owned = string.Join(", ", _playerIdPairs.Select(p => p.Index));
+                        Logger.LogWarning(
+                            $"Client tried to set loadout of player it does not own "
+                                + $"(index(es) owned: {owned},"
+                                + $" got: {setLoadout.Index})"
+                        );
+                    }
                 }
 
                 break;
@@ -201,16 +212,17 @@ class FlatBuffersSession
 
                 // ensure the provided index is a bot we control
                 if (
-                    !_playerIdPairs.Any(playerInfo =>
+                    !_stateSettingIsEnabled
+                    && !_playerIdPairs.Any(playerInfo =>
                         playerInfo.Index == playerInputMsg.PlayerIndex
                     )
                 )
                 {
                     var owned = string.Join(", ", _playerIdPairs.Select(p => p.Index));
                     Logger.LogWarning(
-                        $"Client sent player input unowned player"
-                            + $"(index(es) owned: {owned},"
-                            + $"index got: {playerInputMsg.PlayerIndex})"
+                        $"Client tried to set loadout of player it does not own"
+                            + $" (index(es) owned: {owned},"
+                            + $" got: {playerInputMsg.PlayerIndex})"
                     );
                     break;
                 }

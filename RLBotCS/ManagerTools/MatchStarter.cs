@@ -428,12 +428,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
             {
                 case PlayerClass.CustomBot:
                     bridge.TryWrite(
-                        new SpawnBot(
-                            playerConfig,
-                            BotSkill.Custom,
-                            (uint)(i - indexOffset),
-                            true
-                        )
+                        new SpawnBot(playerConfig, BotSkill.Custom, (uint)(i - indexOffset))
                     );
 
                     break;
@@ -451,7 +446,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
                     };
 
                     bridge.TryWrite(
-                        new SpawnBot(playerConfig, skillEnum, (uint)(i - indexOffset), false)
+                        new SpawnBot(playerConfig, skillEnum, (uint)(i - indexOffset))
                     );
 
                     break;
