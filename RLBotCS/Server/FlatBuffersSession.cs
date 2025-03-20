@@ -161,7 +161,7 @@ class FlatBuffersSession
                     {
                         var owned = string.Join(", ", _playerIdPairs.Select(p => p.Index));
                         Logger.LogWarning(
-                            $"Client sent loadout unowned player"
+                            $"Client tried to set loadout of player it does not own "
                                 + $"(index(es) owned: {owned},"
                                 + $"index got: {setLoadout.Index})"
                         );
