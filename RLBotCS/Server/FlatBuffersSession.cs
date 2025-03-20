@@ -222,7 +222,7 @@ class FlatBuffersSession
                     Logger.LogWarning(
                         $"Client tried to set loadout of player it does not own"
                             + $" (index(es) owned: {owned},"
-                            + $" index got: {playerInputMsg.PlayerIndex})"
+                            + $" got: {playerInputMsg.PlayerIndex})"
                     );
                     break;
                 }
