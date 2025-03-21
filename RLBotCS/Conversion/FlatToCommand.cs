@@ -359,6 +359,14 @@ static class FlatToCommand
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
+    private static string MapInputRestriction(InputRestrictionMutator option) =>
+        option switch
+        {
+            InputRestrictionMutator.Default => "",
+            InputRestrictionMutator.Backwards => "BackwardsMode",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
+        };
+
     private static string GetOption(string option)
     {
         if (option != "")
