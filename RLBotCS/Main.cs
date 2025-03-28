@@ -8,7 +8,7 @@ using RLBotCS.Server.ServerMessage;
 
 if (args.Length > 0 && args[0] == "--version")
 {
-    Console.WriteLine("RLBotServer v5.beta.4.7");
+    Console.WriteLine("RLBotServer v5.beta.4.9");
     Environment.Exit(0);
 }
 
