@@ -47,6 +47,17 @@ public class ConfigParser
         public const string MutatorsMaxTime = "max_time";
         public const string MutatorsGameEvent = "game_event";
         public const string MutatorsAudio = "audio";
+        public const string MutatorsBallGravity = "ball_gravity";
+        public const string MutatorsTerritory = "territory";
+        public const string MutatorsStaleBall = "stale_ball";
+        public const string MutatorsJump = "jump";
+        public const string MutatorsDodgeTimer = "dodge_timer";
+        public const string MutatorsPossessionScore = "possession_score";
+        public const string MutatorsDemolishScore = "demolish_score";
+        public const string MutatorsNormalGoalScore = "normal_goal_score";
+        public const string MutatorsAerialGoalScore = "aerial_goal_score";
+        public const string MutatorsAssistGoalScore = "assist_goal_score";
+        public const string MutatorsInputRestriction = "input_restriction";
 
         public const string CarsList = "cars";
         public const string ScriptsList = "scripts";
@@ -520,6 +531,57 @@ public class ConfigParser
                 GameEventMutator.Default
             ),
             Audio = GetEnum(mutatorTable, Fields.MutatorsAudio, AudioMutator.Default),
+            BallGravity = GetEnum(
+                mutatorTable,
+                Fields.MutatorsBallGravity,
+                BallGravityMutator.Default
+            ),
+            Territory = GetEnum(
+                mutatorTable,
+                Fields.MutatorsTerritory,
+                TerritoryMutator.Default
+            ),
+            StaleBall = GetEnum(
+                mutatorTable,
+                Fields.MutatorsStaleBall,
+                StaleBallMutator.Default
+            ),
+            Jump = GetEnum(mutatorTable, Fields.MutatorsJump, JumpMutator.Default),
+            DodgeTimer = GetEnum(
+                mutatorTable,
+                Fields.MutatorsDodgeTimer,
+                DodgeTimerMutator.Default
+            ),
+            PossessionScore = GetEnum(
+                mutatorTable,
+                Fields.MutatorsPossessionScore,
+                PossessionScoreMutator.Default
+            ),
+            DemolishScore = GetEnum(
+                mutatorTable,
+                Fields.MutatorsDemolishScore,
+                DemolishScoreMutator.Default
+            ),
+            NormalGoalScore = GetEnum(
+                mutatorTable,
+                Fields.MutatorsNormalGoalScore,
+                NormalGoalScoreMutator.Default
+            ),
+            AerialGoalScore = GetEnum(
+                mutatorTable,
+                Fields.MutatorsAerialGoalScore,
+                AerialGoalScoreMutator.Default
+            ),
+            AssistGoalScore = GetEnum(
+                mutatorTable,
+                Fields.MutatorsAssistGoalScore,
+                AssistGoalScoreMutator.Default
+            ),
+            InputRestriction = GetEnum(
+                mutatorTable,
+                Fields.MutatorsInputRestriction,
+                InputRestrictionMutator.Default
+            ),
         };
 
     /// <summary>
