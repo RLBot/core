@@ -35,7 +35,7 @@ static class FlatToCommand
     private static string MapMaxScore(MaxScoreMutator maxScore) =>
         maxScore switch
         {
-            MaxScoreMutator.Default => "",
+            MaxScoreMutator.Unlimited => "",
             MaxScoreMutator.OneGoal => "Max1",
             MaxScoreMutator.ThreeGoals => "Max3",
             MaxScoreMutator.FiveGoals => "Max5",
@@ -50,7 +50,6 @@ static class FlatToCommand
             MaxScoreMutator.EightyGoals => "Max80",
             MaxScoreMutator.NinetyGoals => "Max90",
             MaxScoreMutator.HundredGoals => "Max100",
-            MaxScoreMutator.Unlimited => "UnlimitedScore",
             _ => throw new ArgumentOutOfRangeException(nameof(maxScore), maxScore, null),
         };
 
@@ -170,7 +169,7 @@ static class FlatToCommand
     private static string MapRumble(RumbleMutator option) =>
         option switch
         {
-            RumbleMutator.NoRumble => "",
+            RumbleMutator.Off => "",
             RumbleMutator.DefaultRumble => "ItemsMode",
             RumbleMutator.Slow => "ItemsModeSlow",
             RumbleMutator.Civilized => "ItemsModeBallManipulators",
@@ -234,7 +233,7 @@ static class FlatToCommand
     private static string MapMaxTime(MaxTimeMutator option) =>
         option switch
         {
-            MaxTimeMutator.Default => "",
+            MaxTimeMutator.Unlimited => "",
             MaxTimeMutator.ElevenMinutes => "MaxTime11Minutes",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
@@ -269,7 +268,7 @@ static class FlatToCommand
     private static string MapTerritory(TerritoryMutator option) =>
         option switch
         {
-            TerritoryMutator.Default => "",
+            TerritoryMutator.Off => "",
             TerritoryMutator.Territory => "Territory",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
@@ -277,7 +276,7 @@ static class FlatToCommand
     private static string MapStaleBall(StaleBallMutator option) =>
         option switch
         {
-            StaleBallMutator.Default => "",
+            StaleBallMutator.Unlimited => "",
             StaleBallMutator.ThirtySeconds => "ThirtySeconds",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
@@ -298,7 +297,7 @@ static class FlatToCommand
     private static string MapDodgeTimer(DodgeTimerMutator option) =>
         option switch
         {
-            DodgeTimerMutator.Default => "",
+            DodgeTimerMutator.OnePointTwentyFiveSeconds => "",
             DodgeTimerMutator.TwoSeconds => "DodgeTwoSeconds",
             DodgeTimerMutator.ThreeSeconds => "DodgeThreeSeconds",
             DodgeTimerMutator.Unlimited => "DodgeUnlimitedSeconds",
@@ -308,7 +307,7 @@ static class FlatToCommand
     private static string MapPossessionScore(PossessionScoreMutator option) =>
         option switch
         {
-            PossessionScoreMutator.Default => "",
+            PossessionScoreMutator.Off => "",
             PossessionScoreMutator.OneSecond => "Possession1Second",
             PossessionScoreMutator.TwoSeconds => "Possession2Seconds",
             PossessionScoreMutator.ThreeSeconds => "Possession3Seconds",
@@ -318,7 +317,7 @@ static class FlatToCommand
     private static string MapDemolishScore(DemolishScoreMutator option) =>
         option switch
         {
-            DemolishScoreMutator.Default => "",
+            DemolishScoreMutator.Zero => "",
             DemolishScoreMutator.One => "DemolishScore1",
             DemolishScoreMutator.Two => "DemolishScore2",
             DemolishScoreMutator.Three => "DemolishScore3",
@@ -328,7 +327,7 @@ static class FlatToCommand
     private static string MapNormalGoalScore(NormalGoalScoreMutator option) =>
         option switch
         {
-            NormalGoalScoreMutator.Default => "",
+            NormalGoalScoreMutator.One => "",
             NormalGoalScoreMutator.Zero => "GoalScore0",
             NormalGoalScoreMutator.Two => "GoalScore2",
             NormalGoalScoreMutator.Three => "GoalScore3",
@@ -340,7 +339,7 @@ static class FlatToCommand
     private static string MapAerialGoalScore(AerialGoalScoreMutator option) =>
         option switch
         {
-            AerialGoalScoreMutator.Default => "",
+            AerialGoalScoreMutator.One => "",
             AerialGoalScoreMutator.Zero => "AerialGoalScore0",
             AerialGoalScoreMutator.Two => "AerialGoalScore2",
             AerialGoalScoreMutator.Three => "AerialGoalScore3",
@@ -352,7 +351,7 @@ static class FlatToCommand
     private static string MapAssistGoalScore(AssistGoalScoreMutator option) =>
         option switch
         {
-            AssistGoalScoreMutator.Default => "",
+            AssistGoalScoreMutator.Zero => "",
             AssistGoalScoreMutator.One => "AssistScore1",
             AssistGoalScoreMutator.Two => "AssistScore2",
             AssistGoalScoreMutator.Three => "AssistScore3",
