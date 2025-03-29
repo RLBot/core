@@ -477,7 +477,11 @@ public class ConfigParser
                 Fields.MutatorsMatchLength,
                 MatchLengthMutator.FiveMinutes
             ),
-            MaxScore = GetEnum(mutatorTable, Fields.MutatorsMaxScore, MaxScoreMutator.Unlimited),
+            MaxScore = GetEnum(
+                mutatorTable,
+                Fields.MutatorsMaxScore,
+                MaxScoreMutator.Unlimited
+            ),
             MultiBall = GetEnum(mutatorTable, Fields.MutatorsMultiBall, MultiBallMutator.One),
             Overtime = GetEnum(
                 mutatorTable,
@@ -536,11 +540,7 @@ public class ConfigParser
                 Fields.MutatorsBallGravity,
                 BallGravityMutator.Default
             ),
-            Territory = GetEnum(
-                mutatorTable,
-                Fields.MutatorsTerritory,
-                TerritoryMutator.Off
-            ),
+            Territory = GetEnum(mutatorTable, Fields.MutatorsTerritory, TerritoryMutator.Off),
             StaleBall = GetEnum(
                 mutatorTable,
                 Fields.MutatorsStaleBall,

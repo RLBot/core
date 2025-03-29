@@ -166,7 +166,7 @@ static class GameStateToFlat
                     IsBot = car.IsCustomBot,
                     Name = car.Name,
                     Team = car.Team,
-                    Boost = (uint)Math.Floor(car.Boost),
+                    Boost = car.Boost,
                     SpawnId = car.SpawnId,
                     ScoreInfo = new()
                     {
