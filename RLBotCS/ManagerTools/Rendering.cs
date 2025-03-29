@@ -22,6 +22,8 @@ public class Rendering(TcpMessenger tcpMessenger)
 
     private readonly Queue<ushort> _RenderClearQueue = new();
 
+    private int _numClears = 0;
+
     private ushort RenderItem(RenderTypeUnion renderItem, GameState gameState) =>
         renderItem.Value switch
         {
@@ -206,7 +208,7 @@ public class Rendering(TcpMessenger tcpMessenger)
             return;
 
         foreach (ushort renderItem in renderItems)
-            _RenderClearQueue.Enqueue(renderItem);
+            ClearRender(renderItem);
 
         // Remove the renderId from the client
         clientRenders.Remove(renderId);
@@ -220,7 +222,7 @@ public class Rendering(TcpMessenger tcpMessenger)
         // Tell the game to remove all the renders
         foreach (int renderId in clientRenders.Keys)
         foreach (ushort renderItem in clientRenders[renderId])
-            _RenderClearQueue.Enqueue(renderItem);
+            ClearRender(renderItem);
 
         // Remove the client from the tracker
         _clientRenderTracker.Remove(clientId);
@@ -234,9 +236,27 @@ public class Rendering(TcpMessenger tcpMessenger)
         foreach (var clientRenders in _clientRenderTracker.Values)
         foreach (int renderId in clientRenders.Keys)
         foreach (ushort renderItem in clientRenders[renderId])
-            _RenderClearQueue.Enqueue(renderItem);
+            ClearRender(renderItem);
 
         _clientRenderTracker.Clear();
+    }
+
+    public void ResetClearCount()
+    {
+        _numClears = 0;
+    }
+
+    private void ClearRender(ushort id)
+    {
+        if (_numClears < MaxClearsPerTick)
+        {
+            _renderingSender.RemoveRenderItem(id);
+            _numClears++;
+            return;
+        }
+
+        // If we've reached the limit, queue it up to clear the next tick
+        _RenderClearQueue.Enqueue(id);
     }
 
     public bool SendRenderClears()
@@ -244,12 +264,11 @@ public class Rendering(TcpMessenger tcpMessenger)
         if (_RenderClearQueue.Count == 0)
             return true;
 
-        int clears = 0;
-        while (_RenderClearQueue.Count > 0 && clears < MaxClearsPerTick)
+        while (_RenderClearQueue.Count > 0 && _numClears < MaxClearsPerTick)
         {
             var renderItem = _RenderClearQueue.Dequeue();
             _renderingSender.RemoveRenderItem(renderItem);
-            clears++;
+            _numClears++;
         }
 
         _renderingSender.Send();
