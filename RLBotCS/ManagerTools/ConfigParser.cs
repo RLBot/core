@@ -477,7 +477,7 @@ public class ConfigParser
                 Fields.MutatorsMatchLength,
                 MatchLengthMutator.FiveMinutes
             ),
-            MaxScore = GetEnum(mutatorTable, Fields.MutatorsMaxScore, MaxScoreMutator.Default),
+            MaxScore = GetEnum(mutatorTable, Fields.MutatorsMaxScore, MaxScoreMutator.Unlimited),
             MultiBall = GetEnum(mutatorTable, Fields.MutatorsMultiBall, MultiBallMutator.One),
             Overtime = GetEnum(
                 mutatorTable,
@@ -511,7 +511,7 @@ public class ConfigParser
                 Fields.MutatorsBoostAmount,
                 BoostAmountMutator.NormalBoost
             ),
-            Rumble = GetEnum(mutatorTable, Fields.MutatorsRumble, RumbleMutator.NoRumble),
+            Rumble = GetEnum(mutatorTable, Fields.MutatorsRumble, RumbleMutator.Off),
             BoostStrength = GetEnum(
                 mutatorTable,
                 Fields.MutatorsBoostStrength,
@@ -524,7 +524,7 @@ public class ConfigParser
                 Fields.MutatorsRespawnTime,
                 RespawnTimeMutator.ThreeSeconds
             ),
-            MaxTime = GetEnum(mutatorTable, Fields.MutatorsMaxTime, MaxTimeMutator.Default),
+            MaxTime = GetEnum(mutatorTable, Fields.MutatorsMaxTime, MaxTimeMutator.Unlimited),
             GameEvent = GetEnum(
                 mutatorTable,
                 Fields.MutatorsGameEvent,
@@ -539,43 +539,43 @@ public class ConfigParser
             Territory = GetEnum(
                 mutatorTable,
                 Fields.MutatorsTerritory,
-                TerritoryMutator.Default
+                TerritoryMutator.Off
             ),
             StaleBall = GetEnum(
                 mutatorTable,
                 Fields.MutatorsStaleBall,
-                StaleBallMutator.Default
+                StaleBallMutator.Unlimited
             ),
             Jump = GetEnum(mutatorTable, Fields.MutatorsJump, JumpMutator.Default),
             DodgeTimer = GetEnum(
                 mutatorTable,
                 Fields.MutatorsDodgeTimer,
-                DodgeTimerMutator.Default
+                DodgeTimerMutator.OnePointTwentyFiveSeconds
             ),
             PossessionScore = GetEnum(
                 mutatorTable,
                 Fields.MutatorsPossessionScore,
-                PossessionScoreMutator.Default
+                PossessionScoreMutator.Off
             ),
             DemolishScore = GetEnum(
                 mutatorTable,
                 Fields.MutatorsDemolishScore,
-                DemolishScoreMutator.Default
+                DemolishScoreMutator.Zero
             ),
             NormalGoalScore = GetEnum(
                 mutatorTable,
                 Fields.MutatorsNormalGoalScore,
-                NormalGoalScoreMutator.Default
+                NormalGoalScoreMutator.One
             ),
             AerialGoalScore = GetEnum(
                 mutatorTable,
                 Fields.MutatorsAerialGoalScore,
-                AerialGoalScoreMutator.Default
+                AerialGoalScoreMutator.One
             ),
             AssistGoalScore = GetEnum(
                 mutatorTable,
                 Fields.MutatorsAssistGoalScore,
-                AssistGoalScoreMutator.Default
+                AssistGoalScoreMutator.Zero
             ),
             InputRestriction = GetEnum(
                 mutatorTable,
