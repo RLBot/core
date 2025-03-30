@@ -84,10 +84,8 @@ public class Rendering(TcpMessenger tcpMessenger)
     private ushort SendRect2D(Rect2DT rect2Dt)
     {
         // Move rect left/up when width/height is negative
-        var adjustedX =
-            !rect2Dt.Centered && rect2Dt.Width < 0 ? rect2Dt.X - rect2Dt.Width : rect2Dt.X;
-        var adjustedY =
-            !rect2Dt.Centered && rect2Dt.Height < 0 ? rect2Dt.Y - rect2Dt.Height : rect2Dt.Y;
+        var adjustedX = rect2Dt.Width < 0 ? rect2Dt.X - rect2Dt.Width : rect2Dt.X;
+        var adjustedY = rect2Dt.Height < 0 ? rect2Dt.Y - rect2Dt.Height : rect2Dt.Y;
 
         // Fake a filled rectangle using a string with colored background
         var (text, scale) = MakeFakeRectangleString(
@@ -95,17 +93,14 @@ public class Rendering(TcpMessenger tcpMessenger)
             (int)Math.Abs(rect2Dt.Height * ResolutionHeightPixels)
         );
 
-        var hAlign = rect2Dt.Centered ? TextHAlign.Center : TextHAlign.Left;
-        var vAlign = rect2Dt.Centered ? TextHAlign.Center : TextHAlign.Left;
-
         return _renderingSender.AddText2D(
             text,
             adjustedX,
             adjustedY,
             Color.Transparent, // Foreground
             FlatToModel.ToColor(rect2Dt.Color), // Background
-            (byte)hAlign,
-            (byte)vAlign,
+            (byte)rect2Dt.HAlign,
+            (byte)rect2Dt.VAlign,
             scale
         );
     }
