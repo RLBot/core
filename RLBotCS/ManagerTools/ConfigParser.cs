@@ -289,13 +289,12 @@ public class ConfigParser
         };
 
         string configPath = useConfig ? GetValue(table, Fields.AgentConfigFile, "") : "";
-        // FIXME: Remove in v5.beta.5.0+
+        // FIXME: Remove in v5.beta.6.0+
         if (configPath == "" && table.ContainsKey(Fields.AgentConfigFileOld))
         {
-            Logger.LogWarning(
-                $"In {_context}: '{Fields.AgentConfigFileOld}' is deprecated. Use '{Fields.AgentConfigFile}' instead."
+            Logger.LogError(
+                $"In {_context}: '{Fields.AgentConfigFileOld}' has been removed. Use '{Fields.AgentConfigFile}' instead."
             );
-            configPath = GetValue(table, Fields.AgentConfigFileOld, "");
         }
 
         PlayerConfigurationT player;
