@@ -1,10 +1,10 @@
 [match]
 
 [[cars]]
-config = "normal.bot.toml"
+config_file = "normal.bot.toml"
 name = "New Bot Name"
 loadout_file = ""
 
 [[scripts]]
-config = "normal.script.toml"
+config_file = "normal.script.toml"
 name = "No Override"

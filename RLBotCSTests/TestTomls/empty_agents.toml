@@ -1,5 +1,5 @@
 [[cars]]
-config = "empty.toml"
+config_file = "empty.toml"
 
 [[scripts]]
-config = "empty.toml"
+config_file = "empty.toml"

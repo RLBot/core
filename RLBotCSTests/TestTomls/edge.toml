@@ -19,10 +19,10 @@ type = "pSyOniX"
 skill = "pro"
 
 [[cars]]
-config = "edge.bot.toml"
+config_file = "edge.bot.toml"
 team = "blue"
 skill = "mega pro"  # Ignored
 
 [[cars]]
-config = "phantom/../edge.bot.toml"
+config_file = "phantom/../edge.bot.toml"
 team = "orange"

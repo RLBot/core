@@ -1,4 +1,4 @@
 [match]
 
 [[cars]]
-config = "non-existent.toml"
+config_file = "non-existent.toml"
