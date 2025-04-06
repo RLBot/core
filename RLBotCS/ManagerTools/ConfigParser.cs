@@ -346,7 +346,7 @@ public class ConfigParser
                 SpawnId = 0,
             };
         }
-        
+
         bool autoStart = GetValue(table, Fields.AgentAutoStart, true);
         if (!autoStart)
         {
@@ -649,11 +649,7 @@ public class ConfigParser
                     Fields.RlBotAutoStartBots,
                     true
                 );
-                matchConfig.WaitForBots = GetValue(
-                    rlbotTable,
-                    Fields.RlBotWaitForBots,
-                    true
-                );
+                matchConfig.WaitForBots = GetValue(rlbotTable, Fields.RlBotWaitForBots, true);
             }
 
             TomlTableArray players = GetValue<TomlTableArray>(outerTable, Fields.CarsList, []);
@@ -691,13 +687,13 @@ public class ConfigParser
                         )
                         {
                             var script = LoadScriptConfig(absoluteConfigPath);
-                            
+
                             bool autoStart = GetValue(scripts[i], Fields.AgentAutoStart, true);
                             if (!autoStart)
                             {
                                 script.RunCommand = "";
                             }
-                            
+
                             matchConfig.ScriptConfigurations.Add(script);
                         }
                     }

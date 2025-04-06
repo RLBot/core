@@ -138,7 +138,7 @@ public class ConfigParserTest
         Assert.AreEqual(0u, loadoutP2.LoadoutPaint.HatPaintId);
         Assert.AreEqual(12u, loadoutP2.LoadoutPaint.TrailsPaintId);
         Assert.AreEqual(12u, loadoutP2.LoadoutPaint.GoalExplosionPaintId);
-        
+
         // Set to "" due to `auto_start=false`
         Assert.AreEqual("", edgeMC.PlayerConfigurations[3].RunCommand);
         Assert.AreEqual("", edgeMC.ScriptConfigurations[0].RunCommand);

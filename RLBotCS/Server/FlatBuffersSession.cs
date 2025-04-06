@@ -489,7 +489,7 @@ class FlatBuffersSession
         Logger.LogInformation($"Closing session {_clientId} :: {clientName}");
 
         bool wasReady = _isReady;
-        
+
         _connectionEstablished = false;
         _isReady = false;
         _incomingMessages.Writer.TryComplete();
