@@ -521,7 +521,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         player.Loadout = loadout;
     }
 
-    public void IncrementConnectionReadies()
+    public void IncrementConnectionReady()
     {
         _connectionsReady++;
 
@@ -549,5 +549,10 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
                 "Connections ready: " + _connectionsReady + " / " + _expectedConnections
             );
         }
+    }
+
+    public void DecrementConnectionReady()
+    {
+        _connectionsReady--;
     }
 }
