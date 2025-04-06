@@ -397,7 +397,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
             return false;
 
         bool doSpawning =
-            force || !matchConfig.AutoStartBots || _expectedConnections <= _connectionsReady;
+            force || !matchConfig.WaitForBots || _expectedConnections <= _connectionsReady;
 
         if (!doSpawning)
         {

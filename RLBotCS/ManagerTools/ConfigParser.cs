@@ -15,6 +15,7 @@ public class ConfigParser
         public const string RlBotLauncher = "launcher";
         public const string RlBotLauncherArg = "launcher_arg";
         public const string RlBotAutoStartBots = "auto_start_bots";
+        public const string RlBotWaitForBots = "wait_for_bots";
 
         public const string MatchTable = "match";
         public const string MatchGameMode = "game_mode";
@@ -639,6 +640,11 @@ public class ConfigParser
                 matchConfig.AutoStartBots = GetValue(
                     rlbotTable,
                     Fields.RlBotAutoStartBots,
+                    true
+                );
+                matchConfig.WaitForBots = GetValue(
+                    rlbotTable,
+                    Fields.RlBotWaitForBots,
                     true
                 );
             }

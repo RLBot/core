@@ -46,6 +46,7 @@ public class ConfigParserTest
         Assert.AreEqual(emptyMC.Launcher, defaultMC.Launcher);
         Assert.AreEqual(emptyMC.LauncherArg, defaultMC.LauncherArg);
         Assert.AreEqual(emptyMC.AutoStartBots, defaultMC.AutoStartBots);
+        Assert.AreEqual(emptyMC.WaitForBots, defaultMC.WaitForBots);
         Assert.AreEqual(emptyMC.GameMapUpk, defaultMC.GameMapUpk);
         Assert.AreEqual(
             emptyMC.PlayerConfigurations.Count,
