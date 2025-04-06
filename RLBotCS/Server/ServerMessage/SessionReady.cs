@@ -5,7 +5,7 @@ record SessionReady(bool incrConnections, int ClientId, int SpawnId) : IServerMe
     public ServerAction Execute(ServerContext context)
     {
         if (incrConnections)
-            context.MatchStarter.IncrementConnectionReadies();
+            context.MatchStarter.IncrementConnectionReady();
 
         var (writer, session, _) = context.Sessions[ClientId];
         context.Sessions[ClientId] = (writer, session, SpawnId);
