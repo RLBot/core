@@ -65,6 +65,7 @@ public class ConfigParser
         public const string AgentTeam = "team";
         public const string AgentType = "type";
         public const string AgentSkill = "skill";
+        public const string AgentAutoStart = "auto_start";
         public const string AgentName = "name";
         public const string AgentLoadoutFile = "loadout_file";
         public const string AgentConfigFile = "config_file";
@@ -344,6 +345,12 @@ public class ConfigParser
                 RunCommand = "",
                 SpawnId = 0,
             };
+        }
+        
+        bool autoStart = GetValue(table, Fields.AgentAutoStart, true);
+        if (!autoStart)
+        {
+            player.RunCommand = "";
         }
 
         return player;
@@ -683,9 +690,15 @@ public class ConfigParser
                             )
                         )
                         {
-                            matchConfig.ScriptConfigurations.Add(
-                                LoadScriptConfig(absoluteConfigPath)
-                            );
+                            var script = LoadScriptConfig(absoluteConfigPath);
+                            
+                            bool autoStart = GetValue(scripts[i], Fields.AgentAutoStart, true);
+                            if (!autoStart)
+                            {
+                                script.RunCommand = "";
+                            }
+                            
+                            matchConfig.ScriptConfigurations.Add(script);
                         }
                     }
                     else
