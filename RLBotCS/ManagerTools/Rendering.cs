@@ -256,9 +256,6 @@ public class Rendering(TcpMessenger tcpMessenger)
 
     public bool SendRenderClears()
     {
-        if (_RenderClearQueue.Count == 0)
-            return true;
-
         while (_RenderClearQueue.Count > 0 && _numClears < MaxClearsPerTick)
         {
             var renderItem = _RenderClearQueue.Dequeue();
