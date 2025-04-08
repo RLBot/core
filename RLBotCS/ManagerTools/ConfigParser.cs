@@ -14,8 +14,9 @@ public class ConfigParser
         public const string RlBotTable = "rlbot";
         public const string RlBotLauncher = "launcher";
         public const string RlBotLauncherArg = "launcher_arg";
-        public const string RlBotAutoStartBots = "auto_start_bots";
-        public const string RlBotWaitForBots = "wait_for_bots";
+        public const string RlBotAutoStartAgents = "auto_start_agents";
+        public const string RlBotAutoStartAgentsOld = "auto_start_bots";
+        public const string RlBotWaitForAgents = "wait_for_agents";
 
         public const string MatchTable = "match";
         public const string MatchGameMode = "game_mode";
@@ -644,12 +645,21 @@ public class ConfigParser
                     Launcher.Steam
                 );
                 matchConfig.LauncherArg = GetValue(rlbotTable, Fields.RlBotLauncherArg, "");
-                matchConfig.AutoStartBots = GetValue(
+                matchConfig.AutoStartAgents = GetValue(
                     rlbotTable,
-                    Fields.RlBotAutoStartBots,
+                    Fields.RlBotAutoStartAgents,
                     true
                 );
-                matchConfig.WaitForBots = GetValue(rlbotTable, Fields.RlBotWaitForBots, true);
+                matchConfig.WaitForAgents = GetValue(rlbotTable, Fields.RlBotWaitForAgents, true);
+                // TODO: Remove in future version
+                if (rlbotTable.ContainsKey(Fields.RlBotAutoStartAgentsOld))
+                {
+                    bool autoStartBots = GetValue(rlbotTable, Fields.RlBotAutoStartAgentsOld, true);
+                    matchConfig.AutoStartAgents = autoStartBots;
+                    matchConfig.WaitForAgents = autoStartBots;
+                    Logger.LogWarning($"'{Fields.RlBotAutoStartAgentsOld}' is deprecated. Please use " +
+                                      $"'{Fields.RlBotAutoStartAgents}' and '{Fields.RlBotWaitForAgents}' instead.");
+                }
             }
 
             TomlTableArray players = GetValue<TomlTableArray>(outerTable, Fields.CarsList, []);
