@@ -26,3 +26,11 @@ skill = "mega pro"  # Ignored
 [[cars]]
 config_file = "phantom/../edge.bot.toml"
 team = "orange"
+
+[[cars]]
+config_file = "normal.bot.toml"
+auto_start = false
+
+[[scripts]]
+config_file = "normal.script.toml"
+auto_start = false

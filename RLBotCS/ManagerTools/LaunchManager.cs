@@ -144,10 +144,7 @@ static class LaunchManager
         {
             if (bot.RunCommand == "")
             {
-                Logger.LogWarning(
-                    "Bot {} must be started manually since 'run_command' is empty.",
-                    bot.Name
-                );
+                Logger.LogWarning("Bot {} must be started manually.", bot.Name);
                 continue;
             }
 
@@ -192,10 +189,7 @@ static class LaunchManager
         {
             if (script.RunCommand == "")
             {
-                Logger.LogWarning(
-                    "Script {} must be started manually since 'run_command' is empty.",
-                    script.Name
-                );
+                Logger.LogWarning("Script {} must be started manually.", script.Name);
                 continue;
             }
 

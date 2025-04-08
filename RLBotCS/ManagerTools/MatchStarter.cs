@@ -220,7 +220,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         _connectionsReady = 0;
         _expectedConnections = matchConfig.ScriptConfigurations.Count + processes.Count;
 
-        if (matchConfig.AutoStartBots)
+        if (matchConfig.AutoStartAgents)
         {
             LaunchManager.LaunchBots(processes.Values.ToList(), rlbotSocketsPort);
             LaunchManager.LaunchScripts(matchConfig.ScriptConfigurations, rlbotSocketsPort);
@@ -397,7 +397,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
             return false;
 
         bool doSpawning =
-            force || !matchConfig.AutoStartBots || _expectedConnections <= _connectionsReady;
+            force || !matchConfig.WaitForAgents || _expectedConnections <= _connectionsReady;
 
         if (!doSpawning)
         {
