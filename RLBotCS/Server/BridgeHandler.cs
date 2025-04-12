@@ -19,7 +19,7 @@ class BridgeHandler(
     private const int MAX_TICK_SKIP = 1;
     private readonly BridgeContext _context = new(writer, reader, messenger);
 
-    private async Task HandleIncomingMessages()
+    private async Task HandleInternalMessages()
     {
         await foreach (IBridgeMessage message in _context.Reader.ReadAllAsync())
         {
@@ -148,7 +148,7 @@ class BridgeHandler(
     }
 
     public void BlockingRun() =>
-        Task.WhenAny(Task.Run(HandleIncomingMessages), Task.Run(HandleServer)).Wait();
+        Task.WhenAny(Task.Run(HandleInternalMessages), Task.Run(HandleServer)).Wait();
 
     public void Cleanup()
     {
