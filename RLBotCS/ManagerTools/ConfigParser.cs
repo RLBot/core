@@ -418,7 +418,7 @@ public class ConfigParser
         TomlTable loadoutToml = LoadTomlFile(loadoutPath);
 
         string teamLoadoutString =
-            team == 0 ? Fields.LoadoutBlueTable : Fields.LoadoutOrangeTable;
+            team == Team.Blue ? Fields.LoadoutBlueTable : Fields.LoadoutOrangeTable;
         TomlTable teamLoadout = GetValue<TomlTable>(loadoutToml, teamLoadoutString, []);
         using (_context.Begin(teamLoadoutString, ConfigContextTracker.Type.Link))
         {

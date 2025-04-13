@@ -111,8 +111,8 @@ static class GameStateToFlat
 
         List<TeamInfoT> teams =
         [
-            new() { TeamIndex = 0, Score = gameState.TeamScores.blue },
-            new() { TeamIndex = 1, Score = gameState.TeamScores.orange },
+            new() { TeamIndex = Team.Blue, Score = gameState.TeamScores.blue },
+            new() { TeamIndex = Team.Orange, Score = gameState.TeamScores.orange },
         ];
 
         List<BoostPadStateT> boostStates = gameState

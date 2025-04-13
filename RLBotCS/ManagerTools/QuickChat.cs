@@ -73,7 +73,7 @@ public class QuickChat
 
         foreach (var (_, name, chat) in _chats)
         {
-            var textColor = chat.Team == 0 ? BlueColor : OrangeColor;
+            var textColor = chat.Team == Team.Blue ? BlueColor : OrangeColor;
 
             String2DT message = new()
             {

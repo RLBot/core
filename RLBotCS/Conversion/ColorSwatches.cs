@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using rlbot.flat;
+using Color = System.Drawing.Color;
 
 namespace RLBotCS.Conversion;
 
@@ -6,7 +7,7 @@ static class ColorSwatches
 {
     internal static Color GetPrimary(uint colorId, uint team)
     {
-        var swatches = team == 0 ? BlueSwatches : OrangeSwatches;
+        var swatches = team == Team.Blue ? BlueSwatches : OrangeSwatches;
         return Color.FromArgb(
             255,
             swatches[colorId, 0],

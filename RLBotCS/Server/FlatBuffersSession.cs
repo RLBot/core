@@ -65,7 +65,7 @@ class FlatBuffersSession
     private bool _renderingIsEnabled;
 
     private string _agentId = string.Empty;
-    private uint _team;
+    private uint _team = Team.Other;
     private List<PlayerIdPair> _playerIdPairs = new();
     private bool _sessionForceClosed;
     private bool _closed;
@@ -231,25 +231,38 @@ class FlatBuffersSession
                 await _bridge.WriteAsync(new Input(playerInputMsg));
                 break;
 
-            case DataType.MatchComms when _wantsComms:
+            case DataType.MatchComms:
                 var matchComms = MatchComm.GetRootAsMatchComm(byteBuffer).UnPack();
 
-                // ensure the team is correctly set
-                matchComms.Team = _team;
-
-                // ensure the provided index is a bot we control,
-                // and map the index to the spawn id
-                PlayerIdPair? playerIdPair = _playerIdPairs.FirstOrDefault(idPair =>
-                    idPair.Index == matchComms.Index
-                );
-
-                if (playerIdPair is PlayerIdPair pInfo && pInfo.SpawnId is int pSpawnId)
+                if (_agentId != "")
                 {
-                    await _rlbotServer.WriteAsync(
-                        new SendMatchComm(_clientId, pSpawnId, matchComms)
+                    // ensure the team is correctly set
+                    matchComms.Team = _team;
+
+                    // ensure the provided index is a bot we control,
+                    // and map the index to the spawn id
+                    PlayerIdPair? playerIdPair = _playerIdPairs.FirstOrDefault(idPair =>
+                        idPair.Index == matchComms.Index
                     );
 
-                    await _bridge.WriteAsync(new ShowQuickChat(matchComms));
+                    if (playerIdPair != null)
+                    {
+                        await _rlbotServer.WriteAsync(
+                            new SendMatchComm(_clientId, matchComms)
+                        );
+
+                        await _bridge.WriteAsync(new ShowQuickChat(matchComms));
+                    }
+                }
+                else if (_agentId == "" && _connectionEstablished)
+                {
+                    // Client is a match manager.
+                    // We allow these to send match comms to bots/scripts too, e.g. for briefing.
+                    // They will not appear in quick chat.
+                    matchComms.Index = 0;
+                    matchComms.Team = Team.Other;
+                    matchComms.TeamOnly = false;
+                    await _rlbotServer.WriteAsync(new SendMatchComm(_clientId, matchComms));
                 }
 
                 break;
@@ -319,7 +332,7 @@ class FlatBuffersSession
         }
     }
 
-    private async Task HandleIncomingMessages()
+    private async Task HandleInternalMessages()
     {
         await foreach (SessionMessage message in _incomingMessages.Reader.ReadAllAsync())
             switch (message)
@@ -457,7 +470,7 @@ class FlatBuffersSession
         {
             try
             {
-                await HandleIncomingMessages();
+                await HandleInternalMessages();
             }
             catch (Exception e)
             {
