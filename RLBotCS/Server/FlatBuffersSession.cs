@@ -254,12 +254,12 @@ class FlatBuffersSession
                         await _bridge.WriteAsync(new ShowQuickChat(matchComms));
                     }
                 }
-                else if (_agentId == "" && _connectionEstablished)
+                else if (_agentId == "" && _connectionEstablished && _stateSettingIsEnabled)
                 {
                     // Client is a match manager.
                     // We allow these to send match comms to bots/scripts too, e.g. for briefing.
                     // They will not appear in quick chat.
-                    matchComms.Index = (uint)_clientId;
+                    matchComms.Index = 0;
                     matchComms.Team = 3;
                     matchComms.TeamOnly = false;
                     await _rlbotServer.WriteAsync(new SendMatchComm(_clientId, matchComms));
