@@ -31,7 +31,7 @@ record SendMatchComm(int ClientId, MatchCommT MatchComm) : IServerMessage
                 var player = context.LastTickPacket.Players.Find(player =>
                     player.SpawnId == spawnId
                 );
-                if (message.Message.Team == 2)
+                if (message.Message.Team == Team.Scripts)
                 {
                     if (player is not null)
                         continue;

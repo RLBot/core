@@ -65,7 +65,7 @@ class FlatBuffersSession
     private bool _renderingIsEnabled;
 
     private string _agentId = string.Empty;
-    private uint _team;
+    private uint _team = Team.Other;
     private List<PlayerIdPair> _playerIdPairs = new();
     private bool _sessionForceClosed;
     private bool _closed;
@@ -254,13 +254,13 @@ class FlatBuffersSession
                         await _bridge.WriteAsync(new ShowQuickChat(matchComms));
                     }
                 }
-                else if (_agentId == "" && _connectionEstablished && _stateSettingIsEnabled)
+                else if (_agentId == "" && _connectionEstablished)
                 {
                     // Client is a match manager.
                     // We allow these to send match comms to bots/scripts too, e.g. for briefing.
                     // They will not appear in quick chat.
                     matchComms.Index = 0;
-                    matchComms.Team = 3;
+                    matchComms.Team = Team.Other;
                     matchComms.TeamOnly = false;
                     await _rlbotServer.WriteAsync(new SendMatchComm(_clientId, matchComms));
                 }

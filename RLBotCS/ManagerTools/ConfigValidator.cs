@@ -63,7 +63,7 @@ public static class ConfigValidator
             using var _ = ctx.Begin($"{Fields.CarsList}[{i}]");
             var player = players[i];
 
-            if (player.Team != 0 && player.Team != 1)
+            if (player.Team != Team.Blue && player.Team != Team.Orange)
             {
                 Logger.LogError(
                     $"Invalid {ctx.ToStringWithEnd(Fields.AgentTeam)} of '{player.Team}'. "
