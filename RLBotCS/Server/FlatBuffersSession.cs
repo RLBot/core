@@ -501,7 +501,6 @@ class FlatBuffersSession
                 : "Client w/o agent id";
         Logger.LogInformation($"Closing session {_clientId} :: {clientName}");
 
-        bool wasReady = _isReady;
         _connectionEstablished = false;
         _isReady = false;
         _incomingMessages.Writer.TryComplete();
@@ -524,7 +523,7 @@ class FlatBuffersSession
         finally
         {
             // remove this session from the server
-            _rlbotServer.TryWrite(new SessionClosed(_clientId, wasReady));
+            _rlbotServer.TryWrite(new SessionClosed(_clientId));
 
             // if we're trying to shut down cleanly,
             // let the bot finish sending messages and close the connection itself

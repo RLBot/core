@@ -550,9 +550,4 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
             );
         }
     }
-
-    public void DecrementConnectionReady()
-    {
-        _connectionsReady--;
-    }
 }
