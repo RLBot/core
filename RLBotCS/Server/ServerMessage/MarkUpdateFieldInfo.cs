@@ -1,12 +1,11 @@
 ﻿namespace RLBotCS.Server.ServerMessage;
 
-record MapSpawned(string MapName) : IServerMessage
+record MarkUpdateFieldInfo : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {
         context.FieldInfo = null;
         context.ShouldUpdateFieldInfo = true;
-        context.MatchStarter.MapSpawned(MapName);
 
         return ServerAction.Continue;
     }

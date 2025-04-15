@@ -2,6 +2,7 @@ using Bridge.Models.Message;
 using Bridge.Packet;
 using Bridge.State;
 using rlbot.flat;
+using RLBotCS.Model;
 using CollisionShapeUnion = rlbot.flat.CollisionShapeUnion;
 using MatchPhase = Bridge.Models.Message.MatchPhase;
 

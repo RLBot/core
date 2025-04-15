@@ -15,6 +15,7 @@ record DistributeGameState(GameState GameState, GamePacketT? Packet) : IServerMe
             || context.FieldInfo != null
             || gameState.BoostPads.Count == 0
             || gameState.Goals.Count == 0
+            || context.FieldInfoWriters.Count == 0
         )
             return;
 
@@ -105,7 +106,7 @@ record DistributeGameState(GameState GameState, GamePacketT? Packet) : IServerMe
             lastTouch
         );
 
-        foreach (var (writer, _, _) in context.Sessions.Values)
+        foreach (var (writer, _) in context.Sessions.Values)
         {
             SessionMessage message = new SessionMessage.DistributeBallPrediction(prediction);
             writer.TryWrite(message);
@@ -115,7 +116,7 @@ record DistributeGameState(GameState GameState, GamePacketT? Packet) : IServerMe
     private static void DistributeState(ServerContext context, GamePacketT packet)
     {
         context.LastTickPacket = packet;
-        foreach (var (writer, _, _) in context.Sessions.Values)
+        foreach (var (writer, _) in context.Sessions.Values)
         {
             SessionMessage message = new SessionMessage.DistributeGameState(
                 context.LastTickPacket
@@ -127,7 +128,6 @@ record DistributeGameState(GameState GameState, GamePacketT? Packet) : IServerMe
     public ServerAction Execute(ServerContext context)
     {
         UpdateFieldInfo(context, GameState);
-        context.MatchStarter.SetCurrentMatchPhase(GameState.MatchPhase);
 
         if (Packet is { } packet)
         {

@@ -4,6 +4,7 @@ using Bridge.TCP;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.Conversion;
+using RLBotCS.ManagerTools;
 using RLBotCS.Server.BridgeMessage;
 using RLBotCS.Server.ServerMessage;
 using MatchPhase = Bridge.Models.Message.MatchPhase;
@@ -13,11 +14,12 @@ namespace RLBotCS.Server;
 class BridgeHandler(
     ChannelWriter<IServerMessage> writer,
     ChannelReader<IBridgeMessage> reader,
-    TcpMessenger messenger
+    TcpMessenger messenger,
+    MatchStarter matchStarter
 )
 {
     private const int MAX_TICK_SKIP = 1;
-    private readonly BridgeContext _context = new(writer, reader, messenger);
+    private readonly BridgeContext _context = new(writer, reader, messenger, matchStarter);
 
     private async Task HandleInternalMessages()
     {
@@ -87,6 +89,7 @@ class BridgeHandler(
                         ? _context.GameState.ToFlatBuffers()
                         : null;
                 _context.Writer.TryWrite(new DistributeGameState(_context.GameState, packet));
+                _context.MatchStarter.SetCurrentMatchPhase(_context.GameState.MatchPhase);
 
                 var matchStarted = MessageHandler.ReceivedMatchInfo(messageClump);
                 if (matchStarted)
@@ -94,7 +97,8 @@ class BridgeHandler(
                     _context.GameState.MatchPhase = MatchPhase.Paused;
                     _context.RenderingMgmt.ClearAllRenders(_context.MatchCommandSender);
                     _context.MatchHasStarted = true;
-                    _context.Writer.TryWrite(new MapSpawned(_context.GameState.MapName));
+                    _context.MatchStarter.MapSpawned(_context.GameState.MapName);
+                    _context.Writer.TryWrite(new MarkUpdateFieldInfo()); // TODO: Could be part of DistributeGameState
                 }
 
                 if (_context.GameState.MatchEnded)

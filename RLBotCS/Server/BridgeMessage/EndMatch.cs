@@ -6,5 +6,6 @@ record EndMatch() : IBridgeMessage
     {
         context.MatchCommandSender.AddMatchEndCommand();
         context.MatchCommandSender.Send();
+        context.MatchStarter.SetMatchConfigNull();
     }
 }

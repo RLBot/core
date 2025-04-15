@@ -12,17 +12,14 @@ record StopMatch(bool ShutdownServer) : IServerMessage
             return ServerAction.Stop;
         }
 
-        if (!context.MatchStarter.HasSpawnedMap)
-            return ServerAction.Continue;
-
-        context.MatchStarter.SetMatchConfigNull();
         context.FieldInfo = null;
         context.ShouldUpdateFieldInfo = false;
         context.LastTickPacket = null;
+        context.MatchConfig = null;
         context.Bridge.TryWrite(new ClearRenders());
         context.Bridge.TryWrite(new EndMatch());
 
-        foreach (var (writer, _, _) in context.Sessions.Values)
+        foreach (var (writer, _) in context.Sessions.Values)
             writer.TryWrite(new SessionMessage.StopMatch(ShutdownServer));
 
         return ServerAction.Continue;

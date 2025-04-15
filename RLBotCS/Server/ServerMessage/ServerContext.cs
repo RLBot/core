@@ -9,7 +9,6 @@ namespace RLBotCS.Server.ServerMessage;
 
 class ServerContext(
     Channel<IServerMessage, IServerMessage> incomingMessages,
-    MatchStarter matchStarter,
     ChannelWriter<IBridgeMessage> bridge
 )
 {
@@ -21,11 +20,11 @@ class ServerContext(
         incomingMessages.Writer;
     public Dictionary<
         int,
-        (ChannelWriter<SessionMessage> writer, Thread thread, int spawnId)
+        (ChannelWriter<SessionMessage> writer, Thread thread)
     > Sessions { get; } = [];
 
     public FieldInfoT? FieldInfo { get; set; }
-    public bool ShouldUpdateFieldInfo { get; set; }
+    public bool ShouldUpdateFieldInfo { get; set; } // TODO: This bool might be redundant
 
     /// <summary>List of sessions that have yet to receive the match config (and their indexes).
     /// We clear the list once they have been notified.</summary>
@@ -35,11 +34,11 @@ class ServerContext(
     /// We clear the list once they have been notified.</summary>
     public List<ChannelWriter<SessionMessage>> FieldInfoWriters { get; } = [];
 
-    public MatchStarter MatchStarter { get; } = matchStarter;
     public ChannelWriter<IBridgeMessage> Bridge { get; } = bridge;
 
     public bool StateSettingIsEnabled = false;
     public bool RenderingIsEnabled = false;
 
     public GamePacketT? LastTickPacket { get; set; }
+    public MatchConfigurationT? MatchConfig { get; set; }
 }

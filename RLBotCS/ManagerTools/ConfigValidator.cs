@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.Conversion;
+using RLBotCS.Model;
 
 namespace RLBotCS.ManagerTools;
 
@@ -16,7 +17,7 @@ public static class ConfigValidator
     /// Psyonix bots will be given Psyonix preset loadouts as fitting.
     /// If the config is invalid, the reasons are logged.
     /// </summary>
-    /// <returns>Whether the given match is valid can be started without issues.</returns>
+    /// <returns>Whether the given match is valid and can be started without issues.</returns>
     public static bool Validate(MatchConfigurationT config)
     {
         bool valid = true;

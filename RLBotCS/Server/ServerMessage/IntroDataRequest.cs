@@ -11,7 +11,7 @@ record IntroDataRequest(ChannelWriter<SessionMessage> SessionWriter, string Agen
 {
     public ServerAction Execute(ServerContext context)
     {
-        if (context.MatchStarter.GetMatchConfig() is { } matchConfig)
+        if (context.MatchConfig is { } matchConfig)
         {
             SessionWriter.TryWrite(new SessionMessage.MatchConfig(matchConfig));
 

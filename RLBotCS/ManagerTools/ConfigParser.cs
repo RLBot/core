@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
+using RLBotCS.Model;
 using Tomlyn;
 using Tomlyn.Model;
 

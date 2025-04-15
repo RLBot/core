@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.BridgeMessage;
@@ -9,25 +10,25 @@ record StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {
+        Debug.Assert(ConfigValidator.Validate(MatchConfig));
+        
         context.LastTickPacket = null;
         context.Bridge.TryWrite(new ClearRenders());
 
-        foreach (var (writer, _, _) in context.Sessions.Values)
+        foreach (var (writer, _) in context.Sessions.Values)
             writer.TryWrite(new SessionMessage.StopMatch(false));
-
-        if (MatchConfig.Mutators == null)
-            MatchConfig.Mutators = new();
 
         context.RenderingIsEnabled = MatchConfig.EnableRendering;
         context.StateSettingIsEnabled = MatchConfig.EnableStateSetting;
+        context.MatchConfig = MatchConfig;
 
-        context.MatchStarter.StartMatch(MatchConfig); // May modify the match config
         context.Bridge.TryWrite(new ClearProcessPlayerReservation(MatchConfig));
-
+        context.Bridge.TryWrite(new BridgeMessage.StartMatch(MatchConfig));
+        
         BallPredictor.UpdateMode(MatchConfig);
 
         // update all sessions with the new rendering and state setting settings
-        foreach (var (writer, _, _) in context.Sessions.Values)
+        foreach (var (writer, _) in context.Sessions.Values)
         {
             SessionMessage render = new SessionMessage.RendersAllowed(
                 context.RenderingIsEnabled

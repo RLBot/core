@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using rlbot.flat;
+using RLBotCS.Model;
 
 namespace RLBotCS.ManagerTools;
 
