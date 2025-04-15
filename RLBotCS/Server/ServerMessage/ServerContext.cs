@@ -26,13 +26,13 @@ class ServerContext(
     public FieldInfoT? FieldInfo { get; set; }
     public bool ShouldUpdateFieldInfo { get; set; } // TODO: This bool might be redundant
 
-    /// <summary>List of sessions that have yet to receive the match config (and their indexes).
+    /// <summary>List of sessions that have yet to receive the match config.
     /// We clear the list once they have been notified.</summary>
-    public List<(ChannelWriter<SessionMessage>, string)> MatchConfigWriters { get; } = [];
+    public List<ChannelWriter<SessionMessage>> WaitingMatchConfigRequests { get; } = [];
 
     /// <summary>List of sessions that have yet to receive the field info.
     /// We clear the list once they have been notified.</summary>
-    public List<ChannelWriter<SessionMessage>> FieldInfoWriters { get; } = [];
+    public List<ChannelWriter<SessionMessage>> WaitingFieldInfoRequests { get; } = [];
 
     public ChannelWriter<IBridgeMessage> Bridge { get; } = bridge;
 

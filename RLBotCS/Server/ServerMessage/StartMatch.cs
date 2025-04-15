@@ -22,7 +22,6 @@ record StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
         context.StateSettingIsEnabled = MatchConfig.EnableStateSetting;
         context.MatchConfig = MatchConfig;
 
-        context.Bridge.TryWrite(new ClearProcessPlayerReservation(MatchConfig));
         context.Bridge.TryWrite(new BridgeMessage.StartMatch(MatchConfig));
         
         BallPredictor.UpdateMode(MatchConfig);
@@ -42,15 +41,12 @@ record StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
         }
 
         // Distribute the match settings to all waiting sessions
-        foreach (var (writer, agentId) in context.MatchConfigWriters)
+        foreach (var writer in context.WaitingMatchConfigRequests)
         {
             writer.TryWrite(new SessionMessage.MatchConfig(MatchConfig));
-
-            if (agentId != string.Empty)
-                context.Bridge.TryWrite(new PlayerInfoRequest(writer, MatchConfig, agentId));
         }
 
-        context.MatchConfigWriters.Clear();
+        context.WaitingMatchConfigRequests.Clear();
 
         return ServerAction.Continue;
     }

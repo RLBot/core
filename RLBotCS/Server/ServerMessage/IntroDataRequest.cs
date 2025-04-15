@@ -6,7 +6,7 @@ namespace RLBotCS.Server.ServerMessage;
 /// <summary>
 /// Fetch match config, field info, and relevant bot indexes for a client.
 /// </summary>
-record IntroDataRequest(ChannelWriter<SessionMessage> SessionWriter, string AgentId)
+record IntroDataRequest(int ClientId, ChannelWriter<SessionMessage> SessionWriter, string AgentId)
     : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
@@ -14,16 +14,16 @@ record IntroDataRequest(ChannelWriter<SessionMessage> SessionWriter, string Agen
         if (context.MatchConfig is { } matchConfig)
         {
             SessionWriter.TryWrite(new SessionMessage.MatchConfig(matchConfig));
-
-            if (AgentId != string.Empty)
-                context.Bridge.TryWrite(
-                    new PlayerInfoRequest(SessionWriter, matchConfig, AgentId)
-                );
         }
         else
         {
             // Notify the client when it arrives
-            context.MatchConfigWriters.Add((SessionWriter, AgentId));
+            context.WaitingMatchConfigRequests.Add(SessionWriter);
+        }
+
+        if (AgentId != "")
+        {
+            context.Bridge.TryWrite(new AgentReservationRequest(ClientId, SessionWriter, AgentId));
         }
 
         if (context.FieldInfo != null)
@@ -33,7 +33,7 @@ record IntroDataRequest(ChannelWriter<SessionMessage> SessionWriter, string Agen
         else
         {
             // Notify the client when it arrives
-            context.FieldInfoWriters.Add(SessionWriter);
+            context.WaitingFieldInfoRequests.Add(SessionWriter);
         }
 
         return ServerAction.Continue;

@@ -13,7 +13,15 @@ record StartMatch(MatchConfigurationT MatchConfig) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
+        context.AgentMapping.SetAgents(MatchConfig);
         context.MatchStarter.StartMatch(MatchConfig); // May modify the match config
         
+        // Notify clients about their agents indexes
+        foreach (var infoRequest in context.WaitingAgentRequests)
+        {
+            infoRequest.HandleMessage(context);
+        }
+        
+        context.WaitingAgentRequests.Clear();
     }
 }

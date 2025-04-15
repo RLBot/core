@@ -3,6 +3,7 @@ using Bridge.Controller;
 using Bridge.State;
 using Bridge.TCP;
 using Microsoft.Extensions.Logging;
+using rlbot.flat;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.BridgeMessage;
 using RLBotCS.Server.ServerMessage;
@@ -20,8 +21,11 @@ class BridgeContext(
 
     public int ticksSkipped = 0;
     public GameState GameState = new();
-    public AgentReservation AgentReservation = new();
     public MatchStarter MatchStarter { get; } = matchStarter;
+    public MatchConfigurationT? MatchConfig => MatchStarter.GetMatchConfig();
+    public AgentMapping AgentMapping => MatchStarter.AgentMapping;
+
+    public List<AgentReservationRequest> WaitingAgentRequests = new();
 
     public ChannelWriter<IServerMessage> Writer { get; } = writer;
     public ChannelReader<IBridgeMessage> Reader { get; } = reader;

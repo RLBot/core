@@ -26,8 +26,8 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
     private MatchConfigurationT? _matchConfig;
 
     private Dictionary<string, string> _hivemindNameMap = new();
-    private int _expectedConnections;
-    private int _connectionsReady;
+
+    public readonly AgentMapping AgentMapping = new();
 
     private bool _needsCarSpawning;
 
@@ -217,9 +217,6 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
 
         _hivemindNameMap.Clear();
 
-        _connectionsReady = 0;
-        _expectedConnections = matchConfig.ScriptConfigurations.Count + processes.Count;
-
         if (matchConfig.AutoStartAgents)
         {
             LaunchManager.LaunchBots(processes.Values.ToList(), rlbotSocketsPort);
@@ -396,16 +393,17 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         if (!force && (!_needsCarSpawning || !HasSpawnedMap))
             return false;
 
+        var (ready, expected) = AgentMapping.GetReadyStatus();
         bool doSpawning =
-            force || !matchConfig.WaitForAgents || _expectedConnections <= _connectionsReady;
+            force || !matchConfig.WaitForAgents || ready >= expected;
 
         if (!doSpawning)
         {
             Logger.LogInformation(
-                "Spawning deferred due to missing connections: "
-                    + _connectionsReady
+                "Spawning deferred due to unready agents. Ready: "
+                    + ready
                     + " / "
-                    + _expectedConnections
+                    + expected
             );
             return false;
         }
@@ -521,19 +519,16 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         player.Loadout = loadout;
     }
 
-    public void IncrementConnectionReady()
+    public void CheckAgentReadyStatus()
     {
-        _connectionsReady++;
-
-        // Announce if match starting is deferred due to missing connections.
-        // LogDebug if match is not deferred; We just got a reconnection/extra connection.
         if (_deferredMatchConfig is { } matchConfig && _needsCarSpawning)
         {
+            var (ready, expected) = AgentMapping.GetReadyStatus();
             Logger.LogInformation(
-                "Connections ready: " + _connectionsReady + " / " + _expectedConnections
+                "Agents ready: " + ready + " / " + expected
             );
 
-            if (_connectionsReady >= _expectedConnections)
+            if (ready >= expected)
             {
                 bool spawned = SpawnCars(matchConfig);
                 if (!spawned)
@@ -545,8 +540,10 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         }
         else
         {
+            // Something triggered this check even though we are not waiting for match start, so let's log instead 
+            var (ready, expected) = AgentMapping.GetReadyStatus();
             Logger.LogDebug(
-                "Connections ready: " + _connectionsReady + " / " + _expectedConnections
+                "Agents ready: " + ready + " / " + expected
             );
         }
     }

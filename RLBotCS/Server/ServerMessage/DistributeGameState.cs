@@ -15,7 +15,7 @@ record DistributeGameState(GameState GameState, GamePacketT? Packet) : IServerMe
             || context.FieldInfo != null
             || gameState.BoostPads.Count == 0
             || gameState.Goals.Count == 0
-            || context.FieldInfoWriters.Count == 0
+            || context.WaitingFieldInfoRequests.Count == 0
         )
             return;
 
@@ -75,12 +75,12 @@ record DistributeGameState(GameState GameState, GamePacketT? Packet) : IServerMe
         );
 
         // Distribute the field info to all waiting sessions
-        foreach (var writer in context.FieldInfoWriters)
+        foreach (var writer in context.WaitingFieldInfoRequests)
         {
             writer.TryWrite(new SessionMessage.FieldInfo(context.FieldInfo));
         }
 
-        context.FieldInfoWriters.Clear();
+        context.WaitingFieldInfoRequests.Clear();
     }
 
     private static void DistributeBallPrediction(ServerContext context, GamePacketT packet)

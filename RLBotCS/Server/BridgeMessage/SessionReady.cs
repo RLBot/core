@@ -1,11 +1,10 @@
 namespace RLBotCS.Server.BridgeMessage;
 
-record SessionReady(bool incrConnections) : IBridgeMessage
+record SessionReady(int ClientId) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
-        // TODO
-        if (incrConnections)
-            context.MatchStarter.IncrementConnectionReady();
+        context.AgentMapping.ReadyAgents(ClientId);
+        context.MatchStarter.CheckAgentReadyStatus();
     }
 }

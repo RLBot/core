@@ -125,7 +125,7 @@ class FlatBuffersSession
                 }
 
                 await _rlbotServer.WriteAsync(
-                    new IntroDataRequest(_incomingMessages.Writer, _agentId)
+                    new IntroDataRequest(_clientId, _incomingMessages.Writer, _agentId)
                 );
 
                 _connectionEstablished = true;
@@ -173,9 +173,12 @@ class FlatBuffersSession
                 break;
 
             case DataType.InitComplete when _connectionEstablished && !_isReady:
-                await _bridge.WriteAsync(
-                    new SessionReady(_closeBetweenMatches)
-                );
+                if (_closeBetweenMatches)
+                {
+                    await _bridge.WriteAsync(
+                        new SessionReady(_clientId)
+                    );
+                }
 
                 _isReady = true;
                 break;
@@ -518,7 +521,7 @@ class FlatBuffersSession
         _connectionEstablished = false;
         _isReady = false;
         _incomingMessages.Writer.TryComplete();
-        _bridge.TryWrite(new UnreservePlayers(_team, _playerIdPairs));
+        _bridge.TryWrite(new UnreserveAgents(_clientId));
 
         // try to politely close the connection
         try
