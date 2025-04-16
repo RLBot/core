@@ -8,7 +8,7 @@ record SpawnMap(MatchConfigurationT matchConfig) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
-        context.MatchHasStarted = false;
+        context.MapHasLoaded = false;
         context.DelayMatchCommandSend = true;
 
         string loadMapCommand = FlatToCommand.MakeOpenCommand(matchConfig);

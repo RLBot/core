@@ -91,13 +91,14 @@ class BridgeHandler(
                 _context.Writer.TryWrite(new DistributeGameState(_context.GameState, packet));
                 _context.MatchStarter.SetCurrentMatchPhase(_context.GameState.MatchPhase);
 
-                var matchStarted = MessageHandler.ReceivedMatchInfo(messageClump);
-                if (matchStarted)
+                var mapJustLoaded = MessageHandler.ReceivedMatchInfo(messageClump);
+                if (mapJustLoaded)
                 {
                     _context.GameState.MatchPhase = MatchPhase.Paused;
                     _context.RenderingMgmt.ClearAllRenders(_context.MatchCommandSender);
-                    _context.MatchHasStarted = true;
-                    _context.MatchStarter.MapSpawned(_context.GameState.MapName);
+                    _context.MapHasLoaded = true;
+                    _context.MatchStarter.OnMapSpawn(_context.GameState.MapName);
+                    _context.UpdateTimeMutators();
                     _context.Writer.TryWrite(new MarkUpdateFieldInfo()); // TODO: Could be part of DistributeGameState
                 }
 
@@ -133,7 +134,7 @@ class BridgeHandler(
                         DelayMatchCommandSend: true,
                         QueuedMatchCommands: true,
                         QueuingCommandsComplete: true,
-                        MatchHasStarted: true,
+                        MapHasLoaded: true,
                         GameState.MatchPhase: MatchPhase.Paused
                     }
                 )

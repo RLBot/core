@@ -104,7 +104,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         LoadMatch(matchConfig);
     }
 
-    public void MapSpawned(string MapName)
+    public void OnMapSpawn(string MapName)
     {
         Logger.LogInformation("Got map info for " + MapName);
         HasSpawnedMap = true;
@@ -114,8 +114,6 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
 
         if (_deferredMatchConfig is { } matchConfig)
         {
-            bridge.TryWrite(new SetMutators(matchConfig.Mutators));
-
             bool spawned = SpawnCars(matchConfig);
             if (!spawned)
                 return;
