@@ -37,19 +37,9 @@ class BridgeContext(
     public Rendering RenderingMgmt { get; } = new(messenger);
     public QuickChat QuickChat { get; } = new();
     public PerfMonitor PerfMonitor { get; } = new();
+
+    public PlayerSpawner GetPlayerSpawner() => new(ref GameState, MatchCommandSender);
     
-    public bool MapHasLoaded { get; set; }
-    public bool QueuedMatchCommands { get; set; }
-    public bool DelayMatchCommandSend { get; set; }
-    public bool QueuingCommandsComplete { get; set; }
-
-    public void QueueConsoleCommand(string command)
-    {
-        QueuedMatchCommands = true;
-        QueuingCommandsComplete = false;
-        MatchCommandSender.AddConsoleCommand(command);
-    }
-
     public void UpdateTimeMutators()
     {
         var mutators = MatchConfig!.Mutators;

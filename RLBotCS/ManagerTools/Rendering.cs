@@ -223,10 +223,9 @@ public class Rendering(TcpMessenger tcpMessenger)
         _clientRenderTracker.Remove(clientId);
     }
 
-    public void ClearAllRenders(MatchCommandSender matchCommandSender)
+    public void ClearAllRenders()
     {
-        matchCommandSender.AddConsoleCommand("FlushPersistentDebugLines");
-        matchCommandSender.Send();
+        _renderingSender.AddFlushPersistentDebugLines();
 
         foreach (var clientRenders in _clientRenderTracker.Values)
         foreach (int renderId in clientRenders.Keys)

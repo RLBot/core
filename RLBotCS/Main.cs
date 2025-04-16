@@ -90,7 +90,7 @@ rlbotServer.Start();
 Thread bridgeHandler = new(() =>
 {
     TcpMessenger tcpMessenger = new(gamePort);
-    MatchStarter matchStarter = new(bridgeWriter, gamePort, rlbotSocketsPort);
+    MatchStarter matchStarter = new(gamePort, rlbotSocketsPort);
     BridgeHandler bridgeHandler = new(serverWriter, bridgeChannel.Reader, tcpMessenger, matchStarter);
 
     try

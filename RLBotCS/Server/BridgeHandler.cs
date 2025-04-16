@@ -89,15 +89,18 @@ class BridgeHandler(
                         ? _context.GameState.ToFlatBuffers()
                         : null;
                 _context.Writer.TryWrite(new DistributeGameState(_context.GameState, packet));
-                _context.MatchStarter.SetCurrentMatchPhase(_context.GameState.MatchPhase);
+                _context.MatchStarter.SetCurrentMatchPhase(_context.GameState.MatchPhase, _context.GetPlayerSpawner());
 
                 var mapJustLoaded = MessageHandler.ReceivedMatchInfo(messageClump);
                 if (mapJustLoaded)
                 {
+                    if (_context.MatchConfig is { AutoSaveReplay: true })
+                    {
+                        _context.MatchCommandSender.AddConsoleCommand(FlatToCommand.MakeAutoSaveReplayCommand());
+                    }
                     _context.GameState.MatchPhase = MatchPhase.Paused;
-                    _context.RenderingMgmt.ClearAllRenders(_context.MatchCommandSender);
-                    _context.MapHasLoaded = true;
-                    _context.MatchStarter.OnMapSpawn(_context.GameState.MapName);
+                    _context.RenderingMgmt.ClearAllRenders();
+                    _context.MatchStarter.OnMapSpawn(_context.GameState.MapName, _context.GetPlayerSpawner());
                     _context.UpdateTimeMutators();
                     _context.Writer.TryWrite(new MarkUpdateFieldInfo()); // TODO: Could be part of DistributeGameState
                 }
@@ -128,25 +131,6 @@ class BridgeHandler(
                         _context.PerfMonitor.ClearAll();
                 }
 
-                if (
-                    _context is
-                    {
-                        DelayMatchCommandSend: true,
-                        QueuedMatchCommands: true,
-                        QueuingCommandsComplete: true,
-                        MapHasLoaded: true,
-                        GameState.MatchPhase: MatchPhase.Paused
-                    }
-                )
-                {
-                    // If we send the commands before the map has spawned, nothing will happen
-                    _context.DelayMatchCommandSend = false;
-                    _context.QueuedMatchCommands = false;
-
-                    _context.Logger.LogInformation("Sending delayed match commands");
-                    _context.MatchCommandSender.Send();
-                }
-
                 _context.RenderingMgmt.SendRenderClears();
             }
         }
@@ -164,7 +148,7 @@ class BridgeHandler(
 
             try
             {
-                _context.RenderingMgmt.ClearAllRenders(_context.MatchCommandSender);
+                _context.RenderingMgmt.ClearAllRenders();
 
                 // we can only clear so many renders each tick
                 // so we do this until we've cleared them all

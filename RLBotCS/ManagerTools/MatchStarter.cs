@@ -1,16 +1,15 @@
-﻿using System.Diagnostics;
-using System.Threading.Channels;
+﻿using System.Threading.Channels;
+using Bridge.Controller;
 using Bridge.Models.Message;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.Conversion;
 using RLBotCS.Server.BridgeMessage;
-using ConsoleCommand = RLBotCS.Server.BridgeMessage.ConsoleCommand;
 using MatchPhase = Bridge.Models.Message.MatchPhase;
 
 namespace RLBotCS.ManagerTools;
 
-class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbotSocketsPort)
+class MatchStarter(int gamePort, int rlbotSocketsPort)
 {
     private static readonly ILogger Logger = Logging.GetLogger("MatchStarter");
 
@@ -45,7 +44,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
             _matchConfig = null;
     }
 
-    public void SetCurrentMatchPhase(MatchPhase phase)
+    public void SetCurrentMatchPhase(MatchPhase phase, PlayerSpawner spawner)
     {
         bool phaseWasNull = _currentMatchPhase == null;
         if (_currentMatchPhase != phase)
@@ -68,11 +67,11 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
                 matchConfig.ExistingMatchBehavior = ExistingMatchBehavior.Restart;
             }
 
-            LoadMatch(matchConfig);
+            LoadMatch(matchConfig, spawner);
         }
     }
 
-    public void StartMatch(MatchConfigurationT matchConfig)
+    public void StartMatch(MatchConfigurationT matchConfig, PlayerSpawner spawner)
     {
         PreprocessMatch(matchConfig);
 
@@ -101,12 +100,12 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
             return;
         }
 
-        LoadMatch(matchConfig);
+        LoadMatch(matchConfig, spawner);
     }
 
-    public void OnMapSpawn(string MapName)
+    public void OnMapSpawn(string mapName, PlayerSpawner spawner)
     {
-        Logger.LogInformation("Got map info for " + MapName);
+        Logger.LogInformation("Got map info for " + mapName);
         HasSpawnedMap = true;
 
         if (!_needsCarSpawning)
@@ -114,7 +113,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
 
         if (_deferredMatchConfig is { } matchConfig)
         {
-            bool spawned = SpawnCars(matchConfig);
+            bool spawned = SpawnCars(matchConfig, spawner);
             if (!spawned)
                 return;
 
@@ -228,12 +227,9 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         }
     }
 
-    private void LoadMatch(MatchConfigurationT matchConfig)
+    private void LoadMatch(MatchConfigurationT matchConfig, PlayerSpawner spawner)
     {
         StartBotsAndScripts(matchConfig);
-
-        if (matchConfig.AutoSaveReplay)
-            bridge.TryWrite(new ConsoleCommand(FlatToCommand.MakeAutoSaveReplayCommand()));
 
         var matchInactive =
             _currentMatchPhase is null or MatchPhase.Inactive or MatchPhase.Ended;
@@ -262,7 +258,8 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
             _matchConfig = null;
             _deferredMatchConfig = matchConfig;
 
-            bridge.TryWrite(new SpawnMap(matchConfig));
+            var cmd = spawner.SpawnMap(matchConfig);
+            Logger.LogInformation($"Loading map with command: {cmd}");
         }
         else
         {
@@ -314,20 +311,19 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
 
                     if (despawnHuman)
                     {
-                        bridge.TryWrite(new ConsoleCommand("spectate"));
+                        spawner.MakeHumanSpectate();
                     }
                     if (toDespawnIds.Count > 0)
                     {
-                        bridge.TryWrite(new RemoveOldPlayers(toDespawnIds));
+                        spawner.DespawnPlayers(toDespawnIds);
                     }
-
-                    bridge.TryWrite(new FlushMatchCommands());
+                    
+                    spawner.Flush();
                 }
             }
 
             // Spawning (existing players will not be spawned again)
-            SpawnCars(matchConfig, true);
-            bridge.TryWrite(new FlushMatchCommands());
+            SpawnCars(matchConfig, spawner, true);
 
             _matchConfig = matchConfig;
             _deferredMatchConfig = null;
@@ -384,7 +380,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
             || lastMutators.RespawnTime != mutators.RespawnTime;
     }
 
-    private bool SpawnCars(MatchConfigurationT matchConfig, bool force = false)
+    private bool SpawnCars(MatchConfigurationT matchConfig, PlayerSpawner spawner, bool force = false)
     {
         // ensure this function is only called once
         // and only if the map has been spawned
@@ -423,9 +419,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
             switch (playerConfig.Variety.Type)
             {
                 case PlayerClass.CustomBot:
-                    bridge.TryWrite(
-                        new SpawnBot(playerConfig, BotSkill.Custom, (uint)(i - indexOffset))
-                    );
+                    spawner.SpawnBot(playerConfig, BotSkill.Custom, (uint)(i - indexOffset));
 
                     break;
                 case PlayerClass.Psyonix:
@@ -440,10 +434,8 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
                             "Psyonix skill level is out of range."
                         ),
                     };
-
-                    bridge.TryWrite(
-                        new SpawnBot(playerConfig, skillEnum, (uint)(i - indexOffset))
-                    );
+    
+                    spawner.SpawnBot(playerConfig, skillEnum, (uint)(i - indexOffset));
 
                     break;
                 case PlayerClass.Human:
@@ -471,17 +463,18 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         // If no human was requested for the match,
         // then make the human spectate so we can start the match
         if (humanConfig is null)
-            bridge.TryWrite(new ConsoleCommand("spectate"));
+            spawner.MakeHumanSpectate();
         else
-            bridge.TryWrite(new SpawnHuman(humanConfig, (uint)(numPlayers - indexOffset)));
+            spawner.SpawnHuman(humanConfig, (uint)(numPlayers - indexOffset));
 
-        bridge.TryWrite(new MarkQueuingComplete());
+        spawner.Flush();
 
         return true;
     }
 
     public void AddLoadout(PlayerLoadoutT loadout, int spawnId)
     {
+        // TODO: This function has nothing to do with match starting. Move to message.
         var matchConfig = _deferredMatchConfig ?? _matchConfig;
         if (matchConfig is null)
         {
@@ -517,7 +510,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
         player.Loadout = loadout;
     }
 
-    public void CheckAgentReadyStatus()
+    public void CheckAgentReadyStatus(PlayerSpawner spawner)
     {
         if (_deferredMatchConfig is { } matchConfig && _needsCarSpawning)
         {
@@ -528,7 +521,7 @@ class MatchStarter(ChannelWriter<IBridgeMessage> bridge, int gamePort, int rlbot
 
             if (ready >= expected)
             {
-                bool spawned = SpawnCars(matchConfig);
+                bool spawned = SpawnCars(matchConfig, spawner);
                 if (!spawned)
                     return;
 
