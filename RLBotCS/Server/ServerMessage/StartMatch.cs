@@ -12,15 +12,17 @@ record StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
     {
         Debug.Assert(ConfigValidator.Validate(MatchConfig));
         
-        context.LastTickPacket = null;
         context.Bridge.TryWrite(new ClearRenders());
 
         foreach (var (writer, _) in context.Sessions.Values)
             writer.TryWrite(new SessionMessage.StopMatch(false));
+        
+        context.LastTickPacket = null;
+        context.FieldInfo = null;  // BridgeHandler decides if we reuse the FieldInfo
+        context.MatchConfig = MatchConfig;
 
         context.RenderingIsEnabled = MatchConfig.EnableRendering;
         context.StateSettingIsEnabled = MatchConfig.EnableStateSetting;
-        context.MatchConfig = MatchConfig;
 
         context.Bridge.TryWrite(new BridgeMessage.StartMatch(MatchConfig));
         

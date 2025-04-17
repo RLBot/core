@@ -13,7 +13,6 @@ record StopMatch(bool ShutdownServer) : IServerMessage
         }
 
         context.FieldInfo = null;
-        context.ShouldUpdateFieldInfo = false;
         context.LastTickPacket = null;
         context.MatchConfig = null;
         context.Bridge.TryWrite(new ClearRenders());

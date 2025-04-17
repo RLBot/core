@@ -97,6 +97,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
         if (_currentMatchPhase == null)
         {
             // Defer start, since we are not connected to RL yet
+            ResetMatchStarting();
             _deferredMatchConfig = matchConfig;
             return;
         }
@@ -249,11 +250,11 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
             );
         }
 
+        HasSpawnedMap = !shouldSpawnNewMap;
         HasSpawnedCars = false;
         
         if (shouldSpawnNewMap)
         {
-            HasSpawnedMap = false;
             _matchConfig = null;
             _deferredMatchConfig = matchConfig;
 
