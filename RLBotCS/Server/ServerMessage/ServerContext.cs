@@ -39,7 +39,7 @@ class ServerContext(
     public bool RenderingIsEnabled = false;
 
     public GamePacketT? LastTickPacket { get; set; }
-    
+
     /// <summary>The MatchConfig for the latest started match.
     /// Note that this config is not necessarily identical to the one at BridgeHandler.
     /// This one is the original validated config from the client.

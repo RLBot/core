@@ -252,7 +252,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
 
         HasSpawnedMap = !shouldSpawnNewMap;
         HasSpawnedCars = false;
-        
+
         if (shouldSpawnNewMap)
         {
             _matchConfig = null;
@@ -317,7 +317,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
                     {
                         spawner.DespawnPlayers(toDespawnIds);
                     }
-                    
+
                     spawner.Flush();
                 }
             }
@@ -380,7 +380,11 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
             || lastMutators.RespawnTime != mutators.RespawnTime;
     }
 
-    private bool SpawnCars(MatchConfigurationT matchConfig, PlayerSpawner spawner, bool force = false)
+    private bool SpawnCars(
+        MatchConfigurationT matchConfig,
+        PlayerSpawner spawner,
+        bool force = false
+    )
     {
         // ensure this function is only called once
         // and only if the map has been spawned
@@ -388,16 +392,12 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
             return false;
 
         var (ready, expected) = AgentMapping.GetReadyStatus();
-        bool doSpawning =
-            force || !matchConfig.WaitForAgents || ready >= expected;
+        bool doSpawning = force || !matchConfig.WaitForAgents || ready >= expected;
 
         if (!doSpawning)
         {
             Logger.LogInformation(
-                "Spawning deferred due to unready agents. Ready: "
-                    + ready
-                    + " / "
-                    + expected
+                "Spawning deferred due to unready agents. Ready: " + ready + " / " + expected
             );
             return false;
         }
@@ -434,7 +434,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
                             "Psyonix skill level is out of range."
                         ),
                     };
-    
+
                     spawner.SpawnBot(playerConfig, skillEnum, (uint)(i - indexOffset));
 
                     break;
@@ -477,9 +477,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
         if (_deferredMatchConfig is { } matchConfig && !HasSpawnedCars)
         {
             var (ready, expected) = AgentMapping.GetReadyStatus();
-            Logger.LogInformation(
-                "Agents ready: " + ready + " / " + expected
-            );
+            Logger.LogInformation("Agents ready: " + ready + " / " + expected);
 
             if (ready >= expected)
             {
@@ -493,11 +491,9 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
         }
         else
         {
-            // Something triggered this check even though we are not waiting for match start, so let's log instead 
+            // Something triggered this check even though we are not waiting for match start, so let's log instead
             var (ready, expected) = AgentMapping.GetReadyStatus();
-            Logger.LogDebug(
-                "Agents ready: " + ready + " / " + expected
-            );
+            Logger.LogDebug("Agents ready: " + ready + " / " + expected);
         }
     }
 }

@@ -70,11 +70,7 @@ var serverWriter = serverChannel.Writer;
 
 Thread rlbotServer = new(() =>
 {
-    FlatBuffersServer flatBuffersServer = new(
-        rlbotSocketsPort,
-        serverChannel,
-        bridgeWriter
-    );
+    FlatBuffersServer flatBuffersServer = new(rlbotSocketsPort, serverChannel, bridgeWriter);
 
     try
     {
@@ -91,7 +87,12 @@ Thread bridgeHandler = new(() =>
 {
     TcpMessenger tcpMessenger = new(gamePort);
     MatchStarter matchStarter = new(gamePort, rlbotSocketsPort);
-    BridgeHandler bridgeHandler = new(serverWriter, bridgeChannel.Reader, tcpMessenger, matchStarter);
+    BridgeHandler bridgeHandler = new(
+        serverWriter,
+        bridgeChannel.Reader,
+        tcpMessenger,
+        matchStarter
+    );
 
     try
     {

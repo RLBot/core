@@ -35,7 +35,12 @@ public class AgentMapping
             uint index = (uint)i - humans;
             _agents.Add(
                 new AgentMetadata(
-                    index, playerConfig.Team, playerConfig.Name, playerConfig.AgentId, playerConfig.SpawnId, 0
+                    index,
+                    playerConfig.Team,
+                    playerConfig.Name,
+                    playerConfig.AgentId,
+                    playerConfig.SpawnId,
+                    0
                 )
             );
         }
@@ -46,7 +51,12 @@ public class AgentMapping
             var scriptConfig = matchConfig.ScriptConfigurations[i];
             _agents.Add(
                 new AgentMetadata(
-                    (uint)i, Team.Scripts, scriptConfig.Name, scriptConfig.AgentId, scriptConfig.SpawnId, 0
+                    (uint)i,
+                    Team.Scripts,
+                    scriptConfig.Name,
+                    scriptConfig.AgentId,
+                    scriptConfig.SpawnId,
+                    0
                 )
             );
         }
@@ -124,7 +134,7 @@ public class AgentMapping
             }
         }
     }
-    
+
     public bool AllReady() => _agents.All(a => a.Ready);
 
     /// <summary>Returns how many agents are ready and how many there are in total.</summary>

@@ -17,9 +17,9 @@ record AgentReservationRequest(
             context.WaitingAgentRequests.Add(this);
             return;
         }
-        
+
         bool isHivemind = false;
-        
+
         foreach (var player in matchConfig.PlayerConfigurations)
         {
             if (player.AgentId == AgentId)
@@ -33,9 +33,7 @@ record AgentReservationRequest(
         {
             if (context.AgentMapping.ReserveAgents(ClientId, AgentId) is var (players, team))
             {
-                SessionWriter.TryWrite(
-                    new SessionMessage.PlayerIdPairs(team, players)
-                );
+                SessionWriter.TryWrite(new SessionMessage.PlayerIdPairs(team, players));
                 return;
             }
         }

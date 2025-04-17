@@ -175,9 +175,7 @@ class FlatBuffersSession
             case DataType.InitComplete when _connectionEstablished && !_isReady:
                 if (_closeBetweenMatches)
                 {
-                    await _bridge.WriteAsync(
-                        new SessionReady(_clientId)
-                    );
+                    await _bridge.WriteAsync(new SessionReady(_clientId));
                 }
 
                 _isReady = true;
@@ -446,7 +444,7 @@ class FlatBuffersSession
                             break;
                         }
                     }
-                    
+
                     _messageBuilder.Clear();
                     _messageBuilder.Finish(MatchComm.Pack(_messageBuilder, m.Message).Value);
 

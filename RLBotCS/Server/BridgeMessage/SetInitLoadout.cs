@@ -22,7 +22,8 @@ record SetInitLoadout(PlayerLoadoutT Loadout, int SpawnId) : IBridgeMessage
         {
             // BUG: If "wait_for_agents=false" then you cannot use the new 'loadout generators'
             context.Logger.LogWarning(
-                "Cannot set initial loadout of bot with spawn id {}. Cars have already spawned.", SpawnId
+                "Cannot set initial loadout of bot with spawn id {}. Cars have already spawned.",
+                SpawnId
             );
             return;
         }
@@ -30,7 +31,10 @@ record SetInitLoadout(PlayerLoadoutT Loadout, int SpawnId) : IBridgeMessage
         var player = matchConfig.PlayerConfigurations.Find(p => p.SpawnId == SpawnId);
         if (player is null)
         {
-            context.Logger.LogError("Cannot set loadout of player with spawn id {}. No such player exists.", SpawnId);
+            context.Logger.LogError(
+                "Cannot set loadout of player with spawn id {}. No such player exists.",
+                SpawnId
+            );
             return;
         }
 
