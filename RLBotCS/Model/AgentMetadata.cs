@@ -5,8 +5,7 @@ public class AgentMetadata(
     uint team,
     string name,
     string agentId,
-    int spawnId,
-    uint matchId
+    int spawnId
 )
 {
     public readonly uint Index = index;
@@ -14,7 +13,6 @@ public class AgentMetadata(
     public readonly string Name = name;
     public readonly string AgentId = agentId;
     public readonly int SpawnId = spawnId;
-    public readonly uint MatchId = matchId;
 
     public int? ClientId { get; private set; } = null;
     public bool Ready { get; set; } = false;
