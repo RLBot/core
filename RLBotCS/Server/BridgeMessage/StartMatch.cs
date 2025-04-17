@@ -16,10 +16,15 @@ record StartMatch(MatchConfigurationT MatchConfig) : IBridgeMessage
         context.AgentMapping.SetAgents(MatchConfig);
         context.MatchStarter.StartMatch(MatchConfig, context.GetPlayerSpawner()); // May modify the match config
         
-        // Notify clients about their agents indexes
+        // Handle messages that required a match config
         foreach (var infoRequest in context.WaitingAgentRequests)
         {
             infoRequest.HandleMessage(context);
+        }
+
+        foreach (var setLoadoutsMsg in context.WaitingInitLoadouts)
+        {
+            setLoadoutsMsg.HandleMessage(context);
         }
         
         context.WaitingAgentRequests.Clear();

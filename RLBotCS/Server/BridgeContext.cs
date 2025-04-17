@@ -25,9 +25,13 @@ class BridgeContext(
     public MatchConfigurationT? MatchConfig => MatchStarter.GetMatchConfig();
     public AgentMapping AgentMapping => MatchStarter.AgentMapping;
 
-    /// <summary>List of sessions that wants to reserve an agent id once
+    /// <summary>List of messages that wants to reserve an agent id once
     /// bridge receives the new match config. Cleared afterward.</summary>
     public List<AgentReservationRequest> WaitingAgentRequests = new();
+    
+    /// <summary>List of messages that wants to set their agent's loadout once
+    /// bridge receives the new match config. Cleared afterward.</summary>
+    public List<SetInitLoadout> WaitingInitLoadouts = new();
 
     public ChannelWriter<IServerMessage> Writer { get; } = writer;
     public ChannelReader<IBridgeMessage> Reader { get; } = reader;

@@ -28,9 +28,8 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
 
     public readonly AgentMapping AgentMapping = new();
 
-    private bool _needsCarSpawning;
-
-    public bool HasSpawnedMap;
+    public bool HasSpawnedCars { get; private set; }
+    public bool HasSpawnedMap { get; private set; }
 
     /// <summary>Match phase of the most recently started match.
     /// If null, we have not heard from RL yet (we might not be connected).</summary>
@@ -38,10 +37,12 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
 
     public MatchConfigurationT? GetMatchConfig() => _deferredMatchConfig ?? _matchConfig;
 
-    public void SetMatchConfigNull()
+    public void ResetMatchStarting()
     {
-        if (!_needsCarSpawning)
-            _matchConfig = null;
+        _deferredMatchConfig = null;
+        _matchConfig = null;
+        HasSpawnedMap = false;
+        HasSpawnedCars = false;
     }
 
     public void SetCurrentMatchPhase(MatchPhase phase, PlayerSpawner spawner)
@@ -107,9 +108,6 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
     {
         Logger.LogInformation("Got map info for " + mapName);
         HasSpawnedMap = true;
-
-        if (!_needsCarSpawning)
-            return;
 
         if (_deferredMatchConfig is { } matchConfig)
         {
@@ -251,7 +249,8 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
             );
         }
 
-        _needsCarSpawning = true;
+        HasSpawnedCars = false;
+        
         if (shouldSpawnNewMap)
         {
             HasSpawnedMap = false;
@@ -384,7 +383,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
     {
         // ensure this function is only called once
         // and only if the map has been spawned
-        if (!force && (!_needsCarSpawning || !HasSpawnedMap))
+        if (!force && (HasSpawnedCars || !HasSpawnedMap))
             return false;
 
         var (ready, expected) = AgentMapping.GetReadyStatus();
@@ -402,7 +401,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
             return false;
         }
 
-        _needsCarSpawning = false;
+        HasSpawnedCars = true;
 
         PlayerConfigurationT? humanConfig = null;
         int numPlayers = matchConfig.PlayerConfigurations.Count;
@@ -472,47 +471,9 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
         return true;
     }
 
-    public void AddLoadout(PlayerLoadoutT loadout, int spawnId)
-    {
-        // TODO: This function has nothing to do with match starting. Move to message.
-        var matchConfig = _deferredMatchConfig ?? _matchConfig;
-        if (matchConfig is null)
-        {
-            Logger.LogError("Match settings not loaded yet.");
-            return;
-        }
-
-        if (!_needsCarSpawning)
-        {
-            // todo: when the match is already running,
-            // respawn the car with the new loadout in the same position
-            Logger.LogError(
-                "Match already started, can't add loadout - feature has not implemented!"
-            );
-            return;
-        }
-
-        var player = matchConfig.PlayerConfigurations.Find(p => p.SpawnId == spawnId);
-        if (player is null)
-        {
-            Logger.LogError($"Player with spawn id {spawnId} not found to add loadout to.");
-            return;
-        }
-
-        if (player.Loadout is not null)
-        {
-            Logger.LogError(
-                $"Player \"{player.Name}\" with spawn id {spawnId} already has a loadout."
-            );
-            return;
-        }
-
-        player.Loadout = loadout;
-    }
-
     public void CheckAgentReadyStatus(PlayerSpawner spawner)
     {
-        if (_deferredMatchConfig is { } matchConfig && _needsCarSpawning)
+        if (_deferredMatchConfig is { } matchConfig && !HasSpawnedCars)
         {
             var (ready, expected) = AgentMapping.GetReadyStatus();
             Logger.LogInformation(

@@ -156,7 +156,7 @@ class FlatBuffersSession
                     if (maybeIdPair is { } pair)
                     {
                         await _bridge.WriteAsync(
-                            new SpawnLoadout(setLoadout.Loadout, pair.SpawnId)
+                            new SetInitLoadout(setLoadout.Loadout, pair.SpawnId)
                         );
                     }
                     else
