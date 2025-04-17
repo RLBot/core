@@ -39,8 +39,7 @@ public class AgentMapping
                     playerConfig.Team,
                     playerConfig.Name,
                     playerConfig.AgentId,
-                    playerConfig.SpawnId,
-                    0
+                    playerConfig.SpawnId
                 )
             );
         }
@@ -55,8 +54,7 @@ public class AgentMapping
                     Team.Scripts,
                     scriptConfig.Name,
                     scriptConfig.AgentId,
-                    scriptConfig.SpawnId,
-                    0
+                    scriptConfig.SpawnId
                 )
             );
         }
