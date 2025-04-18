@@ -1,10 +1,7 @@
-﻿using System.Threading.Channels;
-using Bridge.Controller;
+﻿using System.Diagnostics;
 using Bridge.Models.Message;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
-using RLBotCS.Conversion;
-using RLBotCS.Server.BridgeMessage;
 using MatchPhase = Bridge.Models.Message.MatchPhase;
 
 namespace RLBotCS.ManagerTools;
@@ -406,7 +403,6 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
 
         PlayerConfigurationT? humanConfig = null;
         int numPlayers = matchConfig.PlayerConfigurations.Count;
-        int indexOffset = 0;
 
         for (int i = 0; i < numPlayers; i++)
         {
@@ -419,7 +415,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
             switch (playerConfig.Variety.Type)
             {
                 case PlayerClass.CustomBot:
-                    spawner.SpawnBot(playerConfig, BotSkill.Custom, (uint)(i - indexOffset));
+                    spawner.SpawnBot(playerConfig, BotSkill.Custom, (uint)i);
 
                     break;
                 case PlayerClass.Psyonix:
@@ -435,27 +431,16 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
                         ),
                     };
 
-                    spawner.SpawnBot(playerConfig, skillEnum, (uint)(i - indexOffset));
+                    spawner.SpawnBot(playerConfig, skillEnum, (uint)i);
 
                     break;
                 case PlayerClass.Human:
-                    // ensure there's no gap in the player indices
-                    indexOffset++;
+                    // This assertion is upheld by the ConfigValidator. We require it, since otherwise
+                    // the match config in the server could have a different ordering of players
+                    Debug.Assert(i == numPlayers - 1, "Human must be last player in match config.");
 
-                    if (humanConfig is null)
-                    {
-                        // We want the human to have the highest index, defer spawning
-                        humanConfig = playerConfig;
-                        continue;
-                    }
-
-                    // We can't spawn this human player,
-                    // so we need to -1 for every index after this
-                    // to properly set the desired player indices
-                    Logger.LogError(
-                        "Multiple human players requested. RLBot only supports spawning max one human per match."
-                    );
-
+                    // Human spawning happens after the loop
+                    humanConfig = playerConfig;
                     break;
             }
         }
@@ -465,7 +450,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
         if (humanConfig is null)
             spawner.MakeHumanSpectate();
         else
-            spawner.SpawnHuman(humanConfig, (uint)(numPlayers - indexOffset));
+            spawner.SpawnHuman(humanConfig, (uint)(numPlayers - 1));
 
         spawner.Flush();
 

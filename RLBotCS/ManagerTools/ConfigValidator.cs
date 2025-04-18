@@ -58,6 +58,7 @@ public static class ConfigValidator
     {
         bool valid = true;
         int humanCount = 0;
+        int humanIndex = -1;
 
         for (int i = 0; i < players.Count; i++)
         {
@@ -135,6 +136,7 @@ public static class ConfigValidator
                     break;
                 case PlayerClass.Human:
                     humanCount++;
+                    humanIndex = i;
                     player.AgentId = "human"; // Not that it really matters
                     player.Name = "human";
                     player.Loadout = null;
@@ -154,6 +156,14 @@ public static class ConfigValidator
         {
             Logger.LogError("Only one player can be of type \"Human\".");
             valid = false;
+        }
+
+        if (humanIndex != -1)
+        {
+            // Move human to last index
+            var tmp = players[humanIndex];
+            players[humanIndex] = players.Last();
+            players[players.Count - 1] = tmp;
         }
 
         return valid;
