@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.BridgeMessage;

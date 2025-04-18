@@ -437,7 +437,10 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
                 case PlayerClass.Human:
                     // This assertion is upheld by the ConfigValidator. We require it, since otherwise
                     // the match config in the server could have a different ordering of players
-                    Debug.Assert(i == numPlayers - 1, "Human must be last player in match config.");
+                    Debug.Assert(
+                        i == numPlayers - 1,
+                        "Human must be last player in match config."
+                    );
 
                     // Human spawning happens after the loop
                     humanConfig = playerConfig;

@@ -1,12 +1,6 @@
 namespace RLBotCS.Model;
 
-public class AgentMetadata(
-    uint index,
-    uint team,
-    string name,
-    string agentId,
-    int spawnId
-)
+public class AgentMetadata(uint index, uint team, string name, string agentId, int spawnId)
 {
     public readonly uint Index = index;
     public readonly uint Team = team;
