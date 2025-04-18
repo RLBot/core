@@ -6,6 +6,6 @@ record ClearRenders() : IBridgeMessage
     {
         context.QuickChat.ClearChats();
         context.PerfMonitor.ClearAll();
-        context.RenderingMgmt.ClearAllRenders(context.MatchCommandSender);
+        context.RenderingMgmt.ClearAllRenders();
     }
 }

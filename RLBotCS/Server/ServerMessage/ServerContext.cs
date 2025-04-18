@@ -9,7 +9,6 @@ namespace RLBotCS.Server.ServerMessage;
 
 class ServerContext(
     Channel<IServerMessage, IServerMessage> incomingMessages,
-    MatchStarter matchStarter,
     ChannelWriter<IBridgeMessage> bridge
 )
 {
@@ -21,25 +20,30 @@ class ServerContext(
         incomingMessages.Writer;
     public Dictionary<
         int,
-        (ChannelWriter<SessionMessage> writer, Thread thread, int spawnId)
+        (ChannelWriter<SessionMessage> writer, Thread thread)
     > Sessions { get; } = [];
 
     public FieldInfoT? FieldInfo { get; set; }
-    public bool ShouldUpdateFieldInfo { get; set; }
 
-    /// <summary>List of sessions that have yet to receive the match config (and their indexes).
+    /// <summary>List of sessions that have yet to receive the match config.
     /// We clear the list once they have been notified.</summary>
-    public List<(ChannelWriter<SessionMessage>, string)> MatchConfigWriters { get; } = [];
+    public List<ChannelWriter<SessionMessage>> WaitingMatchConfigRequests { get; } = [];
 
     /// <summary>List of sessions that have yet to receive the field info.
     /// We clear the list once they have been notified.</summary>
-    public List<ChannelWriter<SessionMessage>> FieldInfoWriters { get; } = [];
+    public List<ChannelWriter<SessionMessage>> WaitingFieldInfoRequests { get; } = [];
 
-    public MatchStarter MatchStarter { get; } = matchStarter;
     public ChannelWriter<IBridgeMessage> Bridge { get; } = bridge;
 
     public bool StateSettingIsEnabled = false;
     public bool RenderingIsEnabled = false;
 
     public GamePacketT? LastTickPacket { get; set; }
+
+    /// <summary>The MatchConfig for the latest started match.
+    /// Note that this config is not necessarily identical to the one at BridgeHandler.
+    /// This one is the original validated config from the client.
+    /// The BridgeHandler's config may contain updated names, e.g. "Nexto (2)",
+    /// and updated loadouts.</summary>
+    public MatchConfigurationT? MatchConfig { get; set; }
 }

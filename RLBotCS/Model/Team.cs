@@ -1,4 +1,4 @@
-namespace rlbot.flat;
+namespace RLBotCS.Model;
 
 // Not an enum since it that would create a lot of conversion back of forth to uint
 public static class Team

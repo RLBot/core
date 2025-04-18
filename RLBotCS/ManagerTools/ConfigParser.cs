@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
+using RLBotCS.Model;
 using Tomlyn;
 using Tomlyn.Model;
 
@@ -650,15 +651,25 @@ public class ConfigParser
                     Fields.RlBotAutoStartAgents,
                     true
                 );
-                matchConfig.WaitForAgents = GetValue(rlbotTable, Fields.RlBotWaitForAgents, true);
+                matchConfig.WaitForAgents = GetValue(
+                    rlbotTable,
+                    Fields.RlBotWaitForAgents,
+                    true
+                );
                 // TODO: Remove in future version
                 if (rlbotTable.ContainsKey(Fields.RlBotAutoStartAgentsOld))
                 {
-                    bool autoStartBots = GetValue(rlbotTable, Fields.RlBotAutoStartAgentsOld, true);
+                    bool autoStartBots = GetValue(
+                        rlbotTable,
+                        Fields.RlBotAutoStartAgentsOld,
+                        true
+                    );
                     matchConfig.AutoStartAgents = autoStartBots;
                     matchConfig.WaitForAgents = autoStartBots;
-                    Logger.LogWarning($"'{Fields.RlBotAutoStartAgentsOld}' is deprecated. Please use " +
-                                      $"'{Fields.RlBotAutoStartAgents}' and '{Fields.RlBotWaitForAgents}' instead.");
+                    Logger.LogWarning(
+                        $"'{Fields.RlBotAutoStartAgentsOld}' is deprecated. Please use "
+                            + $"'{Fields.RlBotAutoStartAgents}' and '{Fields.RlBotWaitForAgents}' instead."
+                    );
                 }
             }
 

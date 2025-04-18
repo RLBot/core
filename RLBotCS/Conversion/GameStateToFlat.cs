@@ -2,17 +2,20 @@ using Bridge.Models.Message;
 using Bridge.Packet;
 using Bridge.State;
 using rlbot.flat;
+using RLBotCS.Model;
 using CollisionShapeUnion = rlbot.flat.CollisionShapeUnion;
 using MatchPhase = Bridge.Models.Message.MatchPhase;
+using Rotator = Bridge.Models.Phys.Rotator;
+using Vector2 = Bridge.Models.Phys.Vector2;
+using Vector3 = Bridge.Models.Phys.Vector3;
 
 namespace RLBotCS.Conversion;
 
 static class GameStateToFlat
 {
-    private static Vector2T ToVector2T(this Bridge.Models.Phys.Vector2 vec) =>
-        new() { X = vec.X, Y = vec.Y };
+    private static Vector2T ToVector2T(this Vector2 vec) => new() { X = vec.X, Y = vec.Y };
 
-    private static Vector3T ToVector3T(this Bridge.Models.Phys.Vector3 vec) =>
+    private static Vector3T ToVector3T(this Vector3 vec) =>
         new()
         {
             X = vec.X,
@@ -20,7 +23,7 @@ static class GameStateToFlat
             Z = vec.Z,
         };
 
-    private static RotatorT ToRotatorT(this Bridge.Models.Phys.Rotator vec) =>
+    private static RotatorT ToRotatorT(this Rotator vec) =>
         new()
         {
             Pitch = vec.Pitch,

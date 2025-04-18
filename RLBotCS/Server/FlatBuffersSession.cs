@@ -4,9 +4,11 @@ using Google.FlatBuffers;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.ManagerTools;
+using RLBotCS.Model;
 using RLBotCS.Server.BridgeMessage;
 using RLBotCS.Server.ServerMessage;
 using RLBotCS.Types;
+using StartMatch = RLBotCS.Server.ServerMessage.StartMatch;
 
 namespace RLBotCS.Server;
 
@@ -123,7 +125,7 @@ class FlatBuffersSession
                 }
 
                 await _rlbotServer.WriteAsync(
-                    new IntroDataRequest(_incomingMessages.Writer, _agentId)
+                    new IntroDataRequest(_clientId, _incomingMessages.Writer, _agentId)
                 );
 
                 _connectionEstablished = true;
@@ -153,8 +155,8 @@ class FlatBuffersSession
 
                     if (maybeIdPair is { } pair)
                     {
-                        await _rlbotServer.WriteAsync(
-                            new SpawnLoadout(setLoadout.Loadout, pair.SpawnId)
+                        await _bridge.WriteAsync(
+                            new SetInitLoadout(setLoadout.Loadout, pair.SpawnId)
                         );
                     }
                     else
@@ -171,11 +173,10 @@ class FlatBuffersSession
                 break;
 
             case DataType.InitComplete when _connectionEstablished && !_isReady:
-                // use the first spawn id we have
-                PlayerIdPair? idPair = _playerIdPairs.FirstOrDefault();
-                await _rlbotServer.WriteAsync(
-                    new SessionReady(_closeBetweenMatches, _clientId, idPair?.SpawnId ?? 0)
-                );
+                if (_closeBetweenMatches)
+                {
+                    await _bridge.WriteAsync(new SessionReady(_clientId));
+                }
 
                 _isReady = true;
                 break;
@@ -429,7 +430,21 @@ class FlatBuffersSession
                 case SessionMessage.StateSettingAllowed m:
                     _stateSettingIsEnabled = m.Allowed;
                     break;
-                case SessionMessage.MatchComm m when _isReady && _wantsComms:
+                case SessionMessage.MatchComm m when _wantsComms:
+                    // Do not distribute this match comm to our client in certain cases.
+                    // Match managers with no agent id receive all messages.
+                    if (_agentId != "")
+                    {
+                        if (!_isReady)
+                        {
+                            break;
+                        }
+                        if (m.Message.TeamOnly && m.Message.Team != _team)
+                        {
+                            break;
+                        }
+                    }
+
                     _messageBuilder.Clear();
                     _messageBuilder.Finish(MatchComm.Pack(_messageBuilder, m.Message).Value);
 
@@ -504,7 +519,7 @@ class FlatBuffersSession
         _connectionEstablished = false;
         _isReady = false;
         _incomingMessages.Writer.TryComplete();
-        _bridge.TryWrite(new UnreservePlayers(_team, _playerIdPairs));
+        _bridge.TryWrite(new UnreserveAgents(_clientId));
 
         // try to politely close the connection
         try
