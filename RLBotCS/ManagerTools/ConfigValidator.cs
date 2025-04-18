@@ -1,3 +1,4 @@
+using Bridge.Models.Command;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.Conversion;
@@ -91,6 +92,8 @@ public static class ConfigValidator
                     player.Name ??= "";
                     player.RunCommand ??= "";
                     player.RootDir ??= "";
+                    player.Loadout ??= new ();
+                    player.Loadout.LoadoutPaint ??= new();
                     break;
                 case PlayerClass.Psyonix:
                     string skill = player.Variety.AsPsyonix().BotSkill switch
