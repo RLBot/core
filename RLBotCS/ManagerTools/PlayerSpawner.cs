@@ -7,7 +7,7 @@ using RLBotCS.Conversion;
 
 namespace RLBotCS.ManagerTools;
 
-public readonly ref struct PlayerSpawner(ref GameState gameState, MatchCommandSender matchCommandSender)
+public readonly ref struct PlayerSpawner(ref GameState gameState, SpawnCommandQueue spawnCommandQueue)
 {
     private readonly ref GameState _gameState = ref gameState;
 
@@ -21,7 +21,7 @@ public readonly ref struct PlayerSpawner(ref GameState gameState, MatchCommandSe
 
         Loadout loadout = FlatToModel.ToLoadout(config.Loadout, config.Team);
 
-        ushort commandId = matchCommandSender.AddBotSpawnCommand(
+        ushort commandId = spawnCommandQueue.AddBotSpawnCommand(
             config.Name,
             (int)config.Team,
             skill,
@@ -42,7 +42,7 @@ public readonly ref struct PlayerSpawner(ref GameState gameState, MatchCommandSe
 
     public void SpawnHuman(PlayerConfigurationT config, uint desiredIndex)
     {
-        matchCommandSender.AddConsoleCommand("ChangeTeam " + config.Team);
+        spawnCommandQueue.AddConsoleCommand("ChangeTeam " + config.Team);
 
         PlayerMetadata? alreadySpawnedPlayer = _gameState.PlayerMapping.GetKnownPlayers()
             .FirstOrDefault(kp => config.SpawnId == kp.SpawnId);
@@ -66,7 +66,7 @@ public readonly ref struct PlayerSpawner(ref GameState gameState, MatchCommandSe
 
     public void MakeHumanSpectate()
     {
-        matchCommandSender.AddConsoleCommand("spectate");
+        spawnCommandQueue.AddConsoleCommand("spectate");
     }
 
     public void DespawnPlayers(List<int> spawnIds)
@@ -78,7 +78,7 @@ public readonly ref struct PlayerSpawner(ref GameState gameState, MatchCommandSe
 
             if (player != null)
             {
-                matchCommandSender.AddDespawnCommand(player.ActorId);
+                spawnCommandQueue.AddDespawnCommand(player.ActorId);
             }
         }
     }
@@ -86,13 +86,13 @@ public readonly ref struct PlayerSpawner(ref GameState gameState, MatchCommandSe
     public string SpawnMap(MatchConfigurationT matchConfig)
     {
         string loadMapCommand = FlatToCommand.MakeOpenCommand(matchConfig);
-        matchCommandSender.AddConsoleCommand(loadMapCommand);
-        matchCommandSender.Send();
+        spawnCommandQueue.AddConsoleCommand(loadMapCommand);
+        spawnCommandQueue.Flush();
         return loadMapCommand;
     }
 
     public void Flush()
     {
-        matchCommandSender.Send();
+        spawnCommandQueue.Flush();
     }
 }

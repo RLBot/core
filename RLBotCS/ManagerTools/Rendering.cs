@@ -17,10 +17,11 @@ public class Rendering(TcpMessenger tcpMessenger)
     public const int FontWidthPixels = 10;
     public const int FontHeightPixels = 20;
 
-    private readonly RenderingSender _renderingSender = new(tcpMessenger);
+    private readonly RenderingCommandQueue _renderingCommandQueue = new(tcpMessenger);
     private readonly Dictionary<int, Dictionary<int, List<ushort>>> _clientRenderTracker = [];
 
-    private readonly Queue<ushort> _RenderClearQueue = new();
+    /// <summary>There is a maximum number of clears we can send at a time. Overflow goes to this queue.</summary>
+    private readonly Queue<ushort> _renderClearQueue = new();
 
     private int _numClears = 0;
 
@@ -28,13 +29,13 @@ public class Rendering(TcpMessenger tcpMessenger)
         renderItem.Value switch
         {
             Line3DT { Start: var start, End: var end, Color: var color } =>
-                _renderingSender.AddLine3D(
+                _renderingCommandQueue.AddLine3D(
                     FlatToModel.ToRenderAnchor(start, gameState),
                     FlatToModel.ToRenderAnchor(end, gameState),
                     FlatToModel.ToColor(color)
                 ),
             PolyLine3DT { Points: var points, Color: var color } =>
-                _renderingSender.AddLine3DSeries(
+                _renderingCommandQueue.AddLine3DSeries(
                     points.Select(FlatToModel.ToVectorFromT).ToList(),
                     FlatToModel.ToColor(color)
                 ),
@@ -48,7 +49,7 @@ public class Rendering(TcpMessenger tcpMessenger)
                 HAlign: var hAlign,
                 VAlign: var vAlign,
                 Scale: var scale
-            } => _renderingSender.AddText2D(
+            } => _renderingCommandQueue.AddText2D(
                 text,
                 x,
                 y,
@@ -67,7 +68,7 @@ public class Rendering(TcpMessenger tcpMessenger)
                 HAlign: var hAlign,
                 VAlign: var vAlign,
                 Scale: var scale
-            } => _renderingSender.AddText3D(
+            } => _renderingCommandQueue.AddText3D(
                 text,
                 FlatToModel.ToRenderAnchor(anchor, gameState),
                 FlatToModel.ToColor(foreground),
@@ -93,7 +94,7 @@ public class Rendering(TcpMessenger tcpMessenger)
             (int)Math.Abs(rect2Dt.Height * ResolutionHeightPixels)
         );
 
-        return _renderingSender.AddText2D(
+        return _renderingCommandQueue.AddText2D(
             text,
             adjustedX,
             adjustedY,
@@ -113,7 +114,7 @@ public class Rendering(TcpMessenger tcpMessenger)
             (int)Math.Abs(rect3Dt.Height * ResolutionHeightPixels)
         );
 
-        return _renderingSender.AddText3D(
+        return _renderingCommandQueue.AddText3D(
             text,
             FlatToModel.ToRenderAnchor(rect3Dt.Anchor, gameState),
             Color.Transparent,
@@ -187,7 +188,7 @@ public class Rendering(TcpMessenger tcpMessenger)
             renderGroup.Add(RenderItem(renderItem.Variety, gameState));
         }
 
-        _renderingSender.Send();
+        _renderingCommandQueue.Send();
 
         // Add to the tracker
         clientRenders[renderId] = renderGroup;
@@ -225,7 +226,7 @@ public class Rendering(TcpMessenger tcpMessenger)
 
     public void ClearAllRenders()
     {
-        _renderingSender.AddFlushPersistentDebugLines();
+        _renderingCommandQueue.AddFlushPersistentDebugLines();
 
         foreach (var clientRenders in _clientRenderTracker.Values)
         foreach (int renderId in clientRenders.Keys)
@@ -244,26 +245,26 @@ public class Rendering(TcpMessenger tcpMessenger)
     {
         if (_numClears < MaxClearsPerTick)
         {
-            _renderingSender.RemoveRenderItem(id);
+            _renderingCommandQueue.RemoveRenderItem(id);
             _numClears++;
             return;
         }
 
         // If we've reached the limit, queue it up to clear the next tick
-        _RenderClearQueue.Enqueue(id);
+        _renderClearQueue.Enqueue(id);
     }
 
     public bool SendRenderClears()
     {
-        while (_RenderClearQueue.Count > 0 && _numClears < MaxClearsPerTick)
+        while (_renderClearQueue.Count > 0 && _numClears < MaxClearsPerTick)
         {
-            var renderItem = _RenderClearQueue.Dequeue();
-            _renderingSender.RemoveRenderItem(renderItem);
+            var renderItem = _renderClearQueue.Dequeue();
+            _renderingCommandQueue.RemoveRenderItem(renderItem);
             _numClears++;
         }
 
-        _renderingSender.Send();
+        _renderingCommandQueue.Send();
 
-        return _RenderClearQueue.Count == 0;
+        return _renderClearQueue.Count == 0;
     }
 }

@@ -96,9 +96,8 @@ class BridgeHandler(
                 {
                     if (_context.MatchConfig is { AutoSaveReplay: true })
                     {
-                        _context.MatchCommandSender.AddConsoleCommand(FlatToCommand.MakeAutoSaveReplayCommand());
+                        _context.MatchCommandQueue.AddConsoleCommand(FlatToCommand.MakeAutoSaveReplayCommand());
                     }
-                    _context.GameState.MatchPhase = MatchPhase.Paused;
                     _context.RenderingMgmt.ClearAllRenders();
                     _context.MatchStarter.OnMapSpawn(_context.GameState.MapName, _context.GetPlayerSpawner());
                     _context.UpdateTimeMutators();
@@ -129,6 +128,12 @@ class BridgeHandler(
                         );
                     else
                         _context.PerfMonitor.ClearAll();
+                }
+
+                if (_context.MatchStarter.HasSpawnedMap && _context.GameState.MatchPhase == MatchPhase.Paused && _context.SpawnCommandQueue.Count > 0)
+                {
+                    _context.Logger.LogDebug("Sending queued spawning commands");
+                    _context.SpawnCommandQueue.Flush();
                 }
 
                 _context.RenderingMgmt.SendRenderClears();

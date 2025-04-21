@@ -36,13 +36,14 @@ class BridgeContext(
     public ChannelWriter<IServerMessage> Writer { get; } = writer;
     public ChannelReader<IBridgeMessage> Reader { get; } = reader;
     public TcpMessenger Messenger { get; } = messenger;
-    public MatchCommandSender MatchCommandSender { get; } = new(messenger);
+    public MatchCommandQueue MatchCommandQueue { get; } = new(messenger);
+    public SpawnCommandQueue SpawnCommandQueue { get; } = new(messenger);
     public PlayerInputSender PlayerInputSender { get; } = new(messenger);
     public Rendering RenderingMgmt { get; } = new(messenger);
     public QuickChat QuickChat { get; } = new();
     public PerfMonitor PerfMonitor { get; } = new();
 
-    public PlayerSpawner GetPlayerSpawner() => new(ref GameState, MatchCommandSender);
+    public PlayerSpawner GetPlayerSpawner() => new(ref GameState, SpawnCommandQueue);
     
     public void UpdateTimeMutators()
     {

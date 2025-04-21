@@ -28,14 +28,14 @@ record StateSetLoadout(PlayerLoadoutT Loadout, uint Index) : IBridgeMessage
             return;
         }
 
-        context.MatchCommandSender.AddDespawnCommand(meta.ActorId);
+        context.SpawnCommandQueue.AddDespawnCommand(meta.ActorId);
 
         Loadout.LoadoutPaint ??= new LoadoutPaintT();
 
         var player = context.GameState.GameCars[meta.PlayerIndex];
         Loadout loadout = FlatToModel.ToLoadout(Loadout, player.Team);
 
-        ushort commandId = context.MatchCommandSender.AddBotSpawnCommand(
+        ushort commandId = context.SpawnCommandQueue.AddBotSpawnCommand(
             player.Name,
             (int)player.Team,
             BotSkill.Custom,
@@ -53,6 +53,6 @@ record StateSetLoadout(PlayerLoadoutT Loadout, uint Index) : IBridgeMessage
             }
         );
 
-        context.MatchCommandSender.Send();
+        context.SpawnCommandQueue.Flush();
     }
 }
