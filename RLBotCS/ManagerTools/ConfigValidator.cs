@@ -132,6 +132,10 @@ public static class ConfigValidator
                         );
                     }
 
+                    // Fallback if above fails or user didn't include paints
+                    player.Loadout ??= new();
+                    player.Loadout.LoadoutPaint ??= new();
+                    
                     player.RunCommand = "";
                     player.RootDir = "";
 
