@@ -28,7 +28,7 @@ class BridgeContext(
     /// <summary>List of messages that wants to reserve an agent id once
     /// bridge receives the new match config. Cleared afterward.</summary>
     public List<AgentReservationRequest> WaitingAgentRequests = new();
-    
+
     /// <summary>List of messages that wants to set their agent's loadout once
     /// bridge receives the new match config. Cleared afterward.</summary>
     public List<SetInitLoadout> WaitingInitLoadouts = new();
@@ -44,11 +44,10 @@ class BridgeContext(
     public PerfMonitor PerfMonitor { get; } = new();
 
     public PlayerSpawner GetPlayerSpawner() => new(ref GameState, SpawnCommandQueue);
-    
     public void UpdateTimeMutators()
     {
         var mutators = MatchConfig!.Mutators;
-        
+
         GameState.GameTimeRemaining = mutators.MatchLength switch
         {
             MatchLengthMutator.FiveMinutes => 5 * 60,

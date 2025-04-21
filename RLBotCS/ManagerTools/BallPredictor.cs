@@ -148,7 +148,9 @@ public static partial class BallPredictor
                 if (currentTime - latestTouch.GameSeconds < 0.1)
                 {
                     // Target goal is the opposite of the last touch
-                    SetHeatseekerTarget(touchingTeam == Team.Blue ? (byte)Team.Orange : (byte)Team.Blue);
+                    SetHeatseekerTarget(
+                        touchingTeam == Team.Blue ? (byte)Team.Orange : (byte)Team.Blue
+                    );
                 }
                 else if (GetHeatseekerTargetY() == 0 || MathF.Abs(ball.Location.Y) >= 4820)
                 {

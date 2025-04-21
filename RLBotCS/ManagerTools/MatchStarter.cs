@@ -1,10 +1,7 @@
-﻿using System.Threading.Channels;
-using Bridge.Controller;
+﻿using System.Diagnostics;
 using Bridge.Models.Message;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
-using RLBotCS.Conversion;
-using RLBotCS.Server.BridgeMessage;
 using MatchPhase = Bridge.Models.Message.MatchPhase;
 
 namespace RLBotCS.ManagerTools;
@@ -97,6 +94,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
         if (_currentMatchPhase == null)
         {
             // Defer start, since we are not connected to RL yet
+            ResetMatchStarting();
             _deferredMatchConfig = matchConfig;
             return;
         }
@@ -249,11 +247,11 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
             );
         }
 
+        HasSpawnedMap = !shouldSpawnNewMap;
         HasSpawnedCars = false;
-        
+
         if (shouldSpawnNewMap)
         {
-            HasSpawnedMap = false;
             _matchConfig = null;
             _deferredMatchConfig = matchConfig;
 
@@ -380,7 +378,11 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
             || lastMutators.RespawnTime != mutators.RespawnTime;
     }
 
-    private bool SpawnCars(MatchConfigurationT matchConfig, PlayerSpawner spawner, bool force = false)
+    private bool SpawnCars(
+        MatchConfigurationT matchConfig,
+        PlayerSpawner spawner,
+        bool force = false
+    )
     {
         // ensure this function is only called once
         // and only if the map has been spawned
@@ -388,16 +390,12 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
             return false;
 
         var (ready, expected) = AgentMapping.GetReadyStatus();
-        bool doSpawning =
-            force || !matchConfig.WaitForAgents || ready >= expected;
+        bool doSpawning = force || !matchConfig.WaitForAgents || ready >= expected;
 
         if (!doSpawning)
         {
             Logger.LogInformation(
-                "Spawning deferred due to unready agents. Ready: "
-                    + ready
-                    + " / "
-                    + expected
+                "Spawning deferred due to unready agents. Ready: " + ready + " / " + expected
             );
             return false;
         }
@@ -406,7 +404,6 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
 
         PlayerConfigurationT? humanConfig = null;
         int numPlayers = matchConfig.PlayerConfigurations.Count;
-        int indexOffset = 0;
 
         for (int i = 0; i < numPlayers; i++)
         {
@@ -419,7 +416,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
             switch (playerConfig.Variety.Type)
             {
                 case PlayerClass.CustomBot:
-                    spawner.SpawnBot(playerConfig, BotSkill.Custom, (uint)(i - indexOffset));
+                    spawner.SpawnBot(playerConfig, BotSkill.Custom, (uint)i);
 
                     break;
                 case PlayerClass.Psyonix:
@@ -434,28 +431,20 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
                             "Psyonix skill level is out of range."
                         ),
                     };
-    
-                    spawner.SpawnBot(playerConfig, skillEnum, (uint)(i - indexOffset));
+
+                    spawner.SpawnBot(playerConfig, skillEnum, (uint)i);
 
                     break;
                 case PlayerClass.Human:
-                    // ensure there's no gap in the player indices
-                    indexOffset++;
-
-                    if (humanConfig is null)
-                    {
-                        // We want the human to have the highest index, defer spawning
-                        humanConfig = playerConfig;
-                        continue;
-                    }
-
-                    // We can't spawn this human player,
-                    // so we need to -1 for every index after this
-                    // to properly set the desired player indices
-                    Logger.LogError(
-                        "Multiple human players requested. RLBot only supports spawning max one human per match."
+                    // This assertion is upheld by the ConfigValidator. We require it, since otherwise
+                    // the match config in the server could have a different ordering of players
+                    Debug.Assert(
+                        i == numPlayers - 1,
+                        "Human must be last player in match config."
                     );
 
+                    // Human spawning happens after the loop
+                    humanConfig = playerConfig;
                     break;
             }
         }
@@ -465,7 +454,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
         if (humanConfig is null)
             spawner.MakeHumanSpectate();
         else
-            spawner.SpawnHuman(humanConfig, (uint)(numPlayers - indexOffset));
+            spawner.SpawnHuman(humanConfig, (uint)(numPlayers - 1));
 
         if (force)
         {
@@ -480,9 +469,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
         if (_deferredMatchConfig is { } matchConfig && !HasSpawnedCars)
         {
             var (ready, expected) = AgentMapping.GetReadyStatus();
-            Logger.LogInformation(
-                "Agents ready: " + ready + " / " + expected
-            );
+            Logger.LogInformation("Agents ready: " + ready + " / " + expected);
 
             if (ready >= expected)
             {
@@ -496,11 +483,9 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
         }
         else
         {
-            // Something triggered this check even though we are not waiting for match start, so let's log instead 
+            // Something triggered this check even though we are not waiting for match start, so let's log instead
             var (ready, expected) = AgentMapping.GetReadyStatus();
-            Logger.LogDebug(
-                "Agents ready: " + ready + " / " + expected
-            );
+            Logger.LogDebug("Agents ready: " + ready + " / " + expected);
         }
     }
 }

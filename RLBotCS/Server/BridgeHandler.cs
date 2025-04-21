@@ -88,20 +88,27 @@ class BridgeHandler(
                     )
                         ? _context.GameState.ToFlatBuffers()
                         : null;
-                _context.Writer.TryWrite(new DistributeGameState(_context.GameState, packet));
-                _context.MatchStarter.SetCurrentMatchPhase(_context.GameState.MatchPhase, _context.GetPlayerSpawner());
+                _context.Writer.TryWrite(new DistributeGamePacket(packet));
+                _context.MatchStarter.SetCurrentMatchPhase(
+                    _context.GameState.MatchPhase,
+                    _context.GetPlayerSpawner()
+                );
 
                 var mapJustLoaded = MessageHandler.ReceivedMatchInfo(messageClump);
                 if (mapJustLoaded)
                 {
                     if (_context.MatchConfig is { AutoSaveReplay: true })
                     {
-                        _context.MatchCommandQueue.AddConsoleCommand(FlatToCommand.MakeAutoSaveReplayCommand());
+                        _context.MatchCommandQueue.AddConsoleCommand(
+                            FlatToCommand.MakeAutoSaveReplayCommand()
+                        );
                     }
                     _context.RenderingMgmt.ClearAllRenders();
-                    _context.MatchStarter.OnMapSpawn(_context.GameState.MapName, _context.GetPlayerSpawner());
-                    _context.UpdateTimeMutators();
-                    _context.Writer.TryWrite(new MarkUpdateFieldInfo()); // TODO: Could be part of DistributeGameState
+                    _context.MatchStarter.OnMapSpawn(
+                        _context.GameState.MapName,
+                        _context.GetPlayerSpawner()
+                    );
+                    _context.Writer.TryWrite(new DistributeFieldInfo(_context.GameState));
                 }
 
                 if (_context.GameState.MatchEnded)

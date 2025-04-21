@@ -24,7 +24,6 @@ class ServerContext(
     > Sessions { get; } = [];
 
     public FieldInfoT? FieldInfo { get; set; }
-    public bool ShouldUpdateFieldInfo { get; set; } // TODO: This bool might be redundant
 
     /// <summary>List of sessions that have yet to receive the match config.
     /// We clear the list once they have been notified.</summary>
@@ -40,5 +39,11 @@ class ServerContext(
     public bool RenderingIsEnabled = false;
 
     public GamePacketT? LastTickPacket { get; set; }
+
+    /// <summary>The MatchConfig for the latest started match.
+    /// Note that this config is not necessarily identical to the one at BridgeHandler.
+    /// This one is the original validated config from the client.
+    /// The BridgeHandler's config may contain updated names, e.g. "Nexto (2)",
+    /// and updated loadouts.</summary>
     public MatchConfigurationT? MatchConfig { get; set; }
 }

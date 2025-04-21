@@ -7,13 +7,17 @@ using RLBotCS.Conversion;
 
 namespace RLBotCS.ManagerTools;
 
-public readonly ref struct PlayerSpawner(ref GameState gameState, SpawnCommandQueue spawnCommandQueue)
+public readonly ref struct PlayerSpawner(
+    ref GameState gameState,
+    SpawnCommandQueue spawnCommandQueue
+)
 {
     private readonly ref GameState _gameState = ref gameState;
 
     public void SpawnBot(PlayerConfigurationT config, BotSkill skill, uint desiredIndex)
     {
-        PlayerMetadata? alreadySpawnedPlayer = _gameState.PlayerMapping.GetKnownPlayers()
+        PlayerMetadata? alreadySpawnedPlayer = _gameState
+            .PlayerMapping.GetKnownPlayers()
             .FirstOrDefault(kp => config.SpawnId == kp.SpawnId);
         if (alreadySpawnedPlayer != null)
             // We've already spawned this player, don't duplicate them.
@@ -44,7 +48,8 @@ public readonly ref struct PlayerSpawner(ref GameState gameState, SpawnCommandQu
     {
         spawnCommandQueue.AddConsoleCommand("ChangeTeam " + config.Team);
 
-        PlayerMetadata? alreadySpawnedPlayer = _gameState.PlayerMapping.GetKnownPlayers()
+        PlayerMetadata? alreadySpawnedPlayer = _gameState
+            .PlayerMapping.GetKnownPlayers()
             .FirstOrDefault(kp => config.SpawnId == kp.SpawnId);
         if (alreadySpawnedPlayer != null)
         {
@@ -73,7 +78,8 @@ public readonly ref struct PlayerSpawner(ref GameState gameState, SpawnCommandQu
     {
         foreach (int spawnId in spawnIds)
         {
-            PlayerMetadata? player = _gameState.PlayerMapping.GetKnownPlayers()
+            PlayerMetadata? player = _gameState
+                .PlayerMapping.GetKnownPlayers()
                 .FirstOrDefault(p => p.SpawnId == spawnId);
 
             if (player != null)
