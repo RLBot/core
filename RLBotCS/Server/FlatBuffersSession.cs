@@ -74,6 +74,11 @@ class FlatBuffersSession
 
     private readonly FlatBufferBuilder _messageBuilder = new(1 << 10);
 
+    public string ClientName => 
+        _agentId != ""
+            ? $"client {_clientId} (aid {_agentId}, index {string.Join(",", _playerIdPairs.Select(p => p.Index))})"
+            : $"client {_clientId} (w/o aid)";
+
     public FlatBuffersSession(
         TcpClient client,
         int clientId,
@@ -178,6 +183,7 @@ class FlatBuffersSession
                     await _bridge.WriteAsync(new SessionReady(_clientId));
                 }
 
+                Logger.LogDebug("InitComplete from {}", ClientName);
                 _isReady = true;
                 break;
 
@@ -388,6 +394,8 @@ class FlatBuffersSession
                             _messageBuilder
                         )
                     );
+                    
+                    Logger.LogDebug("Reserved agents for {}", ClientName);
 
                     break;
                 case SessionMessage.DistributeBallPrediction m
@@ -510,11 +518,7 @@ class FlatBuffersSession
 
     public void Cleanup()
     {
-        var clientName =
-            _agentId != ""
-                ? $"{_agentId} (index {string.Join(",", _playerIdPairs.Select(p => p.Index))})"
-                : "Client w/o agent id";
-        Logger.LogInformation($"Closing session {_clientId} :: {clientName}");
+        Logger.LogInformation("Closing session for {}", ClientName);
 
         _connectionEstablished = false;
         _isReady = false;
