@@ -76,7 +76,7 @@ class FlatBuffersSession
 
     public string ClientName => 
         _agentId != ""
-            ? $"client {_clientId} (aid {_agentId}, index {string.Join(",", _playerIdPairs.Select(p => p.Index))})"
+            ? $"client {_clientId} (index {string.Join("+", _playerIdPairs.Select(p => p.Index))}, team {_team}, aid {_agentId})"
             : $"client {_clientId} (w/o aid)";
 
     public FlatBuffersSession(

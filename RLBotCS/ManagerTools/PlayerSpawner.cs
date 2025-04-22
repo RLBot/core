@@ -40,13 +40,14 @@ public readonly ref struct PlayerSpawner(
                 DesiredPlayerIndex = desiredIndex,
                 IsCustomBot = skill == BotSkill.Custom,
                 IsBot = true,
+                AgentId = config.AgentId,
             }
         );
     }
 
     public void SpawnHuman(PlayerConfigurationT config, uint desiredIndex)
     {
-        spawnCommandQueue.AddConsoleCommand("ChangeTeam " + config.Team);
+        ushort cmd = spawnCommandQueue.AddConsoleCommand("ChangeTeam " + config.Team);
 
         PlayerMetadata? alreadySpawnedPlayer = _gameState
             .PlayerMapping.GetKnownPlayers()
@@ -60,11 +61,12 @@ public readonly ref struct PlayerSpawner(
         _gameState.PlayerMapping.AddPendingSpawn(
             new SpawnTracker
             {
-                CommandId = 0,
+                CommandId = cmd,
                 SpawnId = config.SpawnId,
                 DesiredPlayerIndex = desiredIndex,
                 IsBot = false,
                 IsCustomBot = false,
+                AgentId = config.AgentId,
             }
         );
     }
