@@ -47,21 +47,21 @@ public readonly ref struct PlayerSpawner(
 
     public void SpawnHuman(PlayerConfigurationT config, uint desiredIndex)
     {
-        ushort cmd = spawnCommandQueue.AddConsoleCommand("ChangeTeam " + config.Team);
+        spawnCommandQueue.AddConsoleCommand("ChangeTeam " + config.Team);
 
         PlayerMetadata? alreadySpawnedPlayer = _gameState
             .PlayerMapping.GetKnownPlayers()
             .FirstOrDefault(kp => config.SpawnId == kp.SpawnId);
         if (alreadySpawnedPlayer != null)
         {
-            alreadySpawnedPlayer.PlayerIndex = desiredIndex;
+            _gameState.PlayerMapping.QueueIndexChange(alreadySpawnedPlayer.PlayerIndex, desiredIndex);
             return;
         }
 
         _gameState.PlayerMapping.AddPendingSpawn(
             new SpawnTracker
             {
-                CommandId = cmd,
+                CommandId = 0, // Human spawning must use command id 0 for reasons in bridge 
                 SpawnId = config.SpawnId,
                 DesiredPlayerIndex = desiredIndex,
                 IsBot = false,
