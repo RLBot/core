@@ -160,6 +160,8 @@ public static class ConfigValidator
                     valid = false;
                     break;
             }
+
+            player.SpawnId = player.Variety.Type == PlayerClass.Human ? 0 : $"{player.AgentId}/{player.Team}/{i}".GetHashCode();
         }
 
         if (humanCount > 1)
@@ -204,6 +206,7 @@ public static class ConfigValidator
             script.Name ??= "";
             script.RunCommand ??= "";
             script.RootDir ??= "";
+            script.SpawnId = $"{script.AgentId}/{Team.Scripts}/{i}".GetHashCode();
         }
 
         return valid;
