@@ -13,9 +13,12 @@ record SetGameState(DesiredGameStateT GameState) : IBridgeMessage
         if (GameState.MatchInfo is { } matchInfo)
         {
             if (matchInfo.WorldGravityZ is { } gravity)
+            {
                 context.MatchCommandQueue.AddConsoleCommand(
                     FlatToCommand.MakeGravityCommand(gravity.Val)
                 );
+                context.GameState.WorldGravityZ = gravity.Val;
+            }
 
             if (matchInfo.GameSpeed is { } speed)
                 context.MatchCommandQueue.AddConsoleCommand(
