@@ -169,6 +169,8 @@ public static partial class BallPredictor
             }
         }
 
+        SetGravity(gravityZ);
+
         unsafe
         {
             var ballSlices = Step(ball, numSlices);
