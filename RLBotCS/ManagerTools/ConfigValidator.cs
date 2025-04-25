@@ -43,6 +43,10 @@ public static class ConfigValidator
                 config.LauncherArg = "";
             }
         }
+        
+        config.Mutators ??= new();
+        config.PlayerConfigurations ??= new();
+        config.ScriptConfigurations ??= new();
 
         valid = ValidatePlayers(ctx, config.PlayerConfigurations) && valid;
         valid = ValidateScripts(ctx, config.ScriptConfigurations) && valid;
