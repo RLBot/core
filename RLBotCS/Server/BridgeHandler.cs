@@ -4,6 +4,7 @@ using Bridge.TCP;
 using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.Conversion;
+using RLBotCS.ManagerTools;
 using RLBotCS.Server.BridgeMessage;
 using RLBotCS.Server.ServerMessage;
 using MatchPhase = Bridge.Models.Message.MatchPhase;
@@ -13,11 +14,12 @@ namespace RLBotCS.Server;
 class BridgeHandler(
     ChannelWriter<IServerMessage> writer,
     ChannelReader<IBridgeMessage> reader,
-    TcpMessenger messenger
+    TcpMessenger messenger,
+    MatchStarter matchStarter
 )
 {
     private const int MAX_TICK_SKIP = 1;
-    private readonly BridgeContext _context = new(writer, reader, messenger);
+    private readonly BridgeContext _context = new(writer, reader, messenger, matchStarter);
 
     private async Task HandleInternalMessages()
     {
@@ -86,15 +88,27 @@ class BridgeHandler(
                     )
                         ? _context.GameState.ToFlatBuffers()
                         : null;
-                _context.Writer.TryWrite(new DistributeGameState(_context.GameState, packet));
+                _context.Writer.TryWrite(new DistributeGamePacket(packet));
+                _context.MatchStarter.SetCurrentMatchPhase(
+                    _context.GameState.MatchPhase,
+                    _context.GetPlayerSpawner()
+                );
 
-                var matchStarted = MessageHandler.ReceivedMatchInfo(messageClump);
-                if (matchStarted)
+                var mapJustLoaded = MessageHandler.ReceivedMatchInfo(messageClump);
+                if (mapJustLoaded)
                 {
-                    _context.GameState.MatchPhase = MatchPhase.Paused;
-                    _context.RenderingMgmt.ClearAllRenders(_context.MatchCommandSender);
-                    _context.MatchHasStarted = true;
-                    _context.Writer.TryWrite(new MapSpawned(_context.GameState.MapName));
+                    if (_context.MatchConfig is { AutoSaveReplay: true })
+                    {
+                        _context.MatchCommandQueue.AddConsoleCommand(
+                            FlatToCommand.MakeAutoSaveReplayCommand()
+                        );
+                    }
+                    _context.RenderingMgmt.ClearAllRenders();
+                    _context.MatchStarter.OnMapSpawn(
+                        _context.GameState.MapName,
+                        _context.GetPlayerSpawner()
+                    );
+                    _context.Writer.TryWrite(new DistributeFieldInfo(_context.GameState));
                 }
 
                 if (_context.GameState.MatchEnded)
@@ -123,23 +137,10 @@ class BridgeHandler(
                         _context.PerfMonitor.ClearAll();
                 }
 
-                if (
-                    _context is
-                    {
-                        DelayMatchCommandSend: true,
-                        QueuedMatchCommands: true,
-                        QueuingCommandsComplete: true,
-                        MatchHasStarted: true,
-                        GameState.MatchPhase: MatchPhase.Paused
-                    }
-                )
+                if (_context.MatchStarter.HasSpawnedMap && _context.GameState.MatchPhase == MatchPhase.Paused && _context.SpawnCommandQueue.Count > 0)
                 {
-                    // If we send the commands before the map has spawned, nothing will happen
-                    _context.DelayMatchCommandSend = false;
-                    _context.QueuedMatchCommands = false;
-
-                    _context.Logger.LogInformation("Sending delayed match commands");
-                    _context.MatchCommandSender.Send();
+                    _context.Logger.LogDebug("Sending queued spawning commands");
+                    _context.SpawnCommandQueue.Flush();
                 }
 
                 _context.RenderingMgmt.SendRenderClears();
@@ -159,7 +160,7 @@ class BridgeHandler(
 
             try
             {
-                _context.RenderingMgmt.ClearAllRenders(_context.MatchCommandSender);
+                _context.RenderingMgmt.ClearAllRenders();
 
                 // we can only clear so many renders each tick
                 // so we do this until we've cleared them all

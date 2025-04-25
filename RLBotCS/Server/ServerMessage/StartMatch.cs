@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Diagnostics;
 using rlbot.flat;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.BridgeMessage;
@@ -9,25 +9,26 @@ record StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {
-        context.LastTickPacket = null;
+        Debug.Assert(ConfigValidator.Validate(MatchConfig));
+
         context.Bridge.TryWrite(new ClearRenders());
 
-        foreach (var (writer, _, _) in context.Sessions.Values)
+        foreach (var (writer, _) in context.Sessions.Values)
             writer.TryWrite(new SessionMessage.StopMatch(false));
 
-        if (MatchConfig.Mutators == null)
-            MatchConfig.Mutators = new();
+        context.LastTickPacket = null;
+        context.FieldInfo = null; // BridgeHandler decides if we reuse the FieldInfo
+        context.MatchConfig = MatchConfig;
 
         context.RenderingIsEnabled = MatchConfig.EnableRendering;
         context.StateSettingIsEnabled = MatchConfig.EnableStateSetting;
 
-        context.MatchStarter.StartMatch(MatchConfig); // May modify the match config
-        context.Bridge.TryWrite(new ClearProcessPlayerReservation(MatchConfig));
+        context.Bridge.TryWrite(new BridgeMessage.StartMatch(MatchConfig));
 
         BallPredictor.UpdateMode(MatchConfig);
 
         // update all sessions with the new rendering and state setting settings
-        foreach (var (writer, _, _) in context.Sessions.Values)
+        foreach (var (writer, _) in context.Sessions.Values)
         {
             SessionMessage render = new SessionMessage.RendersAllowed(
                 context.RenderingIsEnabled
@@ -41,15 +42,12 @@ record StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
         }
 
         // Distribute the match settings to all waiting sessions
-        foreach (var (writer, agentId) in context.MatchConfigWriters)
+        foreach (var writer in context.WaitingMatchConfigRequests)
         {
             writer.TryWrite(new SessionMessage.MatchConfig(MatchConfig));
-
-            if (agentId != string.Empty)
-                context.Bridge.TryWrite(new PlayerInfoRequest(writer, MatchConfig, agentId));
         }
 
-        context.MatchConfigWriters.Clear();
+        context.WaitingMatchConfigRequests.Clear();
 
         return ServerAction.Continue;
     }

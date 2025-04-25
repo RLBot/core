@@ -1,5 +1,6 @@
 using Bridge.State;
 using rlbot.flat;
+using RLBotCS.Model;
 
 namespace RLBotCS.ManagerTools;
 

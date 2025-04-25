@@ -8,17 +8,17 @@ record SetGameState(DesiredGameStateT GameState) : IBridgeMessage
     public void HandleMessage(BridgeContext context)
     {
         foreach (var command in GameState.ConsoleCommands)
-            context.MatchCommandSender.AddConsoleCommand(command.Command);
+            context.MatchCommandQueue.AddConsoleCommand(command.Command);
 
         if (GameState.MatchInfo is { } matchInfo)
         {
             if (matchInfo.WorldGravityZ is { } gravity)
-                context.MatchCommandSender.AddConsoleCommand(
+                context.MatchCommandQueue.AddConsoleCommand(
                     FlatToCommand.MakeGravityCommand(gravity.Val)
                 );
 
             if (matchInfo.GameSpeed is { } speed)
-                context.MatchCommandSender.AddConsoleCommand(
+                context.MatchCommandQueue.AddConsoleCommand(
                     FlatToCommand.MakeGameSpeedCommand(speed.Val)
                 );
         }
@@ -36,7 +36,7 @@ record SetGameState(DesiredGameStateT GameState) : IBridgeMessage
                 var currentPhysics = context.GameState.Balls[(ushort)id].Physics;
                 var fullState = FlatToModel.DesiredToPhysics(physics, currentPhysics);
 
-                context.MatchCommandSender.AddSetPhysicsCommand((ushort)id, fullState);
+                context.MatchCommandQueue.AddSetPhysicsCommand((ushort)id, fullState);
             }
         }
 
@@ -53,18 +53,18 @@ record SetGameState(DesiredGameStateT GameState) : IBridgeMessage
                 var currentPhysics = context.GameState.GameCars[(uint)i].Physics;
                 var fullState = FlatToModel.DesiredToPhysics(physics, currentPhysics);
 
-                context.MatchCommandSender.AddSetPhysicsCommand((ushort)id, fullState);
+                context.MatchCommandQueue.AddSetPhysicsCommand((ushort)id, fullState);
             }
 
             if (car.BoostAmount is { } boostAmount)
             {
-                context.MatchCommandSender.AddSetBoostCommand(
+                context.MatchCommandQueue.AddSetBoostCommand(
                     (ushort)id,
                     (int)boostAmount.Val
                 );
             }
         }
 
-        context.MatchCommandSender.Send();
+        context.MatchCommandQueue.Flush();
     }
 }

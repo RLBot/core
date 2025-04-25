@@ -10,11 +10,10 @@ namespace RLBotCS.Server;
 class FlatBuffersServer(
     int rlbotPort,
     Channel<IServerMessage, IServerMessage> incomingMessages,
-    MatchStarter matchStarter,
     ChannelWriter<IBridgeMessage> bridge
 )
 {
-    private readonly ServerContext _context = new(incomingMessages, matchStarter, bridge)
+    private readonly ServerContext _context = new(incomingMessages, bridge)
     {
         Server = new TcpListener(new(new byte[] { 0, 0, 0, 0 }), rlbotPort),
     };
@@ -32,6 +31,8 @@ class FlatBuffersServer(
 
         Thread sessionThread = new(() =>
         {
+            _context.Logger.LogDebug("Client {} connected", clientId);
+            
             FlatBuffersSession session = new(
                 client,
                 clientId,
@@ -60,7 +61,7 @@ class FlatBuffersServer(
             }
         });
 
-        _context.Sessions.Add(clientId, (sessionChannel.Writer, sessionThread, 0));
+        _context.Sessions.Add(clientId, (sessionChannel.Writer, sessionThread));
         sessionThread.Start();
     }
 
@@ -117,11 +118,11 @@ class FlatBuffersServer(
         _context.Logger.LogDebug("Shutting down FlatBuffersServer");
 
         // Send stop message to all sessions
-        foreach (var (writer, _, _) in _context.Sessions.Values)
+        foreach (var (writer, _) in _context.Sessions.Values)
             writer.TryComplete();
 
         // Ensure all sessions are stopped
-        foreach (var (_, thread, _) in _context.Sessions.Values)
+        foreach (var (_, thread) in _context.Sessions.Values)
             thread.Join();
 
         _context.Sessions.Clear();

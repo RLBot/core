@@ -1,15 +1,20 @@
-using System.Drawing;
 using Bridge.Models.Command;
 using Bridge.Models.Control;
-using Bridge.Models.Phys;
-using Bridge.Models.Render;
 using Bridge.State;
+using rlbot.flat;
+using Color = System.Drawing.Color;
+using LoadoutPaint = Bridge.Models.Command.LoadoutPaint;
+using Physics = Bridge.Models.Phys.Physics;
+using RelativeAnchor = Bridge.Models.Render.RelativeAnchor;
+using RenderAnchor = Bridge.Models.Render.RenderAnchor;
+using Rotator = Bridge.Models.Phys.Rotator;
+using Vector3 = Bridge.Models.Phys.Vector3;
 
 namespace RLBotCS.Conversion;
 
 static class FlatToModel
 {
-    internal static CarInput ToCarInput(rlbot.flat.ControllerStateT state)
+    internal static CarInput ToCarInput(ControllerStateT state)
     {
         float dodgeForward = -state.Pitch;
 
@@ -34,41 +39,37 @@ static class FlatToModel
         };
     }
 
-    internal static Vector3 ToVectorFromT(rlbot.flat.Vector3T vec) => new(vec.X, vec.Y, vec.Z);
+    internal static Vector3 ToVectorFromT(Vector3T vec) => new(vec.X, vec.Y, vec.Z);
 
     internal static RelativeAnchor ExtractRelativeAnchor(
-        rlbot.flat.RelativeAnchorUnion? relative,
+        RelativeAnchorUnion? relative,
         GameState gameState
     ) =>
         relative?.Value switch
         {
-            rlbot.flat.CarAnchorT { Index: var index, Local: var local } => new RelativeAnchor(
+            CarAnchorT { Index: var index, Local: var local } => new RelativeAnchor(
                 ToVectorFromT(local),
                 gameState.PlayerMapping.ActorIdFromPlayerIndex(index) ?? 0
             ),
-            rlbot.flat.BallAnchorT { Index: var index, Local: var local } =>
-                new RelativeAnchor(
-                    ToVectorFromT(local),
-                    gameState.GetBallActorIdFromIndex(index) ?? 0
-                ),
+            BallAnchorT { Index: var index, Local: var local } => new RelativeAnchor(
+                ToVectorFromT(local),
+                gameState.GetBallActorIdFromIndex(index) ?? 0
+            ),
             _ => new RelativeAnchor(new Vector3(0, 0, 0), 0),
         };
 
-    internal static RenderAnchor ToRenderAnchor(
-        rlbot.flat.RenderAnchorT offset,
-        GameState gameState
-    ) =>
+    internal static RenderAnchor ToRenderAnchor(RenderAnchorT offset, GameState gameState) =>
         new RenderAnchor(
             ToVectorFromT(offset.World),
             ExtractRelativeAnchor(offset.Relative, gameState)
         );
 
-    internal static Color ToColor(rlbot.flat.ColorT c) => Color.FromArgb(c.A, c.R, c.G, c.B);
+    internal static Color ToColor(ColorT c) => Color.FromArgb(c.A, c.R, c.G, c.B);
 
     internal static Rotator ToRotator(rlbot.flat.Rotator r) =>
         new Rotator(r.Pitch, r.Yaw, r.Roll);
 
-    internal static Loadout ToLoadout(rlbot.flat.PlayerLoadoutT l, uint team)
+    internal static Loadout ToLoadout(PlayerLoadoutT l, uint team)
     {
         Color primaryColor = ColorSwatches.GetPrimary(l.TeamColorId, team);
         Color secondaryColor = ColorSwatches.GetSecondary(l.CustomColorId);
@@ -106,10 +107,7 @@ static class FlatToModel
         };
     }
 
-    internal static Vector3 DesiredToVector(
-        rlbot.flat.Vector3PartialT? partVec,
-        Vector3 defaultVec
-    ) =>
+    internal static Vector3 DesiredToVector(Vector3PartialT? partVec, Vector3 defaultVec) =>
         partVec switch
         {
             not null => new Vector3(
@@ -120,10 +118,7 @@ static class FlatToModel
             _ => defaultVec,
         };
 
-    internal static Rotator DesiredToRotator(
-        rlbot.flat.RotatorPartialT? partRot,
-        Rotator defaultRot
-    ) =>
+    internal static Rotator DesiredToRotator(RotatorPartialT? partRot, Rotator defaultRot) =>
         partRot switch
         {
             not null => new Rotator(
@@ -134,7 +129,7 @@ static class FlatToModel
             _ => defaultRot,
         };
 
-    internal static Physics DesiredToPhysics(rlbot.flat.DesiredPhysicsT p, Physics defaultP) =>
+    internal static Physics DesiredToPhysics(DesiredPhysicsT p, Physics defaultP) =>
         new(
             DesiredToVector(p.Location, defaultP.Location),
             DesiredToVector(p.Velocity, defaultP.Velocity),

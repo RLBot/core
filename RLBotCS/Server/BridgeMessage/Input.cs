@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using rlbot.flat;
 using RLBotCS.Conversion;
+using PlayerInput = Bridge.Models.Control.PlayerInput;
 
 namespace RLBotCS.Server.BridgeMessage;
 
@@ -14,7 +15,7 @@ record Input(PlayerInputT PlayerInput) : IBridgeMessage
 
         if (actorId is { } actorIdValue)
         {
-            Bridge.Models.Control.PlayerInput playerInput = new()
+            PlayerInput playerInput = new()
             {
                 ActorId = actorIdValue,
                 CarInput = FlatToModel.ToCarInput(PlayerInput.ControllerState),

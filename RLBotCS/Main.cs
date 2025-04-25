@@ -8,7 +8,7 @@ using RLBotCS.Server.ServerMessage;
 
 if (args.Length > 0 && args[0] == "--version")
 {
-    Console.WriteLine("RLBotServer v5.beta.6.1");
+    Console.WriteLine("RLBotServer v5.beta.6.2");
     Environment.Exit(0);
 }
 
@@ -70,13 +70,7 @@ var serverWriter = serverChannel.Writer;
 
 Thread rlbotServer = new(() =>
 {
-    MatchStarter matchStarter = new(bridgeWriter, gamePort, rlbotSocketsPort);
-    FlatBuffersServer flatBuffersServer = new(
-        rlbotSocketsPort,
-        serverChannel,
-        matchStarter,
-        bridgeWriter
-    );
+    FlatBuffersServer flatBuffersServer = new(rlbotSocketsPort, serverChannel, bridgeWriter);
 
     try
     {
@@ -92,7 +86,13 @@ rlbotServer.Start();
 Thread bridgeHandler = new(() =>
 {
     TcpMessenger tcpMessenger = new(gamePort);
-    BridgeHandler bridgeHandler = new(serverWriter, bridgeChannel.Reader, tcpMessenger);
+    MatchStarter matchStarter = new(gamePort, rlbotSocketsPort);
+    BridgeHandler bridgeHandler = new(
+        serverWriter,
+        bridgeChannel.Reader,
+        tcpMessenger,
+        matchStarter
+    );
 
     try
     {
