@@ -19,6 +19,9 @@ jobs:
       with:
         submodules: 'recursive'
 
+    - name: Test
+      run: dotnet test
+
     - name: Build 
       run: dotnet publish -r win-x64
 
@@ -36,6 +39,9 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: 'recursive'
+
+    - name: Test
+      run: dotnet test
 
     - name: Build 
       run: dotnet publish -r linux-x64
