@@ -51,7 +51,7 @@ public class PlayerMappingTest
         Assert.AreEqual(0u, _playerMapping.PlayerIndexFromActorId(111));
         Assert.IsNotNull(index);
         Assert.AreEqual(0u, index);
-        Assert.IsNull(metadata2.SpawnId);
+        Assert.AreEqual(0, metadata2.SpawnId);
         Assert.AreEqual(desiredIndex, _playerMapping.PlayerIndexFromActorId(actorId));
         Assert.IsTrue(!metadata2.IsBot);
         Assert.IsTrue(!metadata2.IsCustomBot);
