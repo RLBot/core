@@ -74,7 +74,7 @@ class FlatBuffersSession
 
     private readonly FlatBufferBuilder _messageBuilder = new(1 << 10);
 
-    public string ClientName => 
+    public string ClientName =>
         _agentId != ""
             ? $"client {_clientId} (index {string.Join("+", _playerIdPairs.Select(p => p.Index))}, team {_team}, aid {_agentId})"
             : $"client {_clientId} (w/o aid)";
@@ -394,7 +394,7 @@ class FlatBuffersSession
                             _messageBuilder
                         )
                     );
-                    
+
                     Logger.LogDebug("Reserved agents for {}", ClientName);
 
                     break;

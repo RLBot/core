@@ -58,10 +58,7 @@ record SetGameState(DesiredGameStateT GameState) : IBridgeMessage
 
             if (car.BoostAmount is { } boostAmount)
             {
-                context.MatchCommandQueue.AddSetBoostCommand(
-                    (ushort)id,
-                    (int)boostAmount.Val
-                );
+                context.MatchCommandQueue.AddSetBoostCommand((ushort)id, (int)boostAmount.Val);
             }
         }
 
