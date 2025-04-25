@@ -147,12 +147,6 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
             {
                 _hivemindNameMap[playerConfig.Name] = playerName;
             }
-
-            if (playerConfig.SpawnId == 0)
-            {
-                playerConfig.SpawnId =
-                    $"${playerConfig.AgentId}/${playerConfig.Team}/${i}".GetHashCode();
-            }
         }
 
         Dictionary<string, int> scriptNames = [];
@@ -170,9 +164,6 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
                 scriptNames[scriptName] = 0;
                 scriptConfig.Name = scriptName;
             }
-
-            if (scriptConfig.SpawnId == 0)
-                scriptConfig.SpawnId = scriptConfig.AgentId.GetHashCode();
         }
     }
 
