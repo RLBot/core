@@ -43,7 +43,7 @@ public static class ConfigValidator
                 config.LauncherArg = "";
             }
         }
-        
+
         config.Mutators ??= new();
         config.PlayerConfigurations ??= new();
         config.ScriptConfigurations ??= new();
@@ -139,7 +139,7 @@ public static class ConfigValidator
                     // Fallback if above fails or user didn't include paints
                     player.Loadout ??= new();
                     player.Loadout.LoadoutPaint ??= new();
-                    
+
                     player.RunCommand = "";
                     player.RootDir = "";
 
@@ -161,7 +161,10 @@ public static class ConfigValidator
                     break;
             }
 
-            player.SpawnId = player.Variety.Type == PlayerClass.Human ? 0 : $"{player.AgentId}/{player.Team}/{i}".GetHashCode();
+            player.SpawnId =
+                player.Variety.Type == PlayerClass.Human
+                    ? 0
+                    : $"{player.AgentId}/{player.Team}/{i}".GetHashCode();
         }
 
         if (humanCount > 1)

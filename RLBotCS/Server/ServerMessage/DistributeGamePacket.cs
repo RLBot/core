@@ -25,7 +25,8 @@ record DistributeGamePacket(GamePacketT? Packet) : IServerMessage
         BallPredictionT prediction = BallPredictor.Generate(
             packet.MatchInfo.SecondsElapsed,
             firstBall,
-            lastTouch
+            lastTouch,
+            packet.MatchInfo.WorldGravityZ
         );
 
         foreach (var (writer, _) in context.Sessions.Values)

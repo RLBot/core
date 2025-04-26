@@ -32,7 +32,7 @@ class FlatBuffersServer(
         Thread sessionThread = new(() =>
         {
             _context.Logger.LogDebug("Client {} connected", clientId);
-            
+
             FlatBuffersSession session = new(
                 client,
                 clientId,

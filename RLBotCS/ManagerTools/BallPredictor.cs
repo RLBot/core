@@ -56,6 +56,9 @@ public static partial class BallPredictor
     [LibraryImport("rl_ball_sym", EntryPoint = "set_heatseeker_target")]
     private static partial void SetHeatseekerTarget(byte blueGoal);
 
+    [LibraryImport("rl_ball_sym", EntryPoint = "set_gravity")]
+    private static partial void SetGravity(float gravityZ);
+
     [LibraryImport("rl_ball_sym", EntryPoint = "step")]
     private static unsafe partial BallSlice* Step(BallSlice ball, ushort ticks);
 
@@ -122,7 +125,8 @@ public static partial class BallPredictor
     public static BallPredictionT Generate(
         float currentTime,
         BallInfoT currentBall,
-        (TouchT, uint)? lastTouch
+        (TouchT, uint)? lastTouch,
+        float gravityZ
     )
     {
         BallSlice ball = new()
@@ -164,6 +168,8 @@ public static partial class BallPredictor
                 ResetHeatseekerTarget();
             }
         }
+
+        SetGravity(gravityZ);
 
         unsafe
         {

@@ -305,7 +305,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
                     {
                         spawner.DespawnPlayers(toDespawnIds);
                     }
-                    
+
                     // We can flush C&S despawn commands immediately
                     spawner.Flush();
                 }
@@ -451,7 +451,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
         {
             spawner.Flush();
         }
-        
+
         return true;
     }
 

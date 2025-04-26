@@ -44,6 +44,7 @@ class BridgeContext(
     public PerfMonitor PerfMonitor { get; } = new();
 
     public PlayerSpawner GetPlayerSpawner() => new(ref GameState, SpawnCommandQueue);
+
     public void UpdateTimeMutators()
     {
         var mutators = MatchConfig!.Mutators;

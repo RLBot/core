@@ -54,14 +54,17 @@ public readonly ref struct PlayerSpawner(
             .FirstOrDefault(kp => config.SpawnId == kp.SpawnId);
         if (alreadySpawnedPlayer != null)
         {
-            _gameState.PlayerMapping.QueueIndexChange(alreadySpawnedPlayer.PlayerIndex, desiredIndex);
+            _gameState.PlayerMapping.QueueIndexChange(
+                alreadySpawnedPlayer.PlayerIndex,
+                desiredIndex
+            );
             return;
         }
 
         _gameState.PlayerMapping.AddPendingSpawn(
             new SpawnTracker
             {
-                CommandId = 0, // Human spawning must use command id 0 for reasons in bridge 
+                CommandId = 0, // Human spawning must use command id 0 for reasons in bridge
                 SpawnId = config.SpawnId,
                 DesiredPlayerIndex = desiredIndex,
                 IsBot = false,
