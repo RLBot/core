@@ -75,20 +75,8 @@ class BridgeHandler(
                 if (timeAdvanced)
                     _context.PerfMonitor.AddRLBotSample(deltaTime);
 
-                GamePacketT? packet =
-                    timeAdvanced
-                    || (
-                        _context.ticksSkipped > MAX_TICK_SKIP
-                        && (
-                            _context.GameState.MatchPhase == MatchPhase.Replay
-                            || _context.GameState.MatchPhase == MatchPhase.Paused
-                            || _context.GameState.MatchPhase == MatchPhase.Ended
-                            || _context.GameState.MatchPhase == MatchPhase.Inactive
-                        )
-                    )
-                        ? _context.GameState.ToFlatBuffers()
-                        : null;
-                _context.Writer.TryWrite(new DistributeGamePacket(packet));
+                ConsiderDistributingPacket(_context, timeAdvanced);
+                
                 _context.MatchStarter.SetCurrentMatchPhase(
                     _context.GameState.MatchPhase,
                     _context.GetPlayerSpawner()
@@ -188,5 +176,36 @@ class BridgeHandler(
                 _context.Messenger.Dispose();
             }
         }
+    }
+
+    private static void ConsiderDistributingPacket(BridgeContext context, bool timeAdvanced)
+    {
+        var config = context.MatchConfig;
+        if (config == null) return;
+
+        // While game is paused (or similar), we distribute less often
+        bool due = context is
+        {
+            ticksSkipped: > MAX_TICK_SKIP,
+            GameState.MatchPhase: MatchPhase.Replay or MatchPhase.Paused or MatchPhase.Ended or MatchPhase.Inactive
+        };
+        if (!timeAdvanced && !due) return;
+        
+        // We only distribute the packet if it has all players from the match config,
+        // - unless the match is already ongoing, then only the bot players are required (humans may leave).
+        bool inactive = context.GameState.MatchPhase is MatchPhase.Inactive or MatchPhase.Ended;
+        int botCount = config.PlayerConfigurations.Count(p => p.Variety.Type != PlayerClass.Human);
+        int requiredPlayers = inactive ? config.PlayerConfigurations.Count : botCount;
+        // Assumption: Bots are always the lower indexes
+        for (uint i = 0; i < requiredPlayers; i++)
+        {
+            if (!context.GameState.GameCars.ContainsKey(i))
+            {
+                return;
+            }
+        }
+        
+        var packet = context.GameState.ToFlatBuffers();
+        context.Writer.TryWrite(new DistributeGamePacket(packet));
     }
 }
