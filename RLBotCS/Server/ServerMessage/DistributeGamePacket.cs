@@ -3,7 +3,7 @@ using RLBotCS.ManagerTools;
 
 namespace RLBotCS.Server.ServerMessage;
 
-record DistributeGamePacket(GamePacketT? Packet) : IServerMessage
+record DistributeGamePacket(GamePacketT Packet) : IServerMessage
 {
     private static void DistributeBallPrediction(ServerContext context, GamePacketT packet)
     {
@@ -50,11 +50,8 @@ record DistributeGamePacket(GamePacketT? Packet) : IServerMessage
 
     public ServerAction Execute(ServerContext context)
     {
-        if (Packet is { } packet)
-        {
-            DistributeBallPrediction(context, packet);
-            DistributeState(context, packet);
-        }
+        DistributeBallPrediction(context, Packet);
+        DistributeState(context, Packet);
 
         return ServerAction.Continue;
     }
