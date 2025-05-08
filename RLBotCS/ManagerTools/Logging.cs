@@ -75,7 +75,7 @@ public class Logging : ILogger
         logLevel switch
         {
             LogLevel.Trace => new[] { Grey, Grey, Grey, Grey },
-            LogLevel.Debug => new[] { Grey, LightBlue, Grey, LightBlue },
+            LogLevel.Debug => new[] { Grey, Grey, Grey, LightBlue },
             LogLevel.Information => new[] { Grey, LightBlue, Grey, LightBlue },
             LogLevel.Warning => new[] { Yellow, Yellow, Yellow, Yellow },
             LogLevel.Error => new[] { Red, Red, Red, Red },
