@@ -85,6 +85,13 @@ class BridgeHandler(
                 var mapJustLoaded = MessageHandler.ReceivedMatchInfo(messageClump);
                 if (mapJustLoaded)
                 {
+                    if (_context.GameState.MatchPhase != MatchPhase.Paused)
+                    {
+                        // LAN matches don't set the MatchPhase to paused, which breaks Continue & Spawn
+                        // thankfully, we can just manually set the match phase to paused
+                        _context.GameState.MatchPhase = MatchPhase.Paused;
+                    }
+
                     if (_context.MatchConfig is { AutoSaveReplay: true })
                     {
                         _context.MatchCommandQueue.AddConsoleCommand(
@@ -97,6 +104,10 @@ class BridgeHandler(
                         _context.GetPlayerSpawner()
                     );
                     _context.Writer.TryWrite(new DistributeFieldInfo(_context.GameState));
+
+                    // wait for the next tick,
+                    // this ensures we don't start the match too soon
+                    continue;
                 }
 
                 if (_context.GameState.MatchEnded)
