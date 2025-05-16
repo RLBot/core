@@ -137,10 +137,26 @@ static class LaunchManager
 
     private static void LaunchGameViaHeroic()
     {
-        Logger.LogWarning("Launching via Heroic...");
-        Process heroic = RunCommandInShell(
-            "xdg-open 'heroic://launch?appName=Sugar&runner=legendary&arg=-rlbot&arg=RLBot_ControllerURL%3D127.0.0.1%3A23233&arg=RLBot_PacketSendRate%3D240&arg=-nomovie'"
-        );
+        Process heroic;
+        
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            heroic = RunCommandInShell(
+                "xdg-open 'heroic://launch?appName=Sugar&runner=legendary&arg=-rlbot&arg=RLBot_ControllerURL%3D127.0.0.1%3A23233&arg=RLBot_PacketSendRate%3D240&arg=-nomovie'"
+            );
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            heroic = RunCommandInShell(
+                "start \"\" \"heroic://launch?appName=Sugar&runner=legendary&arg=-rlbot&arg=RLBot_ControllerURL%3D127.0.0.1%3A23233&arg=RLBot_PacketSendRate%3D240&arg=-nomovie\""
+            );
+        }
+        else
+        {
+            throw new PlatformNotSupportedException(
+                "RLBot is not supported on non-Windows/Linux platforms"
+            );
+        }
         heroic.Start();
     }
 
