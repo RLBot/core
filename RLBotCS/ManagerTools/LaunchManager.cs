@@ -135,6 +135,15 @@ static class LaunchManager
         legendary.Start();
     }
 
+    private static void LaunchGameViaHeroic()
+    {
+        Logger.LogWarning("Launching via Heroic...");
+        Process heroic = RunCommandInShell(
+            "xdg-open 'heroic://launch?appName=Sugar&runner=legendary&arg=-rlbot&arg=RLBot_ControllerURL%3D127.0.0.1%3A23233&arg=RLBot_PacketSendRate%3D240&arg=-nomovie'"
+        );
+        heroic.Start();
+    }
+
     public static void LaunchBots(
         List<rlbot.flat.PlayerConfigurationT> bots,
         int rlbotSocketsPort
@@ -324,6 +333,11 @@ static class LaunchManager
                         LaunchGameViaLegendary();
                         return;
                     }
+                    else if (extraArg.ToLower() == "heroic")
+                    {
+                        LaunchGameViaHeroic();
+                        return;
+                    }
 
                     throw new NotSupportedException($"Unexpected launcher, \"{extraArg}\"");
                 case rlbot.flat.Launcher.NoLaunch:
@@ -353,6 +367,11 @@ static class LaunchManager
                     if (extraArg.ToLower() == "legendary")
                     {
                         LaunchGameViaLegendary();
+                        return;
+                    }
+                    else if (extraArg.ToLower() == "heroic")
+                    {
+                        LaunchGameViaHeroic();
                         return;
                     }
 
