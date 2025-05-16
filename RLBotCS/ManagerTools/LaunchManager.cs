@@ -138,7 +138,7 @@ static class LaunchManager
     private static void LaunchGameViaHeroic()
     {
         Process heroic;
-        
+
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
             heroic = RunCommandInShell(
