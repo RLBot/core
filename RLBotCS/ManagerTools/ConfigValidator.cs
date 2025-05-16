@@ -29,11 +29,11 @@ public static class ConfigValidator
             if (config.Launcher == Launcher.Custom)
             {
                 config.LauncherArg = (config.LauncherArg ?? "").ToLower();
-                if (config.LauncherArg != "legendary")
+                if (config.LauncherArg != "legendary" && config.LauncherArg != "heroic")
                 {
                     Logger.LogError(
                         $"Invalid {ctx.ToStringWithEnd(Fields.RlBotLauncherArg)} value \"{config.LauncherArg}\". "
-                            + $"\"legendary\" is the only Custom launcher supported currently."
+                            + $"\"legendary\" and \"heroic\" are the only Custom launchers supported currently."
                     );
                     valid = false;
                 }

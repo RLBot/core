@@ -135,6 +135,31 @@ static class LaunchManager
         legendary.Start();
     }
 
+    private static void LaunchGameViaHeroic()
+    {
+        Process heroic;
+        
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            heroic = RunCommandInShell(
+                "xdg-open 'heroic://launch?appName=Sugar&runner=legendary&arg=-rlbot&arg=RLBot_ControllerURL%3D127.0.0.1%3A23233&arg=RLBot_PacketSendRate%3D240&arg=-nomovie'"
+            );
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            heroic = RunCommandInShell(
+                "start \"\" \"heroic://launch?appName=Sugar&runner=legendary&arg=-rlbot&arg=RLBot_ControllerURL%3D127.0.0.1%3A23233&arg=RLBot_PacketSendRate%3D240&arg=-nomovie\""
+            );
+        }
+        else
+        {
+            throw new PlatformNotSupportedException(
+                "RLBot is not supported on non-Windows/Linux platforms"
+            );
+        }
+        heroic.Start();
+    }
+
     public static void LaunchBots(
         List<rlbot.flat.PlayerConfigurationT> bots,
         int rlbotSocketsPort
@@ -324,6 +349,11 @@ static class LaunchManager
                         LaunchGameViaLegendary();
                         return;
                     }
+                    else if (extraArg.ToLower() == "heroic")
+                    {
+                        LaunchGameViaHeroic();
+                        return;
+                    }
 
                     throw new NotSupportedException($"Unexpected launcher, \"{extraArg}\"");
                 case rlbot.flat.Launcher.NoLaunch:
@@ -353,6 +383,11 @@ static class LaunchManager
                     if (extraArg.ToLower() == "legendary")
                     {
                         LaunchGameViaLegendary();
+                        return;
+                    }
+                    else if (extraArg.ToLower() == "heroic")
+                    {
+                        LaunchGameViaHeroic();
                         return;
                     }
 
