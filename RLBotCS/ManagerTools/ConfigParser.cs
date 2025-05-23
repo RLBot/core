@@ -201,10 +201,11 @@ public class ConfigParser
             ""
         );
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            return runCommandWindows;
-
+#if WINDOWS
+        return runCommandWindows;
+#else
         return GetValue(runnableSettings, Fields.AgentRunCommandLinux, runCommandWindows);
+#endif
     }
 
     private ScriptConfigurationT LoadScriptConfig(string scriptConfigPath)

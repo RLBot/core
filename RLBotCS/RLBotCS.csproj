@@ -20,9 +20,12 @@
 
   <ItemGroup>
     <PackageReference Include="Tomlyn" Version="0.18.0" />
-    <PackageReference Include="WmiLight" Version="6.13.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
   </ItemGroup>
+
+  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+    <DefineConstants>WINDOWS</DefineConstants>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Google.FlatBuffers" Version="25.2.10" />
