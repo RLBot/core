@@ -85,6 +85,8 @@ static class LaunchManager
         );
         return "";
 #else
+        // Solution taken from:
+        // https://stackoverflow.com/a/58843225/10930209
         return File.ReadAllText($"/proc/{process.Id}/cmdline");
 #endif
     }
