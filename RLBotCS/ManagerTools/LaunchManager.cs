@@ -85,7 +85,7 @@ static class LaunchManager
         );
         return "";
 #else
-        return process.StartInfo.Arguments;
+        return File.ReadAllText($"/proc/{process.Id}/cmdline");
 #endif
     }
 
@@ -398,9 +398,6 @@ static class LaunchManager
         {
             if (!candidate.ProcessName.Contains("RocketLeague"))
                 continue;
-
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                return true;
 
             var args = GetProcessArgs(candidate);
             if (args.Contains("rlbot"))
