@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Google.FlatBuffers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using rlbot.flat;
+using RLBot.Flat;
 
 namespace RLBotCSTests;
 

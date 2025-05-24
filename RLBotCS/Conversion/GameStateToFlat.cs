@@ -1,9 +1,9 @@
 using Bridge.Models.Message;
 using Bridge.Packet;
 using Bridge.State;
-using rlbot.flat;
+using RLBot.Flat;
 using RLBotCS.Model;
-using CollisionShapeUnion = rlbot.flat.CollisionShapeUnion;
+using CollisionShapeUnion = RLBot.Flat.CollisionShapeUnion;
 using MatchPhase = Bridge.Models.Message.MatchPhase;
 using Rotator = Bridge.Models.Phys.Rotator;
 using Vector2 = Bridge.Models.Phys.Vector2;
@@ -86,17 +86,17 @@ static class GameStateToFlat
             balls.Add(new() { Physics = ballPhysics, Shape = collisionShape });
         }
 
-        rlbot.flat.MatchPhase matchPhase = gameState.MatchPhase switch
+        RLBot.Flat.MatchPhase matchPhase = gameState.MatchPhase switch
         {
-            MatchPhase.Inactive => rlbot.flat.MatchPhase.Inactive,
-            MatchPhase.Countdown => rlbot.flat.MatchPhase.Countdown,
-            MatchPhase.Kickoff => rlbot.flat.MatchPhase.Kickoff,
-            MatchPhase.Active => rlbot.flat.MatchPhase.Active,
-            MatchPhase.GoalScored => rlbot.flat.MatchPhase.GoalScored,
-            MatchPhase.Replay => rlbot.flat.MatchPhase.Replay,
-            MatchPhase.Paused => rlbot.flat.MatchPhase.Paused,
-            MatchPhase.Ended => rlbot.flat.MatchPhase.Ended,
-            _ => rlbot.flat.MatchPhase.Inactive,
+            MatchPhase.Inactive => RLBot.Flat.MatchPhase.Inactive,
+            MatchPhase.Countdown => RLBot.Flat.MatchPhase.Countdown,
+            MatchPhase.Kickoff => RLBot.Flat.MatchPhase.Kickoff,
+            MatchPhase.Active => RLBot.Flat.MatchPhase.Active,
+            MatchPhase.GoalScored => RLBot.Flat.MatchPhase.GoalScored,
+            MatchPhase.Replay => RLBot.Flat.MatchPhase.Replay,
+            MatchPhase.Paused => RLBot.Flat.MatchPhase.Paused,
+            MatchPhase.Ended => RLBot.Flat.MatchPhase.Ended,
+            _ => RLBot.Flat.MatchPhase.Inactive,
         };
 
         MatchInfoT matchInfo = new()
