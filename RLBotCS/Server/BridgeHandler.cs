@@ -23,7 +23,9 @@ class BridgeHandler(
 
     private async Task HandleInternalMessages()
     {
-        bool isFirstTick = true;
+        // Only if Rocket League is running,
+        // we wait for it to talk to us first
+        bool isFirstTick = LaunchManager.IsRocketLeagueRunningWithArgs();
 
         await foreach (IBridgeMessage message in _context.Reader.ReadAllAsync())
         {
