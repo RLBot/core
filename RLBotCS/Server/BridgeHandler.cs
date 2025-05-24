@@ -18,7 +18,7 @@ class BridgeHandler(
     MatchStarter matchStarter
 )
 {
-    private ManualResetEvent conditionMet = new ManualResetEvent(false);
+    private ManualResetEvent startReadingInternalMsgs = new ManualResetEvent(false);
 
     private const int MAX_TICK_SKIP = 1;
     private readonly BridgeContext _context = new(writer, reader, messenger, matchStarter);
@@ -28,7 +28,7 @@ class BridgeHandler(
         // if Rocket League is already running,
         // we wait for it to connect to us first
         if (LaunchManager.IsRocketLeagueRunningWithArgs())
-            conditionMet.WaitOne();
+            startReadingInternalMsgs.WaitOne();
 
         _context.Logger.LogDebug("Started reading internal messages");
 
@@ -68,7 +68,7 @@ class BridgeHandler(
                     // Trigger HandleInternalMessages to start processing messages
                     // it will still wait until we're done,
                     // since we have a lock on _context
-                    conditionMet.Set();
+                    startReadingInternalMsgs.Set();
                 }
 
                 // reset the counter that lets us know if we're sending too many bytes
