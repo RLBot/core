@@ -2,7 +2,7 @@ using System.Threading.Channels;
 using Bridge.Conversion;
 using Bridge.TCP;
 using Microsoft.Extensions.Logging;
-using rlbot.flat;
+using RLBot.Flat;
 using RLBotCS.Conversion;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.BridgeMessage;

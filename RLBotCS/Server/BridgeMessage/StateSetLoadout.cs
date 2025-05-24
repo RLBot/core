@@ -2,7 +2,7 @@ using Bridge.Models.Command;
 using Bridge.Models.Message;
 using Bridge.State;
 using Microsoft.Extensions.Logging;
-using rlbot.flat;
+using RLBot.Flat;
 using RLBotCS.Conversion;
 
 namespace RLBotCS.Server.BridgeMessage;

@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using rlbot.flat;
+using RLBot.Flat;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.BridgeMessage;
 
@@ -12,6 +12,7 @@ record StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
         Debug.Assert(ConfigValidator.Validate(MatchConfig));
 
         context.Bridge.TryWrite(new ClearRenders());
+        context.Bridge.TryWrite(new EndMatch());
 
         foreach (var (writer, _) in context.Sessions.Values)
             writer.TryWrite(new SessionMessage.StopMatch(false));
