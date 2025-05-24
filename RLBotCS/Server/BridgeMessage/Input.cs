@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using rlbot.flat;
+using RLBot.Flat;
 using RLBotCS.Conversion;
 using PlayerInput = Bridge.Models.Control.PlayerInput;
 

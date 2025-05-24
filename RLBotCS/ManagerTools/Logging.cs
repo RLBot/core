@@ -33,7 +33,8 @@ public class Logging : ILogger
 
     public Logging(string name, LogLevel minLevel)
     {
-        _name = name.PadLeft(16);
+        // Longest logger: "FlatBuffersSession" with 18 characters
+        _name = name.PadLeft(18);
         _minLevel = minLevel;
     }
 

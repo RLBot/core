@@ -2,12 +2,11 @@ using System.Net.Sockets;
 using System.Threading.Channels;
 using Google.FlatBuffers;
 using Microsoft.Extensions.Logging;
-using rlbot.flat;
+using RLBot.Flat;
 using RLBotCS.ManagerTools;
 using RLBotCS.Model;
 using RLBotCS.Server.BridgeMessage;
 using RLBotCS.Server.ServerMessage;
-using RLBotCS.Types;
 using StartMatch = RLBotCS.Server.ServerMessage.StartMatch;
 
 namespace RLBotCS.Server;
@@ -42,8 +41,8 @@ class FlatBuffersSession
 
     private readonly TcpClient _client;
     private readonly int _clientId;
-    private readonly SocketSpecStreamReader _socketSpecReader;
-    private readonly SocketSpecStreamWriter _socketSpecWriter;
+    private readonly SpecStreamReader _socketSpecReader;
+    private readonly SpecStreamWriter _socketSpecWriter;
 
     private readonly Channel<SessionMessage> _incomingMessages;
     private readonly ChannelWriter<IServerMessage> _rlbotServer;
@@ -72,8 +71,6 @@ class FlatBuffersSession
     private bool _sessionForceClosed;
     private bool _closed;
 
-    private readonly FlatBufferBuilder _messageBuilder = new(1 << 10);
-
     public string ClientName =>
         _agentId != ""
             ? $"client {_clientId} (index {string.Join("+", _playerIdPairs.Select(p => p.Index))}, team {_team}, aid {_agentId})"
@@ -98,22 +95,27 @@ class FlatBuffersSession
         _stateSettingIsEnabled = stateSettingIsEnabled;
 
         NetworkStream stream = _client.GetStream();
-        _socketSpecReader = new SocketSpecStreamReader(stream);
-        _socketSpecWriter = new SocketSpecStreamWriter(stream);
+        _socketSpecReader = new SpecStreamReader(stream);
+        _socketSpecWriter = new SpecStreamWriter(stream);
     }
 
-    private async Task<bool> ParseClientMessage(TypedPayload message)
+    private async Task<bool> ParseClientMessage(InterfacePacket msg)
     {
-        ByteBuffer byteBuffer = new(message.Payload.Array, message.Payload.Offset);
-
-        switch (message.Type)
+        switch (msg.MessageType)
         {
-            case DataType.None:
+            case InterfaceMessage.NONE:
+                Logger.LogError(
+                    $"Received a message with type NONE from {ClientName}. "
+                        + "Something has gone very wrong. Disconnecting."
+                );
+                return false;
+
+            case InterfaceMessage.DisconnectSignal:
                 // The client requested that we close the connection
                 return false;
 
-            case DataType.ConnectionSettings when !_connectionEstablished:
-                var readyMsg = ConnectionSettings.GetRootAsConnectionSettings(byteBuffer);
+            case InterfaceMessage.ConnectionSettings when !_connectionEstablished:
+                var readyMsg = msg.MessageAsConnectionSettings();
 
                 _agentId = readyMsg.AgentId ?? "";
                 _wantsBallPredictions = readyMsg.WantsBallPredictions;
@@ -136,11 +138,11 @@ class FlatBuffersSession
                 _connectionEstablished = true;
                 break;
 
-            case DataType.SetLoadout when _connectionEstablished:
+            case InterfaceMessage.SetLoadout when _connectionEstablished:
                 if (_isReady && !_stateSettingIsEnabled)
                     break;
 
-                var setLoadout = SetLoadout.GetRootAsSetLoadout(byteBuffer).UnPack();
+                var setLoadout = msg.MessageAsSetLoadout().UnPack();
 
                 if (_isReady)
                 {
@@ -177,7 +179,7 @@ class FlatBuffersSession
 
                 break;
 
-            case DataType.InitComplete when _connectionEstablished && !_isReady:
+            case InterfaceMessage.InitComplete when _connectionEstablished && !_isReady:
                 if (_closeBetweenMatches)
                 {
                     await _bridge.WriteAsync(new SessionReady(_clientId));
@@ -187,13 +189,13 @@ class FlatBuffersSession
                 _isReady = true;
                 break;
 
-            case DataType.StopCommand:
-                var stopCommand = StopCommand.GetRootAsStopCommand(byteBuffer);
+            case InterfaceMessage.StopCommand:
+                var stopCommand = msg.MessageAsStopCommand();
                 await _rlbotServer.WriteAsync(new StopMatch(stopCommand.ShutdownServer));
                 break;
 
-            case DataType.StartCommand:
-                var startCommand = StartCommand.GetRootAsStartCommand(byteBuffer);
+            case InterfaceMessage.StartCommand:
+                var startCommand = msg.MessageAsStartCommand();
                 var parser = new ConfigParser();
                 if (
                     parser.TryLoadMatchConfig(startCommand.ConfigPath, out var tomlMatchConfig)
@@ -204,18 +206,16 @@ class FlatBuffersSession
                 }
                 break;
 
-            case DataType.MatchConfig:
-                var matchConfig = MatchConfiguration
-                    .GetRootAsMatchConfiguration(byteBuffer)
-                    .UnPack();
+            case InterfaceMessage.MatchConfiguration:
+                var matchConfig = msg.MessageAsMatchConfiguration().UnPack();
                 if (ConfigValidator.Validate(matchConfig))
                 {
                     await _rlbotServer.WriteAsync(new StartMatch(matchConfig));
                 }
                 break;
 
-            case DataType.PlayerInput when _connectionEstablished:
-                var playerInputMsg = PlayerInput.GetRootAsPlayerInput(byteBuffer).UnPack();
+            case InterfaceMessage.PlayerInput when _connectionEstablished:
+                var playerInputMsg = msg.MessageAsPlayerInput().UnPack();
 
                 // ensure the provided index is a bot we control
                 if (
@@ -238,8 +238,8 @@ class FlatBuffersSession
                 await _bridge.WriteAsync(new Input(playerInputMsg));
                 break;
 
-            case DataType.MatchComms:
-                var matchComms = MatchComm.GetRootAsMatchComm(byteBuffer).UnPack();
+            case InterfaceMessage.MatchComm:
+                var matchComms = msg.MessageAsMatchComm().UnPack();
 
                 if (_agentId != "")
                 {
@@ -274,53 +274,39 @@ class FlatBuffersSession
 
                 break;
 
-            case DataType.RenderGroup:
+            case InterfaceMessage.RenderGroup:
                 if (!_renderingIsEnabled)
                     break;
 
-                var renderingGroup = RenderGroup.GetRootAsRenderGroup(byteBuffer).UnPack();
+                var renderingGroup = msg.MessageAsRenderGroup().UnPack();
                 await _bridge.WriteAsync(
                     new AddRenders(_clientId, renderingGroup.Id, renderingGroup.RenderMessages)
                 );
 
                 break;
 
-            case DataType.RemoveRenderGroup:
+            case InterfaceMessage.RemoveRenderGroup:
                 if (!_renderingIsEnabled)
                     break;
 
-                var removeRenderGroup = RemoveRenderGroup.GetRootAsRemoveRenderGroup(
-                    byteBuffer
-                );
+                var removeRenderGroup = msg.MessageAsRemoveRenderGroup();
                 await _bridge.WriteAsync(new RemoveRenders(_clientId, removeRenderGroup.Id));
                 break;
 
-            case DataType.DesiredGameState:
+            case InterfaceMessage.DesiredGameState:
                 if (!_stateSettingIsEnabled)
                     break;
 
-                var desiredGameState = DesiredGameState
-                    .GetRootAsDesiredGameState(byteBuffer)
-                    .UnPack();
+                var desiredGameState = msg.MessageAsDesiredGameState().UnPack();
                 await _bridge.WriteAsync(new SetGameState(desiredGameState));
 
-                break;
-
-            case DataType.GamePacket:
-            case DataType.FieldInfo:
-            case DataType.BallPrediction:
-            default:
-                Logger.LogError(
-                    $"Core got unexpected message type {message.Type} from client. "
-                        + $"Got ConnectionSettings: {_connectionEstablished}."
-                );
                 break;
         }
 
         return true;
     }
 
-    private void SendPayloadToClient(TypedPayload payload)
+    private void SendPayloadToClient(CoreMessageUnion payload)
     {
         try
         {
@@ -345,37 +331,22 @@ class FlatBuffersSession
             switch (message)
             {
                 case SessionMessage.FieldInfo m:
-                    _messageBuilder.Clear();
-                    _messageBuilder.Finish(FieldInfo.Pack(_messageBuilder, m.Info).Value);
-
-                    SendPayloadToClient(
-                        TypedPayload.FromFlatBufferBuilder(DataType.FieldInfo, _messageBuilder)
-                    );
+                    SendPayloadToClient(CoreMessageUnion.FromFieldInfo(m.Info));
                     break;
                 case SessionMessage.MatchConfig m:
-                    _messageBuilder.Clear();
-                    _messageBuilder.Finish(
-                        MatchConfiguration.Pack(_messageBuilder, m.Config).Value
-                    );
-
-                    SendPayloadToClient(
-                        TypedPayload.FromFlatBufferBuilder(
-                            DataType.MatchConfig,
-                            _messageBuilder
-                        )
-                    );
+                    SendPayloadToClient(CoreMessageUnion.FromMatchConfiguration(m.Config));
                     break;
                 case SessionMessage.PlayerIdPairs m:
                     _team = m.Team;
                     _playerIdPairs = m.IdMaps;
 
-                    List<ControllableInfoT> controllables = new(
-                        _playerIdPairs.Select(playerInfo => new ControllableInfoT()
+                    List<ControllableInfoT> controllables = _playerIdPairs
+                        .Select(playerInfo => new ControllableInfoT()
                         {
                             Index = playerInfo.Index,
                             SpawnId = playerInfo.SpawnId,
                         })
-                    );
+                        .ToList();
 
                     ControllableTeamInfoT playerMappings = new()
                     {
@@ -383,16 +354,8 @@ class FlatBuffersSession
                         Controllables = controllables,
                     };
 
-                    _messageBuilder.Clear();
-                    _messageBuilder.Finish(
-                        ControllableTeamInfo.Pack(_messageBuilder, playerMappings).Value
-                    );
-
                     SendPayloadToClient(
-                        TypedPayload.FromFlatBufferBuilder(
-                            DataType.ControllableTeamInfo,
-                            _messageBuilder
-                        )
+                        CoreMessageUnion.FromControllableTeamInfo(playerMappings)
                     );
 
                     Logger.LogDebug("Reserved agents for {}", ClientName);
@@ -400,30 +363,10 @@ class FlatBuffersSession
                     break;
                 case SessionMessage.DistributeBallPrediction m
                     when _isReady && _wantsBallPredictions:
-                    _messageBuilder.Clear();
-                    _messageBuilder.Finish(
-                        BallPrediction.Pack(_messageBuilder, m.BallPrediction).Value
-                    );
-
-                    SendPayloadToClient(
-                        TypedPayload.FromFlatBufferBuilder(
-                            DataType.BallPrediction,
-                            _messageBuilder
-                        )
-                    );
+                    SendPayloadToClient(CoreMessageUnion.FromBallPrediction(m.BallPrediction));
                     break;
                 case SessionMessage.DistributeGameState m when _isReady:
-                    _messageBuilder.Clear();
-                    _messageBuilder.Finish(
-                        GamePacket.Pack(_messageBuilder, m.GameState).Value
-                    );
-
-                    SendPayloadToClient(
-                        TypedPayload.FromFlatBufferBuilder(
-                            DataType.GamePacket,
-                            _messageBuilder
-                        )
-                    );
+                    SendPayloadToClient(CoreMessageUnion.FromGamePacket(m.GameState));
 
                     foreach (var (index, gotInput) in _gotInput)
                     {
@@ -453,15 +396,7 @@ class FlatBuffersSession
                         }
                     }
 
-                    _messageBuilder.Clear();
-                    _messageBuilder.Finish(MatchComm.Pack(_messageBuilder, m.Message).Value);
-
-                    SendPayloadToClient(
-                        TypedPayload.FromFlatBufferBuilder(
-                            DataType.MatchComms,
-                            _messageBuilder
-                        )
-                    );
+                    SendPayloadToClient(CoreMessageUnion.FromMatchComm(m.Message));
 
                     break;
                 case SessionMessage.StopMatch m
@@ -473,7 +408,7 @@ class FlatBuffersSession
 
     private async Task HandleClientMessages()
     {
-        await foreach (TypedPayload message in _socketSpecReader.ReadAllAsync())
+        await foreach (InterfacePacket message in _socketSpecReader.ReadAllAsync())
         {
             // if the session is closed, ignore any incoming messages
             // this should allow the client to close cleanly
@@ -528,12 +463,9 @@ class FlatBuffersSession
         // try to politely close the connection
         try
         {
-            TypedPayload msg = new()
-            {
-                Type = DataType.None,
-                Payload = new ArraySegment<byte>([1]),
-            };
-            SendPayloadToClient(msg);
+            SendPayloadToClient(
+                CoreMessageUnion.FromDisconnectSignal(new DisconnectSignalT())
+            );
         }
         catch (Exception)
         {

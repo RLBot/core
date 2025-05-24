@@ -1,7 +1,7 @@
 using Bridge.Models.Command;
 using Bridge.Models.Control;
 using Bridge.State;
-using rlbot.flat;
+using RLBot.Flat;
 using Color = System.Drawing.Color;
 using LoadoutPaint = Bridge.Models.Command.LoadoutPaint;
 using Physics = Bridge.Models.Phys.Physics;
@@ -66,7 +66,7 @@ static class FlatToModel
 
     internal static Color ToColor(ColorT c) => Color.FromArgb(c.A, c.R, c.G, c.B);
 
-    internal static Rotator ToRotator(rlbot.flat.Rotator r) =>
+    internal static Rotator ToRotator(RLBot.Flat.Rotator r) =>
         new Rotator(r.Pitch, r.Yaw, r.Roll);
 
     internal static Loadout ToLoadout(PlayerLoadoutT l, uint team)

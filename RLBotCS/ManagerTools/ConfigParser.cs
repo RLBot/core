@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
-using rlbot.flat;
+using RLBot.Flat;
 using RLBotCS.Model;
 using Tomlyn;
 using Tomlyn.Model;
