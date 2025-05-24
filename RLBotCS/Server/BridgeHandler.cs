@@ -23,10 +23,20 @@ class BridgeHandler(
 
     private async Task HandleInternalMessages()
     {
+        bool isFirstTick = true;
+
         await foreach (IBridgeMessage message in _context.Reader.ReadAllAsync())
         {
             lock (_context)
             {
+                if (isFirstTick)
+                {
+                    // Don't start reading messages until we receive the first message from Rocket League
+                    isFirstTick = false;
+                    Monitor.Wait(_context);
+                    _context.Logger.LogDebug("Started reading internal messages");
+                }
+
                 try
                 {
                     message.HandleMessage(_context);
@@ -46,6 +56,8 @@ class BridgeHandler(
         await _context.Messenger.WaitForConnectionAsync();
 
         _context.Logger.LogInformation("Connected to Rocket League");
+
+        bool isFirstTick = true;
 
         await foreach (var messageClump in _context.Messenger.ReadAllAsync())
         {
@@ -147,6 +159,13 @@ class BridgeHandler(
                 }
 
                 _context.RenderingMgmt.SendRenderClears();
+
+                if (isFirstTick)
+                {
+                    isFirstTick = false;
+                    // Trigger HandleInternalMessages to start processing messages
+                    Monitor.Pulse(_context);
+                }
             }
         }
     }
