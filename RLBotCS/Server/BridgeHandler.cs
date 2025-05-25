@@ -18,11 +18,20 @@ class BridgeHandler(
     MatchStarter matchStarter
 )
 {
+    private ManualResetEvent startReadingInternalMsgs = new ManualResetEvent(false);
+
     private const int MAX_TICK_SKIP = 1;
     private readonly BridgeContext _context = new(writer, reader, messenger, matchStarter);
 
     private async Task HandleInternalMessages()
     {
+        // if Rocket League is already running,
+        // we wait for it to connect to us first
+        if (LaunchManager.IsRocketLeagueRunningWithArgs())
+            startReadingInternalMsgs.WaitOne();
+
+        _context.Logger.LogDebug("Started reading internal messages");
+
         await foreach (IBridgeMessage message in _context.Reader.ReadAllAsync())
         {
             lock (_context)
@@ -47,10 +56,21 @@ class BridgeHandler(
 
         _context.Logger.LogInformation("Connected to Rocket League");
 
+        bool isFirstTick = true;
+
         await foreach (var messageClump in _context.Messenger.ReadAllAsync())
         {
             lock (_context)
             {
+                if (isFirstTick)
+                {
+                    isFirstTick = false;
+                    // Trigger HandleInternalMessages to start processing messages
+                    // it will still wait until we're done,
+                    // since we have a lock on _context
+                    startReadingInternalMsgs.Set();
+                }
+
                 // reset the counter that lets us know if we're sending too many bytes
                 // technically this resets every time Rocket League renders a frame,
                 // but we don't know when that is. Since every message from the game
