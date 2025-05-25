@@ -272,7 +272,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
 
                     if (matchConfig.PlayerConfigurations.Count <= i)
                     {
-                        toDespawnIds.Add(lastPlayerConfig.SpawnId);
+                        toDespawnIds.Add(lastPlayerConfig.PlayerId);
                         toDespawnNames.Add(
                             $"{lastPlayerConfig.AgentId} (index {i}, team {lastPlayerConfig.Team})"
                         );
@@ -285,7 +285,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
                         || lastPlayerConfig.Team != playerConfig.Team
                     )
                     {
-                        toDespawnIds.Add(lastPlayerConfig.SpawnId);
+                        toDespawnIds.Add(lastPlayerConfig.PlayerId);
                         toDespawnNames.Add(
                             $"{lastPlayerConfig.AgentId} (index {i}, team {lastPlayerConfig.Team})"
                         );

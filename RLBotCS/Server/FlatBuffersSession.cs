@@ -1,6 +1,5 @@
 using System.Net.Sockets;
 using System.Threading.Channels;
-using Google.FlatBuffers;
 using Microsoft.Extensions.Logging;
 using RLBot.Flat;
 using RLBotCS.ManagerTools;
@@ -163,7 +162,7 @@ class FlatBuffersSession
                     if (maybeIdPair is { } pair)
                     {
                         await _bridge.WriteAsync(
-                            new SetInitLoadout(setLoadout.Loadout, pair.SpawnId)
+                            new SetInitLoadout(setLoadout.Loadout, pair.PlayerId)
                         );
                     }
                     else
@@ -344,7 +343,7 @@ class FlatBuffersSession
                         .Select(playerInfo => new ControllableInfoT()
                         {
                             Index = playerInfo.Index,
-                            SpawnId = playerInfo.SpawnId,
+                            Identifier = playerInfo.PlayerId,
                         })
                         .ToList();
 
