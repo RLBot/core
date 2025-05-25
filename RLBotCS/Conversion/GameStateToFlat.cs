@@ -170,7 +170,7 @@ static class GameStateToFlat
                     Name = car.Name,
                     Team = car.Team,
                     Boost = car.Boost,
-                    SpawnId = car.SpawnId,
+                    PlayerId = car.PlayerId,
                     ScoreInfo = new()
                     {
                         Score = car.ScoreInfo.Score,
