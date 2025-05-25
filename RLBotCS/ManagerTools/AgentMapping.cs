@@ -6,7 +6,7 @@ namespace RLBotCS.ManagerTools;
 public struct PlayerIdPair
 {
     public uint Index;
-    public int SpawnId;
+    public int PlayerId;
 }
 
 public class AgentMapping
@@ -38,7 +38,7 @@ public class AgentMapping
                     playerConfig.Team,
                     playerConfig.Name,
                     playerConfig.AgentId,
-                    playerConfig.SpawnId
+                    playerConfig.PlayerId
                 )
             );
         }
@@ -53,7 +53,7 @@ public class AgentMapping
                     Team.Scripts,
                     scriptConfig.Name,
                     scriptConfig.AgentId,
-                    scriptConfig.SpawnId
+                    scriptConfig.ScriptId
                 )
             );
         }
@@ -69,7 +69,7 @@ public class AgentMapping
             player.SetClient(clientId);
 
             return (
-                new PlayerIdPair { Index = player.Index, SpawnId = player.SpawnId },
+                new PlayerIdPair { Index = player.Index, PlayerId = player.PlayerId },
                 player.Team
             );
         }
@@ -99,7 +99,7 @@ public class AgentMapping
                     new PlayerIdPair
                     {
                         Index = playerMetadata.Index,
-                        SpawnId = playerMetadata.SpawnId,
+                        PlayerId = playerMetadata.PlayerId,
                     }
                 );
             }

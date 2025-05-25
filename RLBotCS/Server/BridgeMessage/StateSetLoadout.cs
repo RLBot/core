@@ -46,7 +46,7 @@ record StateSetLoadout(PlayerLoadoutT Loadout, uint Index) : IBridgeMessage
             new SpawnTracker
             {
                 CommandId = commandId,
-                SpawnId = meta.SpawnId,
+                PlayerId = meta.PlayerId,
                 DesiredPlayerIndex = meta.PlayerIndex,
                 IsCustomBot = true,
                 IsBot = true,

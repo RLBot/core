@@ -7,7 +7,7 @@ namespace RLBotCS.Server.BridgeMessage;
 /// Sets the loadout of a bot that has yet to ready up and spawn (replaces loadout generators from v4).
 /// See also <see cref="StateSetLoadout"/> for loadout change during matches.
 /// </summary>
-record SetInitLoadout(PlayerLoadoutT Loadout, int SpawnId) : IBridgeMessage
+record SetInitLoadout(PlayerLoadoutT Loadout, int PlayerId) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
@@ -22,18 +22,18 @@ record SetInitLoadout(PlayerLoadoutT Loadout, int SpawnId) : IBridgeMessage
         {
             // BUG: If "wait_for_agents=false" then you cannot use the new 'loadout generators'
             context.Logger.LogWarning(
-                "Cannot set initial loadout of bot with spawn id {}. Cars have already spawned.",
-                SpawnId
+                "Cannot set initial loadout of bot with player id {}. Cars have already spawned.",
+                PlayerId
             );
             return;
         }
 
-        var player = matchConfig.PlayerConfigurations.Find(p => p.SpawnId == SpawnId);
+        var player = matchConfig.PlayerConfigurations.Find(p => p.PlayerId == PlayerId);
         if (player is null)
         {
             context.Logger.LogError(
-                "Cannot set loadout of player with spawn id {}. No such player exists.",
-                SpawnId
+                "Cannot set loadout of player with player id {}. No such player exists.",
+                PlayerId
             );
             return;
         }

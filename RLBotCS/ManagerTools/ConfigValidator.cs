@@ -161,7 +161,7 @@ public static class ConfigValidator
                     break;
             }
 
-            player.SpawnId =
+            player.PlayerId =
                 player.Variety.Type == PlayerClass.Human
                     ? 0
                     : $"{player.AgentId}/{player.Team}/{i}".GetHashCode();
@@ -209,7 +209,7 @@ public static class ConfigValidator
             script.Name ??= "";
             script.RunCommand ??= "";
             script.RootDir ??= "";
-            script.SpawnId = $"{script.AgentId}/{Team.Scripts}/{i}".GetHashCode();
+            script.ScriptId = $"{script.AgentId}/{Team.Scripts}/{i}".GetHashCode();
         }
 
         return valid;
