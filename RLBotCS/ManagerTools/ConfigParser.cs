@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
-using rlbot.flat;
+using RLBot.Flat;
 using RLBotCS.Model;
 using Tomlyn;
 using Tomlyn.Model;
@@ -346,7 +345,7 @@ public class ConfigParser
                 Hivemind = false,
                 RootDir = "",
                 RunCommand = "",
-                SpawnId = 0,
+                PlayerId = 0,
             };
         }
 
@@ -409,7 +408,7 @@ public class ConfigParser
                 RunCommand = GetRunCommand(settings),
                 Hivemind = GetValue(settings, Fields.AgentHivemind, false),
                 RootDir = rootDir,
-                SpawnId = 0,
+                PlayerId = 0,
                 Variety = variety,
             };
         }

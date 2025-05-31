@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using Bridge.Models.Message;
 using Microsoft.Extensions.Logging;
-using rlbot.flat;
+using RLBot.Flat;
 using MatchPhase = Bridge.Models.Message.MatchPhase;
 
 namespace RLBotCS.ManagerTools;
@@ -36,6 +36,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
 
     public void ResetMatchStarting()
     {
+        Logger.LogDebug("Reset MatchStarter");
         _deferredMatchConfig = null;
         _matchConfig = null;
         HasSpawnedMap = false;
@@ -271,7 +272,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
 
                     if (matchConfig.PlayerConfigurations.Count <= i)
                     {
-                        toDespawnIds.Add(lastPlayerConfig.SpawnId);
+                        toDespawnIds.Add(lastPlayerConfig.PlayerId);
                         toDespawnNames.Add(
                             $"{lastPlayerConfig.AgentId} (index {i}, team {lastPlayerConfig.Team})"
                         );
@@ -284,7 +285,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
                         || lastPlayerConfig.Team != playerConfig.Team
                     )
                     {
-                        toDespawnIds.Add(lastPlayerConfig.SpawnId);
+                        toDespawnIds.Add(lastPlayerConfig.PlayerId);
                         toDespawnNames.Add(
                             $"{lastPlayerConfig.AgentId} (index {i}, team {lastPlayerConfig.Team})"
                         );

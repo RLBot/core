@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Logging;
-using rlbot.flat;
+using RLBot.Flat;
 
 namespace RLBotCS.Server.ServerMessage;
 

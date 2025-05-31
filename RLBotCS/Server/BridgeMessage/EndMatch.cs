@@ -1,4 +1,4 @@
-﻿namespace RLBotCS.Server.BridgeMessage;
+namespace RLBotCS.Server.BridgeMessage;
 
 record EndMatch() : IBridgeMessage
 {
