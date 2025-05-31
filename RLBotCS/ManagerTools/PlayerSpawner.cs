@@ -2,7 +2,7 @@ using Bridge.Controller;
 using Bridge.Models.Command;
 using Bridge.Models.Message;
 using Bridge.State;
-using rlbot.flat;
+using RLBot.Flat;
 using RLBotCS.Conversion;
 
 namespace RLBotCS.ManagerTools;
