@@ -114,7 +114,7 @@ public static class ConfigValidator
                     player.AgentId ??= "psyonix/" + skill; // Not that it really matters
 
                     // Apply Psyonix preset loadouts
-                    if (player.Name == null)
+                    if (string.IsNullOrEmpty(player.Name))
                     {
                         (player.Name, var preset) = PsyonixLoadouts.GetNext((int)player.Team);
                         string andPreset = player.Loadout == null ? " and preset" : "";
