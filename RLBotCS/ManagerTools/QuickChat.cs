@@ -39,7 +39,7 @@ public class QuickChat
 
     public void AddChat(MatchCommT matchComm, string name, float gameTime)
     {
-        if (matchComm.Display == null)
+        if (string.IsNullOrEmpty(matchComm.Display))
             return;
 
         _chats.AddLast((gameTime, name, matchComm));
