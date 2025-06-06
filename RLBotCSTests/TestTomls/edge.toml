@@ -15,7 +15,7 @@ gravity = "rEvErsE"
 [[cars]]
 # No config
 name = "Boomer"
-type = "pSyOniX"
+type = "pSyOniXbOt"
 skill = "pro"
 
 [[cars]]

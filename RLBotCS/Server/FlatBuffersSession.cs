@@ -25,7 +25,7 @@ record SessionMessage
 
     public record DistributeGameState(GamePacketT GameState) : SessionMessage;
 
-    public record RendersAllowed(bool Allowed) : SessionMessage;
+    public record RendersAllowed(DebugRendering Allowed) : SessionMessage;
 
     public record StateSettingAllowed(bool Allowed) : SessionMessage;
 
@@ -63,6 +63,7 @@ class FlatBuffersSession
 
     private bool _stateSettingIsEnabled;
     private bool _renderingIsEnabled;
+    private DebugRendering _globalRenderingIsEnabled;
 
     private string _agentId = string.Empty;
     private uint _team = Team.Other;
@@ -81,7 +82,7 @@ class FlatBuffersSession
         Channel<SessionMessage> incomingMessages,
         ChannelWriter<IServerMessage> rlbotServer,
         ChannelWriter<IBridgeMessage> bridge,
-        bool renderingIsEnabled,
+        DebugRendering renderingIsEnabled,
         bool stateSettingIsEnabled
     )
     {
@@ -90,7 +91,12 @@ class FlatBuffersSession
         _incomingMessages = incomingMessages;
         _rlbotServer = rlbotServer;
         _bridge = bridge;
-        _renderingIsEnabled = renderingIsEnabled;
+        _renderingIsEnabled = renderingIsEnabled switch
+        {
+            DebugRendering.OnByDefault => true,
+            _ => false,
+        };
+        _globalRenderingIsEnabled = renderingIsEnabled;
         _stateSettingIsEnabled = stateSettingIsEnabled;
 
         NetworkStream stream = _client.GetStream();
@@ -375,7 +381,17 @@ class FlatBuffersSession
 
                     break;
                 case SessionMessage.RendersAllowed m:
-                    _renderingIsEnabled = m.Allowed;
+                    _globalRenderingIsEnabled = m.Allowed;
+                    switch (_globalRenderingIsEnabled)
+                    {
+                        case DebugRendering.OnByDefault:
+                            _renderingIsEnabled = true;
+                            break;
+                        case DebugRendering.OffByDefault:
+                        case DebugRendering.AlwaysOff:
+                            _renderingIsEnabled = false;
+                            break;
+                    }
                     break;
                 case SessionMessage.StateSettingAllowed m:
                     _stateSettingIsEnabled = m.Allowed;

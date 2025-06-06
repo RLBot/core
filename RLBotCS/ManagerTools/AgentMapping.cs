@@ -23,24 +23,44 @@ public class AgentMapping
         {
             var playerConfig = matchConfig.PlayerConfigurations[i];
 
-            if (playerConfig.Variety.Type != PlayerClass.CustomBot)
+            // if (playerConfig.Variety.Type != PlayerClass.CustomBot)
+            // {
+            //     if (playerConfig.Variety.Type == PlayerClass.Human)
+            //         humans++;
+
+            //     continue;
+            // }
+
+            // uint index = (uint)i - humans;
+            // _agents.Add(
+            //     new AgentMetadata(
+            //         index,
+            //         playerConfig.Team,
+            //         playerConfig.Name,
+            //         playerConfig.AgentId,
+            //         playerConfig.PlayerId
+            //     )
+            // );
+
+            switch (playerConfig.Variety.Value)
             {
-                if (playerConfig.Variety.Type == PlayerClass.Human)
-                    humans++;
-
-                continue;
+                case HumanT:
+                    if (playerConfig.Variety.Type == PlayerClass.Human)
+                        humans++;
+                    break;
+                case PsyonixBotT psy:
+                    uint index = (uint)i - humans;
+                    _agents.Add(
+                        new AgentMetadata(
+                            index,
+                            playerConfig.Team,
+                            psy.Name,
+                            "psyonix/" + psy.BotSkill,
+                            playerConfig.PlayerId
+                        )
+                    );
+                    break;
             }
-
-            uint index = (uint)i - humans;
-            _agents.Add(
-                new AgentMetadata(
-                    index,
-                    playerConfig.Team,
-                    playerConfig.Name,
-                    playerConfig.AgentId,
-                    playerConfig.PlayerId
-                )
-            );
         }
 
         // Scripts

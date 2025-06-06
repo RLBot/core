@@ -36,7 +36,7 @@ class ServerContext(
     public ChannelWriter<IBridgeMessage> Bridge { get; } = bridge;
 
     public bool StateSettingIsEnabled = false;
-    public bool RenderingIsEnabled = false;
+    public DebugRendering RenderingIsEnabled = DebugRendering.OffByDefault;
 
     public GamePacketT? LastTickPacket { get; set; }
 

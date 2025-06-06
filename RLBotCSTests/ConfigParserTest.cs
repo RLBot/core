@@ -100,23 +100,32 @@ public class ConfigParserTest
         Assert.AreEqual(MatchLengthMutator.TenMinutes, edgeMC.Mutators.MatchLength);
         Assert.AreEqual(GravityMutator.Reverse, edgeMC.Mutators.Gravity);
 
-        Assert.AreEqual("Boomer", edgeMC.PlayerConfigurations[0].Name);
-        Assert.AreEqual(PlayerClass.Psyonix, edgeMC.PlayerConfigurations[0].Variety.Type);
+        Assert.AreEqual(PlayerClass.PsyonixBot, edgeMC.PlayerConfigurations[0].Variety.Type);
+        Assert.AreEqual("Boomer", edgeMC.PlayerConfigurations[0].Variety.AsPsyonixBot().Name);
         Assert.AreEqual(
             PsyonixSkill.Pro,
-            edgeMC.PlayerConfigurations[0].Variety.AsPsyonix().BotSkill
+            edgeMC.PlayerConfigurations[0].Variety.AsPsyonixBot().BotSkill
         );
-        Assert.AreEqual(null, edgeMC.PlayerConfigurations[0].Loadout);
+        Assert.AreEqual(null, edgeMC.PlayerConfigurations[0].Variety.AsPsyonixBot().Loadout);
 
-        Assert.AreEqual("Edgy Test Bot", edgeMC.PlayerConfigurations[1].Name);
-        Assert.AreEqual("", edgeMC.PlayerConfigurations[1].AgentId);
         Assert.AreEqual(PlayerClass.CustomBot, edgeMC.PlayerConfigurations[1].Variety.Type);
+        Assert.AreEqual(
+            "Edgy Test Bot",
+            edgeMC.PlayerConfigurations[1].Variety.AsCustomBot().Name
+        );
+        Assert.AreEqual("", edgeMC.PlayerConfigurations[1].Variety.AsCustomBot().AgentId);
         Assert.AreEqual(0u, edgeMC.PlayerConfigurations[1].Team);
 
-        Assert.AreEqual("Edgy Test Bot", edgeMC.PlayerConfigurations[2].Name);
+        Assert.AreEqual(
+            "Edgy Test Bot",
+            edgeMC.PlayerConfigurations[2].Variety.AsCustomBot().Name
+        );
         Assert.AreEqual(1u, edgeMC.PlayerConfigurations[2].Team);
 
-        PlayerLoadoutT loadoutP2 = edgeMC.PlayerConfigurations[2].Loadout;
+        PlayerLoadoutT loadoutP2 = edgeMC
+            .PlayerConfigurations[2]
+            .Variety.AsCustomBot()
+            .Loadout;
         Assert.AreEqual(69u, loadoutP2.TeamColorId);
         Assert.AreEqual(0u, loadoutP2.CustomColorId);
         Assert.AreEqual(23u, loadoutP2.CarId);
@@ -140,7 +149,7 @@ public class ConfigParserTest
         Assert.AreEqual(12u, loadoutP2.LoadoutPaint.GoalExplosionPaintId);
 
         // Set to "" due to `auto_start=false`
-        Assert.AreEqual("", edgeMC.PlayerConfigurations[3].RunCommand);
+        Assert.AreEqual("", edgeMC.PlayerConfigurations[3].Variety.AsCustomBot().RunCommand);
         Assert.AreEqual("", edgeMC.ScriptConfigurations[0].RunCommand);
     }
 
@@ -151,14 +160,14 @@ public class ConfigParserTest
         MatchConfigurationT mc = parser.LoadMatchConfig("TestTomls/empty_agents.toml");
 
         PlayerConfigurationT player = mc.PlayerConfigurations[0];
-        Assert.AreEqual("", player.Name);
-        Assert.AreEqual("", player.AgentId);
-        Assert.AreEqual(0u, player.Team);
         Assert.AreEqual(PlayerClass.CustomBot, player.Variety.Type);
-        Assert.AreEqual(Path.GetFullPath("TestTomls"), player.RootDir);
-        Assert.AreEqual("", player.RunCommand);
-        Assert.AreEqual(null, player.Loadout);
-        Assert.AreEqual(false, player.Hivemind);
+        Assert.AreEqual("", player.Variety.AsCustomBot().Name);
+        Assert.AreEqual("", player.Variety.AsCustomBot().AgentId);
+        Assert.AreEqual(0u, player.Team);
+        Assert.AreEqual(Path.GetFullPath("TestTomls"), player.Variety.AsCustomBot().RootDir);
+        Assert.AreEqual("", player.Variety.AsCustomBot().RunCommand);
+        Assert.AreEqual(null, player.Variety.AsCustomBot().Loadout);
+        Assert.AreEqual(false, player.Variety.AsCustomBot().Hivemind);
 
         ScriptConfigurationT script = mc.ScriptConfigurations[0];
         Assert.AreEqual("", script.Name);
@@ -174,8 +183,8 @@ public class ConfigParserTest
         MatchConfigurationT mc = parser.LoadMatchConfig("TestTomls/overrides.toml");
 
         PlayerConfigurationT player = mc.PlayerConfigurations[0];
-        Assert.AreEqual("New Bot Name", player.Name);
-        Assert.AreEqual(null, player.Loadout);
+        Assert.AreEqual("New Bot Name", player.Variety.AsCustomBot().Name);
+        Assert.AreEqual(null, player.Variety.AsCustomBot().Loadout);
 
         ScriptConfigurationT script = mc.ScriptConfigurations[0];
         Assert.AreEqual("Normal Test Script", script.Name); // Not overriden

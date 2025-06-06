@@ -124,29 +124,28 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
         Dictionary<string, int> playerNames = [];
         _hivemindNameMap.Clear();
 
-        for (int i = 0; i < matchConfig.PlayerConfigurations.Count; i++)
+        foreach (var player in matchConfig.PlayerConfigurations)
         {
-            var playerConfig = matchConfig.PlayerConfigurations[i];
-
             // De-duplicating similar names. Overwrites original value.
-            if (playerConfig.Variety.Type == PlayerClass.Human)
-                continue;
 
-            string playerName = playerConfig.Name ?? "";
-            if (playerNames.TryGetValue(playerName, out int value))
+            if (player.Variety.Value is CustomBotT config)
             {
-                playerNames[playerName] = ++value;
-                playerConfig.Name = playerName + $" ({value + 1})";
-            }
-            else
-            {
-                playerNames[playerName] = 0;
-                playerConfig.Name = playerName;
-            }
+                string playerName = config.Name ?? "";
+                if (playerNames.TryGetValue(playerName, out int value))
+                {
+                    playerNames[playerName] = ++value;
+                    config.Name = playerName + $" ({value + 1})";
+                }
+                else
+                {
+                    playerNames[playerName] = 0;
+                    config.Name = playerName;
+                }
 
-            if (playerConfig.Hivemind)
-            {
-                _hivemindNameMap[playerConfig.Name] = playerName;
+                if (config.Hivemind)
+                {
+                    _hivemindNameMap[config.Name] = playerName;
+                }
             }
         }
 
@@ -172,31 +171,31 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
     {
         Dictionary<string, PlayerConfigurationT> processes = new();
 
-        foreach (var playerConfig in matchConfig.PlayerConfigurations)
+        foreach (var player in matchConfig.PlayerConfigurations)
         {
-            if (playerConfig.Variety.Type != PlayerClass.CustomBot)
-                continue;
-
-            if (playerConfig.Hivemind)
+            if (player.Variety.Value is CustomBotT config)
             {
-                // only add one process per team
-                // make sure to not accidentally include two bots
-                // with the same names in the same hivemind process
-                string uniqueName =
-                    playerConfig.RootDir
-                    + "_"
-                    + playerConfig.RunCommand
-                    + "_"
-                    + _hivemindNameMap[playerConfig.Name]
-                    + "_"
-                    + playerConfig.Team;
+                if (config.Hivemind)
+                {
+                    // only add one process per team
+                    // make sure to not accidentally include two bots
+                    // with the same names in the same hivemind process
+                    string uniqueName =
+                        config.RootDir
+                        + "_"
+                        + config.RunCommand
+                        + "_"
+                        + _hivemindNameMap[config.Name]
+                        + "_"
+                        + player.Team;
 
-                if (!processes.ContainsKey(uniqueName))
-                    processes[uniqueName] = playerConfig;
-            }
-            else
-            {
-                processes[playerConfig.Name] = playerConfig;
+                    if (!processes.ContainsKey(uniqueName))
+                        processes[uniqueName] = player;
+                }
+                else
+                {
+                    processes[config.Name] = player;
+                }
             }
         }
 
@@ -270,24 +269,39 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
                         continue;
                     }
 
+                    string lastAgentId = lastPlayerConfig.Variety.Value switch
+                    {
+                        PsyonixBotT bot => $"psyonix/{bot.BotSkill}",
+                        CustomBotT bot => bot.AgentId,
+                        _ => "human",
+                    };
+
                     if (matchConfig.PlayerConfigurations.Count <= i)
                     {
                         toDespawnIds.Add(lastPlayerConfig.PlayerId);
                         toDespawnNames.Add(
-                            $"{lastPlayerConfig.AgentId} (index {i}, team {lastPlayerConfig.Team})"
+                            $"{lastAgentId} (index {i}, team {lastPlayerConfig.Team})"
                         );
                         continue;
                     }
 
                     var playerConfig = matchConfig.PlayerConfigurations[i];
+                    string agentId = playerConfig.Variety.Value switch
+                    {
+                        PsyonixBotT bot => $"psyonix/{bot.BotSkill}",
+                        CustomBotT bot => bot.AgentId,
+                        _ => "human",
+                    };
+
                     if (
-                        lastPlayerConfig.AgentId != playerConfig.AgentId
+                        lastPlayerConfig.Variety.Type != playerConfig.Variety.Type
+                        || lastAgentId != agentId
                         || lastPlayerConfig.Team != playerConfig.Team
                     )
                     {
                         toDespawnIds.Add(lastPlayerConfig.PlayerId);
                         toDespawnNames.Add(
-                            $"{lastPlayerConfig.AgentId} (index {i}, team {lastPlayerConfig.Team})"
+                            $"{lastAgentId} (index {i}, team {lastPlayerConfig.Team})"
                         );
                     }
                 }
@@ -340,10 +354,22 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
             var playerConfig = matchConfig.PlayerConfigurations[i];
 
             if (
-                lastPlayerConfig.AgentId != playerConfig.AgentId
+                lastPlayerConfig.Variety.Type != playerConfig.Variety.Type
                 || lastPlayerConfig.Team != playerConfig.Team
             )
                 return true;
+
+            switch (lastPlayerConfig.Variety.Value)
+            {
+                case PsyonixBotT lastBot:
+                    if (lastBot.BotSkill != playerConfig.Variety.AsPsyonixBot().BotSkill)
+                        return true;
+                    break;
+                case CustomBotT lastBot:
+                    if (lastBot.AgentId != playerConfig.Variety.AsCustomBot().AgentId)
+                        return true;
+                    break;
+            }
         }
 
         var lastMutators = lastMatchConfig.Mutators;
@@ -401,18 +427,21 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
         {
             var playerConfig = matchConfig.PlayerConfigurations[i];
 
-            Logger.LogInformation(
-                $"Spawning {playerConfig.Name} (index {i}, team {playerConfig.Team}, aid {playerConfig.AgentId})"
-            );
-
-            switch (playerConfig.Variety.Type)
+            switch (playerConfig.Variety.Value)
             {
-                case PlayerClass.CustomBot:
-                    spawner.SpawnBot(playerConfig, BotSkill.Custom, (uint)i);
+                case CustomBotT bot:
+                    Logger.LogInformation(
+                        $"Spawning {bot.Name} (index {i}, team {playerConfig.Team}, aid {bot.AgentId})"
+                    );
 
+                    spawner.SpawnBot(playerConfig, BotSkill.Custom, (uint)i);
                     break;
-                case PlayerClass.Psyonix:
-                    var skillEnum = playerConfig.Variety.AsPsyonix().BotSkill switch
+                case PsyonixBotT bot:
+                    Logger.LogInformation(
+                        $"Spawning {bot.Name} (index {i}, team {playerConfig.Team}, skill {bot.BotSkill})"
+                    );
+
+                    var skillEnum = bot.BotSkill switch
                     {
                         PsyonixSkill.Beginner => BotSkill.Intro,
                         PsyonixSkill.Rookie => BotSkill.Easy,
@@ -427,12 +456,16 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
                     spawner.SpawnBot(playerConfig, skillEnum, (uint)i);
 
                     break;
-                case PlayerClass.Human:
+                case HumanT:
                     // This assertion is upheld by the ConfigValidator. We require it, since otherwise
                     // the match config in the server could have a different ordering of players
                     Debug.Assert(
                         i == numPlayers - 1,
                         "Human must be last player in match config."
+                    );
+
+                    Logger.LogInformation(
+                        $"Spawning human (index {i}, team {playerConfig.Team})"
                     );
 
                     // Human spawning happens after the loop

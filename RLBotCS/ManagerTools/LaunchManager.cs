@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -160,16 +160,18 @@ static class LaunchManager
     {
         foreach (var bot in bots)
         {
-            if (bot.RunCommand == "")
+            var details = bot.Variety.AsCustomBot();
+
+            if (details.RunCommand == "")
             {
-                Logger.LogWarning("Bot {} must be started manually.", bot.Name);
+                Logger.LogWarning("Bot {} must be started manually.", details.Name);
                 continue;
             }
 
-            Process botProcess = RunCommandInShell(bot.RunCommand);
+            Process botProcess = RunCommandInShell(details.RunCommand);
 
-            botProcess.StartInfo.WorkingDirectory = bot.RootDir;
-            botProcess.StartInfo.EnvironmentVariables["RLBOT_AGENT_ID"] = bot.AgentId;
+            botProcess.StartInfo.WorkingDirectory = details.RootDir;
+            botProcess.StartInfo.EnvironmentVariables["RLBOT_AGENT_ID"] = details.AgentId;
             botProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
                 rlbotSocketsPort.ToString();
             botProcess.EnableRaisingEvents = true;
@@ -180,7 +182,7 @@ static class LaunchManager
                 {
                     Logger.LogError(
                         "Bot {0} exited with error code {1}. See previous logs for more information.",
-                        bot.Name,
+                        details.Name,
                         botProcess.ExitCode
                     );
                 }
@@ -189,11 +191,11 @@ static class LaunchManager
             try
             {
                 botProcess.Start();
-                Logger.LogInformation("Launched bot: {}", bot.Name);
+                Logger.LogInformation("Launched bot: {}", details.Name);
             }
             catch (Exception e)
             {
-                Logger.LogError($"Failed to launch bot {bot.Name}: {e.Message}");
+                Logger.LogError($"Failed to launch bot {details.Name}: {e.Message}");
             }
         }
     }

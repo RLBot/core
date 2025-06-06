@@ -15,7 +15,6 @@ public class ConfigParser
         public const string RlBotLauncher = "launcher";
         public const string RlBotLauncherArg = "launcher_arg";
         public const string RlBotAutoStartAgents = "auto_start_agents";
-        public const string RlBotAutoStartAgentsOld = "auto_start_bots";
         public const string RlBotWaitForAgents = "wait_for_agents";
 
         public const string MatchTable = "match";
@@ -70,7 +69,6 @@ public class ConfigParser
         public const string AgentName = "name";
         public const string AgentLoadoutFile = "loadout_file";
         public const string AgentConfigFile = "config_file";
-        public const string AgentConfigFileOld = "config";
         public const string AgentSettingsTable = "settings";
         public const string AgentAgentId = "agent_id";
         public const string AgentRootDir = "root_dir";
@@ -270,97 +268,95 @@ public class ConfigParser
         }
 
         PlayerClass playerClass = GetEnum(table, Fields.AgentType, PlayerClass.CustomBot);
-
-        (PlayerClassUnion variety, bool useConfig) = playerClass switch
+        if (playerClass == PlayerClass.Human)
         {
-            PlayerClass.CustomBot => (PlayerClassUnion.FromCustomBot(new CustomBotT()), true),
-            PlayerClass.Psyonix => (
-                PlayerClassUnion.FromPsyonix(
-                    new PsyonixT
-                    {
-                        BotSkill = GetEnum(table, Fields.AgentSkill, PsyonixSkill.AllStar),
-                    }
-                ),
-                true
-            ),
-            PlayerClass.Human => (PlayerClassUnion.FromHuman(new HumanT()), false),
-            PlayerClass.PartyMember => throw new NotImplementedException(
-                "PartyMember not implemented"
-            ),
-            _ => throw new ConfigParserException(
-                $"{_context.ToStringWithEnd(Fields.AgentType)} is out of range."
-            ),
-        };
-
-        string configPath = useConfig ? GetValue(table, Fields.AgentConfigFile, "") : "";
-        // FIXME: Remove in v5.beta.6.0+
-        if (configPath == "" && table.ContainsKey(Fields.AgentConfigFileOld))
-        {
-            Logger.LogError(
-                $"In {_context}: '{Fields.AgentConfigFileOld}' has been removed. Use '{Fields.AgentConfigFile}' instead."
-            );
-        }
-
-        PlayerConfigurationT player;
-        if (useConfig && configPath == "" && variety.Type == PlayerClass.CustomBot)
-        {
-            throw new FileNotFoundException(
-                $"{_context} has type \"rlbot\" but {_context.ToStringWithEnd(Fields.AgentConfigFile)} is empty. "
-                    + $"RLBot bots must specify a config file."
-            );
-        }
-
-        if (useConfig && configPath != "")
-        {
-            string absoluteConfigPath = Path.Combine(matchConfigDir, configPath);
-            using (_context.Begin(Fields.AgentConfigFile, ConfigContextTracker.Type.Link))
+            return new PlayerConfigurationT
             {
-                player = LoadPlayerConfig(
-                    absoluteConfigPath,
-                    variety,
-                    team,
-                    nameOverride,
-                    loadoutFileOverride
-                );
-            }
-        }
-        else
-        {
-            PlayerLoadoutT? loadout = null;
-            if (loadoutFileOverride is not null)
-            {
-                using (_context.Begin(Fields.AgentLoadoutFile, ConfigContextTracker.Type.Link))
-                {
-                    loadout = LoadPlayerLoadout(loadoutFileOverride, team);
-                }
-            }
-
-            player = new PlayerConfigurationT
-            {
-                AgentId = "",
-                Variety = variety,
-                Name = nameOverride,
+                Variety = PlayerClassUnion.FromHuman(new HumanT()),
                 Team = team,
-                Loadout = loadout,
-                Hivemind = false,
-                RootDir = "",
-                RunCommand = "",
                 PlayerId = 0,
             };
         }
 
-        bool autoStart = GetValue(table, Fields.AgentAutoStart, true);
-        if (!autoStart)
+        string configPath = GetValue(table, Fields.AgentConfigFile, "");
+        if (configPath != "")
         {
-            player.RunCommand = "";
+            string absoluteConfigPath = Path.Combine(matchConfigDir, configPath);
+            using (_context.Begin(Fields.AgentConfigFile, ConfigContextTracker.Type.Link))
+            {
+                switch (playerClass)
+                {
+                    case PlayerClass.PsyonixBot:
+                        return LoadPsyonixConfig(
+                            absoluteConfigPath,
+                            team,
+                            nameOverride,
+                            loadoutFileOverride
+                        );
+                    case PlayerClass.CustomBot:
+                        return LoadPlayerConfig(
+                            absoluteConfigPath,
+                            team,
+                            nameOverride,
+                            loadoutFileOverride,
+                            GetValue(table, Fields.AgentAutoStart, true)
+                        );
+                    default:
+                        throw new ConfigParserException(
+                            $"{_context.ToStringWithEnd(Fields.AgentType)} is out of range."
+                        );
+                }
+            }
         }
 
-        return player;
+        PlayerLoadoutT? loadout = null;
+        if (loadoutFileOverride is not null)
+        {
+            using (_context.Begin(Fields.AgentLoadoutFile, ConfigContextTracker.Type.Link))
+            {
+                loadout = LoadPlayerLoadout(loadoutFileOverride, team);
+            }
+        }
+
+        PlayerClassUnion variety;
+        switch (playerClass)
+        {
+            case PlayerClass.PsyonixBot:
+                variety = PlayerClassUnion.FromPsyonixBot(
+                    new PsyonixBotT
+                    {
+                        BotSkill = GetEnum(table, Fields.AgentSkill, PsyonixSkill.AllStar),
+                        Loadout = loadout,
+                        Name = nameOverride,
+                    }
+                );
+                break;
+            case PlayerClass.CustomBot:
+                variety = PlayerClassUnion.FromPsyonixBot(
+                    new PsyonixBotT
+                    {
+                        BotSkill = GetEnum(table, Fields.AgentSkill, PsyonixSkill.AllStar),
+                        Loadout = loadout,
+                        Name = nameOverride,
+                    }
+                );
+                break;
+            default:
+                throw new ConfigParserException(
+                    $"{_context.ToStringWithEnd(Fields.AgentType)} is out of range."
+                );
+        }
+
+        return new PlayerConfigurationT
+        {
+            Variety = variety,
+            Team = team,
+            PlayerId = 0,
+        };
     }
 
-    private PlayerConfigurationT LoadPlayerConfig(
+    private PlayerConfigurationT LoadPsyonixConfig(
         string configPath,
-        PlayerClassUnion variety,
         uint team,
         string? nameOverride,
         string? loadoutFileOverride
@@ -399,17 +395,78 @@ public class ConfigParser
                     (loadoutPath ?? "") != "" ? LoadPlayerLoadout(loadoutPath!, team) : null;
             }
 
+            PsyonixBotT variety = new()
+            {
+                BotSkill = GetEnum(table, Fields.AgentSkill, PsyonixSkill.AllStar),
+                Loadout = loadout,
+                Name = nameOverride ?? GetValue<string>(settings, Fields.AgentName, ""),
+            };
+
             return new PlayerConfigurationT
+            {
+                Variety = PlayerClassUnion.FromPsyonixBot(variety),
+                Team = team,
+                PlayerId = 0,
+            };
+        }
+    }
+
+    private PlayerConfigurationT LoadPlayerConfig(
+        string configPath,
+        uint team,
+        string? nameOverride,
+        string? loadoutFileOverride,
+        bool autoStart
+    )
+    {
+        TomlTable table = LoadTomlFile(configPath);
+        string configDir = Path.GetDirectoryName(configPath)!;
+
+        TomlTable settings = GetValue<TomlTable>(table, Fields.AgentSettingsTable, []);
+        using (_context.Begin(Fields.AgentSettingsTable))
+        {
+            string rootDir = Path.Combine(
+                configDir,
+                GetValue<string>(settings, Fields.AgentRootDir, "")
+            );
+
+            // Override is null, "", or an absolute path.
+            // Null implies no override and "" implies we should not load the loadout.
+            string? loadoutPath = loadoutFileOverride;
+            if (loadoutFileOverride is null)
+            {
+                if (settings.TryGetValue(Fields.AgentLoadoutFile, out var loadoutPathRel))
+                {
+                    loadoutPath = Path.Combine(configDir, (string)loadoutPathRel);
+                }
+                else
+                {
+                    _missingValues.Add(_context.ToStringWithEnd(Fields.AgentLoadoutFile));
+                }
+            }
+
+            PlayerLoadoutT? loadout;
+            using (_context.Begin(Fields.AgentLoadoutFile, ConfigContextTracker.Type.Link))
+            {
+                loadout =
+                    (loadoutPath ?? "") != "" ? LoadPlayerLoadout(loadoutPath!, team) : null;
+            }
+
+            CustomBotT variety = new()
             {
                 AgentId = GetValue<string>(settings, Fields.AgentAgentId, ""),
                 Name = nameOverride ?? GetValue<string>(settings, Fields.AgentName, ""),
-                Team = team,
                 Loadout = loadout,
-                RunCommand = GetRunCommand(settings),
+                RunCommand = autoStart ? GetRunCommand(settings) : "",
                 Hivemind = GetValue(settings, Fields.AgentHivemind, false),
                 RootDir = rootDir,
+            };
+
+            return new PlayerConfigurationT
+            {
+                Variety = PlayerClassUnion.FromCustomBot(variety),
+                Team = team,
                 PlayerId = 0,
-                Variety = variety,
             };
         }
     }
@@ -656,21 +713,6 @@ public class ConfigParser
                     Fields.RlBotWaitForAgents,
                     true
                 );
-                // TODO: Remove in future version
-                if (rlbotTable.ContainsKey(Fields.RlBotAutoStartAgentsOld))
-                {
-                    bool autoStartBots = GetValue(
-                        rlbotTable,
-                        Fields.RlBotAutoStartAgentsOld,
-                        true
-                    );
-                    matchConfig.AutoStartAgents = autoStartBots;
-                    matchConfig.WaitForAgents = autoStartBots;
-                    Logger.LogWarning(
-                        $"'{Fields.RlBotAutoStartAgentsOld}' is deprecated. Please use "
-                            + $"'{Fields.RlBotAutoStartAgents}' and '{Fields.RlBotWaitForAgents}' instead."
-                    );
-                }
             }
 
             TomlTableArray players = GetValue<TomlTableArray>(outerTable, Fields.CarsList, []);
@@ -749,10 +791,10 @@ public class ConfigParser
                     Fields.MatchStartWithoutCountdown,
                     false
                 );
-                matchConfig.EnableRendering = GetValue(
+                matchConfig.EnableRendering = GetEnum(
                     matchTable,
                     Fields.MatchRendering,
-                    false
+                    DebugRendering.OffByDefault
                 );
                 matchConfig.EnableStateSetting = GetValue(
                     matchTable,

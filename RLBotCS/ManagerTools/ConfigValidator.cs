@@ -78,11 +78,11 @@ public static class ConfigValidator
                 valid = false;
             }
 
-            switch (player.Variety.Type)
+            switch (player.Variety.Value)
             {
-                case PlayerClass.CustomBot:
-                    player.AgentId ??= "";
-                    if (player.AgentId == "")
+                case CustomBotT bot:
+                    bot.AgentId ??= "";
+                    if (bot.AgentId == "")
                     {
                         Logger.LogError(
                             $"{ctx.ToStringWithEnd(Fields.AgentType)} is \"rlbot\" "
@@ -92,14 +92,16 @@ public static class ConfigValidator
                         );
                         valid = false;
                     }
-                    player.Name ??= "";
-                    player.RunCommand ??= "";
-                    player.RootDir ??= "";
-                    player.Loadout ??= new();
-                    player.Loadout.LoadoutPaint ??= new();
+                    bot.Name ??= "";
+                    bot.RunCommand ??= "";
+                    bot.RootDir ??= "";
+                    bot.Loadout ??= new();
+                    bot.Loadout.LoadoutPaint ??= new();
+
+                    player.PlayerId = $"{bot.AgentId}/{player.Team}/{i}".GetHashCode();
                     break;
-                case PlayerClass.Psyonix:
-                    string skill = player.Variety.AsPsyonix().BotSkill switch
+                case PsyonixBotT bot:
+                    string skill = bot.BotSkill switch
                     {
                         PsyonixSkill.Beginner => "beginner",
                         PsyonixSkill.Rookie => "rookie",
@@ -111,60 +113,40 @@ public static class ConfigValidator
                             $"{ctx.ToStringWithEnd(Fields.AgentSkill)} is out of range."
                         ),
                     };
-                    player.AgentId ??= "psyonix/" + skill; // Not that it really matters
 
                     // Apply Psyonix preset loadouts
                     if (string.IsNullOrEmpty(player.Name))
                     {
-                        (player.Name, var preset) = PsyonixLoadouts.GetNext((int)player.Team);
-                        string andPreset = player.Loadout == null ? " and preset" : "";
-                        player.Loadout ??= preset;
+                        (bot.Name, var preset) = PsyonixLoadouts.GetNext((int)player.Team);
+                        string andPreset = bot.Loadout == null ? " and preset" : "";
+                        bot.Loadout ??= preset;
                         Logger.LogDebug(
-                            $"Gave unnamed Psyonix bot {ctx} a name{andPreset} ({player.Name})"
+                            $"Gave unnamed Psyonix bot {ctx} a name{andPreset} ({bot.Name})"
                         );
                     }
-                    else if (player.Loadout == null)
+                    else if (bot.Loadout == null)
                     {
-                        player.Loadout = PsyonixLoadouts.GetFromName(
-                            player.Name,
-                            (int)player.Team
-                        );
+                        bot.Loadout = PsyonixLoadouts.GetFromName(bot.Name, (int)player.Team);
                         Logger.LogDebug(
-                            player.Loadout == null
-                                ? $"Failed to find a preset loadout for Psyonix bot {ctx} named \"{player.Name}\"."
-                                : $"Found preset loadout for Psyonix bot {ctx} named \"{player.Name}\"."
+                            bot.Loadout == null
+                                ? $"Failed to find a preset loadout for Psyonix bot {ctx} named \"{bot.Name}\"."
+                                : $"Found preset loadout for Psyonix bot {ctx} named \"{bot.Name}\"."
                         );
                     }
 
                     // Fallback if above fails or user didn't include paints
-                    player.Loadout ??= new();
-                    player.Loadout.LoadoutPaint ??= new();
+                    bot.Loadout ??= new();
+                    bot.Loadout.LoadoutPaint ??= new();
 
-                    player.RunCommand = "";
-                    player.RootDir = "";
-
+                    player.PlayerId =
+                        $"psyonix/{bot.BotSkill}/{player.Team}/{i}".GetHashCode();
                     break;
-                case PlayerClass.Human:
+                case HumanT:
                     humanCount++;
                     humanIndex = i;
-                    player.AgentId = "human"; // Not that it really matters
-                    player.Name = "human";
-                    player.Loadout = null;
-                    player.RunCommand = "";
-                    player.RootDir = "";
-                    break;
-                case PlayerClass.PartyMember:
-                    Logger.LogError(
-                        $"{ctx.ToStringWithEnd(Fields.AgentType)} is \"PartyMember\" which is not supported yet."
-                    );
-                    valid = false;
+                    player.PlayerId = 0;
                     break;
             }
-
-            player.PlayerId =
-                player.Variety.Type == PlayerClass.Human
-                    ? 0
-                    : $"{player.AgentId}/{player.Team}/{i}".GetHashCode();
         }
 
         if (humanCount > 1)

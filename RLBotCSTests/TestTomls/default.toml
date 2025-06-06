@@ -20,7 +20,7 @@ start_without_countdown = false
 # "RestartIfDifferent", "Restart", "ContinueAndSpawn"
 existing_match_behavior = "Restart"
 # Whether debug rendering is enabled
-enable_rendering = false
+enable_rendering = "OffByDefault"
 # Whether game state manipulation is enabled
 enable_state_setting = true
 # Whether replays should be automatically saved

@@ -38,6 +38,7 @@ record SetInitLoadout(PlayerLoadoutT Loadout, int PlayerId) : IBridgeMessage
             return;
         }
 
-        player.Loadout = Loadout;
+        var bot = player.Variety.AsCustomBot();
+        bot.Loadout = Loadout;
     }
 }

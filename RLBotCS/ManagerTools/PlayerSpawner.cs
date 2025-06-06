@@ -16,6 +16,25 @@ public readonly ref struct PlayerSpawner(
 
     public void SpawnBot(PlayerConfigurationT config, BotSkill skill, uint desiredIndex)
     {
+        string botName;
+        string agentId;
+        PlayerLoadoutT configLoadout;
+        switch (config.Variety.Value)
+        {
+            case PsyonixBotT bot:
+                botName = bot.Name;
+                agentId = $"psyonix/{bot.BotSkill}";
+                configLoadout = bot.Loadout;
+                break;
+            case CustomBotT bot:
+                botName = bot.Name;
+                agentId = bot.AgentId;
+                configLoadout = bot.Loadout;
+                break;
+            default:
+                return;
+        }
+
         PlayerMetadata? alreadySpawnedPlayer = _gameState
             .PlayerMapping.GetKnownPlayers()
             .FirstOrDefault(kp => config.PlayerId == kp.PlayerId);
@@ -23,10 +42,10 @@ public readonly ref struct PlayerSpawner(
             // We've already spawned this player, don't duplicate them.
             return;
 
-        Loadout loadout = FlatToModel.ToLoadout(config.Loadout, config.Team);
+        Loadout loadout = FlatToModel.ToLoadout(configLoadout, config.Team);
 
         ushort commandId = spawnCommandQueue.AddBotSpawnCommand(
-            config.Name,
+            botName,
             (int)config.Team,
             skill,
             loadout
@@ -40,7 +59,7 @@ public readonly ref struct PlayerSpawner(
                 DesiredPlayerIndex = desiredIndex,
                 IsCustomBot = skill == BotSkill.Custom,
                 IsBot = true,
-                AgentId = config.AgentId,
+                AgentId = agentId,
             }
         );
     }
@@ -69,7 +88,7 @@ public readonly ref struct PlayerSpawner(
                 DesiredPlayerIndex = desiredIndex,
                 IsBot = false,
                 IsCustomBot = false,
-                AgentId = config.AgentId,
+                AgentId = "human",
             }
         );
     }
