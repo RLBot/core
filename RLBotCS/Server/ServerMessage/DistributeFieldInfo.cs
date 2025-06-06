@@ -1,5 +1,5 @@
 ﻿using Bridge.State;
-using rlbot.flat;
+using RLBot.Flat;
 using GoalInfo = Bridge.Packet.GoalInfo;
 
 namespace RLBotCS.Server.ServerMessage;
