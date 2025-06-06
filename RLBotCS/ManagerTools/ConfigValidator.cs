@@ -115,7 +115,7 @@ public static class ConfigValidator
                     };
 
                     // Apply Psyonix preset loadouts
-                    if (string.IsNullOrEmpty(player.Name))
+                    if (string.IsNullOrEmpty(bot.Name))
                     {
                         (bot.Name, var preset) = PsyonixLoadouts.GetNext((int)player.Team);
                         string andPreset = bot.Loadout == null ? " and preset" : "";
