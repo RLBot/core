@@ -23,25 +23,6 @@ public class AgentMapping
         {
             var playerConfig = matchConfig.PlayerConfigurations[i];
 
-            // if (playerConfig.Variety.Type != PlayerClass.CustomBot)
-            // {
-            //     if (playerConfig.Variety.Type == PlayerClass.Human)
-            //         humans++;
-
-            //     continue;
-            // }
-
-            // uint index = (uint)i - humans;
-            // _agents.Add(
-            //     new AgentMetadata(
-            //         index,
-            //         playerConfig.Team,
-            //         playerConfig.Name,
-            //         playerConfig.AgentId,
-            //         playerConfig.PlayerId
-            //     )
-            // );
-
             switch (playerConfig.Variety.Value)
             {
                 case HumanT:
