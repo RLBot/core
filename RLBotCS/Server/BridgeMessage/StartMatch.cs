@@ -1,4 +1,4 @@
-using rlbot.flat;
+using RLBot.Flat;
 using RLBotCS.Server.ServerMessage;
 
 namespace RLBotCS.Server.BridgeMessage;
