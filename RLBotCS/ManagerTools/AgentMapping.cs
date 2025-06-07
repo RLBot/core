@@ -22,6 +22,7 @@ public class AgentMapping
         for (int i = 0; i < matchConfig.PlayerConfigurations.Count; i++)
         {
             var playerConfig = matchConfig.PlayerConfigurations[i];
+            uint index = (uint)i - humans;
 
             switch (playerConfig.Variety.Value)
             {
@@ -30,13 +31,23 @@ public class AgentMapping
                         humans++;
                     break;
                 case PsyonixBotT psy:
-                    uint index = (uint)i - humans;
                     _agents.Add(
                         new AgentMetadata(
                             index,
                             playerConfig.Team,
                             psy.Name,
                             "psyonix/" + psy.BotSkill,
+                            playerConfig.PlayerId
+                        )
+                    );
+                    break;
+                case CustomBotT bot:
+                    _agents.Add(
+                        new AgentMetadata(
+                            index,
+                            playerConfig.Team,
+                            bot.Name,
+                            bot.AgentId,
                             playerConfig.PlayerId
                         )
                     );
