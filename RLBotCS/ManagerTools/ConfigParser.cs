@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using RLBot.Flat;
 using RLBotCS.Model;
@@ -182,6 +182,39 @@ public class ConfigParser
         return fallback;
     }
 
+    private PlayerClass GetAgentType(TomlTable table)
+    {
+        if (table.TryGetValue(Fields.AgentType, out var raw))
+        {
+            if (raw is string val)
+            {
+                switch (val.ToLower())
+                {
+                    case "rlbot":
+                        return PlayerClass.CustomBot;
+                    case "psyonix":
+                        return PlayerClass.PsyonixBot;
+                    case "human":
+                        return PlayerClass.Human;
+                    default:
+                        throw new InvalidCastException(
+                            $"{_context.ToStringWithEnd(Fields.AgentType)} has invalid value \"{raw}\". "
+                                + $"Find valid values on https:/wiki.rlbot.org."
+                        );
+                }
+            }
+            else
+            {
+                throw new InvalidCastException(
+                    $"{_context.ToStringWithEnd(Fields.AgentType)} has value {raw}, but a value of type {typeof(PlayerClass).Name} was expected."
+                );
+            }
+        }
+
+        _missingValues.Add(_context.ToStringWithEnd(Fields.AgentType));
+        return PlayerClass.CustomBot;
+    }
+
     private static string? CombinePaths(string? parent, string? child)
     {
         if (parent == null || child == null)
@@ -267,7 +300,7 @@ public class ConfigParser
             loadoutFileOverride = Path.Combine(matchConfigDir, loadoutFileOverride);
         }
 
-        PlayerClass playerClass = GetEnum(table, Fields.AgentType, PlayerClass.CustomBot);
+        PlayerClass playerClass = GetAgentType(table);
         if (playerClass == PlayerClass.Human)
         {
             return new PlayerConfigurationT
