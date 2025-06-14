@@ -1,4 +1,4 @@
-using rlbot.flat;
+using RLBot.Flat;
 using RLBotCS.Model;
 
 namespace RLBotCS.ManagerTools;
@@ -6,7 +6,7 @@ namespace RLBotCS.ManagerTools;
 public struct PlayerIdPair
 {
     public uint Index;
-    public int SpawnId;
+    public int PlayerId;
 }
 
 public class AgentMapping
@@ -22,25 +22,37 @@ public class AgentMapping
         for (int i = 0; i < matchConfig.PlayerConfigurations.Count; i++)
         {
             var playerConfig = matchConfig.PlayerConfigurations[i];
-
-            if (playerConfig.Variety.Type != PlayerClass.CustomBot)
-            {
-                if (playerConfig.Variety.Type == PlayerClass.Human)
-                    humans++;
-
-                continue;
-            }
-
             uint index = (uint)i - humans;
-            _agents.Add(
-                new AgentMetadata(
-                    index,
-                    playerConfig.Team,
-                    playerConfig.Name,
-                    playerConfig.AgentId,
-                    playerConfig.SpawnId
-                )
-            );
+
+            switch (playerConfig.Variety.Value)
+            {
+                case HumanT:
+                    if (playerConfig.Variety.Type == PlayerClass.Human)
+                        humans++;
+                    break;
+                case PsyonixBotT psy:
+                    _agents.Add(
+                        new AgentMetadata(
+                            index,
+                            playerConfig.Team,
+                            psy.Name,
+                            "psyonix/" + psy.BotSkill,
+                            playerConfig.PlayerId
+                        )
+                    );
+                    break;
+                case CustomBotT bot:
+                    _agents.Add(
+                        new AgentMetadata(
+                            index,
+                            playerConfig.Team,
+                            bot.Name,
+                            bot.AgentId,
+                            playerConfig.PlayerId
+                        )
+                    );
+                    break;
+            }
         }
 
         // Scripts
@@ -53,7 +65,7 @@ public class AgentMapping
                     Team.Scripts,
                     scriptConfig.Name,
                     scriptConfig.AgentId,
-                    scriptConfig.SpawnId
+                    scriptConfig.ScriptId
                 )
             );
         }
@@ -69,7 +81,7 @@ public class AgentMapping
             player.SetClient(clientId);
 
             return (
-                new PlayerIdPair { Index = player.Index, SpawnId = player.SpawnId },
+                new PlayerIdPair { Index = player.Index, PlayerId = player.PlayerId },
                 player.Team
             );
         }
@@ -99,7 +111,7 @@ public class AgentMapping
                     new PlayerIdPair
                     {
                         Index = playerMetadata.Index,
-                        SpawnId = playerMetadata.SpawnId,
+                        PlayerId = playerMetadata.PlayerId,
                     }
                 );
             }

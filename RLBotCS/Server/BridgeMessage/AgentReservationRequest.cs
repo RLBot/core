@@ -1,5 +1,6 @@
 ﻿using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
+using RLBot.Flat;
 
 namespace RLBotCS.Server.BridgeMessage;
 
@@ -22,9 +23,9 @@ record AgentReservationRequest(
 
         foreach (var player in matchConfig.PlayerConfigurations)
         {
-            if (player.AgentId == AgentId)
+            if (player.Variety.Value is CustomBotT bot && bot.AgentId == AgentId)
             {
-                isHivemind = player.Hivemind;
+                isHivemind = bot.Hivemind;
                 break;
             }
         }

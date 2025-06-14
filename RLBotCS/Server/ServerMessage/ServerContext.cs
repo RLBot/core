@@ -1,7 +1,7 @@
 ﻿using System.Net.Sockets;
 using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
-using rlbot.flat;
+using RLBot.Flat;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.BridgeMessage;
 
@@ -36,7 +36,7 @@ class ServerContext(
     public ChannelWriter<IBridgeMessage> Bridge { get; } = bridge;
 
     public bool StateSettingIsEnabled = false;
-    public bool RenderingIsEnabled = false;
+    public DebugRendering RenderingIsEnabled = DebugRendering.OffByDefault;
 
     public GamePacketT? LastTickPacket { get; set; }
 

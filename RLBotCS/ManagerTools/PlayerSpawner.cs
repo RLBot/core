@@ -2,7 +2,7 @@ using Bridge.Controller;
 using Bridge.Models.Command;
 using Bridge.Models.Message;
 using Bridge.State;
-using rlbot.flat;
+using RLBot.Flat;
 using RLBotCS.Conversion;
 
 namespace RLBotCS.ManagerTools;
@@ -16,17 +16,36 @@ public readonly ref struct PlayerSpawner(
 
     public void SpawnBot(PlayerConfigurationT config, BotSkill skill, uint desiredIndex)
     {
+        string botName;
+        string agentId;
+        PlayerLoadoutT configLoadout;
+        switch (config.Variety.Value)
+        {
+            case PsyonixBotT bot:
+                botName = bot.Name;
+                agentId = $"psyonix/{bot.BotSkill}";
+                configLoadout = bot.Loadout;
+                break;
+            case CustomBotT bot:
+                botName = bot.Name;
+                agentId = bot.AgentId;
+                configLoadout = bot.Loadout;
+                break;
+            default:
+                return;
+        }
+
         PlayerMetadata? alreadySpawnedPlayer = _gameState
             .PlayerMapping.GetKnownPlayers()
-            .FirstOrDefault(kp => config.SpawnId == kp.SpawnId);
+            .FirstOrDefault(kp => config.PlayerId == kp.PlayerId);
         if (alreadySpawnedPlayer != null)
             // We've already spawned this player, don't duplicate them.
             return;
 
-        Loadout loadout = FlatToModel.ToLoadout(config.Loadout, config.Team);
+        Loadout loadout = FlatToModel.ToLoadout(configLoadout, config.Team);
 
         ushort commandId = spawnCommandQueue.AddBotSpawnCommand(
-            config.Name,
+            botName,
             (int)config.Team,
             skill,
             loadout
@@ -36,11 +55,11 @@ public readonly ref struct PlayerSpawner(
             new SpawnTracker
             {
                 CommandId = commandId,
-                SpawnId = config.SpawnId,
+                PlayerId = config.PlayerId,
                 DesiredPlayerIndex = desiredIndex,
                 IsCustomBot = skill == BotSkill.Custom,
                 IsBot = true,
-                AgentId = config.AgentId,
+                AgentId = agentId,
             }
         );
     }
@@ -51,7 +70,7 @@ public readonly ref struct PlayerSpawner(
 
         PlayerMetadata? alreadySpawnedPlayer = _gameState
             .PlayerMapping.GetKnownPlayers()
-            .FirstOrDefault(kp => config.SpawnId == kp.SpawnId);
+            .FirstOrDefault(kp => config.PlayerId == kp.PlayerId);
         if (alreadySpawnedPlayer != null)
         {
             _gameState.PlayerMapping.QueueIndexChange(
@@ -65,11 +84,11 @@ public readonly ref struct PlayerSpawner(
             new SpawnTracker
             {
                 CommandId = 0, // Human spawning must use command id 0 for reasons in bridge
-                SpawnId = config.SpawnId,
+                PlayerId = config.PlayerId,
                 DesiredPlayerIndex = desiredIndex,
                 IsBot = false,
                 IsCustomBot = false,
-                AgentId = config.AgentId,
+                AgentId = "human",
             }
         );
     }
@@ -79,13 +98,13 @@ public readonly ref struct PlayerSpawner(
         spawnCommandQueue.AddConsoleCommand("spectate");
     }
 
-    public void DespawnPlayers(List<int> spawnIds)
+    public void DespawnPlayers(List<int> playerIds)
     {
-        foreach (int spawnId in spawnIds)
+        foreach (int playerId in playerIds)
         {
             PlayerMetadata? player = _gameState
                 .PlayerMapping.GetKnownPlayers()
-                .FirstOrDefault(p => p.SpawnId == spawnId);
+                .FirstOrDefault(p => p.PlayerId == playerId);
 
             if (player != null)
             {

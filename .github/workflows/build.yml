@@ -43,6 +43,11 @@ jobs:
     - name: Test
       run: dotnet test
 
+    - name: Formatting
+      run: |
+        dotnet tool restore
+        dotnet csharpier . --check
+
     - name: Build 
       run: dotnet publish -r linux-x64
 
