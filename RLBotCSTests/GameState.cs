@@ -2,7 +2,7 @@ using Bridge.Packet;
 using Bridge.State;
 using Google.FlatBuffers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using rlbot.flat;
+using RLBot.Flat;
 using RLBotCS.Conversion;
 
 namespace RLBotCSTests;

@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -154,22 +154,24 @@ static class LaunchManager
     }
 
     public static void LaunchBots(
-        List<rlbot.flat.PlayerConfigurationT> bots,
+        List<RLBot.Flat.PlayerConfigurationT> bots,
         int rlbotSocketsPort
     )
     {
         foreach (var bot in bots)
         {
-            if (bot.RunCommand == "")
+            var details = bot.Variety.AsCustomBot();
+
+            if (details.RunCommand == "")
             {
-                Logger.LogWarning("Bot {} must be started manually.", bot.Name);
+                Logger.LogWarning("Bot {} must be started manually.", details.Name);
                 continue;
             }
 
-            Process botProcess = RunCommandInShell(bot.RunCommand);
+            Process botProcess = RunCommandInShell(details.RunCommand);
 
-            botProcess.StartInfo.WorkingDirectory = bot.RootDir;
-            botProcess.StartInfo.EnvironmentVariables["RLBOT_AGENT_ID"] = bot.AgentId;
+            botProcess.StartInfo.WorkingDirectory = details.RootDir;
+            botProcess.StartInfo.EnvironmentVariables["RLBOT_AGENT_ID"] = details.AgentId;
             botProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
                 rlbotSocketsPort.ToString();
             botProcess.EnableRaisingEvents = true;
@@ -180,7 +182,7 @@ static class LaunchManager
                 {
                     Logger.LogError(
                         "Bot {0} exited with error code {1}. See previous logs for more information.",
-                        bot.Name,
+                        details.Name,
                         botProcess.ExitCode
                     );
                 }
@@ -189,17 +191,17 @@ static class LaunchManager
             try
             {
                 botProcess.Start();
-                Logger.LogInformation("Launched bot: {}", bot.Name);
+                Logger.LogInformation("Launched bot: {}", details.Name);
             }
             catch (Exception e)
             {
-                Logger.LogError($"Failed to launch bot {bot.Name}: {e.Message}");
+                Logger.LogError($"Failed to launch bot {details.Name}: {e.Message}");
             }
         }
     }
 
     public static void LaunchScripts(
-        List<rlbot.flat.ScriptConfigurationT> scripts,
+        List<RLBot.Flat.ScriptConfigurationT> scripts,
         int rlbotSocketsPort
     )
     {
@@ -246,7 +248,7 @@ static class LaunchManager
     }
 
     public static void LaunchRocketLeague(
-        rlbot.flat.Launcher launcherPref,
+        RLBot.Flat.Launcher launcherPref,
         string extraArg,
         int gamePort
     )
@@ -254,7 +256,7 @@ static class LaunchManager
 #if WINDOWS
         switch (launcherPref)
         {
-            case rlbot.flat.Launcher.Steam:
+            case RLBot.Flat.Launcher.Steam:
                 string steamPath = GetWindowsSteamPath();
                 Process steam = new();
                 steam.StartInfo.FileName = steamPath;
@@ -266,7 +268,7 @@ static class LaunchManager
                 );
                 steam.Start();
                 break;
-            case rlbot.flat.Launcher.Epic:
+            case RLBot.Flat.Launcher.Epic:
                 bool nonRLBotGameRunning = IsRocketLeagueRunning();
 
                 // we don't need to start the game because there's another instance of non-rlbot rocket league open
@@ -333,7 +335,7 @@ static class LaunchManager
                 }).Start();
 
                 break;
-            case rlbot.flat.Launcher.Custom:
+            case RLBot.Flat.Launcher.Custom:
                 if (extraArg.ToLower() == "legendary")
                 {
                     LaunchGameViaLegendary();
@@ -346,13 +348,13 @@ static class LaunchManager
                 }
 
                 throw new NotSupportedException($"Unexpected launcher, \"{extraArg}\"");
-            case rlbot.flat.Launcher.NoLaunch:
+            case RLBot.Flat.Launcher.NoLaunch:
                 break;
         }
 #else
         switch (launcherPref)
         {
-            case rlbot.flat.Launcher.Steam:
+            case RLBot.Flat.Launcher.Steam:
                 string args = string.Join("%20", GetIdealArgs(gamePort));
                 Process rocketLeague = new();
                 rocketLeague.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
@@ -364,11 +366,11 @@ static class LaunchManager
                 );
                 rocketLeague.Start();
                 break;
-            case rlbot.flat.Launcher.Epic:
+            case RLBot.Flat.Launcher.Epic:
                 throw new NotSupportedException(
                     "Epic Games Store is not directly supported on Linux."
                 );
-            case rlbot.flat.Launcher.Custom:
+            case RLBot.Flat.Launcher.Custom:
                 if (extraArg.ToLower() == "legendary")
                 {
                     LaunchGameViaLegendary();
@@ -381,7 +383,7 @@ static class LaunchManager
                 }
 
                 throw new NotSupportedException($"Unexpected launcher, \"{extraArg}\"");
-            case rlbot.flat.Launcher.NoLaunch:
+            case RLBot.Flat.Launcher.NoLaunch:
                 break;
         }
 #endif

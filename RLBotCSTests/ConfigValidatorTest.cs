@@ -1,5 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using rlbot.flat;
+using RLBot.Flat;
 using RLBotCS.ManagerTools;
 
 namespace RLBotCSTests;
@@ -30,7 +30,8 @@ public class ConfigValidatorTest
         MatchConfigurationT mc = parser.LoadMatchConfig("TestTomls/edge.toml");
         foreach (var player in mc.PlayerConfigurations)
         {
-            player.AgentId = "test/" + player.Name;
+            if (player.Variety.Value is CustomBotT bot)
+                bot.AgentId = "test/" + bot.Name;
         }
         Assert.IsFalse(ConfigValidator.Validate(mc));
         mc.LauncherArg = "legendary";
@@ -54,7 +55,9 @@ public class ConfigValidatorTest
 
         // Otherwise ok
         MatchConfigurationT mc2 = parser.LoadMatchConfig("TestTomls/multi_human.toml");
-        mc2.PlayerConfigurations[0].Variety = PlayerClassUnion.FromPsyonix(new PsyonixT());
+        mc2.PlayerConfigurations[0].Variety = PlayerClassUnion.FromPsyonixBot(
+            new PsyonixBotT()
+        );
         Assert.IsTrue(ConfigValidator.Validate(mc2));
     }
 }

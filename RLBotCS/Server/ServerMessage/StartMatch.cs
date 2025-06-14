@@ -1,5 +1,5 @@
-﻿using System.Diagnostics;
-using rlbot.flat;
+using System.Diagnostics;
+using RLBot.Flat;
 using RLBotCS.ManagerTools;
 using RLBotCS.Server.BridgeMessage;
 
@@ -27,12 +27,16 @@ record StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
 
         BallPredictor.UpdateMode(MatchConfig);
 
+        bool defaultRendering = context.RenderingIsEnabled switch
+        {
+            DebugRendering.OnByDefault => true,
+            _ => false,
+        };
+
         // update all sessions with the new rendering and state setting settings
         foreach (var (writer, _) in context.Sessions.Values)
         {
-            SessionMessage render = new SessionMessage.RendersAllowed(
-                context.RenderingIsEnabled
-            );
+            SessionMessage render = new SessionMessage.RendersAllowed(defaultRendering);
             writer.TryWrite(render);
 
             SessionMessage stateSetting = new SessionMessage.StateSettingAllowed(
