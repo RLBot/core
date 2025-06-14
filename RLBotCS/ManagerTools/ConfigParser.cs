@@ -815,7 +815,7 @@ public class ConfigParser
                 matchConfig.GameMode = GetEnum(
                     matchTable,
                     Fields.MatchGameMode,
-                    GameMode.Soccer
+                    GameMode.Soccar
                 );
                 matchConfig.GameMapUpk = GetValue(matchTable, Fields.MatchMapUpk, "Stadium_P");
                 matchConfig.SkipReplays = GetValue(matchTable, Fields.MatchSkipReplays, false);

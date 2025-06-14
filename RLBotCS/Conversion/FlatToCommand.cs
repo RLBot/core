@@ -11,10 +11,10 @@ static class FlatToCommand
     private static string MapGameMode(GameMode gameMode) =>
         gameMode switch
         {
-            GameMode.Soccer => "?game=TAGame.GameInfo_Soccar_TA",
+            GameMode.Soccar => "?game=TAGame.GameInfo_Soccar_TA",
             GameMode.Hoops => "?game=TAGame.GameInfo_Basketball_TA",
             GameMode.Dropshot => "?game=TAGame.GameInfo_Breakout_TA",
-            GameMode.Hockey => "?game=TAGame.GameInfo_Hockey_TA",
+            GameMode.Snowday => "?game=TAGame.GameInfo_Hockey_TA",
             GameMode.Rumble => "?game=TAGame.GameInfo_Items_TA",
             GameMode.Heatseeker => "?game=TAGame.GameInfo_GodBall_TA",
             GameMode.Gridiron => "?game=TAGame.GameInfo_Football_TA",

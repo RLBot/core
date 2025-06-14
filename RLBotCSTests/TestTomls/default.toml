@@ -8,8 +8,8 @@ auto_start_bots = true
 
 [match]
 # What game mode the game should load.
-# Accepted values are "Soccer", "Hoops", "Dropshot", "Hockey", "Rumble", "Heatseeker", "Gridiron", "Knockout"
-game_mode = "Soccer"
+# Accepted values are "Soccar", "Hoops", "Dropshot", "Snowday", "Rumble", "Heatseeker", "Gridiron", "Knockout"
+game_mode = "Soccar"
 # Which map the game should load into
 game_map_upk = "Stadium_P"
 # Automatically skip replays after a goal. Also stops match replays from being saved.
