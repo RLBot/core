@@ -306,6 +306,10 @@ class FlatBuffersSession
                 await _bridge.WriteAsync(new SetGameState(desiredGameState));
 
                 break;
+            case InterfaceMessage.RenderingStatus:
+                var renderingStatus = msg.MessageAsRenderingStatus();
+                await _rlbotServer.WriteAsync(new UpdateRendering(renderingStatus));
+                break;
         }
 
         return true;
