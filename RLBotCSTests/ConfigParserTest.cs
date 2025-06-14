@@ -93,6 +93,7 @@ public class ConfigParserTest
         ConfigParser parser = new();
         MatchConfigurationT edgeMC = parser.LoadMatchConfig("TestTomls/edge.toml");
 
+        Assert.AreEqual(DebugRendering.AlwaysOff, edgeMC.EnableRendering);
         Assert.AreEqual(Launcher.Custom, edgeMC.Launcher);
         // Ok for parsing, but wil not go through ConfigValidator
         Assert.AreEqual("something invalid", edgeMC.LauncherArg);

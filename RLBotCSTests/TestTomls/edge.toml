@@ -7,6 +7,7 @@ launcher_arg = "something invalid"
 [match]
 game_mode = "Soccar"
 game_map_upk = "Stadium_P"
+enable_rendering = false
 
 [mutators]
 match_length = "TenMinutes"

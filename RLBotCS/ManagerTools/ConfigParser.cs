@@ -824,11 +824,26 @@ public class ConfigParser
                     Fields.MatchStartWithoutCountdown,
                     false
                 );
-                matchConfig.EnableRendering = GetEnum(
-                    matchTable,
-                    Fields.MatchRendering,
-                    DebugRendering.OffByDefault
-                );
+
+                matchConfig.EnableRendering = DebugRendering.OffByDefault;
+                if (
+                    matchTable.TryGetValue(Fields.MatchRendering, out var raw)
+                    && raw is bool enableRendering
+                )
+                {
+                    matchConfig.EnableRendering = enableRendering
+                        ? DebugRendering.OnByDefault
+                        : DebugRendering.AlwaysOff;
+                }
+                else
+                {
+                    matchConfig.EnableRendering = GetEnum(
+                        matchTable,
+                        Fields.MatchRendering,
+                        DebugRendering.OffByDefault
+                    );
+                }
+
                 matchConfig.EnableStateSetting = GetValue(
                     matchTable,
                     Fields.MatchStateSetting,
