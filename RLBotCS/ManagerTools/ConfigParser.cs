@@ -812,30 +812,14 @@ public class ConfigParser
             TomlTable matchTable = GetValue<TomlTable>(outerTable, Fields.MatchTable, []);
             using (_context.Begin(Fields.MatchTable))
             {
-                // TODO: Remove in a future release
-                string gameModeStr = GetValue(matchTable, Fields.MatchGameMode, "").ToLower();
-                if (gameModeStr == "soccer")
+                matchConfig.GameMode = GetValue(matchTable, Fields.MatchGameMode, "")
+                    .ToLower() switch
                 {
-                    Logger.LogWarning(
-                        $"Key '{gameModeStr}' for the field '{Fields.MatchGameMode}' is deprecated, please use 'Soccar' instead."
-                    );
-                    matchConfig.GameMode = GameMode.Soccar;
-                }
-                else if (gameModeStr == "hockey")
-                {
-                    Logger.LogWarning(
-                        $"Key '{gameModeStr}' for the field '{Fields.MatchGameMode}' is deprecated, please use 'Snowday' instead."
-                    );
-                    matchConfig.GameMode = GameMode.Snowday;
-                }
-                else
-                {
-                    matchConfig.GameMode = GetEnum(
-                        matchTable,
-                        Fields.MatchGameMode,
-                        GameMode.Soccar
-                    );
-                }
+                    "soccer" => GameMode.Soccar,
+                    "hockey" => GameMode.Snowday,
+                    _ => GetEnum(matchTable, Fields.MatchGameMode, GameMode.Soccar),
+                };
+
                 matchConfig.GameMapUpk = GetValue(matchTable, Fields.MatchMapUpk, "Stadium_P");
                 matchConfig.SkipReplays = GetValue(matchTable, Fields.MatchSkipReplays, false);
                 matchConfig.InstantStart = GetValue(
