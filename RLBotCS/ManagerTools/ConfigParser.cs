@@ -816,7 +816,6 @@ public class ConfigParser
                     .ToLower() switch
                 {
                     "soccer" => GameMode.Soccar,
-                    "hockey" => GameMode.Snowday,
                     _ => GetEnum(matchTable, Fields.MatchGameMode, GameMode.Soccar),
                 };
 
