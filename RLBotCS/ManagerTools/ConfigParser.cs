@@ -812,11 +812,13 @@ public class ConfigParser
             TomlTable matchTable = GetValue<TomlTable>(outerTable, Fields.MatchTable, []);
             using (_context.Begin(Fields.MatchTable))
             {
-                matchConfig.GameMode = GetEnum(
-                    matchTable,
-                    Fields.MatchGameMode,
-                    GameMode.Soccar
-                );
+                matchConfig.GameMode = GetValue(matchTable, Fields.MatchGameMode, "")
+                    .ToLower() switch
+                {
+                    "soccer" => GameMode.Soccar,
+                    _ => GetEnum(matchTable, Fields.MatchGameMode, GameMode.Soccar),
+                };
+
                 matchConfig.GameMapUpk = GetValue(matchTable, Fields.MatchMapUpk, "Stadium_P");
                 matchConfig.SkipReplays = GetValue(matchTable, Fields.MatchSkipReplays, false);
                 matchConfig.InstantStart = GetValue(
