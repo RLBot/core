@@ -10,9 +10,9 @@ using RLBotCS.Server.ServerMessage;
 if (args.Length > 0 && args[0] == "--version")
 {
     Console.WriteLine(
-        $"RLBotServer v5.beta.7.1\n" +
-        $"Bridge {BridgeVersion.Version}\n" +
-        $"@ https://www.rlbot.org & https://github.com/RLBot/core"
+        $"RLBotServer v5.beta.7.1\n"
+            + $"Bridge {BridgeVersion.Version}\n"
+            + $"@ https://www.rlbot.org & https://github.com/RLBot/core"
     );
     Environment.Exit(0);
 }
@@ -59,9 +59,9 @@ catch (ArgumentOutOfRangeException ex)
 
 logger.LogInformation(
     "Server will use port "
-    + rlbotSocketsPort
-    + ", expecting Rocket League on port "
-    + gamePort
+        + rlbotSocketsPort
+        + ", expecting Rocket League on port "
+        + gamePort
 );
 logger.LogInformation("Waiting for connections...");
 
