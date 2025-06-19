@@ -24,11 +24,11 @@ compiled binaries at `RLBotCS\bin\Release\net8.0`.
 
 ## Deployment
 
-1. Ensure all changes are on the `master` branch
-1. Ensure the version number is correct in `RLBotCS/Main.cs`
-1. Create a new tag with the next version number - e.x. `git tag v0.1.0 -m "Core v0.1.0"`
-   - Preferably sign the tag too - `git tag -s v0.1.0 -m "Core v0.1.0"`
-1. Push the tag - `git push --tags`
+1. Ensure all changes are on the `master` branch.
+1. Ensure the version number is correct in `RLBotCS/Main.cs`.
+1. Create a new tag with the next version number - e.x. `git tag v0.1.0 -m "Core v0.1.0"`.
+   - Preferably sign the tag too - `git tag -s v0.1.0 -m "Core v0.1.0"`.
+1. Push the tag - `git push --tags`.
 1. Wait for the GitHub Actions to build the release and upload it to the release page!
 
 Further deployment steps for automatic updates are still in progress.
