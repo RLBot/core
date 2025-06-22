@@ -31,15 +31,6 @@ public class AgentMapping
                         humans++;
                     break;
                 case PsyonixBotT psy:
-                    _agents.Add(
-                        new AgentMetadata(
-                            index,
-                            playerConfig.Team,
-                            psy.Name,
-                            "psyonix/" + psy.BotSkill,
-                            playerConfig.PlayerId
-                        )
-                    );
                     break;
                 case CustomBotT bot:
                     _agents.Add(
