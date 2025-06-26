@@ -117,6 +117,8 @@ static class FlatToCommand
             BallTypeMutator.PlayerSeeking => "Ball_Fire",
             BallTypeMutator.Dropshot => "Ball_Breakout",
             BallTypeMutator.ScoreAbsorb => "Ball_Score",
+            BallTypeMutator.Shoe => "Ball_Shoe",
+            BallTypeMutator.PizzaPuck => "Ball_PizzaPuck",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
@@ -130,6 +132,7 @@ static class FlatToCommand
             BallWeightMutator.CurveBall => "MagnusBall",
             BallWeightMutator.BeachBallCurve => "MagnusBeachBall",
             BallWeightMutator.MagnusFutBall => "MagnusFutBallTest",
+            BallWeightMutator.MagnusFutballLess => "MagnusFutballLess",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
@@ -182,6 +185,8 @@ static class FlatToCommand
             RumbleMutator.BatmanRumble => "ItemsMode_BM",
             RumbleMutator.GrapplingOnly => "ItemsModeGrapplingHooks",
             RumbleMutator.HaymakerOnly => "ItemsModeBoxingGloves",
+            RumbleMutator.SpikeRushForce => "ItemsModeRugbyLightDark",
+            RumbleMutator.RPS => "ItemsModeRPS",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
@@ -216,7 +221,9 @@ static class FlatToCommand
             DemolishMutator.OnContact => "AlwaysDemolishOpposing",
             DemolishMutator.OnContactFF => "AlwaysDemolish",
             DemolishMutator.OnBallContact => "TeamDemoBall",
+            DemolishMutator.OnBallContactSilent => "TeamDemoBallSilent",
             DemolishMutator.OnBallContactFF => "FFADemoBall",
+            DemolishMutator.OnBallContactFFSilent => "FFADemoBallSilent",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
@@ -269,7 +276,7 @@ static class FlatToCommand
         option switch
         {
             TerritoryMutator.Off => "",
-            TerritoryMutator.Territory => "Territory",
+            TerritoryMutator.Territory => "TerritoryEnabled",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
@@ -366,6 +373,14 @@ static class FlatToCommand
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
+    private static string MapScoringRule(ScoringRule option) =>
+        option switch
+        {
+            ScoringRule.Default => "",
+            ScoringRule.DisableGoalScoring => "DisableGoalScoring",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
+        };
+
     private static string GetOption(string option)
     {
         if (option != "")
@@ -439,6 +454,8 @@ static class FlatToCommand
         command += GetOption(MapNormalGoalScore(mutatorSettings.NormalGoalScore));
         command += GetOption(MapAerialGoalScore(mutatorSettings.AerialGoalScore));
         command += GetOption(MapAssistGoalScore(mutatorSettings.AssistGoalScore));
+        command += GetOption(MapInputRestriction(mutatorSettings.InputRestriction));
+        command += GetOption(MapScoringRule(mutatorSettings.ScoringRule));
 
         return command;
     }
