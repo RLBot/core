@@ -7,7 +7,7 @@ public class CustomMap
     private static readonly ILogger Logger = Logging.GetLogger("CustomMap");
 
     public const string RL_MAP_KEY = "Haunted_TrainStation_P";
-    private const string MAP_SACRAFICE = RL_MAP_KEY + ".upk";
+    private const string MAP_SACRIFICE = RL_MAP_KEY + ".upk";
     private const string TEMP_MAP_NAME = RL_MAP_KEY + "_copy.upk";
 
     public static bool IsCustomMap(string path)
@@ -46,7 +46,7 @@ public class CustomMap
         }
 
         string mapsBasePath = GetMapsBasePath();
-        _originalMapPath = Path.Combine(mapsBasePath, MAP_SACRAFICE);
+        _originalMapPath = Path.Combine(mapsBasePath, MAP_SACRIFICE);
         _tempMapPath = Path.Combine(mapsBasePath, TEMP_MAP_NAME);
 
         Logger.LogInformation($"Custom map detected, loading into {RL_MAP_KEY}");
