@@ -388,17 +388,27 @@ static class FlatToCommand
         return "";
     }
 
-    public static string MakeOpenCommand(MatchConfigurationT matchConfig)
+    public static (string, CustomMap?) MakeOpenCommand(MatchConfigurationT matchConfig)
     {
         var command = "Open ";
+        CustomMap? customMap = null;
 
         // Parse game map
-        // With RLBot v5, GameMap enum is now ignored
-        // You MUST use GameMapUpk instead
         // This is the name of the map file without the extension
         // And can also be used to tell the game to load custom maps
         if (matchConfig.GameMapUpk != "")
-            command += matchConfig.GameMapUpk;
+        {
+            if (CustomMap.IsCustomMap(matchConfig.GameMapUpk))
+            {
+                // load the custom map
+                customMap = new(matchConfig.GameMapUpk);
+                command += CustomMap.RL_MAP_KEY;
+            }
+            else
+            {
+                command += matchConfig.GameMapUpk;
+            }
+        }
         else
         {
             command += "Stadium_P";
@@ -421,7 +431,7 @@ static class FlatToCommand
             command += ",Freeplay";
 
         if (matchConfig.Mutators is not { } mutatorSettings)
-            return command;
+            return (command, customMap);
 
         // Parse mutator settings
         command += GetOption(MapMatchLength(mutatorSettings.MatchLength));
@@ -457,7 +467,7 @@ static class FlatToCommand
         command += GetOption(MapInputRestriction(mutatorSettings.InputRestriction));
         command += GetOption(MapScoringRule(mutatorSettings.ScoringRule));
 
-        return command;
+        return (command, customMap);
     }
 
     public static string MakeGameSpeedCommand(float gameSpeed) =>

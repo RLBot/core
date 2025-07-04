@@ -113,12 +113,14 @@ public readonly ref struct PlayerSpawner(
         }
     }
 
-    public string SpawnMap(MatchConfigurationT matchConfig)
+    public (string, CustomMap?) SpawnMap(MatchConfigurationT matchConfig)
     {
-        string loadMapCommand = FlatToCommand.MakeOpenCommand(matchConfig);
+        (string loadMapCommand, CustomMap? customMap) = FlatToCommand.MakeOpenCommand(
+            matchConfig
+        );
         spawnCommandQueue.AddConsoleCommand(loadMapCommand);
         spawnCommandQueue.Flush();
-        return loadMapCommand;
+        return (loadMapCommand, customMap);
     }
 
     public void Flush()
