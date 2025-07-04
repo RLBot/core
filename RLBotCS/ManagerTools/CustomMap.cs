@@ -49,7 +49,7 @@ public class CustomMap
         _originalMapPath = Path.Combine(mapsBasePath, MAP_SACRIFICE);
         _tempMapPath = Path.Combine(mapsBasePath, TEMP_MAP_NAME);
 
-        Logger.LogInformation($"Custom map detected, loading into {RL_MAP_KEY}");
+        Logger.LogInformation($"Custom map detected. Temporarily replacing {RL_MAP_KEY}");
 
         // don't overwrite the original map if it already exists
         if (!File.Exists(_tempMapPath))
