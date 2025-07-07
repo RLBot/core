@@ -23,6 +23,12 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
 
     private Dictionary<string, string> _hivemindNameMap = new();
 
+    /// <summary>
+    /// If this value is not null,
+    /// then a custom map is being loaded.
+    /// </summary>
+    private CustomMap? _customMap;
+
     public readonly AgentMapping AgentMapping = new();
 
     public bool HasSpawnedCars { get; private set; }
@@ -107,6 +113,11 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
     {
         Logger.LogInformation("Got map info for " + mapName);
         HasSpawnedMap = true;
+        if (_customMap is not null)
+        {
+            _customMap.TryRestoreOriginalMap();
+            _customMap = null;
+        }
 
         if (_deferredMatchConfig is { } matchConfig)
         {
@@ -246,7 +257,9 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
             _matchConfig = null;
             _deferredMatchConfig = matchConfig;
 
-            var cmd = spawner.SpawnMap(matchConfig);
+            var (cmd, customMap) = spawner.SpawnMap(matchConfig);
+            _customMap = customMap;
+
             Logger.LogInformation($"Loading map with command: {cmd}");
         }
         else

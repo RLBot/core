@@ -19,10 +19,13 @@ static class LaunchManager
 
     public static string? GetGameArgs(bool kill)
     {
-        Process[] candidates = Process.GetProcessesByName("RocketLeague");
+        Process[] candidates = Process.GetProcesses();
 
         foreach (var candidate in candidates)
         {
+            if (!candidate.ProcessName.Contains("RocketLeague"))
+                continue;
+
             string args = GetProcessArgs(candidate);
             if (kill)
                 candidate.Kill();
@@ -99,8 +102,10 @@ static class LaunchManager
             "-nomovie",
         ];
 
+#if WINDOWS
     private static List<string> ParseCommand(string command)
     {
+        // Only works on Windows due to exes on Linux running under Wine
         var parts = new List<string>();
         var regex = new Regex(@"(?<match>[\""].+?[\""]|[^ ]+)");
         var matches = regex.Matches(command);
@@ -112,6 +117,7 @@ static class LaunchManager
 
         return parts;
     }
+#endif
 
     private static Process RunCommandInShell(string command)
     {
@@ -387,6 +393,27 @@ static class LaunchManager
                 break;
         }
 #endif
+    }
+
+    public static string? GetRocketLeaguePath()
+    {
+        // Assumes the game has already been launched
+        string? args = GetGameArgs(false);
+        if (args is null)
+            return null;
+
+        string directGamePath;
+
+#if WINDOWS
+        directGamePath = ParseCommand(args)[0];
+#else
+        // On Linux, Rocket League is running under Wine so args is something like
+        // Z:\home\username\.steam\debian-installation\steamapps\common\rocketleague\Binaries\Win64\RocketLeague.exe-rlbotRLBot_ControllerURL=127.0.0.1:23233RLBot_PacketSendRate=240-nomovie
+        // and we must get the real path to RocketLeague.exe from this
+        directGamePath = args.Remove(0, 2).Split("-rlbot")[0].Replace("\\", "/");
+#endif
+
+        return directGamePath;
     }
 
     public static bool IsRocketLeagueRunning() =>
