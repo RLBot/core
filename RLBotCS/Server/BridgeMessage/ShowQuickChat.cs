@@ -2,7 +2,7 @@
 
 namespace RLBotCS.Server.BridgeMessage;
 
-record ShowQuickChat(MatchCommT MatchComm) : IBridgeMessage
+readonly struct ShowQuickChat(MatchCommT MatchComm) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {

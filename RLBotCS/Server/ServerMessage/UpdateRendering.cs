@@ -2,7 +2,7 @@ using RLBot.Flat;
 
 namespace RLBotCS.Server.ServerMessage;
 
-record UpdateRendering(RenderingStatus Status) : IServerMessage
+readonly struct UpdateRendering(RenderingStatus Status) : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {

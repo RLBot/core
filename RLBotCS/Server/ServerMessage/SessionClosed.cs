@@ -2,7 +2,7 @@
 
 namespace RLBotCS.Server.ServerMessage;
 
-record SessionClosed(int ClientId) : IServerMessage
+readonly struct SessionClosed(int ClientId) : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {

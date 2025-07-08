@@ -4,7 +4,7 @@ using GoalInfo = Bridge.Packet.GoalInfo;
 
 namespace RLBotCS.Server.ServerMessage;
 
-record DistributeFieldInfo(GameState GameState) : IServerMessage
+readonly struct DistributeFieldInfo(GameState GameState) : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {

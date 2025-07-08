@@ -1,6 +1,6 @@
 namespace RLBotCS.Server.BridgeMessage;
 
-record EndMatch() : IBridgeMessage
+readonly struct EndMatch() : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {

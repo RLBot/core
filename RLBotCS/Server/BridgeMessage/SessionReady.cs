@@ -1,6 +1,6 @@
 namespace RLBotCS.Server.BridgeMessage;
 
-record SessionReady(int ClientId) : IBridgeMessage
+readonly struct SessionReady(int ClientId) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {

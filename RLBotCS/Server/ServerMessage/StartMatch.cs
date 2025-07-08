@@ -5,7 +5,7 @@ using RLBotCS.Server.BridgeMessage;
 
 namespace RLBotCS.Server.ServerMessage;
 
-record StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
+readonly struct StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {

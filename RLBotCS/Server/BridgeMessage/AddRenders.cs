@@ -2,7 +2,7 @@
 
 namespace RLBotCS.Server.BridgeMessage;
 
-record AddRenders(int ClientId, int RenderId, List<RenderMessageT> RenderItems)
+readonly struct AddRenders(int ClientId, int RenderId, List<RenderMessageT> RenderItems)
     : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)

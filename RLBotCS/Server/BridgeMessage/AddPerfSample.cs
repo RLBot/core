@@ -1,6 +1,6 @@
 ﻿namespace RLBotCS.Server.BridgeMessage;
 
-record AddPerfSample(uint Index, bool GotInput) : IBridgeMessage
+readonly struct AddPerfSample(uint Index, bool GotInput) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {

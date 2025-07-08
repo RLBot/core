@@ -5,7 +5,7 @@ using PlayerInput = Bridge.Models.Control.PlayerInput;
 
 namespace RLBotCS.Server.BridgeMessage;
 
-record Input(PlayerInputT PlayerInput) : IBridgeMessage
+readonly struct Input(PlayerInputT PlayerInput) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
