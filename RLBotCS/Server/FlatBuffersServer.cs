@@ -20,7 +20,7 @@ class FlatBuffersServer(
 
     private void AddSession(TcpClient client)
     {
-        Channel<SessionMessage> sessionChannel = Channel.CreateUnbounded<SessionMessage>();
+        Channel<SessionMessage> sessionChannel = Channel.CreateBounded<SessionMessage>(60);
         client.NoDelay = true;
 
         int clientId = client.Client.Handle.ToInt32();
@@ -96,7 +96,11 @@ class FlatBuffersServer(
             while (true)
             {
                 TcpClient client = await _context.Server.AcceptTcpClientAsync();
-                AddSession(client);
+
+                lock (_context)
+                {
+                    AddSession(client);
+                }
             }
         }
         catch (Exception e)
