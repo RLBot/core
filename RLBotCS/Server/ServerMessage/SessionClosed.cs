@@ -8,6 +8,7 @@ record SessionClosed(int ClientId) : IServerMessage
     {
         context.Bridge.TryWrite(new RemoveClientRenders(ClientId));
         context.Sessions.Remove(ClientId);
+        context.MissedMessagesCount.Remove(ClientId);
 
         return ServerAction.Continue;
     }

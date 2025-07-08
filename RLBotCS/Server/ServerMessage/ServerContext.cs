@@ -46,4 +46,32 @@ class ServerContext(
     /// The BridgeHandler's config may contain updated names, e.g. "Nexto (2)",
     /// and updated loadouts.</summary>
     public MatchConfigurationT? MatchConfig { get; set; }
+
+    public readonly Dictionary<int, uint> MissedMessagesCount = new();
+
+    public void DistributeMessage(SessionMessage message)
+    {
+        foreach (var (id, (writer, _)) in Sessions)
+        {
+            if (!writer.TryWrite(message))
+            {
+                uint missedMessages = MissedMessagesCount.GetValueOrDefault(id);
+                missedMessages += 1;
+                MissedMessagesCount[id] = missedMessages;
+
+                // Log warning with exponential backoff,
+                // e.g. every 10, 100, 1000, etc. messages missed
+                // (including the first missed message)
+                uint powerOfTen = (uint)Math.Pow(10, Math.Ceiling(Math.Log10(missedMessages)));
+                if (missedMessages == powerOfTen)
+                {
+                    Logger.LogWarning(
+                        "Session {}'s outbound message queue is full ({} messages missed)",
+                        id,
+                        missedMessages
+                    );
+                }
+            }
+        }
+    }
 }
