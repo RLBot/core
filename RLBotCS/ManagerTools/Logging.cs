@@ -5,13 +5,13 @@ namespace RLBotCS.ManagerTools;
 
 public class Logging : ILogger
 {
-    private const string Grey = "\x1b[38;20m";
-    private const string LightBlue = "\x1b[94;20m";
-    private const string Yellow = "\x1b[33;20m";
-    private const string Green = "\x1b[32;20m";
-    private const string Red = "\x1b[31;20m";
-    private const string BoldRen = "\x1b[31;1m";
-    private const string Reset = "\x1b[0m";
+    public const string Grey = "\x1b[38;20m";
+    public const string LightBlue = "\x1b[94;20m";
+    public const string Yellow = "\x1b[33;20m";
+    public const string Green = "\x1b[32;20m";
+    public const string Red = "\x1b[31;20m";
+    public const string BoldRed = "\x1b[31;1m";
+    public const string Reset = "\x1b[0m";
 
     private static readonly LogLevel LoggingLevel = Environment.GetEnvironmentVariable(
         "RLBOT_LOG_LEVEL"
@@ -80,7 +80,7 @@ public class Logging : ILogger
             LogLevel.Information => new[] { Grey, LightBlue, Grey, LightBlue },
             LogLevel.Warning => new[] { Yellow, Yellow, Yellow, Yellow },
             LogLevel.Error => new[] { Red, Red, Red, Red },
-            LogLevel.Critical => new[] { Red, BoldRen, Red, BoldRen },
+            LogLevel.Critical => new[] { Red, BoldRed, Red, BoldRed },
             _ => new[] { Grey, Grey, Grey, Grey },
         };
 

@@ -7,12 +7,16 @@ using RLBotCS.Server;
 using RLBotCS.Server.BridgeMessage;
 using RLBotCS.Server.ServerMessage;
 
+#if WINDOWS
+WinTermColor.EnableVirtualTerminal();
+#endif
+
 if (args.Length > 0 && args[0] == "--version")
 {
     Console.WriteLine(
-        $"RLBotServer v5.beta.7.4\n"
-            + $"Bridge {BridgeVersion.Version}\n"
-            + $"@ https://www.rlbot.org & https://github.com/RLBot/core"
+        $"{Logging.Yellow}RLBotServer {Logging.Green}v5.beta.7.5\n"
+            + $"{Logging.Yellow}Bridge {Logging.Green}{BridgeVersion.Version}{Logging.Reset}\n"
+            + $"@ {Logging.LightBlue}https://www.rlbot.org{Logging.Reset} & {Logging.LightBlue}https://github.com/RLBot/core{Logging.Reset}"
     );
     Environment.Exit(0);
 }
