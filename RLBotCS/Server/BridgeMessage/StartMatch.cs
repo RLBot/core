@@ -9,7 +9,7 @@ namespace RLBotCS.Server.BridgeMessage;
 /// not from <see cref="FlatBuffersSession"/>, as the <see cref="FlatBuffersServer"/>
 /// needs to be reset too to avoid distributing old match configs.
 /// </summary>
-record StartMatch(MatchConfigurationT MatchConfig) : IBridgeMessage
+readonly struct StartMatch(MatchConfigurationT MatchConfig) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {

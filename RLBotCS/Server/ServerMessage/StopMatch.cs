@@ -2,7 +2,7 @@
 
 namespace RLBotCS.Server.ServerMessage;
 
-record StopMatch(bool ShutdownServer) : IServerMessage
+readonly struct StopMatch(bool ShutdownServer) : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {

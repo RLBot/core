@@ -1,6 +1,6 @@
 ﻿namespace RLBotCS.Server.BridgeMessage;
 
-record ClearRenders() : IBridgeMessage
+readonly struct ClearRenders() : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {

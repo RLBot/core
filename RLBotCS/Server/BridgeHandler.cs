@@ -130,7 +130,10 @@ class BridgeHandler(
                     continue;
                 }
 
-                if (_context.GameState.MatchEnded)
+                if (
+                    _context.GameState.MatchPhase == MatchPhase.Ended
+                    || _context.GameState.MatchPhase == MatchPhase.Inactive
+                )
                 {
                     // reset everything
                     _context.QuickChat.ClearChats();
