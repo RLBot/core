@@ -55,8 +55,7 @@ class ServerContext(
         {
             if (!writer.TryWrite(message))
             {
-                uint missedMessages = MissedMessagesCount.GetValueOrDefault(id);
-                missedMessages += 1;
+                uint missedMessages = MissedMessagesCount.GetValueOrDefault(id) + 1;
                 MissedMessagesCount[id] = missedMessages;
 
                 // Log warning with exponential backoff,
