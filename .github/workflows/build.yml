@@ -12,6 +12,8 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
+    env:
+      NUGET_PACKAGES: D:\nuget\packages
 
     steps:
     - name: Checkout
@@ -20,10 +22,10 @@ jobs:
         submodules: 'recursive'
 
     - name: Test
-      run: dotnet test --no-restore
+      run: dotnet test
 
     - name: Build 
-      run: dotnet publish RLBotCS -r win-x64 --no-restore
+      run: dotnet publish RLBotCS -r win-x64
 
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
