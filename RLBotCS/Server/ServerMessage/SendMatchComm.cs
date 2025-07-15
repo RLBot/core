@@ -11,7 +11,7 @@ readonly struct SendMatchComm(int ClientId, MatchCommT MatchComm) : IServerMessa
 
         if (context.LastTickPacket is null)
         {
-            context.Logger.LogWarning("Received MatchComm before receiving a GameTickPacket.");
+            context.Logger.LogWarning("Received MatchComm before receiving a GamePacket.");
             return ServerAction.Continue;
         }
 

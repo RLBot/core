@@ -1,4 +1,4 @@
-﻿using RLBot.Flat;
+using RLBot.Flat;
 using RLBotCS.ManagerTools;
 
 namespace RLBotCS.Server.ServerMessage;
@@ -28,24 +28,15 @@ readonly struct DistributeGamePacket(GamePacketT Packet) : IServerMessage
             lastTouch,
             packet.MatchInfo.WorldGravityZ
         );
-
-        foreach (var (writer, _) in context.Sessions.Values)
-        {
-            SessionMessage message = new SessionMessage.DistributeBallPrediction(prediction);
-            writer.TryWrite(message);
-        }
+        context.DistributeMessage(new SessionMessage.DistributeBallPrediction(prediction));
     }
 
     private static void DistributeState(ServerContext context, GamePacketT packet)
     {
         context.LastTickPacket = packet;
-        foreach (var (writer, _) in context.Sessions.Values)
-        {
-            SessionMessage message = new SessionMessage.DistributeGameState(
-                context.LastTickPacket
-            );
-            writer.TryWrite(message);
-        }
+        context.DistributeMessage(
+            new SessionMessage.DistributeGameState(context.LastTickPacket)
+        );
     }
 
     public ServerAction Execute(ServerContext context)
