@@ -13,27 +13,29 @@ namespace RLBotCS.Server;
 /// <summary>
 /// A message sent to <see cref="FlatBuffersSession"/> from <see cref="FlatBuffersServer"/>.
 /// </summary>
-record SessionMessage
+interface SessionMessage
 {
-    public record MatchConfig(MatchConfigurationT Config) : SessionMessage;
+    public readonly record struct MatchConfig(MatchConfigurationT Config) : SessionMessage;
 
-    public record FieldInfo(FieldInfoT Info) : SessionMessage;
+    public readonly record struct FieldInfo(FieldInfoT Info) : SessionMessage;
 
-    public record PlayerIdPairs(uint Team, List<PlayerIdPair> IdMaps) : SessionMessage;
+    public readonly record struct PlayerIdPairs(uint Team, List<PlayerIdPair> IdMaps)
+        : SessionMessage;
 
-    public record DistributeBallPrediction(BallPredictionT BallPrediction) : SessionMessage;
+    public readonly record struct DistributeBallPrediction(BallPredictionT BallPrediction)
+        : SessionMessage;
 
-    public record DistributeGameState(GamePacketT GameState) : SessionMessage;
+    public readonly record struct DistributeGameState(GamePacketT GameState) : SessionMessage;
 
-    public record RendersAllowed(bool Allowed) : SessionMessage;
+    public readonly record struct RendersAllowed(bool Allowed) : SessionMessage;
 
-    public record StateSettingAllowed(bool Allowed) : SessionMessage;
+    public readonly record struct StateSettingAllowed(bool Allowed) : SessionMessage;
 
-    public record MatchComm(MatchCommT Message) : SessionMessage;
+    public readonly record struct MatchComm(MatchCommT Message) : SessionMessage;
 
-    public record StopMatch(bool Force) : SessionMessage;
+    public readonly record struct StopMatch(bool Force) : SessionMessage;
 
-    public record UpdateRendering(RenderingStatus Status) : SessionMessage;
+    public readonly record struct UpdateRendering(RenderingStatus Status) : SessionMessage;
 }
 
 class FlatBuffersSession

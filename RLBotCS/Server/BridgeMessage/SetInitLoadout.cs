@@ -7,7 +7,7 @@ namespace RLBotCS.Server.BridgeMessage;
 /// Sets the loadout of a bot that has yet to ready up and spawn (replaces loadout generators from v4).
 /// See also <see cref="StateSetLoadout"/> for loadout change during matches.
 /// </summary>
-record SetInitLoadout(PlayerLoadoutT Loadout, int PlayerId) : IBridgeMessage
+readonly struct SetInitLoadout(PlayerLoadoutT Loadout, int PlayerId) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
@@ -28,7 +28,8 @@ record SetInitLoadout(PlayerLoadoutT Loadout, int PlayerId) : IBridgeMessage
             return;
         }
 
-        var player = matchConfig.PlayerConfigurations.Find(p => p.PlayerId == PlayerId);
+        int thisPlayerId = PlayerId;
+        var player = matchConfig.PlayerConfigurations.Find(p => p.PlayerId == thisPlayerId);
         if (player is null)
         {
             context.Logger.LogError(

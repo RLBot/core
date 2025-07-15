@@ -7,13 +7,14 @@ using RLBotCS.Conversion;
 
 namespace RLBotCS.Server.BridgeMessage;
 
-record StateSetLoadout(PlayerLoadoutT Loadout, uint Index) : IBridgeMessage
+readonly struct StateSetLoadout(PlayerLoadoutT Loadout, uint Index) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
+        uint thisIndex = Index;
         PlayerMetadata? meta = context
             .GameState.PlayerMapping.GetKnownPlayers()
-            .FirstOrDefault(kp => Index == kp.PlayerIndex);
+            .FirstOrDefault(kp => thisIndex == kp.PlayerIndex);
         if (meta == null)
             return;
 
@@ -47,6 +48,7 @@ record StateSetLoadout(PlayerLoadoutT Loadout, uint Index) : IBridgeMessage
             {
                 CommandId = commandId,
                 PlayerId = meta.PlayerId,
+                AgentId = meta.AgentId,
                 DesiredPlayerIndex = meta.PlayerIndex,
                 IsCustomBot = true,
                 IsBot = true,

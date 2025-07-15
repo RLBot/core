@@ -3,7 +3,7 @@ using RLBotCS.Conversion;
 
 namespace RLBotCS.Server.BridgeMessage;
 
-record SetGameState(DesiredGameStateT GameState) : IBridgeMessage
+readonly struct SetGameState(DesiredGameStateT GameState) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {

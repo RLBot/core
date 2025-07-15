@@ -4,7 +4,7 @@ using RLBot.Flat;
 
 namespace RLBotCS.Server.BridgeMessage;
 
-record AgentReservationRequest(
+readonly struct AgentReservationRequest(
     int ClientId,
     ChannelWriter<SessionMessage> SessionWriter,
     string AgentId

@@ -6,7 +6,7 @@ namespace RLBotCS.Server.ServerMessage;
 /// <summary>
 /// Fetch match config, field info, and relevant bot indexes for a client.
 /// </summary>
-record IntroDataRequest(
+readonly struct IntroDataRequest(
     int ClientId,
     ChannelWriter<SessionMessage> SessionWriter,
     string AgentId
