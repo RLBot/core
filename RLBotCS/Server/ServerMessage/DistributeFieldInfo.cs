@@ -14,7 +14,7 @@ readonly struct DistributeFieldInfo(GameState GameState) : IServerMessage
             Goals = new List<GoalInfoT>(GameState.Goals.Count),
         };
 
-        foreach (GoalInfo goal in GameState.Goals)
+        foreach (GoalInfo goal in GameState.Goals.Values)
         {
             context.FieldInfo.Goals.Add(
                 new GoalInfoT
