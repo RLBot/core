@@ -37,7 +37,7 @@ Further deployment steps for automatic updates are still in progress.
 
 ### Formatting
 
-This project uses the CSharpier formatter. You can run it with `dotnet csharpier .`
+This project uses the CSharpier formatter. You can run it with `dotnet csharpier format .`
 
 ### Flatbuffers
 

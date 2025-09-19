@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
@@ -14,70 +13,86 @@
     <PublishWmiLightStaticallyLinked>true</PublishWmiLightStaticallyLinked>
     <SelfContained>true</SelfContained>
     <StaticExecutable>true</StaticExecutable>
-    <LinkerFlavor Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">lld</LinkerFlavor>
+    <LinkerFlavor
+      Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'"
+      >lld</LinkerFlavor
+    >
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="Tomlyn" Version="0.18.0" />
+    <PackageReference Include="Tomlyn" Version="0.19.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
   </ItemGroup>
-
   <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
     <DefineConstants>WINDOWS</DefineConstants>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Google.FlatBuffers" Version="25.2.10" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="FlatBuffer\" />
   </ItemGroup>
-
   <ItemGroup>
     <DirectPInvoke Include="rl_ball_sym" />
-
     <!-- Statically linked for publishing -->
-    <NativeLibrary Include=".\lib\rl_ball_sym\win-x86_64\rl_ball_sym.lib" Condition="'$(OS)' == 'Windows_NT'" />
-    <NativeLibrary Include="./lib/rl_ball_sym/linux-x86_64/librl_ball_sym.a" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'" />
-    <NativeLibrary Include="./lib/rl_ball_sym/mac-aarch64/librl_ball_sym.a" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'" />
-
+    <NativeLibrary
+      Include=".\lib\rl_ball_sym\win-x86_64\rl_ball_sym.lib"
+      Condition="'$(OS)' == 'Windows_NT'"
+    />
+    <NativeLibrary
+      Include="./lib/rl_ball_sym/linux-x86_64/librl_ball_sym.a"
+      Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'"
+    />
+    <NativeLibrary
+      Include="./lib/rl_ball_sym/mac-aarch64/librl_ball_sym.a"
+      Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'"
+    />
     <!-- Dynamically linked for development -->
-    <ContentWithTargetPath Include=".\lib\rl_ball_sym\win-x86_64\rl_ball_sym.dll" Condition="'$(OS)' == 'Windows_NT'">
+    <ContentWithTargetPath
+      Include=".\lib\rl_ball_sym\win-x86_64\rl_ball_sym.dll"
+      Condition="'$(OS)' == 'Windows_NT'"
+    >
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>rl_ball_sym.dll</TargetPath>
     </ContentWithTargetPath>
-
-    <ContentWithTargetPath Include="./lib/rl_ball_sym/linux-x86_64/librl_ball_sym.so" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">
+    <ContentWithTargetPath
+      Include="./lib/rl_ball_sym/linux-x86_64/librl_ball_sym.so"
+      Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'"
+    >
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>rl_ball_sym.so</TargetPath>
     </ContentWithTargetPath>
-
-    <ContentWithTargetPath Include="./lib/rl_ball_sym/mac-aarch64/librl_ball_sym.dylib" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'">
-        <CopyToPublishDirectory>Never</CopyToPublishDirectory>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        <TargetPath>rl_ball_sym.dylib</TargetPath>
+    <ContentWithTargetPath
+      Include="./lib/rl_ball_sym/mac-aarch64/librl_ball_sym.dylib"
+      Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'"
+    >
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>rl_ball_sym.dylib</TargetPath>
     </ContentWithTargetPath>
   </ItemGroup>
-
-  <Target Name="GenerateFlatBuffersWindows" BeforeTargets="PreBuildEvent" Condition=" '$(OS)' == 'Windows_NT' ">
+  <Target
+    Name="GenerateFlatBuffersWindows"
+    BeforeTargets="PreBuildEvent"
+    Condition=" '$(OS)' == 'Windows_NT' "
+  >
     <Exec Command="call ../generate-flatbuffers.bat" />
   </Target>
-
-  <Target Name="GenerateFlatBuffersLinux" BeforeTargets="PreBuildEvent" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">
+  <Target
+    Name="GenerateFlatBuffersLinux"
+    BeforeTargets="PreBuildEvent"
+    Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'"
+  >
     <Exec Command="../generate-flatbuffers.sh" />
   </Target>
-
   <ItemGroup>
     <Compile Include="..\FlatBuffer\RLBot.cs" />
   </ItemGroup>
-
   <ItemGroup>
     <Reference Include="Bridge">
       <HintPath>lib\Bridge.dll</HintPath>
     </Reference>
   </ItemGroup>
-
 </Project>

@@ -1,61 +1,67 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
-
     <IsPackable>false</IsPackable>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
     <PackageReference Include="MSTest.TestAdapter" Version="2.2.7" />
     <PackageReference Include="MSTest.TestFramework" Version="2.2.7" />
     <PackageReference Include="coverlet.collector" Version="3.1.0" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\RLBotCS\RLBotCS.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <Reference Include="Bridge">
       <HintPath>..\RLBotCS\lib\Bridge.dll</HintPath>
     </Reference>
   </ItemGroup>
-
   <ItemGroup>
     <DirectPInvoke Include="rl_ball_sym" />
-
     <!-- Statically linked for publishing -->
-    <NativeLibrary Include="..\RLBotCS\lib\rl_ball_sym\win-x86_64\rl_ball_sym.lib" Condition="'$(OS)' == 'Windows_NT'" />
-    <NativeLibrary Include="../RLBotCS/lib/rl_ball_sym/linux-x86_64/librl_ball_sym.a" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'" />
-    <NativeLibrary Include="../RLBotCS/lib/rl_ball_sym/mac-aarch64/librl_ball_sym.a" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'" />
-
+    <NativeLibrary
+      Include="..\RLBotCS\lib\rl_ball_sym\win-x86_64\rl_ball_sym.lib"
+      Condition="'$(OS)' == 'Windows_NT'"
+    />
+    <NativeLibrary
+      Include="../RLBotCS/lib/rl_ball_sym/linux-x86_64/librl_ball_sym.a"
+      Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'"
+    />
+    <NativeLibrary
+      Include="../RLBotCS/lib/rl_ball_sym/mac-aarch64/librl_ball_sym.a"
+      Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'"
+    />
     <!-- Dynamically linked for development -->
-    <ContentWithTargetPath Include="..\RLBotCS\lib\rl_ball_sym\win-x86_64\rl_ball_sym.dll" Condition="'$(OS)' == 'Windows_NT'">
+    <ContentWithTargetPath
+      Include="..\RLBotCS\lib\rl_ball_sym\win-x86_64\rl_ball_sym.dll"
+      Condition="'$(OS)' == 'Windows_NT'"
+    >
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>rl_ball_sym.dll</TargetPath>
     </ContentWithTargetPath>
-
-    <ContentWithTargetPath Include="../RLBotCS/lib/rl_ball_sym/linux-x86_64/librl_ball_sym.so" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">
+    <ContentWithTargetPath
+      Include="../RLBotCS/lib/rl_ball_sym/linux-x86_64/librl_ball_sym.so"
+      Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'"
+    >
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>rl_ball_sym.so</TargetPath>
     </ContentWithTargetPath>
-
-    <ContentWithTargetPath Include="../RLBotCS/lib/rl_ball_sym/mac-aarch64/librl_ball_sym.dylib" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'">
-        <CopyToPublishDirectory>Never</CopyToPublishDirectory>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        <TargetPath>rl_ball_sym.dylib</TargetPath>
+    <ContentWithTargetPath
+      Include="../RLBotCS/lib/rl_ball_sym/mac-aarch64/librl_ball_sym.dylib"
+      Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'"
+    >
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>rl_ball_sym.dylib</TargetPath>
     </ContentWithTargetPath>
   </ItemGroup>
-
   <ItemGroup>
     <Content Include="TestTomls\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-
 </Project>

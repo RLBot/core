@@ -270,9 +270,7 @@ public class ConfigParser
         switch (raw)
         {
             // Toml numbers are longs by default
-            case long i
-            and >= 0
-            and <= 1:
+            case long i and >= 0 and <= 1:
                 return (uint)i;
             case string s when s.Equals("blue", StringComparison.OrdinalIgnoreCase):
                 return 0;
