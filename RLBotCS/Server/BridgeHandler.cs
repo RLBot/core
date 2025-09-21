@@ -88,7 +88,10 @@ class BridgeHandler(
                 float deltaTime = _context.GameState.SecondsElapsed - prevTime;
                 bool timeAdvanced = deltaTime > 0.001;
                 if (timeAdvanced)
+                {
                     _context.ticksSkipped = 0;
+                    _context.ticksSinceMapLoad += 1;
+                }
                 else
                     _context.ticksSkipped++;
 
@@ -105,6 +108,7 @@ class BridgeHandler(
                 var mapJustLoaded = MessageHandler.ReceivedMatchInfo(messageClump);
                 if (mapJustLoaded)
                 {
+                    _context.ticksSinceMapLoad = 0;
                     if (_context.GameState.MatchPhase != MatchPhase.Paused)
                     {
                         // LAN matches don't set the MatchPhase to paused, which breaks Continue & Spawn
@@ -161,6 +165,7 @@ class BridgeHandler(
 
                 if (
                     _context.MatchStarter.HasSpawnedMap
+                    && _context.ticksSinceMapLoad >= 2
                     && _context.GameState.MatchPhase == MatchPhase.Paused
                     && _context.SpawnCommandQueue.Count > 0
                 )
