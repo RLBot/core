@@ -20,6 +20,7 @@ class BridgeContext(
     public readonly ILogger Logger = Logging.GetLogger("BridgeHandler");
 
     public int ticksSkipped = 0;
+    public uint ticksSinceMapLoad = 0;
     public GameState GameState = new();
     public MatchStarter MatchStarter { get; } = matchStarter;
     public MatchConfigurationT? MatchConfig => MatchStarter.GetMatchConfig();
