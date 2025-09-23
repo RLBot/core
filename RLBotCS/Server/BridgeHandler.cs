@@ -88,12 +88,11 @@ class BridgeHandler(
                 float deltaTime = _context.GameState.SecondsElapsed - prevTime;
                 bool timeAdvanced = deltaTime > 0.001;
                 if (timeAdvanced)
-                {
                     _context.ticksSkipped = 0;
-                    _context.ticksSinceMapLoad += 1;
-                }
                 else
                     _context.ticksSkipped++;
+
+                _context.ticksSinceMapLoad += 1;
 
                 if (timeAdvanced)
                     _context.PerfMonitor.AddRLBotSample(deltaTime);
