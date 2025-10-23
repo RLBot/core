@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Sockets;
 using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
@@ -15,7 +16,7 @@ class FlatBuffersServer(
 {
     private readonly ServerContext _context = new(incomingMessages, bridge)
     {
-        Server = new TcpListener(new(new byte[] { 0, 0, 0, 0 }), rlbotPort),
+        Server = new TcpListener(IPAddress.IPv6Any, rlbotPort),
     };
 
     private void AddSession(TcpClient client)
@@ -89,6 +90,7 @@ class FlatBuffersServer(
         {
             if (_context.Server == null)
                 throw new InvalidOperationException("Server not initialized");
+            _context.Server.Server.DualMode = true;
             _context.Server.Start();
 
             BallPredictor.SetMode(PredictionMode.Standard);
