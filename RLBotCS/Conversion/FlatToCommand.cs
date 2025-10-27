@@ -373,11 +373,11 @@ static class FlatToCommand
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
-    private static string MapScoringRule(ScoringRule option) =>
+    private static string MapScoringRule(ScoringRuleMutator option) =>
         option switch
         {
-            ScoringRule.Default => "",
-            ScoringRule.DisableGoalScoring => "DisableGoalScoring",
+            ScoringRuleMutator.Default => "",
+            ScoringRuleMutator.Disabled => "DisableGoalScoring",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
