@@ -36,6 +36,8 @@ interface SessionMessage
     public readonly record struct StopMatch(bool Force) : SessionMessage;
 
     public readonly record struct UpdateRendering(RenderingStatus Status) : SessionMessage;
+
+    public readonly record struct PingResponse() : SessionMessage;
 }
 
 class FlatBuffersSession
@@ -306,11 +308,15 @@ class FlatBuffersSession
 
                 var desiredGameState = msg.MessageAsDesiredGameState().UnPack();
                 await _bridge.WriteAsync(new SetGameState(desiredGameState));
-
                 break;
+
             case InterfaceMessage.RenderingStatus:
                 var renderingStatus = msg.MessageAsRenderingStatus();
                 await _rlbotServer.WriteAsync(new UpdateRendering(renderingStatus));
+                break;
+
+            case InterfaceMessage.PingRequest:
+                _incomingMessages.Writer.TryWrite(new SessionMessage.PingResponse());
                 break;
         }
 
@@ -426,6 +432,11 @@ class FlatBuffersSession
                             break;
                         }
                     }
+                    break;
+                case SessionMessage.PingResponse m:
+                    SendPayloadToClient(
+                        CoreMessageUnion.FromPingResponse(new PingResponseT())
+                    );
                     break;
             }
     }
