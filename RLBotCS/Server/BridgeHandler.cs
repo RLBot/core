@@ -224,14 +224,14 @@ class BridgeHandler(
 
         // While game is paused (or similar), we distribute less often
         bool due =
-            context
-                is {
-                    ticksSkipped: > MAX_TICK_SKIP,
-                    GameState.MatchPhase: MatchPhase.Replay
-                        or MatchPhase.Paused
-                        or MatchPhase.Ended
-                        or MatchPhase.Inactive
-                };
+            context is
+            {
+                ticksSkipped: > MAX_TICK_SKIP,
+                GameState.MatchPhase: MatchPhase.Replay
+                    or MatchPhase.Paused
+                    or MatchPhase.Ended
+                    or MatchPhase.Inactive
+            };
         if (!timeAdvanced && !due)
             return;
 
