@@ -9,7 +9,7 @@ readonly struct StartMatch(MatchConfigurationT MatchConfig) : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {
-        Debug.Assert(ConfigValidator.Validate(MatchConfig));
+        Debug.Assert(ConfigValidator.Validate(MatchConfig, true));
 
         context.Bridge.TryWrite(new ClearRenders());
 
