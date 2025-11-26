@@ -48,8 +48,11 @@ public static class ConfigValidator
         config.PlayerConfigurations ??= new();
         config.ScriptConfigurations ??= new();
 
-        valid = ValidatePlayers(ctx, config.PlayerConfigurations, surpressWarnings) && valid;
-        valid = ValidateScripts(ctx, config.ScriptConfigurations) && valid;
+        Dictionary<string, (string rootDir, string runCmd)> agentIdTracker = new();
+        valid =
+            ValidatePlayers(ctx, config.PlayerConfigurations, agentIdTracker, surpressWarnings)
+            && valid;
+        valid = ValidateScripts(ctx, config.ScriptConfigurations, agentIdTracker) && valid;
 
         Logger.LogDebug(valid ? "Match config is valid." : "Match config is invalid!");
         return valid;
@@ -58,15 +61,13 @@ public static class ConfigValidator
     private static bool ValidatePlayers(
         ConfigContextTracker ctx,
         List<PlayerConfigurationT> players,
+        Dictionary<string, (string rootDir, string runCmd)> agentIdTracker,
         bool surpressWarnings
     )
     {
         bool valid = true;
         int humanCount = 0;
         int humanIndex = -1;
-
-        // map of agentid -> rootdir,runcmd
-        Dictionary<string, (string rootDir, string runCmd)> agentIdTracker = new();
 
         for (int i = 0; i < players.Count; i++)
         {
@@ -212,11 +213,11 @@ public static class ConfigValidator
 
     private static bool ValidateScripts(
         ConfigContextTracker ctx,
-        List<ScriptConfigurationT> scripts
+        List<ScriptConfigurationT> scripts,
+        Dictionary<string, (string rootDir, string runCmd)> agentIdTracker
     )
     {
         bool valid = true;
-        HashSet<string> agentIds = new();
 
         for (int i = 0; i < scripts.Count; i++)
         {
@@ -238,14 +239,16 @@ public static class ConfigValidator
             script.RootDir ??= "";
             script.ScriptId = $"{script.AgentId}/{Team.Scripts}/{i}".GetHashCode();
 
-            // Scripts must have unique agent ids
-            if (!agentIds.Add(script.AgentId))
+            if (agentIdTracker.TryGetValue(script.AgentId, out var existing))
             {
                 Logger.LogError(
                     $"{ctx.ToStringWithEnd(Fields.AgentAgentId)} \"{script.AgentId}\" is already in use. "
                         + "Each script must have a unique agent ID."
                 );
-                valid = false;
+            }
+            else
+            {
+                agentIdTracker[script.AgentId] = (script.RootDir, script.RunCommand);
             }
         }
 
