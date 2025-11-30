@@ -134,7 +134,7 @@ public static class ConfigValidator
                                 }
 
                                 Logger.LogWarning(
-                                    $"Potential agent ID conflict: {bot.AgentId} is used by multiple bots with different {errorStr}.\n"
+                                    $"Potential agent ID conflict: \"{bot.AgentId}\" is used by multiple bots with different {errorStr}.\n"
                                         + "Agent configs using the same ID may get used interchangeably. Agents that behave differently should have unique IDs."
                                 );
                             }
