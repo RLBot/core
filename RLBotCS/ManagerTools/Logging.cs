@@ -6,7 +6,7 @@ namespace RLBotCS.ManagerTools;
 public class Logging : ILogger
 {
     private const string Grey = "\x1b[38;20m";
-    private const string LightBlue = "\x1b[34;20m";
+    private const string LightBlue = "\x1b[94;20m";
     private const string Yellow = "\x1b[33;20m";
     private const string Green = "\x1b[32;20m";
     private const string Red = "\x1b[31;20m";
