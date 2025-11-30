@@ -245,6 +245,7 @@ public static class ConfigValidator
                     $"{ctx.ToStringWithEnd(Fields.AgentAgentId)} \"{script.AgentId}\" is already in use. "
                         + "Each script must have a unique agent ID."
                 );
+                valid = false;
             }
             else
             {
