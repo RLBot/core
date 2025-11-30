@@ -6,7 +6,7 @@ namespace RLBotCS.ManagerTools;
 public class Logging : ILogger
 {
     private const string Grey = "\x1b[38;20m";
-    private const string LightBlue = "\x1b[94;20m";
+    private const string Cyan = "\x1b[36;20m";
     private const string Yellow = "\x1b[33;20m";
     private const string Green = "\x1b[32;20m";
     private const string Red = "\x1b[31;20m";
@@ -63,9 +63,9 @@ public class Logging : ILogger
             var logBuilder = new StringBuilder();
             logBuilder.Append($"{logLevelColors[0]}{DateTime.Now:HH:mm:ss}{Reset} ");
             logBuilder.Append(
-                $"{logLevelColors[1]}{logLevelString}:{Reset}{Green}{AppName}{Reset}"
+                $"{logLevelColors[1]}{logLevelString}{Reset}{Green}{AppName}{Reset}"
             );
-            logBuilder.Append($"{logLevelColors[2]}[ {_name} ]{Reset} ");
+            logBuilder.Append($"{logLevelColors[2]} {_name}:{Reset} ");
             logBuilder.Append($"{logLevelColors[3]}{message}{Reset}");
 
             Console.WriteLine(logBuilder.ToString());
@@ -76,8 +76,8 @@ public class Logging : ILogger
         logLevel switch
         {
             LogLevel.Trace => new[] { Grey, Grey, Grey, Grey },
-            LogLevel.Debug => new[] { Grey, Grey, Grey, LightBlue },
-            LogLevel.Information => new[] { Grey, LightBlue, Grey, LightBlue },
+            LogLevel.Debug => new[] { Grey, Cyan, Grey, Cyan },
+            LogLevel.Information => new[] { Grey, Grey, Grey, Cyan },
             LogLevel.Warning => new[] { Yellow, Yellow, Yellow, Yellow },
             LogLevel.Error => new[] { Red, Red, Red, Red },
             LogLevel.Critical => new[] { Red, BoldRed, Red, BoldRed },
@@ -87,13 +87,13 @@ public class Logging : ILogger
     private string GetLogLevelString(LogLevel logLevel) =>
         logLevel switch
         {
-            LogLevel.Trace => "TRACE".PadLeft(8),
-            LogLevel.Debug => "DEBUG".PadLeft(8),
-            LogLevel.Information => "INFO".PadLeft(8),
-            LogLevel.Warning => "WARNING".PadLeft(8),
-            LogLevel.Error => "ERROR".PadLeft(8),
-            LogLevel.Critical => "CRITICAL".PadLeft(8),
-            _ => "UNKNOWN".PadLeft(8),
+            LogLevel.Trace => "TRACE".PadLeft(5),
+            LogLevel.Debug => "DEBUG".PadLeft(5),
+            LogLevel.Information => "INFO".PadLeft(5),
+            LogLevel.Warning => "WARN".PadLeft(5),
+            LogLevel.Error => "ERROR".PadLeft(5),
+            LogLevel.Critical => "CRIT".PadLeft(5),
+            _ => "UNKN".PadLeft(5),
         };
 
     public class CustomConsoleLoggerProvider : ILoggerProvider
