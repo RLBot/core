@@ -18,7 +18,7 @@ public static class ConfigValidator
     /// If the config is invalid, the reasons are logged.
     /// </summary>
     /// <returns>Whether the given match is valid and can be started without issues.</returns>
-    public static bool Validate(MatchConfigurationT config)
+    public static bool Validate(MatchConfigurationT config, bool surpressWarnings = false)
     {
         bool valid = true;
         PsyonixLoadouts.Reset();
@@ -48,8 +48,11 @@ public static class ConfigValidator
         config.PlayerConfigurations ??= new();
         config.ScriptConfigurations ??= new();
 
-        valid = ValidatePlayers(ctx, config.PlayerConfigurations) && valid;
-        valid = ValidateScripts(ctx, config.ScriptConfigurations) && valid;
+        Dictionary<string, (string rootDir, string runCmd)> agentIdTracker = new();
+        valid =
+            ValidatePlayers(ctx, config.PlayerConfigurations, agentIdTracker, surpressWarnings)
+            && valid;
+        valid = ValidateScripts(ctx, config.ScriptConfigurations, agentIdTracker) && valid;
 
         Logger.LogDebug(valid ? "Match config is valid." : "Match config is invalid!");
         return valid;
@@ -57,7 +60,9 @@ public static class ConfigValidator
 
     private static bool ValidatePlayers(
         ConfigContextTracker ctx,
-        List<PlayerConfigurationT> players
+        List<PlayerConfigurationT> players,
+        Dictionary<string, (string rootDir, string runCmd)> agentIdTracker,
+        bool surpressWarnings
     )
     {
         bool valid = true;
@@ -99,6 +104,46 @@ public static class ConfigValidator
                     bot.Loadout.LoadoutPaint ??= new();
 
                     player.PlayerId = $"{bot.AgentId}/{player.Team}/{i}".GetHashCode();
+
+                    // Dont validate agent id for bots that will be manually started
+                    if (!surpressWarnings && !string.IsNullOrEmpty(bot.RunCommand))
+                    {
+                        // Reduce user confusion around how agent ids should be used
+                        // Same bot == same agent id, different bot == different agent id
+                        // This is not a hard requirement, so we just log a warning
+                        // We check for "same bot" by comparing RootDir and RunCommand
+                        if (agentIdTracker.TryGetValue(bot.AgentId, out var existing))
+                        {
+                            if (
+                                existing.rootDir != bot.RootDir
+                                || existing.runCmd != bot.RunCommand
+                            )
+                            {
+                                string errorStr;
+
+                                if (existing.rootDir != bot.RootDir)
+                                {
+                                    errorStr =
+                                        existing.runCmd != bot.RunCommand
+                                            ? "RootDirs and RunCommands"
+                                            : "RootDirs";
+                                }
+                                else
+                                {
+                                    errorStr = "RunCommands";
+                                }
+
+                                Logger.LogWarning(
+                                    $"Potential agent ID conflict: \"{bot.AgentId}\" is used by multiple bots with different {errorStr}.\n"
+                                        + "Agent configs using the same ID may get used interchangeably. Agents that behave differently should have unique IDs."
+                                );
+                            }
+                        }
+                        else
+                        {
+                            agentIdTracker[bot.AgentId] = (bot.RootDir, bot.RunCommand);
+                        }
+                    }
                     break;
                 case PsyonixBotT bot:
                     string skill = bot.BotSkill switch
@@ -168,7 +213,8 @@ public static class ConfigValidator
 
     private static bool ValidateScripts(
         ConfigContextTracker ctx,
-        List<ScriptConfigurationT> scripts
+        List<ScriptConfigurationT> scripts,
+        Dictionary<string, (string rootDir, string runCmd)> agentIdTracker
     )
     {
         bool valid = true;
@@ -192,6 +238,19 @@ public static class ConfigValidator
             script.RunCommand ??= "";
             script.RootDir ??= "";
             script.ScriptId = $"{script.AgentId}/{Team.Scripts}/{i}".GetHashCode();
+
+            if (agentIdTracker.TryGetValue(script.AgentId, out var existing))
+            {
+                Logger.LogError(
+                    $"{ctx.ToStringWithEnd(Fields.AgentAgentId)} \"{script.AgentId}\" is already in use. "
+                        + "Each script must have a unique agent ID."
+                );
+                valid = false;
+            }
+            else
+            {
+                agentIdTracker[script.AgentId] = (script.RootDir, script.RunCommand);
+            }
         }
 
         return valid;
