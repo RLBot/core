@@ -6,7 +6,7 @@ namespace RLBotCS.ManagerTools;
 public class Logging : ILogger
 {
     private const string Grey = "\x1b[38;20m";
-    private const string Cyan = "\x1b[36;20m";
+    private const string LightBlue = "\x1b[34;20m";
     private const string Yellow = "\x1b[33;20m";
     private const string Green = "\x1b[32;20m";
     private const string Red = "\x1b[31;20m";
@@ -76,8 +76,8 @@ public class Logging : ILogger
         logLevel switch
         {
             LogLevel.Trace => new[] { Grey, Grey, Grey, Grey },
-            LogLevel.Debug => new[] { Grey, Cyan, Grey, Cyan },
-            LogLevel.Information => new[] { Grey, Grey, Grey, Cyan },
+            LogLevel.Debug => new[] { Grey, Grey, Grey, LightBlue },
+            LogLevel.Information => new[] { Grey, LightBlue, Grey, LightBlue },
             LogLevel.Warning => new[] { Yellow, Yellow, Yellow, Yellow },
             LogLevel.Error => new[] { Red, Red, Red, Red },
             LogLevel.Critical => new[] { Red, BoldRed, Red, BoldRed },
