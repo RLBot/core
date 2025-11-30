@@ -63,9 +63,9 @@ public class Logging : ILogger
             var logBuilder = new StringBuilder();
             logBuilder.Append($"{logLevelColors[0]}{DateTime.Now:HH:mm:ss}{Reset} ");
             logBuilder.Append(
-                $"{logLevelColors[1]}{logLevelString}:{Reset}{Green}{AppName}{Reset}"
+                $"{logLevelColors[1]}{logLevelString}{Reset}{Green}{AppName}{Reset}"
             );
-            logBuilder.Append($"{logLevelColors[2]}[ {_name} ]{Reset} ");
+            logBuilder.Append($"{logLevelColors[2]} {_name}:{Reset} ");
             logBuilder.Append($"{logLevelColors[3]}{message}{Reset}");
 
             Console.WriteLine(logBuilder.ToString());
@@ -87,13 +87,13 @@ public class Logging : ILogger
     private string GetLogLevelString(LogLevel logLevel) =>
         logLevel switch
         {
-            LogLevel.Trace => "TRACE".PadLeft(8),
-            LogLevel.Debug => "DEBUG".PadLeft(8),
-            LogLevel.Information => "INFO".PadLeft(8),
-            LogLevel.Warning => "WARNING".PadLeft(8),
-            LogLevel.Error => "ERROR".PadLeft(8),
-            LogLevel.Critical => "CRITICAL".PadLeft(8),
-            _ => "UNKNOWN".PadLeft(8),
+            LogLevel.Trace => "TRACE".PadLeft(5),
+            LogLevel.Debug => "DEBUG".PadLeft(5),
+            LogLevel.Information => "INFO".PadLeft(5),
+            LogLevel.Warning => "WARN".PadLeft(5),
+            LogLevel.Error => "ERROR".PadLeft(5),
+            LogLevel.Critical => "CRIT".PadLeft(5),
+            _ => "UNKN".PadLeft(5),
         };
 
     public class CustomConsoleLoggerProvider : ILoggerProvider
