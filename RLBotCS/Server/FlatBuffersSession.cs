@@ -429,9 +429,21 @@ class FlatBuffersSession
                         if (player.Index == m.Status.Index)
                         {
                             _renderingIsEnabled = m.Status.Status;
+                            SendPayloadToClient(
+                                CoreMessageUnion.FromRenderingStatus(
+                                    new RenderingStatusT()
+                                    {
+                                        Index = player.Index,
+                                        IsBot = m.Status.IsBot,
+                                        Status = m.Status.Status,
+                                    }
+                                )
+                            );
+
                             break;
                         }
                     }
+
                     break;
                 case SessionMessage.PingResponse m:
                     SendPayloadToClient(
