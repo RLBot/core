@@ -44,8 +44,8 @@ public class BallPrediction
         var ballPred = BallPredictor.Generate(1, gTP2.Balls[0], null, -650f);
 
         int numSlices = 6 * 120;
-        Assert.AreEqual(numSlices, ballPred.Slices.Count);
-        Assert.IsTrue(ballPred.Slices[numSlices - 1].GameSeconds > 5.9999);
+        Assert.HasCount(numSlices, ballPred.Slices);
+        Assert.IsInRange(6.9999, 7.0001, ballPred.Slices[numSlices - 1].GameSeconds);
 
         // comment out to see results of the below test
         // dotnet test -c "Release" for best results
@@ -75,6 +75,6 @@ public class BallPrediction
         );
 
         // makes the above result print out
-        Assert.IsTrue(false);
+        Assert.Fail();
     }
 }
