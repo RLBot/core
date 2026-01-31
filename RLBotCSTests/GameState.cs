@@ -47,6 +47,6 @@ public class TestGameState
         );
 
         var flatPacket = packet.ToFlatBuffers();
-        Assert.AreEqual(3, flatPacket.BoostPads.Count);
+        Assert.HasCount(3, flatPacket.BoostPads);
     }
 }

@@ -30,7 +30,7 @@ public class ConfigParserTest
                 }
                 e = e.InnerException!;
             }
-            Assert.IsInstanceOfType(e, typeof(T));
+            Assert.IsInstanceOfType<T>(e);
             return;
         }
         Assert.Fail();
@@ -48,14 +48,8 @@ public class ConfigParserTest
         Assert.AreEqual(emptyMC.AutoStartAgents, defaultMC.AutoStartAgents);
         Assert.AreEqual(emptyMC.WaitForAgents, defaultMC.WaitForAgents);
         Assert.AreEqual(emptyMC.GameMapUpk, defaultMC.GameMapUpk);
-        Assert.AreEqual(
-            emptyMC.PlayerConfigurations.Count,
-            defaultMC.PlayerConfigurations.Count
-        );
-        Assert.AreEqual(
-            emptyMC.ScriptConfigurations.Count,
-            defaultMC.ScriptConfigurations.Count
-        );
+        Assert.HasCount(emptyMC.PlayerConfigurations.Count, defaultMC.PlayerConfigurations);
+        Assert.HasCount(emptyMC.ScriptConfigurations.Count, defaultMC.ScriptConfigurations);
         Assert.AreEqual(emptyMC.GameMode, defaultMC.GameMode);
         Assert.AreEqual(emptyMC.SkipReplays, defaultMC.SkipReplays);
         Assert.AreEqual(emptyMC.InstantStart, defaultMC.InstantStart);
@@ -107,7 +101,7 @@ public class ConfigParserTest
             PsyonixSkill.Pro,
             edgeMC.PlayerConfigurations[0].Variety.AsPsyonixBot().BotSkill
         );
-        Assert.AreEqual(null, edgeMC.PlayerConfigurations[0].Variety.AsPsyonixBot().Loadout);
+        Assert.IsNull(edgeMC.PlayerConfigurations[0].Variety.AsPsyonixBot().Loadout);
 
         Assert.AreEqual(PlayerClass.CustomBot, edgeMC.PlayerConfigurations[1].Variety.Type);
         Assert.AreEqual(
@@ -167,8 +161,8 @@ public class ConfigParserTest
         Assert.AreEqual(0u, player.Team);
         Assert.AreEqual(Path.GetFullPath("TestTomls"), player.Variety.AsCustomBot().RootDir);
         Assert.AreEqual("", player.Variety.AsCustomBot().RunCommand);
-        Assert.AreEqual(null, player.Variety.AsCustomBot().Loadout);
-        Assert.AreEqual(false, player.Variety.AsCustomBot().Hivemind);
+        Assert.IsNull(player.Variety.AsCustomBot().Loadout);
+        Assert.IsFalse(player.Variety.AsCustomBot().Hivemind);
 
         ScriptConfigurationT script = mc.ScriptConfigurations[0];
         Assert.AreEqual("", script.Name);
@@ -185,7 +179,7 @@ public class ConfigParserTest
 
         PlayerConfigurationT player = mc.PlayerConfigurations[0];
         Assert.AreEqual("New Bot Name", player.Variety.AsCustomBot().Name);
-        Assert.AreEqual(null, player.Variety.AsCustomBot().Loadout);
+        Assert.IsNull(player.Variety.AsCustomBot().Loadout);
 
         ScriptConfigurationT script = mc.ScriptConfigurations[0];
         Assert.AreEqual("Normal Test Script", script.Name); // Not overriden
@@ -194,7 +188,7 @@ public class ConfigParserTest
     [TestMethod]
     public void ConfigNotFound()
     {
-        ConfigParser parser = new ConfigParser();
+        ConfigParser parser = new();
         AssertThrowsInnerException<ArgumentNullException>(() => parser.LoadMatchConfig(null!));
 
         AssertThrowsInnerException<FileNotFoundException>(() =>
