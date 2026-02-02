@@ -135,7 +135,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
         if (nameCounts.TryGetValue(name, out int count))
         {
             nameCounts[name] = ++count;
-            name += $" ({count})";
+            name += $" ({count + 1})";
         }
         else
         {
