@@ -130,6 +130,21 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
         }
     }
 
+    private static string DedupName(string name, Dictionary<string, int> nameCounts)
+    {
+        if (nameCounts.TryGetValue(name, out int count))
+        {
+            nameCounts[name] = ++count;
+            name += $" ({count + 1})";
+        }
+        else
+        {
+            nameCounts[name] = 0;
+        }
+
+        return name;
+    }
+
     private void PreprocessMatch(MatchConfigurationT matchConfig)
     {
         Dictionary<string, int> playerNames = [];
@@ -138,43 +153,28 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
         foreach (var player in matchConfig.PlayerConfigurations)
         {
             // De-duplicating similar names. Overwrites original value.
-
-            if (player.Variety.Value is CustomBotT config)
+            switch (player.Variety.Value)
             {
-                string playerName = config.Name ?? "";
-                if (playerNames.TryGetValue(playerName, out int value))
-                {
-                    playerNames[playerName] = ++value;
-                    config.Name = playerName + $" ({value + 1})";
-                }
-                else
-                {
-                    playerNames[playerName] = 0;
-                    config.Name = playerName;
-                }
+                case CustomBotT config:
+                    string playerName = config.Name ?? "";
+                    config.Name = DedupName(playerName, playerNames);
 
-                if (config.Hivemind)
-                {
-                    _hivemindNameMap[config.Name] = playerName;
-                }
+                    if (config.Hivemind)
+                    {
+                        _hivemindNameMap[config.Name] = playerName;
+                    }
+                    break;
+                case PsyonixBotT config:
+                    config.Name = DedupName(config.Name ?? "", playerNames);
+                    break;
             }
         }
 
         Dictionary<string, int> scriptNames = [];
-        foreach (var scriptConfig in matchConfig.ScriptConfigurations)
+        foreach (var script in matchConfig.ScriptConfigurations)
         {
             // De-duplicating similar names. Overwrites original value.
-            string scriptName = scriptConfig.Name ?? "";
-            if (scriptNames.TryGetValue(scriptName, out int value))
-            {
-                scriptNames[scriptName] = ++value;
-                scriptConfig.Name = scriptName + $" ({value})";
-            }
-            else
-            {
-                scriptNames[scriptName] = 0;
-                scriptConfig.Name = scriptName;
-            }
+            script.Name = DedupName(script.Name ?? "", scriptNames);
         }
     }
 

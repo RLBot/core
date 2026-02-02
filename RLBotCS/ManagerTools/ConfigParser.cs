@@ -167,7 +167,7 @@ public class ConfigParser
                     return res;
                 throw new InvalidCastException(
                     $"{_context.ToStringWithEnd(key)} has invalid value \"{raw}\". "
-                        + $"Find valid values on https:/wiki.rlbot.org."
+                        + $"Find valid values on https://wiki.rlbot.org."
                 );
             }
             else
@@ -199,7 +199,7 @@ public class ConfigParser
                     default:
                         throw new InvalidCastException(
                             $"{_context.ToStringWithEnd(Fields.AgentType)} has invalid value \"{raw}\". "
-                                + $"Find valid values on https:/wiki.rlbot.org."
+                                + $"Find valid values on https://wiki.rlbot.org."
                         );
                 }
             }
