@@ -87,6 +87,7 @@ public static class ConfigValidator
             {
                 case CustomBotT bot:
                     bot.AgentId ??= "";
+                    bot.AgentId = bot.AgentId.Trim();
                     if (bot.AgentId == "")
                     {
                         Logger.LogError(
@@ -225,6 +226,7 @@ public static class ConfigValidator
             var script = scripts[i];
 
             script.AgentId ??= "";
+            script.AgentId = script.AgentId.Trim();
             if (script.AgentId == "")
             {
                 Logger.LogError(

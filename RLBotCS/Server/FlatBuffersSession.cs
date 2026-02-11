@@ -126,7 +126,7 @@ class FlatBuffersSession
             case InterfaceMessage.ConnectionSettings when !_connectionEstablished:
                 var readyMsg = msg.MessageAsConnectionSettings();
 
-                _agentId = readyMsg.AgentId ?? "";
+                _agentId = (readyMsg.AgentId ?? "").Trim();
                 _wantsBallPredictions = readyMsg.WantsBallPredictions;
                 _wantsComms = readyMsg.WantsComms;
                 _closeBetweenMatches = readyMsg.CloseBetweenMatches;
