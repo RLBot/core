@@ -1,6 +1,5 @@
 using Bridge.State;
 using RLBot.Flat;
-
 using Deltas = (float GameTimeDelta, float ArrivalDelta);
 
 namespace RLBotCS.ManagerTools;
@@ -55,7 +54,8 @@ public class PerfMonitor
     {
         var sorted = data.OrderBy(x => x).ToList();
         int n = sorted.Count;
-        if (n == 0) return default;
+        if (n == 0)
+            return default;
 
         double rank = p * (n - 1);
         int lower = (int)Math.Floor(rank);
@@ -71,7 +71,6 @@ public class PerfMonitor
             return;
         time = 0;
 
-
         var arrivalDeltas = _rlbotSamples.Iter().Select(t => t.ArrivalDelta);
         var gameTimeDeltas = _rlbotSamples.Iter().Select(t => t.GameTimeDelta);
 
@@ -79,19 +78,20 @@ public class PerfMonitor
         float averageTickRate = 1f / averageTickDelta;
 
         // Find deltas larger than expected at 60hz, allowing 10% margin
-        float misses60 = arrivalDeltas
-            .Count(d =>
-                (d - (1f / 60f)) > (0.1f / 60f));
+        float misses60 = arrivalDeltas.Count(d => (d - (1f / 60f)) > (0.1f / 60f));
 
         // Find deltas larger than expected at 120hz, allowing 10% margin
-        float misses120 = arrivalDeltas
-            .Count(d =>
-                (d - (1f / 120f)) > (0.1f / 120f));
+        float misses120 = arrivalDeltas.Count(d => (d - (1f / 120f)) > (0.1f / 120f));
 
         string message = $"""
-        RLBot @ {averageTickRate:0}hz {(1f - misses60 / 120f) * 100f:0}%|{(1f - misses120 / 120f) * 100f:0}%
-         p95 {GetPercentile(arrivalDeltas, 0.95f) * 1000f:0.0}ms p99 {GetPercentile(arrivalDeltas, 0.99f) * 1000f:0.0}ms
-        """;
+            RLBot @ {averageTickRate:0}hz {(1f - misses60 / 120f) * 100f:0}%|{(
+                1f - misses120 / 120f
+            ) * 100f:0}%
+             p95 {GetPercentile(arrivalDeltas, 0.95f) * 1000f:0.0}ms p99 {GetPercentile(
+                arrivalDeltas,
+                0.99f
+            ) * 1000f:0.0}ms
+            """;
         bool shouldRender = misses120 > 1;
 
         foreach (var (name, samples) in _samples)

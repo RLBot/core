@@ -100,7 +100,8 @@ class BridgeHandler(
                 {
                     // Only track ticks where time advanced, the api actually sends more
                     // clumps, but we don't care about those.
-                    float arrivalDeltaTime = (float)Stopwatch.GetElapsedTime(lastNewTickTimestamp).TotalSeconds;
+                    float arrivalDeltaTime = (float)
+                        Stopwatch.GetElapsedTime(lastNewTickTimestamp).TotalSeconds;
                     lastNewTickTimestamp = Stopwatch.GetTimestamp();
 
                     _context.PerfMonitor.AddRLBotSample((deltaTime, arrivalDeltaTime));
