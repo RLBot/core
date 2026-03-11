@@ -1,5 +1,6 @@
 using Bridge.State;
 using RLBot.Flat;
+using Deltas = (float GameTimeDelta, float ArrivalDelta);
 
 namespace RLBotCS.ManagerTools;
 
@@ -25,13 +26,13 @@ public class PerfMonitor
         B = 0,
     };
 
-    private readonly CircularBuffer<float> _rlbotSamples = new(_maxSamples);
+    private readonly CircularBuffer<Deltas> _rlbotSamples = new(_maxSamples);
     private readonly SortedDictionary<string, CircularBuffer<bool>> _samples = new();
     private float time = 0;
 
-    public void AddRLBotSample(float timeDiff)
+    public void AddRLBotSample(Deltas deltas)
     {
-        _rlbotSamples.AddLast(timeDiff);
+        _rlbotSamples.AddLast(deltas);
     }
 
     public void AddSample(string name, bool gotInput)
@@ -49,6 +50,20 @@ public class PerfMonitor
         _samples.Remove(name);
     }
 
+    public static float GetPercentile(IEnumerable<float> data, float p)
+    {
+        var sorted = data.OrderBy(x => x).ToList();
+        int n = sorted.Count;
+        if (n == 0)
+            return default;
+
+        double rank = p * (n - 1);
+        int lower = (int)Math.Floor(rank);
+        int upper = (int)Math.Ceiling(rank);
+
+        return (float)(sorted[lower] + (rank - lower) * (sorted[upper] - sorted[lower]));
+    }
+
     public void RenderSummary(Rendering rendering, GameState gameState, float deltaTime)
     {
         time += deltaTime;
@@ -56,11 +71,28 @@ public class PerfMonitor
             return;
         time = 0;
 
-        float averageTimeDiff = _rlbotSamples.Count > 0 ? _rlbotSamples.Iter().Average() : 1;
-        float timeDiffPercentage = 1 / (120f * averageTimeDiff);
+        var arrivalDeltas = _rlbotSamples.Iter().Select(t => t.ArrivalDelta);
+        var gameTimeDeltas = _rlbotSamples.Iter().Select(t => t.GameTimeDelta);
 
-        string message = $"RLBot: {timeDiffPercentage * 100:0.0}%";
-        bool shouldRender = timeDiffPercentage < 0.9999 || timeDiffPercentage > 1.0001;
+        float averageTickDelta = gameTimeDeltas.Sum() / _maxSamples;
+        float averageTickRate = 1f / averageTickDelta;
+
+        // Find deltas larger than expected at 60hz, allowing 10% margin
+        float misses60 = arrivalDeltas.Count(d => (d - (1f / 60f)) > (0.1f / 60f));
+
+        // Find deltas larger than expected at 120hz, allowing 10% margin
+        float misses120 = arrivalDeltas.Count(d => (d - (1f / 120f)) > (0.1f / 120f));
+
+        string message = $"""
+            RLBot @ {averageTickRate:0}hz {(1f - misses60 / 120f) * 100f:0}%|{(
+                1f - misses120 / 120f
+            ) * 100f:0}%
+             p95 {GetPercentile(arrivalDeltas, 0.95f) * 1000f:0.0}ms p99 {GetPercentile(
+                arrivalDeltas,
+                0.99f
+            ) * 1000f:0.0}ms
+            """;
+        bool shouldRender = misses120 > 1;
 
         foreach (var (name, samples) in _samples)
         {
