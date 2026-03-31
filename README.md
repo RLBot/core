@@ -8,7 +8,7 @@ This is a C++ rewrite of the old backend that lived at
 
 ## Developer Setup
 
-- Install .NET 8 SDK [https://dotnet.microsoft.com/en-us/download/dotnet/8.0]
+- Install .NET 10 SDK [https://dotnet.microsoft.com/en-us/download/dotnet/10.0]
 - Install an IDE
   - Visual Studio 2022 was used for initial development.
   - Rider and VS Code are also known to work.
@@ -18,7 +18,7 @@ This is a C++ rewrite of the old backend that lived at
 ## Building
 
 In Visual Studio 2022, you can build the solution in Release mode, and find the
-compiled binaries at `RLBotCS\bin\Release\net8.0`.
+compiled binaries at `RLBotCS\bin\Release\net10.0`.
 
 - Note: You can also build with the command `dotnet build -c "Release"`
 
