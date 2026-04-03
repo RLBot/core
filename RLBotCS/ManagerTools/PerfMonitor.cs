@@ -90,7 +90,7 @@ public class PerfMonitor
 
         // Allow 1/120 missed for good
         // Allow 0/60 missed for subpar
-        string statusText = misses120 <= 2 ? "Good" : (misses60 <= 1 ? "Subpar" : "Poor")
+        string statusText = misses120 <= 2 ? "Good" : (misses60 <= 1 ? "Subpar" : "Poor");
 
         string message = $"""
             RLBot @ {averageTickRate:0}hz {(1f - missesAdaptive / 120f) * 100f:0}% {statusText}
