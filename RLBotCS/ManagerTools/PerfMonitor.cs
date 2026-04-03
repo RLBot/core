@@ -77,22 +77,29 @@ public class PerfMonitor
         float averageTickDelta = gameTimeDeltas.Sum() / _maxSamples;
         float averageTickRate = 1f / averageTickDelta;
 
-        // Find deltas larger than expected at 60hz, allowing 10% margin
+        // Find deltas larger than expected at averageTickRate, allowing 10% margin
+        float missesAdaptive = arrivalDeltas.Count(d =>
+            (d - (1f / averageTickRate)) > (0.1f / averageTickRate)
+        );
+
+        // Find deltas larger than expected at 120hz, allowing 10% margin
         float misses60 = arrivalDeltas.Count(d => (d - (1f / 60f)) > (0.1f / 60f));
 
         // Find deltas larger than expected at 120hz, allowing 10% margin
         float misses120 = arrivalDeltas.Count(d => (d - (1f / 120f)) > (0.1f / 120f));
 
+        // Allow 1/120 missed for good
+        // Allow 0/60 missed for subpar
+        string statusText = misses120 <= 2 ? "Good" : (misses60 <= 1 ? "Subpar" : "Poor")
+
         string message = $"""
-            RLBot @ {averageTickRate:0}hz {(1f - misses60 / 120f) * 100f:0}%|{(
-                1f - misses120 / 120f
-            ) * 100f:0}%
+            RLBot @ {averageTickRate:0}hz {(1f - missesAdaptive / 120f) * 100f:0}% {statusText}
              p95 {GetPercentile(arrivalDeltas, 0.95f) * 1000f:0.0}ms p99 {GetPercentile(
                 arrivalDeltas,
                 0.99f
             ) * 1000f:0.0}ms
             """;
-        bool shouldRender = misses120 > 1;
+        bool shouldRender = misses120 > 0;
 
         foreach (var (name, samples) in _samples)
         {
