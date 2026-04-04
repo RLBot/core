@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Threading.Channels;
 using Bridge.Conversion;
 using Bridge.TCP;
@@ -57,6 +58,7 @@ class BridgeHandler(
         _context.Logger.LogInformation("Connected to Rocket League");
 
         bool isFirstTick = true;
+        long lastNewTickTimestamp = Stopwatch.GetTimestamp();
 
         await foreach (var messageClump in _context.Messenger.ReadAllAsync())
         {
@@ -95,7 +97,15 @@ class BridgeHandler(
                 _context.ticksSinceMapLoad += 1;
 
                 if (timeAdvanced)
-                    _context.PerfMonitor.AddRLBotSample(deltaTime);
+                {
+                    // Only track ticks where time advanced, the api actually sends more
+                    // clumps, but we don't care about those.
+                    float arrivalDeltaTime = (float)
+                        Stopwatch.GetElapsedTime(lastNewTickTimestamp).TotalSeconds;
+                    lastNewTickTimestamp = Stopwatch.GetTimestamp();
+
+                    _context.PerfMonitor.AddRLBotSample((deltaTime, arrivalDeltaTime));
+                }
 
                 ConsiderDistributingPacket(_context, timeAdvanced);
 

@@ -2,11 +2,11 @@ namespace RLBotCS.ManagerTools;
 
 public class CircularBuffer<T>
 {
-    private int _startIndex;
-    private int _currentIndex;
+    private int _size = 0;
+    private int _currentIndex = 0;
     private readonly T[] _buffer;
 
-    public int Count => (_currentIndex - _startIndex + _buffer.Length) % _buffer.Length;
+    public int Count => _buffer.Length;
 
     public CircularBuffer(int capacity)
     {
@@ -16,16 +16,13 @@ public class CircularBuffer<T>
     public void AddLast(T item)
     {
         _buffer[_currentIndex] = item;
-
-        // continuously overwrite the oldest item once full
+        _size = Math.Max(_currentIndex + 1, _size);
         _currentIndex = (_currentIndex + 1) % _buffer.Length;
-        if (_currentIndex == _startIndex)
-            _startIndex = (_startIndex + 1) % _buffer.Length;
     }
 
     public IEnumerable<T> Iter()
     {
-        for (int i = _startIndex; i != _currentIndex; i = (i + 1) % _buffer.Length)
-            yield return _buffer[i];
+        for (int i = 0; i < Math.Min(_buffer.Length, _size); i++)
+            yield return _buffer[(i + _currentIndex) % _buffer.Length];
     }
 }
