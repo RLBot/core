@@ -37,7 +37,7 @@ interface SessionMessage
 
     public readonly record struct UpdateRendering(RenderingStatus Status) : SessionMessage;
 
-    public readonly record struct PingResponse() : SessionMessage;
+    public readonly record struct PingResponse(ulong Cookie) : SessionMessage;
 }
 
 class FlatBuffersSession
@@ -316,7 +316,9 @@ class FlatBuffersSession
                 break;
 
             case InterfaceMessage.PingRequest:
-                _incomingMessages.Writer.TryWrite(new SessionMessage.PingResponse());
+                _incomingMessages.Writer.TryWrite(
+                    new SessionMessage.PingResponse(msg.MessageAsPingRequest().UnPack().Cookie)
+                );
                 break;
         }
 
@@ -447,7 +449,9 @@ class FlatBuffersSession
                     break;
                 case SessionMessage.PingResponse m:
                     SendPayloadToClient(
-                        CoreMessageUnion.FromPingResponse(new PingResponseT())
+                        CoreMessageUnion.FromPingResponse(
+                            new PingResponseT() { Cookie = m.Cookie }
+                        )
                     );
                     break;
             }
