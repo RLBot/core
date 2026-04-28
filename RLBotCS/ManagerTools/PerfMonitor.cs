@@ -11,7 +11,9 @@ public class PerfMonitor
     private const int _maxSamples = 120;
     private const float _timeSkip = 0.5f;
 
-    static readonly Lazy<String> OVERRIDE_ENV_VAR = new(() => Environment.GetEnvironmentVariable("RLBOT_PERF_MONITOR_OVERRIDE") ?? "");
+    static readonly Lazy<String> OVERRIDE_ENV_VAR = new(() =>
+        Environment.GetEnvironmentVariable("RLBOT_PERF_MONITOR_OVERRIDE") ?? ""
+    );
 
     private static readonly ColorT TextColor = new ColorT()
     {
