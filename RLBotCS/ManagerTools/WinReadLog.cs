@@ -42,6 +42,9 @@ public class WinReadLog
 
     public (string, string)? GetGamePathAndAuth()
     {
+        if (!File.Exists(LogPath))
+            return null;
+
         string logContent = File.ReadAllText(LogPath);
 
         int authStart =

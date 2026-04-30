@@ -302,11 +302,17 @@ static class LaunchManager
                 }
 
                 Logger.LogInformation("Finding Rocket League...");
-                (string, string)? pathAndAuth = null;
 
-                WinReadLog logReader = new();
+                // Wait until the game is running
+                while (!IsRocketLeagueRunning())
+                {
+                    Thread.Sleep(1000);
+                }
 
                 // get the game path & login args
+                WinReadLog logReader = new();
+                (string, string)? pathAndAuth = null;
+
                 while (pathAndAuth is null)
                 {
                     pathAndAuth = logReader.GetGamePathAndAuth();
