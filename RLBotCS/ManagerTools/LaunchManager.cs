@@ -288,16 +288,18 @@ static class LaunchManager
                 {
                     return;
                 }
-                
+
                 if (IsRocketLeagueRunning())
                 {
-                    Logger.LogError("Please close Rocket League so RLBot can start it in RLBot mode.");
+                    Logger.LogError(
+                        "Please close Rocket League so RLBot can start it in RLBot mode."
+                    );
                     return;
                 }
 
                 // To launch RocketLeague for Epic we need some extra login parameters from Epic.
                 // We get these by launching the game normally, reading the args, and then closing it again.
-                
+
                 Process launcher = new();
                 launcher.StartInfo.FileName = "cmd.exe";
                 launcher.StartInfo.Arguments =
@@ -332,7 +334,7 @@ static class LaunchManager
                     throw new Exception("Failed to get Rocket League exe path");
                 string directGamePath = pathAndAuth.Value.Item1;
                 Logger.LogInformation($"Found Rocket League at \"{directGamePath}\"");
-                
+
                 // Wait for the game to fully close
                 Logger.LogDebug("Waiting for Rocket League to fully close...");
                 while (IsRocketLeagueRunning())
@@ -352,7 +354,11 @@ static class LaunchManager
                 epicRocketLeague.StartInfo.RedirectStandardError = true;
 
                 Logger.LogInformation($"Starting Rocket League with Epic: {rlbotArgs}");
-                Logger.LogDebug("Full command: {} {}", epicRocketLeague.StartInfo.FileName, epicRocketLeague.StartInfo.Arguments);
+                Logger.LogDebug(
+                    "Full command: {} {}",
+                    epicRocketLeague.StartInfo.FileName,
+                    epicRocketLeague.StartInfo.Arguments
+                );
                 epicRocketLeague.Start();
 
                 // If we don't read the output, the game will hang
