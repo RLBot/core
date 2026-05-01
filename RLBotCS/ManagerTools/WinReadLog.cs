@@ -47,14 +47,13 @@ public class WinReadLog
 
         string logContent = File.ReadAllText(LogPath);
 
-        int authStart =
-            logContent.IndexOf(AUTH_LINE_PREFIX, StringComparison.Ordinal)
-            + AUTH_LINE_PREFIX.Length;
-        int pathStart =
-            logContent.IndexOf(PATH_LINE_PREFIX, StringComparison.Ordinal)
-            + PATH_LINE_PREFIX.Length;
-        if (authStart == -1 || pathStart == -1)
+        int authPrefixIndex = logContent.IndexOf(AUTH_LINE_PREFIX, StringComparison.Ordinal);
+        int pathPrefixIndex = logContent.IndexOf(PATH_LINE_PREFIX, StringComparison.Ordinal);
+        if (authPrefixIndex == -1 || pathPrefixIndex == -1)
             return null;
+
+        int authStart = authPrefixIndex + AUTH_LINE_PREFIX.Length;
+        int pathStart = pathPrefixIndex + PATH_LINE_PREFIX.Length;
 
         int authEnd = logContent.IndexOf('\n', authStart);
         int pathEnd = logContent.IndexOf('\n', pathStart);
