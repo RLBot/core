@@ -17,7 +17,7 @@ static class LaunchManager
 
     private static readonly ILogger Logger = Logging.GetLogger("LaunchManager");
 
-    public static string? GetGameArgs(bool kill)
+    public static string? GetGameArgs()
     {
         Process[] candidates = Process.GetProcesses();
 
@@ -26,14 +26,23 @@ static class LaunchManager
             if (!candidate.ProcessName.Contains("RocketLeague"))
                 continue;
 
-            string args = GetProcessArgs(candidate);
-            if (kill)
-                candidate.Kill();
-
-            return args;
+            return GetProcessArgs(candidate);
         }
 
         return null;
+    }
+
+    public static void KillGame()
+    {
+        Process[] candidates = Process.GetProcesses();
+
+        foreach (var candidate in candidates)
+        {
+            if (!candidate.ProcessName.Contains("RocketLeague"))
+                continue;
+
+            candidate.Kill();
+        }
     }
 
     public static int FindUsableGamePort(int rlbotSocketsPort)
@@ -94,7 +103,7 @@ static class LaunchManager
 #endif
     }
 
-    private static string[] GetIdealArgs(int gamePort) =>
+    private static string[] GetRLBotArgs(int gamePort) =>
         [
             "-rlbot",
             $"RLBot_ControllerURL=127.0.0.1:{gamePort}",
@@ -267,74 +276,92 @@ static class LaunchManager
                 Process steam = new();
                 steam.StartInfo.FileName = steamPath;
                 steam.StartInfo.Arguments =
-                    $"-applaunch {SteamGameId} " + string.Join(" ", GetIdealArgs(gamePort));
+                    $"-applaunch {SteamGameId} " + string.Join(" ", GetRLBotArgs(gamePort));
 
                 Logger.LogInformation(
-                    $"Starting Rocket League with args {steamPath} {steam.StartInfo.Arguments}"
+                    $"Starting Rocket League with steam: {steamPath} {steam.StartInfo.Arguments}"
                 );
                 steam.Start();
                 break;
             case RLBot.Flat.Launcher.Epic:
-                bool nonRLBotGameRunning = IsRocketLeagueRunning();
-
-                // we don't need to start the game because there's another instance of non-rlbot rocket league open
-                if (!nonRLBotGameRunning)
+                if (IsRocketLeagueRunningWithArgs())
                 {
-                    // we need a hack to launch the game properly
-                    // start the game
-                    Process launcher = new();
-                    launcher.StartInfo.FileName = "cmd.exe";
-                    launcher.StartInfo.Arguments =
-                        "/c start \"\" \"com.epicgames.launcher://apps/9773aa1aa54f4f7b80e44bef04986cea%3A530145df28a24424923f5828cc9031a1%3ASugar?action=launch&silent=true\"";
-                    launcher.Start();
-
-                    // wait for it to start
-                    Thread.Sleep(1000);
+                    return;
                 }
 
+                if (IsRocketLeagueRunning())
+                {
+                    Logger.LogError(
+                        "Please close Rocket League so RLBot can start it in RLBot mode."
+                    );
+                    return;
+                }
+
+                // To launch RocketLeague for Epic we need some extra login parameters from Epic.
+                // We get these by launching the game normally, reading the args, and then closing it again.
+
+                Process launcher = new();
+                launcher.StartInfo.FileName = "cmd.exe";
+                launcher.StartInfo.Arguments =
+                    "/c start \"\" \"com.epicgames.launcher://apps/9773aa1aa54f4f7b80e44bef04986cea%3A530145df28a24424923f5828cc9031a1%3ASugar?action=launch&silent=true\"";
+                launcher.Start();
+                Thread.Sleep(500);
+
+                // Get login args
                 Logger.LogInformation("Finding Rocket League...");
-                string? args = null;
-
-                // get the game path & login args, the quickly kill the game
-                // todo: add max number of retries
-                while (args is null)
+                string? epicArgs = null;
+                int triesLeft = 40;
+                while (epicArgs is null && triesLeft-- > 0)
                 {
-                    // don't kill the game if it was already running, and not for RLBot
-                    args = GetGameArgs(!nonRLBotGameRunning);
-                    Thread.Sleep(1000);
+                    epicArgs = GetGameArgs();
+                    Thread.Sleep(500);
                 }
-
-                if (args is null)
+                KillGame();
+                if (epicArgs is null)
                     throw new Exception("Failed to get Rocket League args");
+                Logger.LogDebug("Epic RocketLeague args: {}", epicArgs);
+                epicArgs = Regex.Replace(epicArgs, "\".*\"", "").Replace("\"\"", "").Trim();
 
-                string directGamePath = ParseCommand(args)[0];
+                // Get the game path from launch logs
+                WinReadLog logReader = new();
+                (string, string)? pathAndAuth = null;
+                while (pathAndAuth is null)
+                {
+                    pathAndAuth = logReader.GetGamePathAndAuth();
+                    Thread.Sleep(500);
+                }
+                if (pathAndAuth is null)
+                    throw new Exception("Failed to get Rocket League exe path");
+                string directGamePath = pathAndAuth.Value.Item1;
                 Logger.LogInformation($"Found Rocket League at \"{directGamePath}\"");
 
-                // append RLBot args
-                args = args.Replace(directGamePath, "");
-                args = args.Replace("\"\"", "");
-                string idealArgs = string.Join(" ", GetIdealArgs(gamePort));
-                // rlbot args need to be first or the game might ignore them :(
-                string modifiedArgs = $"\"{directGamePath}\" {idealArgs} {args}";
-
-                // wait for the game to fully close
+                // Wait for the game to fully close
+                Logger.LogDebug("Waiting for Rocket League to fully close...");
                 while (IsRocketLeagueRunning())
                     Thread.Sleep(500);
 
-                // relaunch the game with the new args
+                string rlbotArgs = string.Join(" ", GetRLBotArgs(gamePort));
+                string modifiedArgs = $"\"{directGamePath}\" {rlbotArgs} {epicArgs}";
+
+                // Relaunch the game with the new args
                 Process epicRocketLeague = new();
                 epicRocketLeague.StartInfo.FileName = "cmd.exe";
                 epicRocketLeague.StartInfo.Arguments = $"/c \"{modifiedArgs}\"";
 
-                // prevent the game from printing to the console
+                // Prevent the game from printing to the console
                 epicRocketLeague.StartInfo.UseShellExecute = false;
                 epicRocketLeague.StartInfo.RedirectStandardOutput = true;
                 epicRocketLeague.StartInfo.RedirectStandardError = true;
+
+                Logger.LogInformation($"Starting Rocket League with Epic: {rlbotArgs}");
+                Logger.LogDebug(
+                    "Full command: {} {}",
+                    epicRocketLeague.StartInfo.FileName,
+                    epicRocketLeague.StartInfo.Arguments
+                );
                 epicRocketLeague.Start();
 
-                Logger.LogInformation($"Starting RocketLeague.exe directly with {idealArgs}");
-
-                // if we don't read the output, the game will hang
+                // If we don't read the output, the game will hang
                 new Thread(() =>
                 {
                     epicRocketLeague.StandardOutput.ReadToEnd();
@@ -342,12 +369,12 @@ static class LaunchManager
 
                 break;
             case RLBot.Flat.Launcher.Custom:
-                if (extraArg.ToLower() == "legendary")
+                if (extraArg.Equals("legendary", StringComparison.OrdinalIgnoreCase))
                 {
                     LaunchGameViaLegendary();
                     return;
                 }
-                else if (extraArg.ToLower() == "heroic")
+                else if (extraArg.Equals("heroic", StringComparison.OrdinalIgnoreCase))
                 {
                     LaunchGameViaHeroic();
                     return;
@@ -361,7 +388,7 @@ static class LaunchManager
         switch (launcherPref)
         {
             case RLBot.Flat.Launcher.Steam:
-                string args = string.Join("%20", GetIdealArgs(gamePort));
+                string args = string.Join("%20", GetRLBotArgs(gamePort));
                 Process rocketLeague = new();
                 rocketLeague.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                 rocketLeague.StartInfo.FileName = "steam";
@@ -377,12 +404,12 @@ static class LaunchManager
                     "Epic Games Store is not directly supported on Linux."
                 );
             case RLBot.Flat.Launcher.Custom:
-                if (extraArg.ToLower() == "legendary")
+                if (extraArg.Equals("legendary", StringComparison.OrdinalIgnoreCase))
                 {
                     LaunchGameViaLegendary();
                     return;
                 }
-                else if (extraArg.ToLower() == "heroic")
+                else if (extraArg.Equals("heroic", StringComparison.OrdinalIgnoreCase))
                 {
                     LaunchGameViaHeroic();
                     return;
@@ -398,7 +425,7 @@ static class LaunchManager
     public static string? GetRocketLeaguePath()
     {
         // Assumes the game has already been launched
-        string? args = GetGameArgs(false);
+        string? args = GetGameArgs();
         if (args is null)
             return null;
 
