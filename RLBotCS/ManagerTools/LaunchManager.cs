@@ -318,8 +318,7 @@ static class LaunchManager
                 if (epicArgs is null)
                     throw new Exception("Failed to get Rocket League args");
                 Logger.LogDebug("Epic RocketLeague args: {}", epicArgs);
-                epicArgs = epicArgs.Replace("\"RocketLeague_EAC.exe\"", "").Trim();
-                
+                epicArgs = Regex.Replace(epicArgs, "\".*\"", "").Replace("\"\"", "").Trim();
 
                 // Get the game path from launch logs
                 WinReadLog logReader = new();
