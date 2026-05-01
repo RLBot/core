@@ -383,7 +383,7 @@ static class LaunchManager
         switch (launcherPref)
         {
             case RLBot.Flat.Launcher.Steam:
-                string args = string.Join("%20", GetIdealArgs(gamePort));
+                string args = string.Join("%20", GetRLBotArgs(gamePort));
                 Process rocketLeague = new();
                 rocketLeague.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                 rocketLeague.StartInfo.FileName = "steam";
