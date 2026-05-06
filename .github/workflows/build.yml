@@ -16,54 +16,92 @@ jobs:
       NUGET_PACKAGES: D:\nuget\packages
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v6
-      with:
-        submodules: 'recursive'
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: "recursive"
 
-    - name: Test
-      run: dotnet test
+      - name: Test
+        run: dotnet test
 
-    - name: Build 
-      run: dotnet publish RLBotCS -r win-x64
+      - name: Build
+        run: dotnet publish RLBotCS -r win-x64
 
-    - name: Upload build artifact
-      uses: actions/upload-artifact@v7
-      with:
-        name: RLBotServer-windows
-        path: ./**/publish/RLBotServer.exe
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: RLBotServer-windows
+          path: ./**/publish/RLBotServer.exe
 
   build-linux:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v6
-      with:
-        submodules: 'recursive'
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: "recursive"
 
-    - name: Test
-      run: dotnet test
+      - name: Test
+        run: dotnet test
 
-    - name: Formatting
-      run: |
-        dotnet tool restore
-        dotnet csharpier check .
+      - name: Formatting
+        run: |
+          dotnet tool restore
+          dotnet csharpier check .
 
-    - name: Build 
-      run: dotnet publish RLBotCS -r linux-x64
+      - name: Build
+        run: dotnet publish RLBotCS -r linux-x64
 
-    - name: Upload build artifact
-      uses: actions/upload-artifact@v7
-      with:
-        name: RLBotServer-ubuntu
-        path: ./**/publish/RLBotServer
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: RLBotServer-ubuntu
+          path: ./**/publish/RLBotServer
+
+  package-linux:
+    name: Package Linux
+    runs-on: ubuntu-latest
+    if: "startsWith(github.ref, 'refs/tags/')"
+    needs: [build-linux]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v8
+        with:
+          merge-multiple: "true"
+
+      - name: Install packaging dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm
+
+      - name: Package .deb and .rpm
+        run: |
+          chmod +x ./package-rlbot.sh
+          BIN_PATH="$(find . -type f -name RLBotServer | head -n 1)"
+          if [ -z "$BIN_PATH" ]; then
+            echo "RLBotServer binary not found in downloaded artifacts" >&2
+            exit 1
+          fi
+          OUTPUT_DIR=dist ./package-rlbot.sh "$BIN_PATH" ubuntu fedora
+
+      - name: Upload package artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: RLBotServer-linux-packages
+          path: dist/*
 
   release:
     name: Release
     runs-on: ubuntu-latest
     if: "startsWith(github.ref, 'refs/tags/')"
-    needs: [build-linux, build-windows]
+    needs: [build-linux, build-windows, package-linux]
     permissions:
       contents: write
 
@@ -71,10 +109,14 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           merge-multiple: "true"
+
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          files: ./RLBotCS/**/publish/RLBotServer*
+          files: |
+            ./RLBotCS/**/publish/RLBotServer*
+            ./dist/*.deb
+            ./dist/*.rpm
           generate_release_notes: true
           body: |
             Pre-built binaries that allows bots to interface with Rocket League via the RLBot v5 spec
