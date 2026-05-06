@@ -6,17 +6,16 @@ set -euo pipefail
 # Usage: ./package-rlbot.sh <binary_path> [distro_list]
 #
 # If no distribution list is provided, it defaults to packaging for ubuntu and fedora
-# Supported distributions: ubuntu, fedora, arch
+# Supported distributions: ubuntu, fedora
 #
 # Examples:
 #   ./package-rlbot.sh ./RLBotServer ubuntu
-#   ./package-rlbot.sh ./RLBotServer arch
 #   ./package-rlbot.sh ./RLBotServer  # Defaults to ubuntu, fedora
 #
 # This script packages the RLBotServer binary for various Linux distributions,
 # creating appropriate metadata and package structures.
 
-DEFAULT_DISTROS=("ubuntu" "fedora" "arch")
+DEFAULT_DISTROS=("ubuntu" "fedora")
 
 usage() {
   cat <<'EOF'
@@ -62,17 +61,6 @@ normalize_rpm_version() {
 
   if [[ -z "$input" ]]; then
     echo "RPM version is empty" >&2
-    return 1
-  fi
-
-  echo "${input//-/.}"
-}
-
-normalize_arch_version() {
-  local input="$1"
-
-  if [[ -z "$input" ]]; then
-    echo "Arch pkgver is empty" >&2
     return 1
   fi
 
@@ -185,50 +173,6 @@ EOF
   echo "Created ${out_dir}/$(basename "$rpm_file")"
 }
 
-package_arch() {
-  require_cmd tar
-  require_cmd zstd
-  require_cmd du
-  require_cmd date
-
-  local pkg_name="rlbotserver"
-  local arch_arch="x86_64"
-  local arch_root="${tmp_root}/arch/${pkg_name}"
-  local pkgdir="${arch_root}/pkgdir"
-  local pkgver_full="${arch_version}-${release}"
-  local pkg_base_name="${pkg_name}-${arch_version}-${release}-${arch_arch}"
-  local pkg_tar="${tmp_root}/${pkg_base_name}.pkg.tar"
-  local pkg_file="${out_dir}/${pkg_base_name}.pkg.tar.zst"
-
-  rm -rf "$arch_root"
-  mkdir -p "$pkgdir/usr/local/bin"
-
-  install -m 0755 "$binary_path" "$pkgdir/usr/local/bin/$binary_name"
-
-  local builddate
-  local size
-  builddate="$(date -u +%s)"
-  size="$(du -sb "$pkgdir" | awk '{print $1}')"
-
-  cat > "$pkgdir/.PKGINFO" <<EOF
-pkgname = ${pkg_name}
-pkgver = ${pkgver_full}
-pkgdesc = RLBotServer binary
-url = https://rlbot.org
-builddate = ${builddate}
-packager = RLBot Contributors
-size = ${size}
-arch = ${arch_arch}
-license = MIT
-EOF
-
-  tar --numeric-owner --owner=0 --group=0 -C "$pkgdir" -cf "$pkg_tar" .
-  zstd -q -T0 -z "$pkg_tar" -o "$pkg_file"
-  rm -f "$pkg_tar"
-
-  echo "Created ${pkg_file}"
-}
-
 main() {
   if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then
     usage
@@ -269,7 +213,6 @@ main() {
 
   version="$(get_git_version "$script_dir")"
   rpm_version="$(normalize_rpm_version "$version")"
-  arch_version="$(normalize_arch_version "$version")"
   release="${RLBOT_RELEASE:-1}"
   out_dir="${OUTPUT_DIR:-dist}"
   mkdir -p "$out_dir"
@@ -291,12 +234,9 @@ main() {
       fedora)
         package_rpm
         ;;
-      arch)
-        package_arch
-        ;;
       *)
         echo "Unknown distribution: $distro" >&2
-        echo "Supported distributions: ubuntu, fedora, arch" >&2
+        echo "Supported distributions: ubuntu, fedora" >&2
         exit 1
         ;;
     esac
