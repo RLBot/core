@@ -10,7 +10,7 @@ set -euo pipefail
 #
 # Examples:
 #   ./package-rlbot.sh ./RLBotServer ubuntu
-#   ./package-rlbot.sh ./RLBotServer  # Defaults to ubuntu, fedora
+#   ./package-rlbot.sh ./RLBotServer  # Defaults to ubuntu and fedora
 #
 # This script packages the RLBotServer binary for various Linux distributions,
 # creating appropriate metadata and package structures.
@@ -22,14 +22,13 @@ usage() {
 Usage: ./package-rlbot.sh <binary_path> [distro_list]
 
 If no distribution list is provided, it defaults to packaging all supported distributions.
-Supported distributions: ubuntu, fedora, arch.
+Supported distributions: ubuntu, fedora.
 
 Examples:
   ./package-rlbot.sh ./RLBotServer ubuntu
-  ./package-rlbot.sh ./RLBotServer  # Defaults to ubuntu, fedora, & arch
+  ./package-rlbot.sh ./RLBotServer  # Defaults to ubuntu and fedora
 
 Environment overrides:
-  RLBOT_RELEASE   RPM release number (default: 1)
   OUTPUT_DIR      Output directory for packages (default: ./dist)
 EOF
 }
@@ -133,7 +132,7 @@ package_rpm() {
   cat > "$spec_file" <<EOF
 Name:           ${pkg_name}
 Version:        ${rpm_version}
-Release:        ${release}%{?dist}
+Release:        1%{?dist}
 Summary:        RLBotServer binary
 
 License:        MIT
@@ -156,7 +155,7 @@ install -m 0755 ${binary_name} %{buildroot}/usr/local/bin/${binary_name}
 /usr/local/bin/${binary_name}
 
 %changelog
-* $(date -u "+%a %b %d %Y") RLBot Contributors - ${version}-${release}
+* $(date -u "+%a %b %d %Y") RLBot Contributors - ${version}-1
 - Packaged RLBotServer binary
 EOF
 
@@ -213,7 +212,6 @@ main() {
 
   version="$(get_git_version "$script_dir")"
   rpm_version="$(normalize_rpm_version "$version")"
-  release="${RLBOT_RELEASE:-1}"
   out_dir="${OUTPUT_DIR:-dist}"
   mkdir -p "$out_dir"
 
