@@ -94,9 +94,9 @@ package_deb() {
   local deb_path="${out_dir}/${pkg_name}_${version}_${deb_arch}.deb"
 
   rm -rf "$pkg_dir"
-  mkdir -p "$pkg_dir/DEBIAN" "$pkg_dir/usr/local/bin"
+  mkdir -p "$pkg_dir/DEBIAN" "$pkg_dir/usr/bin"
 
-  install -m 0755 "$binary_path" "$pkg_dir/usr/local/bin/$binary_name"
+  install -m 0755 "$binary_path" "$pkg_dir/usr/bin/$binary_name"
 
   cat > "$pkg_dir/DEBIAN/control" <<EOF
 Package: ${pkg_name}
@@ -148,11 +148,11 @@ RLBotServer is the backend server for RLBot v5, allowing custom bots and scripts
 %build
 
 %install
-mkdir -p %{buildroot}/usr/local/bin
-install -m 0755 ${binary_name} %{buildroot}/usr/local/bin/${binary_name}
+mkdir -p %{buildroot}/usr/bin
+install -m 0755 ${binary_name} %{buildroot}/usr/bin/${binary_name}
 
 %files
-/usr/local/bin/${binary_name}
+/usr/bin/${binary_name}
 
 %changelog
 * $(date -u "+%a %b %d %Y") RLBot Contributors - ${version}-1
