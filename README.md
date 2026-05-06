@@ -3,7 +3,7 @@
 The RLBot Core Project builds a `RLBotServer.exe` binary that allows custom bots and scripts
 to interface with Rocket League.
 
-This is a C++ rewrite of the old backend that lived at
+This is a C# rewrite of the old C++ backend that lived at
 [RLBot/src/main/cpp/RLBotInterface](https://github.com/RLBot/RLBot/tree/00720d1efc447e5495d3952a03e10b5b762421ee/src/main/cpp/RLBotInterface) in v4.
 
 ## Developer Setup
