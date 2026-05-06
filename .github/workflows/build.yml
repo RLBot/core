@@ -80,7 +80,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y rpm
 
-      - name: Package .deb and .rpm
+      - name: Generate packages
         run: |
           chmod +x ./package-rlbot.sh
           BIN_PATH="$(find . -type f -name RLBotServer | head -n 1)"
@@ -89,7 +89,7 @@ jobs:
             exit 1
           fi
           chmod +x "$BIN_PATH"
-          OUTPUT_DIR=dist ./package-rlbot.sh "$BIN_PATH" ubuntu fedora
+          OUTPUT_DIR=dist ./package-rlbot.sh "$BIN_PATH"
 
       - name: Upload package artifacts
         uses: actions/upload-artifact@v7
@@ -115,8 +115,9 @@ jobs:
         with:
           files: |
             ./RLBotCS/**/publish/RLBotServer*
-            ./dist/*.deb
-            ./dist/*.rpm
+            ./*.deb
+            ./*.rpm
+            ./*.pkg.tar.zst
           generate_release_notes: true
           body: |
             Pre-built binaries that allows bots to interface with Rocket League via the RLBot v5 spec
