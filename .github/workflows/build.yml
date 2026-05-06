@@ -88,6 +88,7 @@ jobs:
             echo "RLBotServer binary not found in downloaded artifacts" >&2
             exit 1
           fi
+          chmod +x "$BIN_PATH"
           OUTPUT_DIR=dist ./package-rlbot.sh "$BIN_PATH" ubuntu fedora
 
       - name: Upload package artifacts
