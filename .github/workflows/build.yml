@@ -117,7 +117,6 @@ jobs:
             ./RLBotCS/**/publish/RLBotServer*
             ./*.deb
             ./*.rpm
-            ./*.pkg.tar.zst
           generate_release_notes: true
           body: |
             Pre-built binaries that allows bots to interface with Rocket League via the RLBot v5 spec
