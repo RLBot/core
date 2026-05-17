@@ -404,9 +404,23 @@ static class FlatToCommand
                 customMap = new(matchConfig.GameMapUpk);
                 command += CustomMap.RL_MAP_KEY;
             }
-            else
+             else
             {
-                command += matchConfig.GameMapUpk;
+                // Warn if the map name doesn't look like a valid official or custom map.
+                // Official maps end with _p or _P, custom maps end with .upk or .udk.
+                string mapUpk = matchConfig.GameMapUpk;
+                bool isOfficialMap = mapUpk.EndsWith("_p", StringComparison.OrdinalIgnoreCase);
+                bool isCustomMapExtension =
+                    mapUpk.EndsWith(".upk", StringComparison.OrdinalIgnoreCase)
+                    || mapUpk.EndsWith(".udk", StringComparison.OrdinalIgnoreCase);
+                if (!isOfficialMap && !isCustomMapExtension)
+                {
+                    Logger.LogWarning(
+                        $"Map name '{mapUpk}' does not end with '_p'/'_P' (official maps) or '.upk'/'.udk' (custom maps). "
+                            + "The map may fail to load. Official map names should end with '_p', e.g. 'Stadium_P'."
+                    );
+                }
+                command += mapUpk;
             }
         }
         else
