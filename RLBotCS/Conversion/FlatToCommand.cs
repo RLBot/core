@@ -404,7 +404,7 @@ static class FlatToCommand
                 customMap = new(matchConfig.GameMapUpk);
                 command += CustomMap.RL_MAP_KEY;
             }
-             else
+            else
             {
                 // Warn if the map name doesn't look like a valid official or custom map.
                 // Official maps end with _p or _P, custom maps end with .upk or .udk.
