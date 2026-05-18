@@ -84,7 +84,7 @@ class FlatBuffersServer(
             }
     }
 
- private async Task HandleServer()
+    private async Task HandleServer()
     {
         try
         {
@@ -115,7 +115,7 @@ class FlatBuffersServer(
         {
             // This happens during normal shutdown when the server is stopped while waiting
             // for a connection. Not an error.
-            _context.Logger.LogDebug("Server stopped while waiting for connections.");
+            _context.Logger.LogDebug("Server abruptly stopped while waiting for connections.");
         }
         catch (Exception e)
         {
