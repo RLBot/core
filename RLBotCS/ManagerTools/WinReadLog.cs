@@ -45,25 +45,37 @@ public class WinReadLog
         if (!File.Exists(LogPath))
             return null;
 
-        string logContent = File.ReadAllText(LogPath);
+        string? auth = null;
+        string? path = null;
 
-        int authPrefixIndex = logContent.IndexOf(AUTH_LINE_PREFIX, StringComparison.Ordinal);
-        int pathPrefixIndex = logContent.IndexOf(PATH_LINE_PREFIX, StringComparison.Ordinal);
-        if (authPrefixIndex == -1 || pathPrefixIndex == -1)
-            return null;
+        using var reader = new StreamReader(
+            LogPath,
+            Encoding.UTF8,
+            detectEncodingFromByteOrderMarks: true
+        );
 
-        int authStart = authPrefixIndex + AUTH_LINE_PREFIX.Length;
-        int pathStart = pathPrefixIndex + PATH_LINE_PREFIX.Length;
+        string? line;
+        while ((line = reader.ReadLine()) != null)
+        {
+            if (auth == null && line.StartsWith(AUTH_LINE_PREFIX, StringComparison.Ordinal))
+            {
+                auth = line[AUTH_LINE_PREFIX.Length..].TrimEnd('\r', '\n');
+            }
+            else if (
+                path == null
+                && line.StartsWith(PATH_LINE_PREFIX, StringComparison.Ordinal)
+            )
+            {
+                path = line[PATH_LINE_PREFIX.Length..].TrimEnd('\r', '\n');
+            }
 
-        int authEnd = logContent.IndexOf('\n', authStart);
-        int pathEnd = logContent.IndexOf('\n', pathStart);
-        if (authEnd == -1 || pathEnd == -1)
-            return null;
+            if (auth != null && path != null)
+            {
+                return (Path.Combine(path, BINARY_NAME), auth);
+            }
+        }
 
-        string auth = logContent[authStart..authEnd].TrimEnd('\r', '\n');
-        string path = logContent[pathStart..pathEnd].TrimEnd('\r', '\n');
-
-        return (Path.Combine(path, BINARY_NAME), auth);
+        return null;
     }
 }
 #endif
