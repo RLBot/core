@@ -1,4 +1,4 @@
-﻿using System.Threading.Channels;
+using System.Threading.Channels;
 using Bridge;
 using Bridge.TCP;
 using Microsoft.Extensions.Logging;
@@ -10,7 +10,7 @@ using RLBotCS.Server.ServerMessage;
 if (args.Length > 0 && args[0] == "--version")
 {
     Console.WriteLine(
-        "RLBotServer v5.0.0-rc.9\n"
+        "RLBotServer v5.0.0-rc.8\n"
             + $"Bridge {BridgeVersion.Version}\n"
             + "@ https://www.rlbot.org & https://github.com/RLBot/core"
     );
