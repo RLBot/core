@@ -2,6 +2,7 @@ using System.Text;
 using Bridge.Controller;
 using Bridge.State;
 using Bridge.TCP;
+using Microsoft.Extensions.Logging;
 using RLBot.Flat;
 using RLBotCS.Conversion;
 using Color = System.Drawing.Color;
@@ -16,6 +17,9 @@ public class Rendering(TcpMessenger tcpMessenger)
     public const int ResolutionHeightPixels = 1080;
     public const int FontWidthPixels = 10;
     public const int FontHeightPixels = 20;
+    public const int RectangleStringMaxLength = 30_000;
+
+    private readonly ILogger Logger = Logging.GetLogger("Rendering");
 
     private readonly RenderingCommandQueue _renderingCommandQueue = new(tcpMessenger);
     private readonly Dictionary<int, Dictionary<int, List<ushort>>> _clientRenderTracker = [];
@@ -130,7 +134,7 @@ public class Rendering(TcpMessenger tcpMessenger)
     /// scaled the string is scaled with  returned scaling factor. We use this as a hack to created filled rectangles
     /// for rectangle rendering.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The rectangle string and the font scaling</returns>
     private (string, float) MakeFakeRectangleString(int width, int height)
     {
         int Gcd(int a, int b)
@@ -147,27 +151,31 @@ public class Rendering(TcpMessenger tcpMessenger)
             return a | b;
         }
 
-        // We use the greatest common divisor to simplify the fraction (width/height)
-        // minimizing the characters needed for the rectangle.
         int gcd = Gcd(width, height);
         int cols = (width / gcd) * (FontHeightPixels / FontWidthPixels);
         int rows = height / gcd;
+        float scale = gcd / (float)FontHeightPixels;
 
-        StringBuilder str = new StringBuilder(cols * rows + rows);
-        for (int r = 0; r < rows; r++)
+        if (cols + rows > RectangleStringMaxLength)
         {
-            for (int c = 0; c < cols; c++)
-            {
-                str.Append(' ');
-            }
-
-            if (r + 1 < rows)
-            {
-                str.Append('\n');
-            }
+            // The width-height ratio has resulting in a very long string.
+            // TODO: Consider an approximate solution as backup. Do we ever hit this case though?
+            Logger.LogWarning(
+                "A rendered rectangle requires more characters than budget allows. Consider different width-height ratio."
+            );
         }
 
-        return (str.ToString(), gcd / (float)FontHeightPixels);
+        StringBuilder str = new StringBuilder(cols + rows);
+        for (int c = 0; c < cols; c++)
+        {
+            str.Append(' ');
+        }
+        for (int r = 0; r < rows - 1; r++)
+        {
+            str.Append('\n');
+        }
+
+        return (str.ToString(), scale);
     }
 
     public void AddRenderGroup(

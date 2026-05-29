@@ -1,4 +1,4 @@
-﻿using System.Threading.Channels;
+using System.Threading.Channels;
 using Bridge;
 using Bridge.TCP;
 using Microsoft.Extensions.Logging;
