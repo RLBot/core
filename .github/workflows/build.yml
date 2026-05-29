@@ -64,7 +64,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'release' && github.event.action == 'published')
+    if: github.event_name == 'release' && github.event.action == 'published'
     needs: [build-linux, build-windows]
     permissions:
       contents: write
@@ -74,9 +74,9 @@ jobs:
         with:
           merge-multiple: "true"
       - name: Publish to GitHub Releases
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ github.event_name == 'release' && github.event.release.tag_name || github.ref_name }}
+          tag_name: ${{ github.event.release.tag_name }}
           files: ./RLBotCS/**/publish/RLBotServer*
           generate_release_notes: true
           body: |
