@@ -8,6 +8,8 @@ on:
       - "v*.*.*"
   pull_request:
   workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
   build-windows:
@@ -16,53 +18,53 @@ jobs:
       NUGET_PACKAGES: D:\nuget\packages
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v6
-      with:
-        submodules: 'recursive'
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: "recursive"
 
-    - name: Test
-      run: dotnet test
+      - name: Test
+        run: dotnet test
 
-    - name: Build 
-      run: dotnet publish RLBotCS -r win-x64
+      - name: Build
+        run: dotnet publish RLBotCS -r win-x64
 
-    - name: Upload build artifact
-      uses: actions/upload-artifact@v7
-      with:
-        name: RLBotServer-windows
-        path: ./**/publish/RLBotServer.exe
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: RLBotServer-windows
+          path: ./**/publish/RLBotServer.exe
 
   build-linux:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v6
-      with:
-        submodules: 'recursive'
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: "recursive"
 
-    - name: Test
-      run: dotnet test
+      - name: Test
+        run: dotnet test
 
-    - name: Formatting
-      run: |
-        dotnet tool restore
-        dotnet csharpier check .
+      - name: Formatting
+        run: |
+          dotnet tool restore
+          dotnet csharpier check .
 
-    - name: Build 
-      run: dotnet publish RLBotCS -r linux-x64
+      - name: Build
+        run: dotnet publish RLBotCS -r linux-x64
 
-    - name: Upload build artifact
-      uses: actions/upload-artifact@v7
-      with:
-        name: RLBotServer-ubuntu
-        path: ./**/publish/RLBotServer
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: RLBotServer-ubuntu
+          path: ./**/publish/RLBotServer
 
   release:
     name: Release
     runs-on: ubuntu-latest
-    if: "startsWith(github.ref, 'refs/tags/')"
+    if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'release' && github.event.action == 'published')
     needs: [build-linux, build-windows]
     permissions:
       contents: write
@@ -74,6 +76,7 @@ jobs:
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.event_name == 'release' && github.event.release.tag_name || github.ref_name }}
           files: ./RLBotCS/**/publish/RLBotServer*
           generate_release_notes: true
           body: |
