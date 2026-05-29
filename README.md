@@ -26,12 +26,15 @@ compiled binaries at `RLBotCS\bin\Release\net10.0`.
 
 1. Ensure all changes are on the `master` branch.
 1. Ensure the version number is correct in `RLBotCS/Main.cs`.
-1. Create a new tag with the next version number - e.x. `git tag v0.1.0 -m "Core v0.1.0"`.
-   - Preferably sign the tag too - `git tag -s v0.1.0 -m "Core v0.1.0"`.
-1. Push the tag - `git push --tags`.
-1. Wait for the GitHub Actions to build the release and upload it to the release page!
+1. In GitHub’s UI, create and publish a new release (this will create the tag for you).
+   - Use the next version number, e.g. `v1.0.0`.
+   - Mark the release as **pre-release** initially.
+1. Wait for the GitHub Actions workflow to build the release and upload it to the release page.
+1. After the workflow finishes, edit the release and set it as the **latest release**.
 
-Further deployment steps for automatic updates are still in progress.
+### Release rollbacks
+
+Instances of RLBot download the version tagged as the latest release. To rollback a release or otherwise change the version being distributed, simply **mark any other verison at the latest release** in GitHub's UI.
 
 ## Maintenance
 
