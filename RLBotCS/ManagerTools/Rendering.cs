@@ -137,35 +137,9 @@ public class Rendering(TcpMessenger tcpMessenger)
     /// <returns>The rectangle string and the font scaling</returns>
     private (string, float) MakeFakeRectangleString(int width, int height)
     {
-        int Gcd(int a, int b)
-        {
-            // Greatest common divisor by Euclidean algorithm https://stackoverflow.com/a/41766138
-            while (a != 0 && b != 0)
-            {
-                if (a > b)
-                    a %= b;
-                else
-                    b %= a;
-            }
+        (ushort cols, ushort rows, float scale) = RectUtil.ApproximateRect(width, height, FontWidthPixels, FontHeightPixels);
 
-            return a | b;
-        }
-
-        int gcd = Gcd(width, height);
-        int cols = (width / gcd) * (FontHeightPixels / FontWidthPixels);
-        int rows = height / gcd;
-        float scale = gcd / (float)FontHeightPixels;
-
-        if (cols + rows > RectangleStringMaxLength)
-        {
-            // The width-height ratio has resulting in a very long string.
-            // TODO: Consider an approximate solution as backup. Do we ever hit this case though?
-            Logger.LogWarning(
-                "A rendered rectangle requires more characters than budget allows. Consider different width-height ratio."
-            );
-        }
-
-        StringBuilder str = new StringBuilder(cols + rows);
+        StringBuilder str = new(cols + rows);
         for (int c = 0; c < cols; c++)
         {
             str.Append(' ');
