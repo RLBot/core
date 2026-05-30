@@ -71,7 +71,7 @@ public static class RectUtil
 
     private static bool LessThanGeoMean(float x, (float a, float b) m)
     {
-        if (m.a >= HalfPrecisionRangeHigh || m.b >= HalfPrecisionRangeHigh)
+        if (m.b >= HalfPrecisionRangeHigh)
             return x < MathF.Sqrt(m.a) * MathF.Sqrt(m.b);
         return x * x < m.a * m.b;
     }
