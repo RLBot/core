@@ -49,9 +49,9 @@ public static class RectUtil
         }
 
         for (ushort a = 1; a <= Limit; ++a)
-            for (ushort b = 1; b <= a && a * b <= Limit; ++b)
-                if (Gcd(a, b) == 1)
-                    dictionary.Add((float)a / b, (a, b));
+        for (ushort b = 1; b <= a && a * b <= Limit; ++b)
+            if (Gcd(a, b) == 1)
+                dictionary.Add((float)a / b, (a, b));
 
         ratios = [.. dictionary.Keys];
         rects = [.. dictionary.Values];
@@ -59,15 +59,23 @@ public static class RectUtil
 
     private static float GeoMean(float a, float b)
     {
-        if (a >= HalfPrecisionRangeHigh || b >= HalfPrecisionRangeHigh ||
-            a <= HalfPrecisionRangeLow || b <= HalfPrecisionRangeLow)
+        if (
+            a >= HalfPrecisionRangeHigh
+            || b >= HalfPrecisionRangeHigh
+            || a <= HalfPrecisionRangeLow
+            || b <= HalfPrecisionRangeLow
+        )
             return MathF.Sqrt(a) * MathF.Sqrt(b);
         return MathF.Sqrt(a * b);
     }
 
     private static bool LessThanGeoMean(float x, (float a, float b) m)
     {
-        if (x >= HalfPrecisionRangeHigh || m.a >= HalfPrecisionRangeHigh || m.b >= HalfPrecisionRangeHigh)
+        if (
+            x >= HalfPrecisionRangeHigh
+            || m.a >= HalfPrecisionRangeHigh
+            || m.b >= HalfPrecisionRangeHigh
+        )
             return x < MathF.Sqrt(m.a) * MathF.Sqrt(m.b);
         return x * x < m.a * m.b;
     }
@@ -89,7 +97,11 @@ public static class RectUtil
             return rects.Last();
 
         int lowerIdx = higherIdx - 1;
-        return rects[LessThanGeoMean(value, (ratios[lowerIdx], ratios[higherIdx])) ? lowerIdx : higherIdx];
+        return rects[
+            LessThanGeoMean(value, (ratios[lowerIdx], ratios[higherIdx]))
+                ? lowerIdx
+                : higherIdx
+        ];
     }
 
     private static (ushort cols, ushort rows) Find(float width, float height)
@@ -105,7 +117,12 @@ public static class RectUtil
     /// Approximates the rectangle <tt>width</tt>×<tt>height</tt> with <tt>cols</tt>×<tt>rows</tt>
     /// rectangles with dimensions <tt>elementWidth</tt>×<tt>elementHeight</tt> scaled by <tt>scale</tt>.
     /// </summary>
-    public static (ushort cols, ushort rows, float scale) ApproximateRect(int width, int height, int elementWidth, int elementHeight)
+    public static (ushort cols, ushort rows, float scale) ApproximateRect(
+        int width,
+        int height,
+        int elementWidth,
+        int elementHeight
+    )
     {
         float elementsInWidth = (float)width / elementWidth;
         float elementsInHeight = (float)height / elementHeight;

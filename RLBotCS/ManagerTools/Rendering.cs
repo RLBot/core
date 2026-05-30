@@ -137,7 +137,12 @@ public class Rendering(TcpMessenger tcpMessenger)
     /// <returns>The rectangle string and the font scaling</returns>
     private (string, float) MakeFakeRectangleString(int width, int height)
     {
-        (ushort cols, ushort rows, float scale) = RectUtil.ApproximateRect(width, height, FontWidthPixels, FontHeightPixels);
+        (ushort cols, ushort rows, float scale) = RectUtil.ApproximateRect(
+            width,
+            height,
+            FontWidthPixels,
+            FontHeightPixels
+        );
 
         StringBuilder str = new(cols + rows);
         for (int c = 0; c < cols; c++)

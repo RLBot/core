@@ -13,7 +13,7 @@ public class RectUtilTest
     {
         for (int i = 1; i <= TestUpTo; ++i)
         {
-            for(int j = 1; j <= TestUpTo; ++j)
+            for (int j = 1; j <= TestUpTo; ++j)
             {
                 (ushort cols, ushort rows, float scale) = RectUtil.ApproximateRect(i, i, j, j);
                 Assert.AreEqual(1, cols);
@@ -35,7 +35,12 @@ public class RectUtilTest
                 {
                     for (int l = 1; l <= TestUpTo; ++l)
                     {
-                        (ushort cols, ushort rows, float scale) = RectUtil.ApproximateRect(i, j, k, l);
+                        (ushort cols, ushort rows, float scale) = RectUtil.ApproximateRect(
+                            i,
+                            j,
+                            k,
+                            l
+                        );
                         Assert.IsInRange(iMin, iMax, k * scale * cols);
                         Assert.IsInRange(jMin, jMax, l * scale * rows);
                     }
