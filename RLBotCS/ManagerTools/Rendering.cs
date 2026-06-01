@@ -94,8 +94,8 @@ public class Rendering(TcpMessenger tcpMessenger)
 
         // Fake a filled rectangle using a string with colored background
         var (text, scale) = MakeFakeRectangleString(
-            (int)Math.Abs(rect2Dt.Width * ResolutionWidthPixels),
-            (int)Math.Abs(rect2Dt.Height * ResolutionHeightPixels)
+            (uint)Math.Abs(rect2Dt.Width * ResolutionWidthPixels),
+            (uint)Math.Abs(rect2Dt.Height * ResolutionHeightPixels)
         );
 
         return _renderingCommandQueue.AddText2D(
@@ -114,8 +114,8 @@ public class Rendering(TcpMessenger tcpMessenger)
     {
         // Fake a filled rectangle using a string with colored background
         var (text, scale) = MakeFakeRectangleString(
-            (int)Math.Abs(rect3Dt.Width * ResolutionWidthPixels),
-            (int)Math.Abs(rect3Dt.Height * ResolutionHeightPixels)
+            (uint)Math.Abs(rect3Dt.Width * ResolutionWidthPixels),
+            (uint)Math.Abs(rect3Dt.Height * ResolutionHeightPixels)
         );
 
         return _renderingCommandQueue.AddText3D(
@@ -135,7 +135,7 @@ public class Rendering(TcpMessenger tcpMessenger)
     /// for rectangle rendering.
     /// </summary>
     /// <returns>The rectangle string and the font scaling</returns>
-    private (string, float) MakeFakeRectangleString(int width, int height)
+    private (string, float) MakeFakeRectangleString(uint width, uint height)
     {
         (ushort cols, ushort rows, float scale) = RectUtil.ApproximateRect(
             width,

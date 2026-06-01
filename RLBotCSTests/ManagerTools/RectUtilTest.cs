@@ -6,14 +6,14 @@ namespace RLBotCSTests.ManagerTools;
 [TestClass]
 public class RectUtilTest
 {
-    const int TestUpTo = 64;
+    const uint TestUpTo = 64;
 
     [TestMethod]
     public void ApproximateRectTest()
     {
-        for (int i = 1; i <= TestUpTo; ++i)
+        for (uint i = 1; i <= TestUpTo; ++i)
         {
-            for (int j = 1; j <= TestUpTo; ++j)
+            for (uint j = 1; j <= TestUpTo; ++j)
             {
                 (ushort cols, ushort rows, float scale) = RectUtil.ApproximateRect(i, i, j, j);
                 Assert.AreEqual(1, cols);
@@ -23,17 +23,17 @@ public class RectUtilTest
             }
         }
 
-        for (int i = 1; i <= TestUpTo; ++i)
+        for (uint i = 1; i <= TestUpTo; ++i)
         {
-            float iMin = i * 0.95f;
-            float iMax = i * 1.05f;
-            for (int j = 1; j <= TestUpTo; ++j)
+            float iMin = i * 0.96f;
+            float iMax = i * 1.04f;
+            for (uint j = 1; j <= TestUpTo; ++j)
             {
-                float jMin = j * 0.95f;
-                float jMax = j * 1.05f;
-                for (int k = 1; k <= TestUpTo; ++k)
+                float jMin = j * 0.96f;
+                float jMax = j * 1.04f;
+                for (uint k = 1; k <= TestUpTo; ++k)
                 {
-                    for (int l = 1; l <= TestUpTo; ++l)
+                    for (uint l = 1; l <= TestUpTo; ++l)
                     {
                         (ushort cols, ushort rows, float scale) = RectUtil.ApproximateRect(
                             i,
