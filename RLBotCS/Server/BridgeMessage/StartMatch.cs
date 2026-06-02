@@ -16,6 +16,10 @@ readonly struct StartMatch(MatchConfigurationT MatchConfig) : IBridgeMessage
         context.AgentMapping.SetAgents(MatchConfig);
         context.MatchStarter.StartMatch(MatchConfig, context.GetPlayerSpawner()); // May modify the match config
         context.UpdateTimeMutators();
+        context.PerfMonitor.SetDisplayMode(
+            MatchConfig.PerformanceMonitor,
+            context.RenderingMgmt
+        );
 
         // Handle messages that required a match config
         foreach (var infoRequest in context.WaitingAgentRequests)

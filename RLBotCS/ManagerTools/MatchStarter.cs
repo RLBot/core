@@ -349,7 +349,7 @@ class MatchStarter(int gamePort, int rlbotSocketsPort)
 
     private bool IsDifferentFromLast(MatchConfigurationT matchConfig)
     {
-        // Don't consider rendering/state setting because that can be enabled/disabled without restarting the match
+        // Don't consider rendering/state setting/perf monitor because they can be toggled without restarting the match
 
         var lastMatchConfig = _matchConfig;
         if (lastMatchConfig == null)

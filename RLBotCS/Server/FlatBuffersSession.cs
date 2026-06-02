@@ -315,6 +315,14 @@ class FlatBuffersSession
                 await _rlbotServer.WriteAsync(new UpdateRendering(renderingStatus));
                 break;
 
+            case InterfaceMessage.UpdatePerformanceMonitor:
+                var updatePerformanceMonitor = msg.MessageAsUpdatePerformanceMonitor()
+                    .UnPack();
+                await _rlbotServer.WriteAsync(
+                    new ServerMessage.UpdatePerformanceMonitor(updatePerformanceMonitor.Show)
+                );
+                break;
+
             case InterfaceMessage.PingRequest:
                 _incomingMessages.Writer.TryWrite(
                     new SessionMessage.PingResponse(msg.MessageAsPingRequest().UnPack().Cookie)
