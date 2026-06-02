@@ -419,7 +419,7 @@ class FlatBuffersSession
 
                     break;
                 case SessionMessage.StopMatch m
-                    when m.Force || (_connectionEstablished && _closeBetweenMatches):
+                    when m.Force || (_isReady && _closeBetweenMatches):
                     _sessionForceClosed = m.Force;
                     return;
                 case SessionMessage.UpdateRendering m
