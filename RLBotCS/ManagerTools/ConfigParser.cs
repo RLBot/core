@@ -225,16 +225,21 @@ public class ConfigParser
 
     private string GetRunCommand(TomlTable runnableSettings)
     {
-        string runCommandWindows = GetValue<string>(
-            runnableSettings,
-            Fields.AgentRunCommand,
-            ""
-        );
+        string runCommandWindows = GetValue(runnableSettings, Fields.AgentRunCommand, "");
 
 #if WINDOWS
         return runCommandWindows;
 #else
-        return GetValue(runnableSettings, Fields.AgentRunCommandLinux, runCommandWindows);
+        string runCommandLinux = GetValue(runnableSettings, Fields.AgentRunCommandLinux, "");
+
+        if (!string.IsNullOrEmpty(runCommandLinux))
+            return runCommandLinux;
+
+        // No Linux run command specified; try to run the Windows command via Wine.
+        if (!string.IsNullOrEmpty(runCommandWindows))
+            return $"wine {runCommandWindows}";
+
+        return "";
 #endif
     }
 
