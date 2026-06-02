@@ -35,7 +35,7 @@ interface SessionMessage
 
     public readonly record struct StopMatch(bool Force) : SessionMessage;
 
-    public readonly record struct UpdateRendering(RenderingStatus Status) : SessionMessage;
+    public readonly record struct UpdateRendering(RenderingStatusT Status) : SessionMessage;
 
     public readonly record struct PingResponse(ulong Cookie) : SessionMessage;
 }
@@ -52,7 +52,7 @@ class FlatBuffersSession
     private readonly Channel<SessionMessage> _incomingMessages;
     private readonly ChannelWriter<IServerMessage> _rlbotServer;
     private readonly ChannelWriter<IBridgeMessage> _bridge;
-    private readonly Dictionary<uint, bool> _gotInput = new();
+    private readonly Dictionary<uint, bool> _gotInput = [];
 
     /// <summary>Indicates that we received a ConnectionSettings message from the client, and that
     /// we now know its agent id (if any) and whether it is interested in ball prediction, match comms,
@@ -72,7 +72,7 @@ class FlatBuffersSession
 
     private string _agentId = string.Empty;
     private uint _team = Team.Other;
-    private List<PlayerIdPair> _playerIdPairs = new();
+    private List<PlayerIdPair> _playerIdPairs = [];
     private bool _sessionForceClosed;
     private bool _closed;
 
@@ -311,7 +311,7 @@ class FlatBuffersSession
                 break;
 
             case InterfaceMessage.RenderingStatus:
-                var renderingStatus = msg.MessageAsRenderingStatus();
+                var renderingStatus = msg.MessageAsRenderingStatus().UnPack();
                 await _rlbotServer.WriteAsync(new UpdateRendering(renderingStatus));
                 break;
 
@@ -422,28 +422,20 @@ class FlatBuffersSession
                     when m.Force || (_connectionEstablished && _closeBetweenMatches):
                     _sessionForceClosed = m.Force;
                     return;
-                case SessionMessage.UpdateRendering m
-                    when (m.Status.IsBot && (_team == Team.Blue || _team == Team.Orange))
-                        || (!m.Status.IsBot && _team == Team.Scripts):
-
-                    foreach (var player in _playerIdPairs)
+                case SessionMessage.UpdateRendering m:
+                    if (_team == Team.Other)
                     {
-                        if (player.Index == m.Status.Index)
-                        {
-                            _renderingIsEnabled = m.Status.Status;
-                            SendPayloadToClient(
-                                CoreMessageUnion.FromRenderingStatus(
-                                    new RenderingStatusT()
-                                    {
-                                        Index = player.Index,
-                                        IsBot = m.Status.IsBot,
-                                        Status = m.Status.Status,
-                                    }
-                                )
-                            );
+                        SendPayloadToClient(CoreMessageUnion.FromRenderingStatus(m.Status));
+                        return;
+                    }
 
-                            break;
-                        }
+                    bool isCorrectTeam =
+                        (m.Status.IsBot && (_team == Team.Blue || _team == Team.Orange))
+                        || (!m.Status.IsBot && _team == Team.Scripts);
+                    if (isCorrectTeam && _playerIdPairs.Exists(p => p.Index == m.Status.Index))
+                    {
+                        _renderingIsEnabled = m.Status.Status;
+                        SendPayloadToClient(CoreMessageUnion.FromRenderingStatus(m.Status));
                     }
 
                     break;
