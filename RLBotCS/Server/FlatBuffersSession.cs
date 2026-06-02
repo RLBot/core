@@ -423,10 +423,20 @@ class FlatBuffersSession
                     _sessionForceClosed = m.Force;
                     return;
                 case SessionMessage.UpdateRendering m:
-                    if (_playerIdPairs.Exists(p => p.Index == m.Status.Index))
-                        _renderingIsEnabled = m.Status.Status;
+                    if (_team == Team.Other)
+                    {
+                        SendPayloadToClient(CoreMessageUnion.FromRenderingStatus(m.Status));
+                        return;
+                    }
 
-                    SendPayloadToClient(CoreMessageUnion.FromRenderingStatus(m.Status));
+                    bool isCorrectTeam =
+                        (m.Status.IsBot && (_team == Team.Blue || _team == Team.Orange))
+                        || (!m.Status.IsBot && _team == Team.Scripts);
+                    if (isCorrectTeam && _playerIdPairs.Exists(p => p.Index == m.Status.Index))
+                    {
+                        _renderingIsEnabled = m.Status.Status;
+                        SendPayloadToClient(CoreMessageUnion.FromRenderingStatus(m.Status));
+                    }
 
                     break;
                 case SessionMessage.PingResponse m:
