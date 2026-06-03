@@ -6,6 +6,6 @@ readonly struct UpdatePerformanceMonitor(PerformanceMonitor Mode) : IBridgeMessa
 {
     public void HandleMessage(BridgeContext context)
     {
-        context.PerfMonitor.SetDisplayMode(Mode, context.RenderingMgmt);
+        context.PerfMonitor.SetDisplayMode(Mode);
     }
 }

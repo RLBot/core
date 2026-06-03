@@ -49,14 +49,7 @@ public class PerfMonitor
         _samples.Remove(name);
     }
 
-    public void SetDisplayMode(PerformanceMonitor mode, Rendering rendering)
-    {
-        Console.WriteLine($"Setting performance monitor display mode to {mode}");
-        _displayMode = mode;
-
-        if (mode == PerformanceMonitor.NeverShow)
-            rendering.RemoveRenderGroup(ClientId, RenderGroupId);
-    }
+    public void SetDisplayMode(PerformanceMonitor mode) => _displayMode = mode;
 
     public static float GetPercentile(IEnumerable<float> data, float p)
     {
