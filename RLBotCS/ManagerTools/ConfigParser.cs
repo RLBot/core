@@ -750,6 +750,11 @@ public class ConfigParser
                     Fields.RlBotWaitForAgents,
                     true
                 );
+                matchConfig.PerformanceMonitor = GetEnum(
+                    rlbotTable,
+                    Fields.MatchPerformanceMonitor,
+                    PerformanceMonitor.ShowWhenSuboptimal
+                );
             }
 
             TomlTableArray players = GetValue<TomlTableArray>(outerTable, Fields.CarsList, []);
@@ -866,11 +871,6 @@ public class ConfigParser
                     false
                 );
                 matchConfig.Freeplay = GetValue(matchTable, Fields.MatchFreePlay, false);
-                matchConfig.PerformanceMonitor = GetEnum(
-                    matchTable,
-                    Fields.MatchPerformanceMonitor,
-                    PerformanceMonitor.ShowWhenSuboptimal
-                );
             }
 
             string mv = string.Join(",", _missingValues);
