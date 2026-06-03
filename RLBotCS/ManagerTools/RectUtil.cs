@@ -30,16 +30,16 @@ public static class RectUtil
     /// Discards the same number of least significant bits from a and b
     /// if either is too large to fit into a ushort.
     /// </summary>
-    private static (ushort, ushort, int) SafeCast(uint a, uint b)
+    private static (ushort, ushort, float) SafeCast(uint a, uint b)
     {
         if (a <= UInt16.MaxValue && b <= UInt16.MaxValue)
-            return ((ushort)a, (ushort)b, 0);
+            return ((ushort)a, (ushort)b, 1f);
 
         int shift = Int32.Max(
             LeadingZerosForUShort - BitOperations.LeadingZeroCount(a),
             LeadingZerosForUShort - BitOperations.LeadingZeroCount(b)
         );
-        return ((ushort)(a >> shift), (ushort)(b >> shift), shift);
+        return ((ushort)(a >> shift), (ushort)(b >> shift), 1f / (1u << shift));
     }
 
     /// <summary>
@@ -56,8 +56,8 @@ public static class RectUtil
         uint wh = width * elementHeight;
         uint hw = height * elementWidth;
         uint gcd = Gcd(wh, hw);
-        (ushort cols, ushort rows, int shift) = SafeCast(wh / gcd, hw / gcd);
+        (ushort cols, ushort rows, float reduction) = SafeCast(wh / gcd, hw / gcd);
 
-        return (cols, rows, ((float)(gcd >> shift)) / (elementWidth * elementHeight));
+        return (cols, rows, (gcd * reduction) / (elementWidth * elementHeight));
     }
 }

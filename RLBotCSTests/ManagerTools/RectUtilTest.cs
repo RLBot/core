@@ -13,7 +13,7 @@ public class RectUtilTest
     }
 
     [TestMethod]
-    public void ApproximateRectTest_Generic()
+    public void RectSolveTest_Generic()
     {
         const uint TestUpTo = 64;
 
@@ -55,7 +55,7 @@ public class RectUtilTest
     }
 
     [TestMethod]
-    public void ApproximateRectTest_Practical()
+    public void RectSolveTest_Practical()
     {
         const uint TestUpTo = 7680;
 
