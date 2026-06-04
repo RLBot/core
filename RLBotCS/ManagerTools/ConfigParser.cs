@@ -27,6 +27,7 @@ public class ConfigParser
         public const string MatchStateSetting = "enable_state_setting";
         public const string MatchAutoSaveReplays = "auto_save_replays";
         public const string MatchFreePlay = "freeplay";
+        public const string MatchPerformanceMonitor = "performance_monitor";
 
         public const string MutatorsTable = "mutators";
         public const string MutatorsMatchLength = "match_length";
@@ -748,6 +749,11 @@ public class ConfigParser
                     rlbotTable,
                     Fields.RlBotWaitForAgents,
                     true
+                );
+                matchConfig.PerformanceMonitor = GetEnum(
+                    rlbotTable,
+                    Fields.MatchPerformanceMonitor,
+                    PerformanceMonitor.ShowWhenSuboptimal
                 );
             }
 

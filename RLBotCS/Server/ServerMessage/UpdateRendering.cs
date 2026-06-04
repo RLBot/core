@@ -14,7 +14,7 @@ readonly struct UpdateRendering(RenderingStatusT Status) : IServerMessage
 
         // Distribute to all sessions;
         // they will figure out on their own if rendering should be enable/disabled
-        foreach (var (id, (writer, _)) in context.Sessions)
+        foreach (var (_, (writer, _)) in context.Sessions)
         {
             writer.TryWrite(message);
         }

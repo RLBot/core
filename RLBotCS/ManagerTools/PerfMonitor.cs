@@ -11,14 +11,14 @@ public class PerfMonitor
     private const int _maxSamples = 120;
     private const float _timeSkip = 0.5f;
 
-    private static readonly ColorT TextColor = new ColorT()
+    private static readonly ColorT TextColor = new()
     {
         A = 255,
         R = 255,
         G = 255,
         B = 255,
     };
-    private static readonly ColorT BackColor = new ColorT()
+    private static readonly ColorT BackColor = new()
     {
         A = 100,
         R = 0,
@@ -27,7 +27,8 @@ public class PerfMonitor
     };
 
     private readonly CircularBuffer<Deltas> _rlbotSamples = new(_maxSamples);
-    private readonly SortedDictionary<string, CircularBuffer<bool>> _samples = new();
+    private readonly SortedDictionary<string, CircularBuffer<bool>> _samples = [];
+    private PerformanceMonitor _displayMode = PerformanceMonitor.ShowWhenSuboptimal;
     private float time = 0;
 
     public void AddRLBotSample(Deltas deltas)
@@ -37,18 +38,18 @@ public class PerfMonitor
 
     public void AddSample(string name, bool gotInput)
     {
-        if (!_samples.ContainsKey(name))
-        {
+        if (_samples.TryGetValue(name, out var buffer))
+            buffer.AddLast(gotInput);
+        else
             _samples[name] = new(_maxSamples);
-        }
-
-        _samples[name].AddLast(gotInput);
     }
 
     public void RemoveBot(string name)
     {
         _samples.Remove(name);
     }
+
+    public void SetDisplayMode(PerformanceMonitor mode) => _displayMode = mode;
 
     public static float GetPercentile(IEnumerable<float> data, float p)
     {
@@ -66,6 +67,12 @@ public class PerfMonitor
 
     public void RenderSummary(Rendering rendering, GameState gameState, float deltaTime)
     {
+        if (_displayMode == PerformanceMonitor.NeverShow)
+        {
+            rendering.RemoveRenderGroup(ClientId, RenderGroupId);
+            return;
+        }
+
         time += deltaTime;
         if (time < _timeSkip)
             return;
@@ -99,7 +106,7 @@ public class PerfMonitor
                 0.99f
             ) * 1000f:0.0}ms
             """;
-        bool shouldRender = misses120 > 0;
+        bool shouldRender = _displayMode == PerformanceMonitor.AlwaysShow || misses120 > 0;
 
         foreach (var (name, samples) in _samples)
         {
@@ -124,10 +131,10 @@ public class PerfMonitor
             VAlign = TextVAlign.Top,
         };
 
-        var renderMessages = new List<RenderMessageT>()
-        {
-            new RenderMessageT() { Variety = RenderTypeUnion.FromString2D(renderText) },
-        };
+        List<RenderMessageT> renderMessages =
+        [
+            new() { Variety = RenderTypeUnion.FromString2D(renderText) },
+        ];
 
         if (shouldRender)
             rendering.AddRenderGroup(ClientId, RenderGroupId, renderMessages, gameState);
