@@ -50,6 +50,7 @@ static class FlatToCommand
             MaxScoreMutator.EightyGoals => "Max80",
             MaxScoreMutator.NinetyGoals => "Max90",
             MaxScoreMutator.HundredGoals => "Max100",
+            MaxScoreMutator.OneHundredFiftyOneGoals => "Max151",
             _ => throw new ArgumentOutOfRangeException(nameof(maxScore), maxScore, null),
         };
 
@@ -119,6 +120,8 @@ static class FlatToCommand
             BallTypeMutator.ScoreAbsorb => "Ball_Score",
             BallTypeMutator.Shoe => "Ball_Shoe",
             BallTypeMutator.PizzaPuck => "Ball_PizzaPuck",
+            BallTypeMutator.Strike => "Ball_Strike",
+            BallTypeMutator.SpookyBalloon => "Ball_SpookyBalloon",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
@@ -133,6 +136,7 @@ static class FlatToCommand
             BallWeightMutator.BeachBallCurve => "MagnusBeachBall",
             BallWeightMutator.MagnusFutBall => "MagnusFutBallTest",
             BallWeightMutator.MagnusFutballLess => "MagnusFutballLess",
+            BallWeightMutator.Balloon => "BalloonBall",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
@@ -241,7 +245,21 @@ static class FlatToCommand
         option switch
         {
             MaxTimeMutator.Unlimited => "",
+            MaxTimeMutator.OneMinute => "MaxTime1Minute",
+            MaxTimeMutator.TwoMinutes => "MaxTime2Minutes",
+            MaxTimeMutator.ThreeMinutes => "MaxTime3Minutes",
+            MaxTimeMutator.FourMinutes => "MaxTime4Minutes",
+            MaxTimeMutator.FiveMinutes => "MaxTime5Minutes",
+            MaxTimeMutator.SixMinutes => "MaxTime6Minutes",
+            MaxTimeMutator.SevenMinutes => "MaxTime7Minutes",
+            MaxTimeMutator.EightMinutes => "MaxTime8Minutes",
+            MaxTimeMutator.NineMinutes => "MaxTime9Minutes",
+            MaxTimeMutator.TenMinutes => "MaxTime10Minutes",
             MaxTimeMutator.ElevenMinutes => "MaxTime11Minutes",
+            MaxTimeMutator.TwelveMinutes => "MaxTime12Minutes",
+            MaxTimeMutator.ThirteenMinutes => "MaxTime13Minutes",
+            MaxTimeMutator.FourteenMinutes => "MaxTime14Minutes",
+            MaxTimeMutator.FifteenMinutes => "MaxTime15Minutes",
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
@@ -381,6 +399,55 @@ static class FlatToCommand
             _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
         };
 
+    private static string MapTriTipMode(TriTipModeMutator option) =>
+        option switch
+        {
+            TriTipModeMutator.Off => "",
+            TriTipModeMutator.Tritip => "Tritip",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
+        };
+
+    private static string MapLockedDamagePhase(LockedDamagePhaseMutator option) =>
+        option switch
+        {
+            LockedDamagePhaseMutator.Default => "",
+            LockedDamagePhaseMutator.High => "BreakoutBallIndex2",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
+        };
+
+    private static string MapSpawnDemoball(SpawnDemoballMutator option) =>
+        option switch
+        {
+            SpawnDemoballMutator.Off => "",
+            SpawnDemoballMutator.On => "FireBallObstacleEnabled",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
+        };
+
+    private static string MapBoostRestriction(BoostRestritionMutator option) =>
+        option switch
+        {
+            BoostRestritionMutator.Default => "",
+            BoostRestritionMutator.AerialOnly => "AerialBoostOnly",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
+        };
+
+    private static string MapKeepUpRules(KeepUpRulesMutator option) =>
+        option switch
+        {
+            KeepUpRulesMutator.Off => "",
+            KeepUpRulesMutator.EnabledIncrement => "KeepUpEnabled",
+            KeepUpRulesMutator.Enabled => "KeepUpStageEnabled",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
+        };
+
+    private static string MapMatchAdmin(MatchAdminMutator option) =>
+        option switch
+        {
+            MatchAdminMutator.Off => "",
+            MatchAdminMutator.On => "MatchCreatorAdminEnabled",
+            _ => throw new ArgumentOutOfRangeException(nameof(option), option, null),
+        };
+
     private static string GetOption(string option)
     {
         if (option != "")
@@ -480,6 +547,12 @@ static class FlatToCommand
         command += GetOption(MapAssistGoalScore(mutatorSettings.AssistGoalScore));
         command += GetOption(MapInputRestriction(mutatorSettings.InputRestriction));
         command += GetOption(MapScoringRule(mutatorSettings.ScoringRule));
+        command += GetOption(MapTriTipMode(mutatorSettings.TriTipMode));
+        command += GetOption(MapLockedDamagePhase(mutatorSettings.LockedDamagePhase));
+        command += GetOption(MapSpawnDemoball(mutatorSettings.SpawnDemoball));
+        command += GetOption(MapBoostRestriction(mutatorSettings.BoostRestriction));
+        command += GetOption(MapKeepUpRules(mutatorSettings.KeepUpRules));
+        command += GetOption(MapMatchAdmin(mutatorSettings.MatchAdmin));
 
         return (command, customMap);
     }
