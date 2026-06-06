@@ -434,7 +434,7 @@ class FlatBuffersSession
                     if (_team == Team.Other)
                     {
                         SendPayloadToClient(CoreMessageUnion.FromRenderingStatus(m.Status));
-                        return;
+                        break;
                     }
 
                     bool isCorrectTeam =
