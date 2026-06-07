@@ -15,8 +15,7 @@
     <StaticExecutable>true</StaticExecutable>
     <LinkerFlavor
       Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'"
-      >lld</LinkerFlavor
-    >
+      >lld</LinkerFlavor>
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
   <ItemGroup>
