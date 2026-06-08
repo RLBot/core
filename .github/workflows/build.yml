@@ -35,12 +35,24 @@ jobs:
 
   build-linux:
     runs-on: ubuntu-latest
+    container:
+      image: debian:bookworm-slim
 
     steps:
+      - name: Install prerequisites
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends clang lld
+
       - name: Checkout
         uses: actions/checkout@v6
         with:
           submodules: "recursive"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
 
       - name: Test
         run: dotnet test
