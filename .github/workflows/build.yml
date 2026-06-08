@@ -42,7 +42,7 @@ jobs:
       - name: Install prerequisites
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends clang lld git
+          apt-get install -y --no-install-recommends ca-certificates clang lld git
 
       - name: Checkout
         uses: actions/checkout@v6
