@@ -142,8 +142,9 @@ public class ConfigParser
             }
 
             path = Path.GetFullPath(path);
+            using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
             return TomlSerializer.Deserialize<TomlTable>(
-                File.Open(path, FileMode.Open),
+                stream,
                 ParserTomlContext.Default
             )!;
         }
