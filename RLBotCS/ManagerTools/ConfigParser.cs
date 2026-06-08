@@ -4,6 +4,7 @@ using RLBot.Flat;
 using RLBotCS.Model;
 using Tomlyn;
 using Tomlyn.Model;
+using Tomlyn.Serialization;
 
 namespace RLBotCS.ManagerTools;
 
@@ -16,6 +17,7 @@ public class ConfigParser
         public const string RlBotLauncherArg = "launcher_arg";
         public const string RlBotAutoStartAgents = "auto_start_agents";
         public const string RlBotWaitForAgents = "wait_for_agents";
+        public const string RlBotPerformanceMonitor = "performance_monitor";
 
         public const string MatchTable = "match";
         public const string MatchGameMode = "game_mode";
@@ -27,7 +29,6 @@ public class ConfigParser
         public const string MatchStateSetting = "enable_state_setting";
         public const string MatchAutoSaveReplays = "auto_save_replays";
         public const string MatchFreePlay = "freeplay";
-        public const string MatchPerformanceMonitor = "performance_monitor";
 
         public const string MutatorsTable = "mutators";
         public const string MutatorsMatchLength = "match_length";
@@ -112,7 +113,21 @@ public class ConfigParser
     private readonly ConfigContextTracker _context = new();
 
     /// <summary>Holds field names that were not present in the config. Used for debugging.</summary>
-    private readonly List<string> _missingValues = new();
+    private readonly List<string> _missingValues = [];
+
+    /// <summary>
+    /// AOT-safe TOML serializer context for parsing documents into <see cref="TomlTable"/>.
+    /// </summary>
+    private sealed class ParserTomlContext : TomlSerializerContext
+    {
+        public static readonly ParserTomlContext Default = new();
+
+        private ParserTomlContext()
+            : base(new()) { }
+
+        public override TomlTypeInfo? GetTypeInfo(Type type, TomlSerializerOptions options) =>
+            type == typeof(TomlTable) ? GetBuiltInTypeInfo<TomlTable>(options) : null;
+    }
 
     private TomlTable LoadTomlFile(string path)
     {
@@ -127,7 +142,10 @@ public class ConfigParser
             }
 
             path = Path.GetFullPath(path);
-            return Toml.ToModel(File.ReadAllText(path), path);
+            return TomlSerializer.Deserialize<TomlTable>(
+                File.Open(path, FileMode.Open),
+                ParserTomlContext.Default
+            )!;
         }
         catch (Exception e)
         {
@@ -729,7 +747,7 @@ public class ConfigParser
             path = Path.GetFullPath(path);
             TomlTable outerTable = LoadTomlFile(path);
 
-            MatchConfigurationT matchConfig = new MatchConfigurationT();
+            MatchConfigurationT matchConfig = new();
 
             TomlTable rlbotTable = GetValue<TomlTable>(outerTable, Fields.RlBotTable, []);
             using (_context.Begin(Fields.RlBotTable))
@@ -752,7 +770,7 @@ public class ConfigParser
                 );
                 matchConfig.PerformanceMonitor = GetEnum(
                     rlbotTable,
-                    Fields.MatchPerformanceMonitor,
+                    Fields.RlBotPerformanceMonitor,
                     PerformanceMonitor.ShowWhenSuboptimal
                 );
             }
