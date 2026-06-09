@@ -10,16 +10,14 @@
     <OptimizationPreference>Speed</OptimizationPreference>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-    <PublishWmiLightStaticallyLinked>true</PublishWmiLightStaticallyLinked>
     <SelfContained>true</SelfContained>
-    <StaticExecutable>true</StaticExecutable>
     <LinkerFlavor
       Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'"
       >lld</LinkerFlavor>
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Tomlyn" Version="0.20.0" />
+    <PackageReference Include="Tomlyn" Version="2.5.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.2" />
   </ItemGroup>
   <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
