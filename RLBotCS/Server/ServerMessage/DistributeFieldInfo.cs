@@ -12,6 +12,7 @@ readonly struct DistributeFieldInfo(GameState GameState) : IServerMessage
         {
             BoostPads = new List<BoostPadT>(GameState.BoostPads.Count),
             Goals = new List<GoalInfoT>(GameState.Goals.Count),
+            Tiles = new List<TileT>(GameState.Tiles.Count),
         };
 
         foreach (GoalInfo goal in GameState.Goals.Values)
@@ -55,6 +56,31 @@ readonly struct DistributeFieldInfo(GameState GameState) : IServerMessage
         }
 
         context.FieldInfo.BoostPads.Sort(
+            (a, b) =>
+            {
+                if (a.Location.Y != b.Location.Y)
+                    return a.Location.Y.CompareTo(b.Location.Y);
+                return a.Location.X.CompareTo(b.Location.X);
+            }
+        );
+
+        foreach (var tile in GameState.Tiles.Values)
+        {
+            context.FieldInfo.Tiles.Add(
+                new TileT
+                {
+                    Location = new Vector3T
+                    {
+                        X = tile.SpawnPosition.X,
+                        Y = tile.SpawnPosition.Y,
+                        Z = tile.SpawnPosition.Z,
+                    },
+                    Team = tile.Team,
+                }
+            );
+        }
+
+        context.FieldInfo.Tiles.Sort(
             (a, b) =>
             {
                 if (a.Location.Y != b.Location.Y)
