@@ -83,7 +83,15 @@ static class GameStateToFlat
                 ),
             };
 
-            balls.Add(new() { Physics = ballPhysics, Shape = collisionShape });
+            balls.Add(
+                new()
+                {
+                    Physics = ballPhysics,
+                    Shape = collisionShape,
+                    ChargeLevel = ball.chargeLevel,
+                    TargetSpeed = ball.targetSpeed,
+                }
+            );
         }
 
         RLBot.Flat.MatchPhase matchPhase = gameState.MatchPhase switch
@@ -126,6 +134,12 @@ static class GameStateToFlat
                 IsActive = boost.IsActive,
                 Timer = boost.Timer,
             })
+            .ToList();
+
+        List<RLBot.Flat.TileDamageLevel> tileStates = gameState
+            .Tiles.Values.OrderBy(tile => tile.SpawnPosition.Y)
+            .ThenBy(tile => tile.SpawnPosition.X)
+            .Select(tile => (RLBot.Flat.TileDamageLevel)tile.DamageLevel)
             .ToList();
 
         List<PlayerInfoT> players = new(gameState.GameCars.Count);
@@ -205,6 +219,11 @@ static class GameStateToFlat
                     HasDodged = car.HasDodged,
                     DodgeElapsed = car.DodgeElapsed,
                     DodgeDir = car.DodgeDir.ToVector2T(),
+                    RumbleItem = car.RumbleInfo.Item is not null
+                        ? (RLBot.Flat.RumbleItem)car.RumbleInfo.Item
+                        : null,
+                    TimeUntilNextItem = car.RumbleInfo.TimeUntilNextItem,
+                    MaxTimeUntilNextItem = car.RumbleInfo.MaxTimeUntilNextItem,
                 }
             );
         }
@@ -216,6 +235,7 @@ static class GameStateToFlat
             Teams = teams,
             BoostPads = boostStates,
             Players = players,
+            Tiles = tileStates,
         };
     }
 }
