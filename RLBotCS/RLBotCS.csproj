@@ -84,6 +84,13 @@
   >
     <Exec Command="../generate-flatbuffers.sh" />
   </Target>
+  <Target
+    Name="GenerateFlatBuffersMac"
+    BeforeTargets="PreBuildEvent"
+    Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))'"
+  >
+    <Exec Command="../generate-flatbuffers-mac.sh" />
+  </Target>
   <ItemGroup>
     <Compile Include="..\FlatBuffer\RLBot.cs" />
   </ItemGroup>
