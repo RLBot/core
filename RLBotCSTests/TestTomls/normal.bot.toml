@@ -6,6 +6,10 @@ run_command_linux = "python bot.py"
 loadout_file = "loadout.toml"
 logo_file = "normal_logo.png"
 
+[settings.environment]
+BOT_ENV = "bot-value"
+SHARED_ENV = "bot-shared"
+
 [details]
 description = "This is a normal test bot"
 fun_fact = "knock knock ..."

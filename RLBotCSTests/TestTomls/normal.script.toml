@@ -6,6 +6,10 @@ run_command_linux = "python script.py"
 loadout_file = "loadout.toml"
 logo_file = "normal_logo.png"
 
+[settings.environment]
+SCRIPT_ENV = "script-value"
+SHARED_ENV = "script-shared"
+
 [details]
 description = "This is a normal test script"
 fun_fact = "knock knock ..."
