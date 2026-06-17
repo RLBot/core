@@ -145,18 +145,12 @@ static class LaunchManager
 
     private static void ApplyEnvironment(
         ProcessStartInfo startInfo,
-        List<RLBot.Flat.EnvironmentVariableT>? environment
+        List<RLBot.Flat.EnvironmentVariableT> environment
     )
     {
-        if (environment == null)
-            return;
-
         foreach (var variable in environment)
         {
-            if (string.IsNullOrEmpty(variable.Name))
-                continue;
-
-            startInfo.EnvironmentVariables[variable.Name] = variable.Value ?? "";
+            startInfo.EnvironmentVariables[variable.Name] = variable.Value;
         }
     }
 
