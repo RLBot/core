@@ -183,12 +183,21 @@ public class ConfigParserTest
         CustomBotT bot = player.Variety.AsCustomBot();
         Assert.IsNull(bot.Loadout);
         Assert.AreEqual("bot-value", bot.Environment.Single(e => e.Name == "BOT_ENV").Value);
-        Assert.AreEqual("bot-shared", bot.Environment.Single(e => e.Name == "SHARED_ENV").Value);
+        Assert.AreEqual(
+            "bot-shared",
+            bot.Environment.Single(e => e.Name == "SHARED_ENV").Value
+        );
 
         ScriptConfigurationT script = mc.ScriptConfigurations[0];
         Assert.AreEqual("Normal Test Script", script.Name); // Not overriden
-        Assert.AreEqual("script-value", script.Environment.Single(e => e.Name == "SCRIPT_ENV").Value);
-        Assert.AreEqual("script-shared", script.Environment.Single(e => e.Name == "SHARED_ENV").Value);
+        Assert.AreEqual(
+            "script-value",
+            script.Environment.Single(e => e.Name == "SCRIPT_ENV").Value
+        );
+        Assert.AreEqual(
+            "script-shared",
+            script.Environment.Single(e => e.Name == "SHARED_ENV").Value
+        );
     }
 
     [TestMethod]
