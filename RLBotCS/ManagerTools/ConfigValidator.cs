@@ -101,6 +101,7 @@ public static class ConfigValidator
                     bot.Name ??= "";
                     bot.RunCommand ??= "";
                     bot.RootDir ??= "";
+                    bot.Environment ??= [];
                     bot.Loadout ??= new();
                     bot.Loadout.LoadoutPaint ??= new();
 
@@ -239,6 +240,7 @@ public static class ConfigValidator
             script.Name ??= "";
             script.RunCommand ??= "";
             script.RootDir ??= "";
+            script.Environment ??= [];
             script.ScriptId = $"{script.AgentId}/{Team.Scripts}/{i}".GetHashCode();
 
             if (agentIdTracker.TryGetValue(script.AgentId, out var existing))

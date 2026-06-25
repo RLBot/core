@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RLBot.Flat;
 using RLBotCS.ManagerTools;
@@ -179,10 +180,24 @@ public class ConfigParserTest
 
         PlayerConfigurationT player = mc.PlayerConfigurations[0];
         Assert.AreEqual("New Bot Name", player.Variety.AsCustomBot().Name);
-        Assert.IsNull(player.Variety.AsCustomBot().Loadout);
+        CustomBotT bot = player.Variety.AsCustomBot();
+        Assert.IsNull(bot.Loadout);
+        Assert.AreEqual("bot-value", bot.Environment.Single(e => e.Name == "BOT_ENV").Value);
+        Assert.AreEqual(
+            "bot-shared",
+            bot.Environment.Single(e => e.Name == "SHARED_ENV").Value
+        );
 
         ScriptConfigurationT script = mc.ScriptConfigurations[0];
         Assert.AreEqual("Normal Test Script", script.Name); // Not overriden
+        Assert.AreEqual(
+            "script-value",
+            script.Environment.Single(e => e.Name == "SCRIPT_ENV").Value
+        );
+        Assert.AreEqual(
+            "script-shared",
+            script.Environment.Single(e => e.Name == "SHARED_ENV").Value
+        );
     }
 
     [TestMethod]

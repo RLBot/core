@@ -76,6 +76,7 @@ public class ConfigParser
         public const string AgentRootDir = "root_dir";
         public const string AgentRunCommand = "run_command";
         public const string AgentRunCommandLinux = "run_command_linux";
+        public const string AgentEnvironment = "environment";
         public const string AgentHivemind = "hivemind";
 
         public const string LoadoutBlueTable = "blue_loadout";
@@ -260,6 +261,33 @@ public class ConfigParser
 #endif
     }
 
+    private List<EnvironmentVariableT> GetEnvironment(TomlTable runnableSettings)
+    {
+        TomlTable environment = GetValue<TomlTable>(
+            runnableSettings,
+            Fields.AgentEnvironment,
+            []
+        );
+
+        List<EnvironmentVariableT> variables = [];
+        using (_context.Begin(Fields.AgentEnvironment))
+        {
+            foreach (var (key, rawValue) in environment)
+            {
+                if (rawValue is not string value)
+                {
+                    throw new InvalidCastException(
+                        $"{_context.ToStringWithEnd(key)} has value {rawValue}, but a value of type String was expected."
+                    );
+                }
+
+                variables.Add(new() { Name = key, Value = value });
+            }
+        }
+
+        return variables;
+    }
+
     private ScriptConfigurationT LoadScriptConfig(string scriptConfigPath)
     {
         TomlTable scriptToml = LoadTomlFile(scriptConfigPath);
@@ -276,6 +304,7 @@ public class ConfigParser
                     GetValue(settings, Fields.AgentRootDir, "")
                 ),
                 RunCommand = GetRunCommand(settings),
+                Environment = GetEnvironment(settings),
                 AgentId = GetValue(settings, Fields.AgentAgentId, ""),
             };
         }
@@ -511,6 +540,7 @@ public class ConfigParser
                 Name = nameOverride ?? GetValue<string>(settings, Fields.AgentName, ""),
                 Loadout = loadout,
                 RunCommand = autoStart ? GetRunCommand(settings) : "",
+                Environment = GetEnvironment(settings),
                 Hivemind = GetValue(settings, Fields.AgentHivemind, false),
                 RootDir = rootDir,
             };

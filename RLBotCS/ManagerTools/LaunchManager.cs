@@ -143,6 +143,17 @@ static class LaunchManager
         return process;
     }
 
+    private static void ApplyEnvironment(
+        ProcessStartInfo startInfo,
+        List<RLBot.Flat.EnvironmentVariableT> environment
+    )
+    {
+        foreach (var variable in environment)
+        {
+            startInfo.EnvironmentVariables[variable.Name] = variable.Value;
+        }
+    }
+
     private static void LaunchGameViaLegendary()
     {
         Process legendary = RunCommandInShell(
@@ -186,6 +197,7 @@ static class LaunchManager
             Process botProcess = RunCommandInShell(details.RunCommand);
 
             botProcess.StartInfo.WorkingDirectory = details.RootDir;
+            ApplyEnvironment(botProcess.StartInfo, details.Environment);
             botProcess.StartInfo.EnvironmentVariables["RLBOT_AGENT_ID"] = details.AgentId;
             botProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
                 rlbotSocketsPort.ToString();
@@ -233,6 +245,7 @@ static class LaunchManager
             if (script.RootDir != "")
                 scriptProcess.StartInfo.WorkingDirectory = script.RootDir;
 
+            ApplyEnvironment(scriptProcess.StartInfo, script.Environment);
             scriptProcess.StartInfo.EnvironmentVariables["RLBOT_AGENT_ID"] = script.AgentId;
             scriptProcess.StartInfo.EnvironmentVariables["RLBOT_SERVER_PORT"] =
                 rlbotSocketsPort.ToString();
