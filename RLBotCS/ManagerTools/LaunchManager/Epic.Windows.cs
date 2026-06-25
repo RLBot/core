@@ -1,0 +1,92 @@
+#if WINDOWS
+using System.Diagnostics;
+using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
+
+namespace RLBotCS.ManagerTools;
+
+public static partial class LaunchManager
+{
+    private static void LaunchGameViaEpic(int gamePort)
+    {
+        if (IsRocketLeagueRunningWithArgs())
+            return;
+
+        if (IsRocketLeagueRunning())
+        {
+            Logger.LogError("Please close Rocket League so RLBot can start it in RLBot mode.");
+            return;
+        }
+
+        // To launch RocketLeague for Epic we need some extra login parameters from Epic.
+        // We get these by launching the game normally, reading the args, and then closing it again.
+
+        Process launcher = new();
+        launcher.StartInfo.FileName = "cmd.exe";
+        launcher.StartInfo.Arguments =
+            "/c start \"\" \"com.epicgames.launcher://apps/9773aa1aa54f4f7b80e44bef04986cea%3A530145df28a24424923f5828cc9031a1%3ASugar?action=launch&silent=true\"";
+        launcher.Start();
+        Thread.Sleep(500);
+
+        // Get login args
+        Logger.LogInformation("Finding Rocket League...");
+        string? epicArgs = null;
+        int triesLeft = 40;
+        while (epicArgs is null && triesLeft-- > 0)
+        {
+            epicArgs = GetGameArgs();
+            Thread.Sleep(500);
+        }
+        KillGame();
+        if (epicArgs is null)
+            throw new Exception("Failed to get Rocket League args");
+        Logger.LogDebug("Epic RocketLeague args: {}", epicArgs);
+        epicArgs = Regex.Replace(epicArgs, "\".*\"", "").Replace("\"\"", "").Trim();
+
+        // Get the game path from launch logs
+        WinReadLog logReader = new();
+        (string, string)? pathAndAuth = null;
+        while (pathAndAuth is null)
+        {
+            pathAndAuth = logReader.GetGamePathAndAuth();
+            Thread.Sleep(500);
+        }
+        if (pathAndAuth is null)
+            throw new Exception("Failed to get Rocket League exe path");
+        string directGamePath = pathAndAuth.Value.Item1;
+        Logger.LogInformation($"Found Rocket League at \"{directGamePath}\"");
+
+        // Wait for the game to fully close
+        Logger.LogDebug("Waiting for Rocket League to fully close...");
+        while (IsRocketLeagueRunning())
+            Thread.Sleep(500);
+
+        string rlbotArgs = string.Join(" ", GetRLBotArgs(gamePort));
+        string modifiedArgs = $"\"{directGamePath}\" {rlbotArgs} {epicArgs}";
+
+        // Relaunch the game with the new args
+        Process epicRocketLeague = new();
+        epicRocketLeague.StartInfo.FileName = "cmd.exe";
+        epicRocketLeague.StartInfo.Arguments = $"/c \"{modifiedArgs}\"";
+
+        // Prevent the game from printing to the console
+        epicRocketLeague.StartInfo.UseShellExecute = false;
+        epicRocketLeague.StartInfo.RedirectStandardOutput = true;
+        epicRocketLeague.StartInfo.RedirectStandardError = true;
+
+        Logger.LogInformation($"Starting Rocket League with Epic: {rlbotArgs}");
+        Logger.LogDebug(
+            "Full command: {} {}",
+            epicRocketLeague.StartInfo.FileName,
+            epicRocketLeague.StartInfo.Arguments
+        );
+        epicRocketLeague.Start();
+
+        // If we don't read the output, the game will hang
+        new Thread(() =>
+        {
+            epicRocketLeague.StandardOutput.ReadToEnd();
+        }).Start();
+    }
+}
+#endif
