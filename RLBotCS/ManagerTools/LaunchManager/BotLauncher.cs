@@ -16,7 +16,7 @@ public static partial class LaunchManager
 
             if (details.RunCommand == "")
             {
-                Logger.LogWarning("Bot {} must be started manually.", details.Name);
+                Logger.LogWarning($"Bot {details.Name} must be started manually.");
                 continue;
             }
 
@@ -34,9 +34,7 @@ public static partial class LaunchManager
                 if (botProcess.ExitCode != 0)
                 {
                     Logger.LogError(
-                        "Bot {0} exited with error code {1}. See previous logs for more information.",
-                        details.Name,
-                        botProcess.ExitCode
+                        $"Bot {details.Name} exited with error code {botProcess.ExitCode}. See previous logs for more information."
                     );
                 }
             };
@@ -44,7 +42,7 @@ public static partial class LaunchManager
             try
             {
                 botProcess.Start();
-                Logger.LogInformation("Launched bot: {}", details.Name);
+                Logger.LogInformation($"Launched bot: {details.Name}");
             }
             catch (Exception e)
             {
@@ -62,7 +60,7 @@ public static partial class LaunchManager
         {
             if (script.RunCommand == "")
             {
-                Logger.LogWarning("Script {} must be started manually.", script.Name);
+                Logger.LogWarning($"Script {script.Name} must be started manually.");
                 continue;
             }
 
@@ -82,9 +80,7 @@ public static partial class LaunchManager
                 if (scriptProcess.ExitCode != 0)
                 {
                     Logger.LogError(
-                        "Script {0} exited with error code {1}. See previous logs for more information.",
-                        script.Name,
-                        scriptProcess.ExitCode
+                        $"Script {script.Name} exited with error code {scriptProcess.ExitCode}. See previous logs for more information."
                     );
                 }
             };
@@ -92,7 +88,7 @@ public static partial class LaunchManager
             try
             {
                 scriptProcess.Start();
-                Logger.LogInformation("Launched script: {}", script.Name);
+                Logger.LogInformation($"Launched script: {script.Name}");
             }
             catch (Exception e)
             {

@@ -40,7 +40,7 @@ public static partial class LaunchManager
         KillGame();
         if (epicArgs is null)
             throw new Exception("Failed to get Rocket League args");
-        Logger.LogDebug("Epic RocketLeague args: {}", epicArgs);
+        Logger.LogDebug($"Epic RocketLeague args: {epicArgs}");
         epicArgs = Regex.Replace(epicArgs, "\".*\"", "").Replace("\"\"", "").Trim();
 
         // Get the game path from launch logs
@@ -51,8 +51,6 @@ public static partial class LaunchManager
             pathAndAuth = logReader.GetGamePathAndAuth();
             Thread.Sleep(500);
         }
-        if (pathAndAuth is null)
-            throw new Exception("Failed to get Rocket League exe path");
         string directGamePath = pathAndAuth.Value.Item1;
         Logger.LogInformation($"Found Rocket League at \"{directGamePath}\"");
 
@@ -76,9 +74,7 @@ public static partial class LaunchManager
 
         Logger.LogInformation($"Starting Rocket League with Epic: {rlbotArgs}");
         Logger.LogDebug(
-            "Full command: {} {}",
-            epicRocketLeague.StartInfo.FileName,
-            epicRocketLeague.StartInfo.Arguments
+            $"Full command: {epicRocketLeague.StartInfo.FileName} {epicRocketLeague.StartInfo.Arguments}"
         );
         epicRocketLeague.Start();
 

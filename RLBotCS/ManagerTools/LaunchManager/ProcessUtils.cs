@@ -127,9 +127,7 @@ public static partial class LaunchManager
             return commandLine;
 
         Logger.LogError(
-            $"Failed to retrieve command line arguments for process {0}: {1}",
-            process.ProcessName,
-            ProcessCommandLine.ErrorToString(err)
+            $"Failed to retrieve command line arguments for process {process.ProcessName}: {ProcessCommandLine.ErrorToString(err)}"
         );
         return "";
 #else
@@ -160,25 +158,24 @@ public static partial class LaunchManager
         return directGamePath;
     }
 
-    public static bool IsRocketLeagueRunning() =>
-        Process
+    public static bool IsRocketLeagueRunning()
+    {
+        return Process
             .GetProcesses()
             .Any(candidate => candidate.ProcessName.Contains("RocketLeague"));
+    }
 
     public static bool IsRocketLeagueRunningWithArgs()
     {
-        Process[] candidates = Process.GetProcesses();
+        return Process
+            .GetProcesses()
+            .Any(candidate =>
+            {
+                if (!candidate.ProcessName.Contains("RocketLeague"))
+                    return false;
 
-        foreach (var candidate in candidates)
-        {
-            if (!candidate.ProcessName.Contains("RocketLeague"))
-                continue;
-
-            var args = GetProcessArgs(candidate);
-            if (args.Contains("rlbot"))
-                return true;
-        }
-
-        return false;
+                var args = GetProcessArgs(candidate);
+                return args.Contains("rlbot");
+            });
     }
 }

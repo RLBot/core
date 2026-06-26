@@ -252,7 +252,10 @@ public static partial class LaunchManager
             if (match.Success)
                 return match.Groups[1].Value;
         }
-        catch { }
+        catch (Exception e)
+        {
+            Logger.LogWarning($"Failed to read tool manifest {protonDir}: {e.Message}");
+        }
 
         return null;
     }
