@@ -40,42 +40,66 @@ public class WinReadLog
         );
     }
 
+    public void DeleteLog()
+    {
+        if (File.Exists(LogPath))
+            File.Delete(LogPath);
+    }
+
     public (string, string)? GetGamePathAndAuth()
     {
         if (!File.Exists(LogPath))
             return null;
 
-        string? auth = null;
-        string? path = null;
-
-        using var reader = new StreamReader(
-            LogPath,
-            Encoding.UTF8,
-            detectEncodingFromByteOrderMarks: true
-        );
-
-        string? line;
-        while ((line = reader.ReadLine()) != null)
+        try
         {
-            if (auth == null && line.StartsWith(AUTH_LINE_PREFIX, StringComparison.Ordinal))
+            string? auth = null;
+            string? path = null;
+
+            using var stream = new FileStream(
+                LogPath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite
+            );
+            using var reader = new StreamReader(
+                stream,
+                Encoding.UTF8,
+                detectEncodingFromByteOrderMarks: true
+            );
+
+            string? line;
+            while ((line = reader.ReadLine()) != null)
             {
-                auth = line[AUTH_LINE_PREFIX.Length..].TrimEnd('\r', '\n');
-            }
-            else if (
-                path == null
-                && line.StartsWith(PATH_LINE_PREFIX, StringComparison.Ordinal)
-            )
-            {
-                path = line[PATH_LINE_PREFIX.Length..].TrimEnd('\r', '\n');
+                if (
+                    auth == null
+                    && line.StartsWith(AUTH_LINE_PREFIX, StringComparison.Ordinal)
+                )
+                {
+                    auth = line[AUTH_LINE_PREFIX.Length..].TrimEnd('\r', '\n');
+                }
+                else if (
+                    path == null
+                    && line.StartsWith(PATH_LINE_PREFIX, StringComparison.Ordinal)
+                )
+                {
+                    path = line[PATH_LINE_PREFIX.Length..].TrimEnd('\r', '\n');
+                }
+
+                if (auth != null && path != null)
+                {
+                    return (Path.Combine(path, BINARY_NAME), auth);
+                }
             }
 
-            if (auth != null && path != null)
-            {
-                return (Path.Combine(path, BINARY_NAME), auth);
-            }
+            return null;
         }
-
-        return null;
+        catch (IOException)
+        {
+            // Rocket League may still be writing to the log file.
+            // Return null so the caller retries.
+            return null;
+        }
     }
 }
 #endif

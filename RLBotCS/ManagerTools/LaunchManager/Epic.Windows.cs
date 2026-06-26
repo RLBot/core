@@ -18,6 +18,10 @@ public static partial class LaunchManager
             return;
         }
 
+        // Start with a fresh Launch.log so we don't read stale data from a previous run.
+        WinReadLog logReader = new();
+        logReader.DeleteLog();
+
         // To launch RocketLeague for Epic we need some extra login parameters from Epic.
         // We get these by launching the game normally, reading the args, and then closing it again.
 
@@ -28,30 +32,18 @@ public static partial class LaunchManager
         launcher.Start();
         Thread.Sleep(500);
 
-        // Get login args
-        Logger.LogInformation("Finding Rocket League...");
-        string? epicArgs = null;
-        int triesLeft = 40;
-        while (epicArgs is null && triesLeft-- > 0)
-        {
-            epicArgs = GetGameArgs();
-            Thread.Sleep(500);
-        }
-        KillGame();
-        if (epicArgs is null)
-            throw new Exception("Failed to get Rocket League args");
-        Logger.LogDebug($"Epic RocketLeague args: {epicArgs}");
-        epicArgs = Regex.Replace(epicArgs, "\".*\"", "").Replace("\"\"", "").Trim();
-
-        // Get the game path from launch logs
-        WinReadLog logReader = new();
+        // Get the game path and login info from launch logs
         (string, string)? pathAndAuth = null;
         while (pathAndAuth is null)
         {
             pathAndAuth = logReader.GetGamePathAndAuth();
             Thread.Sleep(500);
         }
+
+        KillGame();
         string directGamePath = pathAndAuth.Value.Item1;
+        string authArgs = pathAndAuth.Value.Item2;
+        Logger.LogDebug($"Epic RocketLeague args: {authArgs}");
         Logger.LogInformation($"Found Rocket League at \"{directGamePath}\"");
 
         // Wait for the game to fully close
@@ -60,12 +52,12 @@ public static partial class LaunchManager
             Thread.Sleep(500);
 
         string rlbotArgs = string.Join(" ", GetRLBotArgs(gamePort));
-        string modifiedArgs = $"\"{directGamePath}\" {rlbotArgs} {epicArgs}";
+        string modifiedArgs = $"{rlbotArgs} {authArgs}";
 
         // Relaunch the game with the new args
         Process epicRocketLeague = new();
-        epicRocketLeague.StartInfo.FileName = "cmd.exe";
-        epicRocketLeague.StartInfo.Arguments = $"/c \"{modifiedArgs}\"";
+        epicRocketLeague.StartInfo.FileName = directGamePath;
+        epicRocketLeague.StartInfo.Arguments = modifiedArgs;
 
         // Prevent the game from printing to the console
         epicRocketLeague.StartInfo.UseShellExecute = false;
