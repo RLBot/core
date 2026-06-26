@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 #if WINDOWS
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 #endif
 
 namespace RLBotCS.ManagerTools;
