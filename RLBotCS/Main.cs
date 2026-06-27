@@ -10,7 +10,7 @@ using RLBotCS.Server.ServerMessage;
 if (args.Length > 0 && args[0] == "--version")
 {
     Console.WriteLine(
-        "RLBotServer v5.0.0-rc.14\n"
+        "RLBotServer v5.0.0-rc.15\n"
             + $"Bridge {BridgeVersion.Version}\n"
             + "@ https://www.rlbot.org & https://github.com/RLBot/core"
     );
