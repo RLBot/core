@@ -2,7 +2,9 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-public class WinReadLog
+namespace RLBotCS.ManagerTools;
+
+public static class ReadLog
 {
     private const int CSIDL_PERSONAL = 0x0005;
     private const int SHGFP_TYPE_CURRENT = 0;
@@ -26,11 +28,8 @@ public class WinReadLog
         return sb.ToString();
     }
 
-    private string LogPath;
-
-    public WinReadLog()
-    {
-        LogPath = Path.Combine(
+    private static string LogPath { get; } =
+        Path.Combine(
             GetMyDocumentsFolder(),
             "My Games",
             "Rocket League",
@@ -38,15 +37,14 @@ public class WinReadLog
             "Logs",
             "Launch.log"
         );
-    }
 
-    public void DeleteLog()
+    public static void DeleteLog()
     {
         if (File.Exists(LogPath))
             File.Delete(LogPath);
     }
 
-    public (string, string)? GetGamePathAndAuth()
+    public static (string, string)? GetGamePathAndAuth()
     {
         if (!File.Exists(LogPath))
             return null;

@@ -2,9 +2,11 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
+namespace RLBotCS.ManagerTools;
+
 // Solution taken from:
 // https://stackoverflow.com/a/46006415/10930209
-public static class ProcessCommandLine
+public static class ProcArgs
 {
     private static class Win32Native
     {

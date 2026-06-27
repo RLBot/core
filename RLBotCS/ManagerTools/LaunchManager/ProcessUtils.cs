@@ -121,13 +121,13 @@ public static partial class LaunchManager
     private static string GetProcessArgs(Process process)
     {
 #if WINDOWS
-        int err = ProcessCommandLine.Retrieve(process, out string commandLine);
+        int err = ProcArgs.Retrieve(process, out string commandLine);
 
         if (err == 0)
             return commandLine;
 
         Logger.LogError(
-            $"Failed to retrieve command line arguments for process {process.ProcessName}: {ProcessCommandLine.ErrorToString(err)}"
+            $"Failed to retrieve command line arguments for process {process.ProcessName}: {ProcArgs.ErrorToString(err)}"
         );
         return "";
 #else

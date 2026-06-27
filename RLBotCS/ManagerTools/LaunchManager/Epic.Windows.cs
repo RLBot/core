@@ -19,8 +19,7 @@ public static partial class LaunchManager
         }
 
         // Start with a fresh Launch.log so we don't read stale data from a previous run.
-        WinReadLog logReader = new();
-        logReader.DeleteLog();
+        ReadLog.DeleteLog();
 
         // To launch RocketLeague for Epic we need some extra login parameters from Epic.
         // We get these by launching the game normally, reading the args, and then closing it again.
@@ -36,7 +35,7 @@ public static partial class LaunchManager
         (string, string)? pathAndAuth = null;
         while (pathAndAuth is null)
         {
-            pathAndAuth = logReader.GetGamePathAndAuth();
+            pathAndAuth = ReadLog.GetGamePathAndAuth();
             Thread.Sleep(500);
         }
 
