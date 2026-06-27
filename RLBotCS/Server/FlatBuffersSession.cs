@@ -35,7 +35,7 @@ interface SessionMessage
 
     public readonly record struct StopMatch(bool Force) : SessionMessage;
 
-    public readonly record struct UpdateRendering(RenderingStatusT Status) : SessionMessage;
+    public readonly record struct UpdateRenderingStatus(RenderingStatusT Status) : SessionMessage;
 
     public readonly record struct PingResponse(ulong Cookie) : SessionMessage;
 }
@@ -312,7 +312,7 @@ class FlatBuffersSession
 
             case InterfaceMessage.RenderingStatus:
                 var renderingStatus = msg.MessageAsRenderingStatus().UnPack();
-                await _rlbotServer.WriteAsync(new UpdateRendering(renderingStatus));
+                await _rlbotServer.WriteAsync(new UpdateRenderingStatus(renderingStatus));
                 break;
 
             case InterfaceMessage.UpdatePerformanceMonitor:
@@ -430,7 +430,7 @@ class FlatBuffersSession
                     when m.Force || (_connectionEstablished && _closeBetweenMatches):
                     _sessionForceClosed = m.Force;
                     return;
-                case SessionMessage.UpdateRendering m:
+                case SessionMessage.UpdateRenderingStatus m:
                     if (_team == Team.Other)
                     {
                         SendPayloadToClient(CoreMessageUnion.FromRenderingStatus(m.Status));
@@ -444,6 +444,11 @@ class FlatBuffersSession
                     {
                         _renderingIsEnabled = m.Status.Status;
                         SendPayloadToClient(CoreMessageUnion.FromRenderingStatus(m.Status));
+
+                        if (!_renderingIsEnabled)
+                        {
+                            await _bridge.WriteAsync(new RemoveClientRenders(_clientId));
+                        }
                     }
 
                     break;
