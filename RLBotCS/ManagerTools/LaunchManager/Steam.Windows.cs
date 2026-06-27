@@ -1,6 +1,7 @@
 #if WINDOWS
 #pragma warning disable CA1416
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
@@ -9,6 +10,9 @@ namespace RLBotCS.ManagerTools;
 
 public static partial class LaunchManager
 {
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern IntPtr FindWindow(string? lpClassName, string? lpWindowName);
+
     private static string GetWindowsSteamPath()
     {
         using RegistryKey? key = Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam");
@@ -98,6 +102,13 @@ public static partial class LaunchManager
         return null;
     }
 
+    private static bool IsSteamRunning()
+    {
+        return Process
+            .GetProcesses()
+            .Any(p => p.ProcessName.Equals("steam", StringComparison.OrdinalIgnoreCase));
+    }
+
     private static void LaunchGameViaSteam(int gamePort)
     {
         string? gamePath = FindWindowsRocketLeaguePath();
@@ -105,6 +116,23 @@ public static partial class LaunchManager
             throw new FileNotFoundException(
                 "Could not find Rocket League installation. Ensure Rocket League is installed via Steam."
             );
+
+        if (!IsSteamRunning())
+        {
+            string steamPath = GetWindowsSteamPath();
+            Logger.LogInformation($"Launching Steam at \"{steamPath}\"...");
+
+            Process steam = new();
+            steam.StartInfo.FileName = steamPath;
+            steam.Start();
+
+            // Wait for Steam's main window to appear,
+            // otherwise we will launch the game too soon and won't be logged in
+            while (FindWindow(null, "Steam") == IntPtr.Zero)
+            {
+                Thread.Sleep(500);
+            }
+        }
 
         string args = string.Join(" ", GetRLBotArgs(gamePort));
 
@@ -116,8 +144,6 @@ public static partial class LaunchManager
 
         rocketLeague.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
 
-        // Let Steamworks initialize by providing the AppId,
-        // so the game can authenticate with the running Steam client.
         rocketLeague.StartInfo.Environment["SteamAppId"] = SteamGameId;
         rocketLeague.StartInfo.Environment["SteamGameId"] = SteamGameId;
 

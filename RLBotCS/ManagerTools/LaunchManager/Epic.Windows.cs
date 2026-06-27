@@ -22,7 +22,9 @@ public static partial class LaunchManager
                 "/c start \"\" \"com.epicgames.launcher://apps/9773aa1aa54f4f7b80e44bef04986cea%3A530145df28a24424923f5828cc9031a1%3ASugar?action=launch&silent=true\"";
             launcher.Start();
             Thread.Sleep(500);
-        } else {
+        }
+        else
+        {
             Logger.LogInformation("Relaunching Rocket League via Epic.");
         }
 
