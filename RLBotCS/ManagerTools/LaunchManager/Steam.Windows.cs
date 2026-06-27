@@ -120,7 +120,7 @@ public static partial class LaunchManager
         if (!IsSteamRunning())
         {
             string steamPath = GetWindowsSteamPath();
-            Logger.LogInformation($"Launching Steam at \"{steamPath}\"...");
+            Logger.LogInformation($"Launching Steam: \"{steamPath}\"...");
 
             Process steam = new();
             steam.StartInfo.FileName = steamPath;
@@ -132,6 +132,7 @@ public static partial class LaunchManager
             {
                 Thread.Sleep(500);
             }
+            Thread.Sleep(500);
         }
 
         string args = string.Join(" ", GetRLBotArgs(gamePort));
@@ -147,7 +148,7 @@ public static partial class LaunchManager
         rocketLeague.StartInfo.Environment["SteamAppId"] = SteamGameId;
         rocketLeague.StartInfo.Environment["SteamGameId"] = SteamGameId;
 
-        Logger.LogInformation($"Starting Rocket League without EAC: {gamePath} {args}");
+        Logger.LogInformation($"Launching Rocket League via Steam: \"{gamePath} {args}\"...");
         rocketLeague.Start();
     }
 }

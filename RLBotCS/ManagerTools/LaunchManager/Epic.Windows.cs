@@ -60,7 +60,7 @@ public static partial class LaunchManager
         epicRocketLeague.StartInfo.RedirectStandardOutput = true;
         epicRocketLeague.StartInfo.RedirectStandardError = true;
 
-        Logger.LogInformation($"Starting Rocket League with Epic: {rlbotArgs}");
+        Logger.LogInformation($"Launching Rocket League via Epic: \"{directGamePath} {rlbotArgs}\"...");
         Logger.LogDebug(
             $"Full command: {epicRocketLeague.StartInfo.FileName} {epicRocketLeague.StartInfo.Arguments}"
         );

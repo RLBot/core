@@ -415,7 +415,7 @@ public static partial class LaunchManager
         rocketLeague.StartInfo.Environment["SteamGameId"] = SteamGameId;
 
         Logger.LogInformation(
-            $"Starting Rocket League via Proton without EAC: {protonPath} run {gamePath} {args}"
+            $"Launching Rocket League via Proton: \"{protonPath} run {gamePath} {args}\"..."
         );
         rocketLeague.Start();
     }
