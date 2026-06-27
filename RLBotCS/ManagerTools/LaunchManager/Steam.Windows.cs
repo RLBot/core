@@ -1,6 +1,6 @@
 #if WINDOWS
+#pragma warning disable CA1416
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
@@ -11,11 +11,6 @@ public static partial class LaunchManager
 {
     private static string GetWindowsSteamPath()
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            throw new PlatformNotSupportedException(
-                "Getting Windows path on non-Windows platform"
-            );
-
         using RegistryKey? key = Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam");
         if (key?.GetValue("SteamExe")?.ToString() is { } value)
             return value;
