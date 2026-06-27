@@ -35,7 +35,8 @@ interface SessionMessage
 
     public readonly record struct StopMatch(bool Force) : SessionMessage;
 
-    public readonly record struct UpdateRenderingStatus(RenderingStatusT Status) : SessionMessage;
+    public readonly record struct UpdateRenderingStatus(RenderingStatusT Status)
+        : SessionMessage;
 
     public readonly record struct PingResponse(ulong Cookie) : SessionMessage;
 }
