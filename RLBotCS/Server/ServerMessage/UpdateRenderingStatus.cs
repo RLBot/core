@@ -2,7 +2,7 @@ using RLBot.Flat;
 
 namespace RLBotCS.Server.ServerMessage;
 
-readonly struct UpdateRendering(RenderingStatusT Status) : IServerMessage
+readonly struct UpdateRenderingStatus(RenderingStatusT Status) : IServerMessage
 {
     public ServerAction Execute(ServerContext context)
     {
@@ -10,7 +10,7 @@ readonly struct UpdateRendering(RenderingStatusT Status) : IServerMessage
         if (context.RenderingIsEnabled == DebugRendering.AlwaysOff)
             return ServerAction.Continue;
 
-        SessionMessage.UpdateRendering message = new(Status);
+        SessionMessage.UpdateRenderingStatus message = new(Status);
 
         // Distribute to all sessions;
         // they will figure out on their own if rendering should be enable/disabled
