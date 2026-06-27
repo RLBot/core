@@ -1,6 +1,5 @@
 #if WINDOWS
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 
 namespace RLBotCS.ManagerTools;
@@ -9,27 +8,23 @@ public static partial class LaunchManager
 {
     private static void LaunchGameViaEpic(int gamePort)
     {
-        if (IsRocketLeagueRunningWithArgs())
-            return;
-
-        if (IsRocketLeagueRunning())
+        if (!IsRocketLeagueRunning())
         {
-            Logger.LogError("Please close Rocket League so RLBot can start it in RLBot mode.");
-            return;
+            // Start with a fresh Launch.log so we don't read stale data from a previous run.
+            ReadLog.DeleteLog();
+
+            // To launch RocketLeague for Epic we need some extra login parameters from Epic.
+            // We get these by launching the game normally, reading the args, and then closing it again.
+
+            Process launcher = new();
+            launcher.StartInfo.FileName = "cmd.exe";
+            launcher.StartInfo.Arguments =
+                "/c start \"\" \"com.epicgames.launcher://apps/9773aa1aa54f4f7b80e44bef04986cea%3A530145df28a24424923f5828cc9031a1%3ASugar?action=launch&silent=true\"";
+            launcher.Start();
+            Thread.Sleep(500);
+        } else {
+            Logger.LogInformation("Relaunching Rocket League via Epic.");
         }
-
-        // Start with a fresh Launch.log so we don't read stale data from a previous run.
-        ReadLog.DeleteLog();
-
-        // To launch RocketLeague for Epic we need some extra login parameters from Epic.
-        // We get these by launching the game normally, reading the args, and then closing it again.
-
-        Process launcher = new();
-        launcher.StartInfo.FileName = "cmd.exe";
-        launcher.StartInfo.Arguments =
-            "/c start \"\" \"com.epicgames.launcher://apps/9773aa1aa54f4f7b80e44bef04986cea%3A530145df28a24424923f5828cc9031a1%3ASugar?action=launch&silent=true\"";
-        launcher.Start();
-        Thread.Sleep(500);
 
         // Get the game path and login info from launch logs
         (string, string)? pathAndAuth = null;

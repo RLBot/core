@@ -62,7 +62,9 @@ public static partial class LaunchManager
             if (!candidate.ProcessName.Contains("RocketLeague"))
                 continue;
 
-            return GetProcessArgs(candidate);
+            string args = GetProcessArgs(candidate);
+            if (args.Length > 0)
+                return args;
         }
 
         return null;
@@ -126,7 +128,7 @@ public static partial class LaunchManager
         if (err == 0)
             return commandLine;
 
-        Logger.LogError(
+        Logger.LogWarning(
             $"Failed to retrieve command line arguments for process {process.ProcessName}: {ProcArgs.ErrorToString(err)}"
         );
         return "";
@@ -175,7 +177,7 @@ public static partial class LaunchManager
                     return false;
 
                 var args = GetProcessArgs(candidate);
-                return args.Contains("rlbot");
+                return args.Length > 0 && args.Contains("rlbot");
             });
     }
 }
