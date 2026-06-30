@@ -34,7 +34,7 @@ public static partial class LaunchManager
                 LaunchGameViaEpic(gamePort);
                 break;
             case RLBot.Flat.Launcher.Custom:
-                LaunchCustomLauncher(extraArg);
+                LaunchCustomLauncher(extraArg, gamePort);
                 break;
             case RLBot.Flat.Launcher.NoLaunch:
                 break;

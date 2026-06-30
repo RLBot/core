@@ -4,40 +4,43 @@ namespace RLBotCS.ManagerTools;
 
 public static partial class LaunchManager
 {
-    private static void LaunchGameViaLegendary()
+    private static void LaunchGameViaLegendary(int gamePort)
     {
-        Process legendary = RunCommandInShell(
-            "legendary launch Sugar -rlbot RLBot_ControllerURL=127.0.0.1:23233 RLBot_PacketSendRate=240 -nomovie"
-        );
+        string args = string.Join(" ", GetRLBotArgs(gamePort));
+        Process legendary = RunCommandInShell($"legendary launch Sugar {args} -noeac");
         legendary.Start();
     }
 
-    private static void LaunchGameViaHeroic()
+    private static void LaunchGameViaHeroic(int gamePort)
     {
+        string[] rlbotArgs = GetRLBotArgs(gamePort);
+        string heroicArgs = string.Join(
+            "",
+            rlbotArgs.Select(a => $"&arg={Uri.EscapeDataString(a)}")
+        );
+        string heroicUrl =
+            $"heroic://launch?appName=Sugar&runner=legendary{heroicArgs}&arg=-noeac";
+
         Process heroic;
 
 #if WINDOWS
-        heroic = RunCommandInShell(
-            "start \"\" \"heroic://launch?appName=Sugar&runner=legendary&arg=-rlbot&arg=RLBot_ControllerURL%3D127.0.0.1%3A23233&arg=RLBot_PacketSendRate%3D240&arg=-nomovie\""
-        );
+        heroic = RunCommandInShell($"start \"\" \"{heroicUrl}\"");
 #else
-        heroic = RunCommandInShell(
-            "xdg-open 'heroic://launch?appName=Sugar&runner=legendary&arg=-rlbot&arg=RLBot_ControllerURL%3D127.0.0.1%3A23233&arg=RLBot_PacketSendRate%3D240&arg=-nomovie'"
-        );
+        heroic = RunCommandInShell($"xdg-open '{heroicUrl}'");
 #endif
 
         heroic.Start();
     }
 
-    private static void LaunchCustomLauncher(string extraArg)
+    private static void LaunchCustomLauncher(string extraArg, int gamePort)
     {
         if (extraArg.Equals("legendary", StringComparison.OrdinalIgnoreCase))
         {
-            LaunchGameViaLegendary();
+            LaunchGameViaLegendary(gamePort);
         }
         else if (extraArg.Equals("heroic", StringComparison.OrdinalIgnoreCase))
         {
-            LaunchGameViaHeroic();
+            LaunchGameViaHeroic(gamePort);
         }
         else
         {
