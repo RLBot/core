@@ -6,7 +6,7 @@ To use RLBot as a player or bot developer, please download the installer at http
 
 ## Developer Setup
 
-1. Install (.NET 10 SDK)[https://dotnet.microsoft.com/en-us/download/dotnet/10.0]
+1. Install [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
 1. Initialize submodules: `git submodule update --init`
 1. Build: `dotnet build -c Release`
 
