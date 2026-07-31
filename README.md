@@ -15,9 +15,9 @@ To use RLBot as a player or bot developer, please download the installer at http
 1. Ensure all changes are on the `master` branch.
 1. Ensure the version number is correct in `RLBotCS/Main.cs`.
 1. In GitHub, create a new release.
-  - Name the release and the new tag after the version number, e.g. `v5.0.1`
-  - Mark the release as **pre-release** initially.
-  - Write/generate an appropriate change log.
+    - Name the release and the new tag after the version number, e.g. `v5.0.1`
+    - Mark the release as **pre-release** initially.
+    - Write/generate an appropriate change log.
 1. Wait for the GitHub Actions workflow to build the release and upload it to the release page.
 1. After the workflow finishes, edit the release and set it as the **latest release**.
 
