@@ -1,4 +1,5 @@
-﻿using RLBot.Flat;
+﻿using Microsoft.Extensions.Logging;
+using RLBot.Flat;
 using RLBotCS.Conversion;
 
 namespace RLBotCS.Server.BridgeMessage;
@@ -7,6 +8,11 @@ readonly struct SetGameState(DesiredGameStateT GameState) : IBridgeMessage
 {
     public void HandleMessage(BridgeContext context)
     {
+        if (GameState.ConsoleCommands.Count > 0)
+        {
+            context.Logger.LogWarning("Running console commands through the DesiredGameState message is deprecated. " +
+                                      "Use the ConsoleCommand message type instead.");
+        }
         foreach (var command in GameState.ConsoleCommands)
             context.MatchCommandQueue.AddConsoleCommand(command.Command);
 

@@ -304,11 +304,19 @@ class FlatBuffersSession
                 break;
 
             case InterfaceMessage.DesiredGameState:
-                if (!_stateSettingIsEnabled)
+                if (!_stateSettingIsEnabled && _agentId != "")
                     break;
 
                 var desiredGameState = msg.MessageAsDesiredGameState().UnPack();
                 await _bridge.WriteAsync(new SetGameState(desiredGameState));
+                break;
+            
+            case InterfaceMessage.ConsoleCommand:
+                if (!_stateSettingIsEnabled && _agentId != "")
+                    break;
+                
+                var command = msg.MessageAsConsoleCommand().UnPack();
+                await _bridge.WriteAsync(new RunConsoleCommand(command));
                 break;
 
             case InterfaceMessage.RenderingStatus:
