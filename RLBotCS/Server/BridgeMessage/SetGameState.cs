@@ -10,8 +10,10 @@ readonly struct SetGameState(DesiredGameStateT GameState) : IBridgeMessage
     {
         if (GameState.ConsoleCommands.Count > 0)
         {
-            context.Logger.LogWarning("Running console commands through the DesiredGameState message is deprecated. " +
-                                      "Use the ConsoleCommand message type instead.");
+            context.Logger.LogWarning(
+                "Running console commands through the DesiredGameState message is deprecated. "
+                    + "Use the ConsoleCommand message type instead."
+            );
         }
         foreach (var command in GameState.ConsoleCommands)
             context.MatchCommandQueue.AddConsoleCommand(command.Command);
