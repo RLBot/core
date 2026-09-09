@@ -1,0 +1,7 @@
+[match]
+
+[[cars]]
+config_file = "platform.bot.toml"
+
+[[scripts]]
+config_file = "platform.script.toml"
