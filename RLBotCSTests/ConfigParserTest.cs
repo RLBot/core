@@ -201,6 +201,76 @@ public class ConfigParserTest
     }
 
     [TestMethod]
+    public void PlatformEnvironmentOverrides()
+    {
+        ConfigParser parser = new();
+        MatchConfigurationT mc = parser.LoadMatchConfig("TestTomls/platform.toml");
+
+        string expectedShared =
+            OperatingSystem.IsWindows() ? "windows-bot-value"
+            : OperatingSystem.IsLinux() ? "linux-bot-value"
+            : "common-bot-value";
+        string expectedScriptShared =
+            OperatingSystem.IsWindows() ? "windows-script-value"
+            : OperatingSystem.IsLinux() ? "linux-script-value"
+            : "common-script-value";
+
+        CustomBotT bot = mc.PlayerConfigurations[0].Variety.AsCustomBot();
+        Assert.AreEqual(
+            "$HOME/common-value",
+            bot.Environment.Single(e => e.Name == "COMMON_ENV").Value
+        );
+        Assert.AreEqual(
+            expectedShared,
+            bot.Environment.Single(e => e.Name == "SHARED_ENV").Value
+        );
+
+        ScriptConfigurationT script = mc.ScriptConfigurations[0];
+        Assert.AreEqual(
+            "$HOME/common-value",
+            script.Environment.Single(e => e.Name == "COMMON_ENV").Value
+        );
+        Assert.AreEqual(
+            expectedScriptShared,
+            script.Environment.Single(e => e.Name == "SHARED_ENV").Value
+        );
+
+        if (OperatingSystem.IsWindows())
+        {
+            Assert.AreEqual(
+                Environment.ExpandEnvironmentVariables(
+                    "%LOCALAPPDATA%\\RLBot5\\bots\\torch-archive"
+                ),
+                bot.Environment.Single(e => e.Name == "PLATFORM_ENV").Value
+            );
+            Assert.AreEqual(
+                Environment.ExpandEnvironmentVariables(
+                    "%LOCALAPPDATA%\\RLBot5\\bots\\torch-archive"
+                ),
+                script.Environment.Single(e => e.Name == "PLATFORM_ENV").Value
+            );
+        }
+        else if (OperatingSystem.IsLinux())
+        {
+            string expectedPlatform =
+                $"{Environment.GetEnvironmentVariable("HOME")}/.local/share/RLBot5/bots/torch-archive";
+            Assert.AreEqual(
+                expectedPlatform,
+                bot.Environment.Single(e => e.Name == "PLATFORM_ENV").Value
+            );
+            Assert.AreEqual(
+                expectedPlatform,
+                script.Environment.Single(e => e.Name == "PLATFORM_ENV").Value
+            );
+        }
+        else
+        {
+            Assert.IsFalse(bot.Environment.Any(e => e.Name == "PLATFORM_ENV"));
+            Assert.IsFalse(script.Environment.Any(e => e.Name == "PLATFORM_ENV"));
+        }
+    }
+
+    [TestMethod]
     public void ConfigNotFound()
     {
         ConfigParser parser = new();

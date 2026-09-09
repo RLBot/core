@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using RLBot.Flat;
 using RLBotCS.Model;
@@ -77,6 +78,8 @@ public class ConfigParser
         public const string AgentRunCommand = "run_command";
         public const string AgentRunCommandLinux = "run_command_linux";
         public const string AgentEnvironment = "environment";
+        public const string AgentEnvironmentWindows = "windows";
+        public const string AgentEnvironmentLinux = "linux";
         public const string AgentHivemind = "hivemind";
 
         public const string LoadoutBlueTable = "blue_loadout";
@@ -261,6 +264,26 @@ public class ConfigParser
 #endif
     }
 
+    private static readonly Regex UnixEnvironmentVariablePattern = new(
+        @"\$(?:\{(?<braced>[A-Za-z_][A-Za-z0-9_]*)\}|(?<bare>[A-Za-z_][A-Za-z0-9_]*))",
+        RegexOptions.Compiled
+    );
+
+    private static string ExpandEnvironmentValue(string value)
+    {
+        value = Environment.ExpandEnvironmentVariables(value);
+        return UnixEnvironmentVariablePattern.Replace(
+            value,
+            match =>
+            {
+                string name = match.Groups["braced"].Success
+                    ? match.Groups["braced"].Value
+                    : match.Groups["bare"].Value;
+                return Environment.GetEnvironmentVariable(name) ?? match.Value;
+            }
+        );
+    }
+
     private List<EnvironmentVariableT> GetEnvironment(TomlTable runnableSettings)
     {
         TomlTable environment = GetValue<TomlTable>(
@@ -269,11 +292,21 @@ public class ConfigParser
             []
         );
 
-        List<EnvironmentVariableT> variables = [];
-        using (_context.Begin(Fields.AgentEnvironment))
+        Dictionary<string, string> values = new(StringComparer.Ordinal);
+
+        void ReadValues(TomlTable table, bool skipPlatformTables, bool expandValues)
         {
-            foreach (var (key, rawValue) in environment)
+            foreach (var (key, rawValue) in table)
             {
+                if (
+                    skipPlatformTables
+                    && (
+                        key == Fields.AgentEnvironmentWindows
+                        || key == Fields.AgentEnvironmentLinux
+                    )
+                )
+                    continue;
+
                 if (rawValue is not string value)
                 {
                     throw new InvalidCastException(
@@ -281,11 +314,41 @@ public class ConfigParser
                     );
                 }
 
-                variables.Add(new() { Name = key, Value = value });
+                values[key] = expandValues ? ExpandEnvironmentValue(value) : value;
             }
         }
 
-        return variables;
+        using (_context.Begin(Fields.AgentEnvironment))
+        {
+            ReadValues(environment, true, false);
+
+            string? platform =
+                OperatingSystem.IsWindows() ? Fields.AgentEnvironmentWindows
+                : OperatingSystem.IsLinux() ? Fields.AgentEnvironmentLinux
+                : null;
+
+            if (
+                platform is not null
+                && environment.TryGetValue(platform, out var rawPlatformEnvironment)
+            )
+            {
+                if (rawPlatformEnvironment is not TomlTable platformEnvironment)
+                {
+                    throw new InvalidCastException(
+                        $"{_context.ToStringWithEnd(platform)} has value {rawPlatformEnvironment}, but a table was expected."
+                    );
+                }
+
+                using (_context.Begin(platform))
+                {
+                    ReadValues(platformEnvironment, false, true);
+                }
+            }
+        }
+
+        return values
+            .Select(pair => new EnvironmentVariableT { Name = pair.Key, Value = pair.Value })
+            .ToList();
     }
 
     private ScriptConfigurationT LoadScriptConfig(string scriptConfigPath)
