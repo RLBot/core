@@ -9,7 +9,7 @@ using Tomlyn.Serialization;
 
 namespace RLBotCS.ManagerTools;
 
-public class ConfigParser
+public partial class ConfigParser
 {
     public static class Fields
     {
@@ -264,21 +264,19 @@ public class ConfigParser
 #endif
     }
 
-    private static readonly Regex UnixEnvironmentVariablePattern = new(
-        @"\$(?:\{(?<braced>[A-Za-z_][A-Za-z0-9_]*)\}|(?<bare>[A-Za-z_][A-Za-z0-9_]*))",
-        RegexOptions.Compiled
-    );
+    [GeneratedRegex(@"%([^%]+)%|\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))")]
+    private static partial Regex EnvironmentVariablePattern();
 
     private static string ExpandEnvironmentValue(string value)
     {
-        value = Environment.ExpandEnvironmentVariables(value);
-        return UnixEnvironmentVariablePattern.Replace(
+        return EnvironmentVariablePattern().Replace(
             value,
             match =>
             {
-                string name = match.Groups["braced"].Success
-                    ? match.Groups["braced"].Value
-                    : match.Groups["bare"].Value;
+                string name =
+                    match.Groups[1].Success ? match.Groups[1].Value
+                    : match.Groups[2].Success ? match.Groups[2].Value
+                    : match.Groups[3].Value;
                 return Environment.GetEnvironmentVariable(name) ?? match.Value;
             }
         );
