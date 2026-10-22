@@ -269,17 +269,18 @@ public partial class ConfigParser
 
     private static string ExpandEnvironmentValue(string value)
     {
-        return EnvironmentVariablePattern().Replace(
-            value,
-            match =>
-            {
-                string name =
-                    match.Groups[1].Success ? match.Groups[1].Value
-                    : match.Groups[2].Success ? match.Groups[2].Value
-                    : match.Groups[3].Value;
-                return Environment.GetEnvironmentVariable(name) ?? match.Value;
-            }
-        );
+        return EnvironmentVariablePattern()
+            .Replace(
+                value,
+                match =>
+                {
+                    string name =
+                        match.Groups[1].Success ? match.Groups[1].Value
+                        : match.Groups[2].Success ? match.Groups[2].Value
+                        : match.Groups[3].Value;
+                    return Environment.GetEnvironmentVariable(name) ?? match.Value;
+                }
+            );
     }
 
     private List<EnvironmentVariableT> GetEnvironment(TomlTable runnableSettings)
