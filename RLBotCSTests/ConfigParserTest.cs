@@ -201,6 +201,189 @@ public class ConfigParserTest
     }
 
     [TestMethod]
+    public void PlatformEnvironmentOverrides()
+    {
+        ConfigParser parser = new();
+        MatchConfigurationT mc = parser.LoadMatchConfig("TestTomls/platform.toml");
+
+        string expectedShared =
+            OperatingSystem.IsWindows() ? "windows-bot-value"
+            : OperatingSystem.IsLinux() ? "linux-bot-value"
+            : "common-bot-value";
+        string expectedScriptShared =
+            OperatingSystem.IsWindows() ? "windows-script-value"
+            : OperatingSystem.IsLinux() ? "linux-script-value"
+            : "common-script-value";
+
+        CustomBotT bot = mc.PlayerConfigurations[0].Variety.AsCustomBot();
+        Assert.AreEqual(
+            "$HOME/common-value",
+            bot.Environment.Single(e => e.Name == "COMMON_ENV").Value
+        );
+        Assert.AreEqual(
+            expectedShared,
+            bot.Environment.Single(e => e.Name == "SHARED_ENV").Value
+        );
+
+        ScriptConfigurationT script = mc.ScriptConfigurations[0];
+        Assert.AreEqual(
+            "$HOME/common-value",
+            script.Environment.Single(e => e.Name == "COMMON_ENV").Value
+        );
+        Assert.AreEqual(
+            expectedScriptShared,
+            script.Environment.Single(e => e.Name == "SHARED_ENV").Value
+        );
+
+        if (OperatingSystem.IsWindows())
+        {
+            Assert.AreEqual(
+                Environment.ExpandEnvironmentVariables(
+                    "%LOCALAPPDATA%\\RLBot5\\bots\\torch-archive"
+                ),
+                bot.Environment.Single(e => e.Name == "PLATFORM_ENV").Value
+            );
+            Assert.AreEqual(
+                Environment.ExpandEnvironmentVariables(
+                    "%LOCALAPPDATA%\\RLBot5\\bots\\torch-archive"
+                ),
+                script.Environment.Single(e => e.Name == "PLATFORM_ENV").Value
+            );
+        }
+        else if (OperatingSystem.IsLinux())
+        {
+            string expectedPlatform =
+                $"{Environment.GetEnvironmentVariable("HOME")}/.local/share/RLBot5/bots/torch-archive";
+            Assert.AreEqual(
+                expectedPlatform,
+                bot.Environment.Single(e => e.Name == "PLATFORM_ENV").Value
+            );
+            Assert.AreEqual(
+                expectedPlatform,
+                script.Environment.Single(e => e.Name == "PLATFORM_ENV").Value
+            );
+        }
+        else
+        {
+            Assert.IsFalse(bot.Environment.Any(e => e.Name == "PLATFORM_ENV"));
+            Assert.IsFalse(script.Environment.Any(e => e.Name == "PLATFORM_ENV"));
+        }
+    }
+
+    [TestMethod]
+    [DoNotParallelize]
+    public void ExpandsSelectedPlatformEnvironmentValuesOnce()
+    {
+        string[] names =
+        [
+            "RLBCPERCENT_TEST",
+            "RLBCEMPTY_TEST",
+            "RLBCDOLLAR_TEST",
+            "RLBCPERCENT_REPLACEMENT_TEST",
+            "RLBCPAREN_TEST(x86)",
+            "RLBCINNER_TEST",
+            "RLBCMISSING_TEST",
+        ];
+        string?[] previousValues = names.Select(Environment.GetEnvironmentVariable).ToArray();
+        string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+
+        try
+        {
+            Environment.SetEnvironmentVariable("RLBCPERCENT_TEST", "percent-value");
+            Environment.SetEnvironmentVariable("RLBCEMPTY_TEST", "");
+            Assert.AreEqual("", Environment.GetEnvironmentVariable("RLBCEMPTY_TEST"));
+            Environment.SetEnvironmentVariable("RLBCDOLLAR_TEST", "$RLBCINNER_TEST");
+            Environment.SetEnvironmentVariable(
+                "RLBCPERCENT_REPLACEMENT_TEST",
+                "%RLBCINNER_TEST%"
+            );
+            Environment.SetEnvironmentVariable("RLBCPAREN_TEST(x86)", "paren-value");
+            Environment.SetEnvironmentVariable("RLBCINNER_TEST", "expanded");
+            Environment.SetEnvironmentVariable("RLBCMISSING_TEST", null);
+            Assert.IsNull(Environment.GetEnvironmentVariable("RLBCMISSING_TEST"));
+
+            string platform = OperatingSystem.IsWindows() ? "windows" : "linux";
+            string matchPath = Path.Combine(directory, "match.toml");
+            File.WriteAllText(
+                matchPath,
+                """
+                [match]
+                [[cars]]
+                config_file = "bot.toml"
+                [[scripts]]
+                config_file = "script.toml"
+                """
+            );
+            string agentToml = $$"""
+                [settings]
+                agent_id = "test"
+                name = "test"
+                run_command = ""
+                run_command_linux = ""
+
+                [settings.environment]
+                COMMON = "$HOME and %RLBCPERCENT_TEST%"
+
+                [settings.environment.{{platform}}]
+                VALUE = "%RLBCPERCENT_TEST%$RLBCEMPTY_TEST${RLBCPERCENT_TEST}%RLBCPAREN_TEST(x86)%%RLBCMISSING_TEST%$RLBCMISSING_TEST${RLBCMISSING_TEST}"
+                DOLLAR_REPLACEMENT = "%RLBCDOLLAR_TEST%"
+                PERCENT_REPLACEMENT = "$RLBCPERCENT_REPLACEMENT_TEST"
+                """;
+            File.WriteAllText(Path.Combine(directory, "bot.toml"), agentToml);
+            File.WriteAllText(Path.Combine(directory, "script.toml"), agentToml);
+
+            MatchConfigurationT config = new ConfigParser().LoadMatchConfig(matchPath);
+            CustomBotT bot = config.PlayerConfigurations[0].Variety.AsCustomBot();
+            ScriptConfigurationT script = config.ScriptConfigurations[0];
+
+            AssertEnvironmentValue(
+                bot.Environment,
+                "VALUE",
+                "percent-valuepercent-valueparen-value%RLBCMISSING_TEST%$RLBCMISSING_TEST${RLBCMISSING_TEST}"
+            );
+            AssertEnvironmentValue(
+                script.Environment,
+                "VALUE",
+                "percent-valuepercent-valueparen-value%RLBCMISSING_TEST%$RLBCMISSING_TEST${RLBCMISSING_TEST}"
+            );
+            AssertEnvironmentValue(bot.Environment, "DOLLAR_REPLACEMENT", "$RLBCINNER_TEST");
+            AssertEnvironmentValue(
+                script.Environment,
+                "DOLLAR_REPLACEMENT",
+                "$RLBCINNER_TEST"
+            );
+            AssertEnvironmentValue(bot.Environment, "PERCENT_REPLACEMENT", "%RLBCINNER_TEST%");
+            AssertEnvironmentValue(
+                script.Environment,
+                "PERCENT_REPLACEMENT",
+                "%RLBCINNER_TEST%"
+            );
+            AssertEnvironmentValue(bot.Environment, "COMMON", "$HOME and %RLBCPERCENT_TEST%");
+            AssertEnvironmentValue(
+                script.Environment,
+                "COMMON",
+                "$HOME and %RLBCPERCENT_TEST%"
+            );
+        }
+        finally
+        {
+            for (int i = 0; i < names.Length; i++)
+                Environment.SetEnvironmentVariable(names[i], previousValues[i]);
+            Directory.Delete(directory, true);
+        }
+    }
+
+    private static void AssertEnvironmentValue(
+        System.Collections.Generic.IEnumerable<EnvironmentVariableT> environment,
+        string name,
+        string expected
+    )
+    {
+        Assert.AreEqual(expected, environment.Single(value => value.Name == name).Value);
+    }
+
+    [TestMethod]
     public void ConfigNotFound()
     {
         ConfigParser parser = new();

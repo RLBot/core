@@ -1,0 +1,19 @@
+[settings]
+agent_id = "test/platform-bot"
+name = "Platform Test Bot"
+run_command = "python bot.py"
+run_command_linux = "python bot.py"
+
+[settings.environment]
+COMMON_ENV = "$HOME/common-value"
+SHARED_ENV = "common-bot-value"
+
+[settings.environment.windows]
+SHARED_ENV = "windows-bot-value"
+PLATFORM_ENV = "%LOCALAPPDATA%\\RLBot5\\bots\\torch-archive"
+
+[settings.environment.linux]
+SHARED_ENV = "linux-bot-value"
+PLATFORM_ENV = "$HOME/.local/share/RLBot5/bots/torch-archive"
+
+[details]

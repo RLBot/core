@@ -1,0 +1,19 @@
+[settings]
+agent_id = "test/platform-script"
+name = "Platform Test Script"
+run_command = "python script.py"
+run_command_linux = "python script.py"
+
+[settings.environment]
+COMMON_ENV = "$HOME/common-value"
+SHARED_ENV = "common-script-value"
+
+[settings.environment.windows]
+SHARED_ENV = "windows-script-value"
+PLATFORM_ENV = "%LOCALAPPDATA%\\RLBot5\\bots\\torch-archive"
+
+[settings.environment.linux]
+SHARED_ENV = "linux-script-value"
+PLATFORM_ENV = "$HOME/.local/share/RLBot5/bots/torch-archive"
+
+[details]
