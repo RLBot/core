@@ -94,6 +94,7 @@ public class ConfigParserTest
         Assert.AreEqual("something invalid", edgeMC.LauncherArg);
 
         Assert.AreEqual(MatchLengthMutator.TenMinutes, edgeMC.Mutators.MatchLength);
+        Assert.AreEqual(SeriesLengthMutator.FiveGames, edgeMC.Mutators.SeriesLength);
         Assert.AreEqual(GravityMutator.Reverse, edgeMC.Mutators.Gravity);
 
         Assert.AreEqual(PlayerClass.PsyonixBot, edgeMC.PlayerConfigurations[0].Variety.Type);

@@ -11,6 +11,7 @@ enable_rendering = false
 
 [mutators]
 match_length = "TenMinutes"
+series_length = "FiveGames"
 gravity = "rEvErsE"
 
 [[cars]]

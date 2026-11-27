@@ -36,6 +36,7 @@ public partial class ConfigParser
         public const string MutatorsMaxScore = "max_score";
         public const string MutatorsMultiBall = "multi_ball";
         public const string MutatorsOvertime = "overtime";
+        public const string MutatorsSeriesLength = "series_length";
         public const string MutatorsGameSpeed = "game_speed";
         public const string MutatorsBallMaxSpeed = "ball_max_speed";
         public const string MutatorsBallType = "ball_type";
@@ -698,6 +699,11 @@ public partial class ConfigParser
                 mutatorTable,
                 Fields.MutatorsOvertime,
                 OvertimeMutator.Unlimited
+            ),
+            SeriesLength = GetEnum(
+                mutatorTable,
+                Fields.MutatorsSeriesLength,
+                SeriesLengthMutator.Unlimited
             ),
             GameSpeed = GetEnum(
                 mutatorTable,
